@@ -648,6 +648,9 @@ function initGridVisitantesEvento() {
     ],
     rownumbers: true,
     rownumWidth: 40,
+    // multiselect: true,
+    // multiselectWidth: 30,
+    multiselect: false,
     cmTemplate: { sortable: false },
     rowNum: 50,
     rowList: [50, 100, 200, 500, 999999],
@@ -973,6 +976,297 @@ function enviarCertificadoVisitanteEvento(MVis_Cod, btnEl) {
       }
     });
   });
+}
+
+// --- COLA DE ENVÍO MASIVO DE WHATSAPP ---
+window._queueEnvioMasivo = {
+  activo: false,
+  pausado: false,
+  items: [],
+  indiceActual: 0,
+  delaySegundos: 5,
+  idEvento: null,
+  nombreEvento: '',
+  exitos: 0,
+  fallos: 0,
+  timerId: null,
+  countdownId: null
+};
+
+function abrirModalEnvioMasivo() {
+  var selIds = $("#gridVisitantesEvento").jqGrid('getGridParam', 'selarrrow') || [];
+  var idEvento = $("#selMan_Eve").val() || "";
+  var postUrl = (window.location.href || '').split('#')[0];
+
+  console.log("[EnvioMasivo] abrirModalEnvioMasivo - selIds:", selIds, "idEvento:", idEvento);
+
+  if (!idEvento) {
+    mostrarAlertaUI("Atención", "Por favor seleccione un evento específico en el filtro superior para realizar el envío masivo.", "warning");
+    return;
+  }
+
+  if (selIds.length === 0) {
+    mostrarAlertaUI("Atención", "Por favor seleccione al menos un visitante marcando las casillas del grid para realizar el envío masivo.", "warning");
+    return;
+  }
+
+  // Obtener datos del evento (mensaje configurado y delay)
+  $.post(postUrl, { getDatosEventoEnvioMasivoAjax: 1, Man_Eve: idEvento }, function (res) {
+    console.log("[EnvioMasivo] getDatosEventoEnvioMasivoAjax resp:", res);
+    if (!res || !res.success) {
+      mostrarAlertaUI("Error", "No se pudieron obtener los datos de configuración del evento.", "danger");
+      return;
+    }
+
+    var delaySecs = parseInt(res.Man_Mdel, 10) || 5;
+    var msgPlantilla = $.trim(res.Man_Mmsg);
+    var nomEvento = res.Man_ENom || 'Evento';
+
+    if (!msgPlantilla) {
+      mostrarAlertaUI("Aviso", "El evento seleccionado no tiene configurado un Mensaje Masivo / Difusión en la pantalla de Configuración de Eventos.", "warning");
+      return;
+    }
+
+    // Confirmar con el usuario
+    swal({
+      title: "¿Iniciar Envío Masivo?",
+      text: "Se enviará el mensaje masivo de WhatsApp a " + selIds.length + " visitante(s) seleccionado(s) con una pausa de seguridad de " + delaySecs + " segundos entre cada mensaje.",
+      type: "info",
+      showCancelButton: true,
+      confirmButtonColor: "#2563eb",
+      confirmButtonText: "Sí, Iniciar Envío",
+      cancelButtonText: "Cancelar",
+      closeOnConfirm: true
+    }, function (isConfirm) {
+      if (isConfirm) {
+        iniciarColaEnvioMasivo(selIds, idEvento, nomEvento, delaySecs);
+      }
+    });
+  }, "json").fail(function (xhr, status, err) {
+    console.error("[EnvioMasivo] Error al consultar evento:", status, err, xhr.responseText);
+    mostrarAlertaUI("Error", "Ocurrió un error de comunicación al consultar el evento.", "danger");
+  });
+}
+
+function iniciarColaEnvioMasivo(selIds, idEvento, nomEvento, delaySecs) {
+  // Recopilar objetos de visitantes seleccionados desde el grid
+  var queueItems = [];
+  $.each(selIds, function (i, id) {
+    var rowData = $("#gridVisitantesEvento").jqGrid('getRowData', id);
+    var mvisCod = parseInt(rowData.MVis_Cod || id, 10);
+    var nombre = rowData.nombre || rowData.Prs_Nom || ('Visitante #' + mvisCod);
+    var cedula = rowData.Prs_Ced || '';
+    var tel = rowData.Prs_Tel || '';
+    queueItems.push({
+      MVis_Cod: mvisCod,
+      nombre: nombre,
+      cedula: cedula,
+      telefono: tel
+    });
+  });
+
+  console.log("[EnvioMasivo] Iniciar cola con", queueItems.length, "items:", queueItems);
+
+  window._queueEnvioMasivo = {
+    activo: true,
+    pausado: false,
+    items: queueItems,
+    indiceActual: 0,
+    delaySegundos: delaySecs,
+    idEvento: idEvento,
+    nombreEvento: nomEvento,
+    exitos: 0,
+    fallos: 0,
+    timerId: null,
+    countdownId: null
+  };
+
+  // Inicializar UI del diálogo
+  actualizarUIProgresoMasivo();
+  $("#boxProgresoMasivoTimer").hide();
+  $("#btnPausarEnvioMasivo").html('<i class="glyphicon glyphicon-pause"></i> Pausar').removeClass('btn-success').addClass('btn-warning');
+
+  $("#progresoEnvioMasivoDialog").dialog({
+    modal: true,
+    width: 480,
+    resizable: false,
+    closeOnEscape: false,
+    dialogClass: "modal-model1",
+    open: function () {
+      $(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide();
+    }
+  });
+
+  procesarSiguienteEnCola();
+}
+
+function actualizarUIProgresoMasivo() {
+  var q = window._queueEnvioMasivo;
+  var total = q.items.length;
+  var actual = q.indiceActual;
+  var pct = total > 0 ? Math.round((actual / total) * 100) : 0;
+  if (pct > 100) pct = 100;
+
+  $("#txtProgresoMasivoContador").html('<i class="glyphicon glyphicon-bullhorn"></i> Procesando: ' + actual + ' de ' + total + ' (' + pct + '%)');
+  $("#txtProgresoMasivoPorcentaje").text(pct + '%');
+  $("#barProgresoMasivo").css('width', pct + '%').text(pct + '%').attr('aria-valuenow', pct);
+
+  $("#cntMasivoExitos").text(q.exitos);
+  $("#cntMasivoFallos").text(q.fallos);
+  $("#cntMasivoPendientes").text(Math.max(0, total - actual));
+}
+
+function procesarSiguienteEnCola() {
+  var q = window._queueEnvioMasivo;
+  if (!q.activo) return;
+
+  if (q.pausado) {
+    $("#txtProgresoMasivoEstado").html('<span style="color: #f59e0b;"><i class="glyphicon glyphicon-pause"></i> Cola en pausa... Presione Reanudar para continuar.</span>');
+    return;
+  }
+
+  if (q.indiceActual >= q.items.length) {
+    finalizarColaEnvioMasivo();
+    return;
+  }
+
+  var item = q.items[q.indiceActual];
+  $("#boxProgresoMasivoTimer").hide();
+  $("#txtProgresoMasivoDestinatario").text(item.nombre + (item.telefono ? ' (' + item.telefono + ')' : ''));
+  $("#txtProgresoMasivoEstado").html('<span style="color: #2563eb;"><i class="glyphicon glyphicon-refresh spin"></i> Enviando WhatsApp...</span>');
+
+  var postUrl = (window.location.href || '').split('#')[0];
+  console.log("[EnvioMasivo] Procesando item:", item);
+
+  $.post(postUrl, {
+    enviarMensajeMasivoVisitanteAjax: 1,
+    MVis_Cod: item.MVis_Cod,
+    Man_Eve: q.idEvento
+  }, function (res) {
+    console.log("[EnvioMasivo] Resultado item", item.MVis_Cod, ":", res);
+    if (res && res.success) {
+      q.exitos++;
+      $("#txtProgresoMasivoEstado").html('<span style="color: #16a34a;"><i class="glyphicon glyphicon-ok"></i> ' + (res.message || 'Enviado con éxito') + '</span>');
+    } else {
+      q.fallos++;
+      var errMsg = (res && res.message) ? res.message : 'Error desconocido';
+      $("#txtProgresoMasivoEstado").html('<span style="color: #dc2626;"><i class="glyphicon glyphicon-remove"></i> Falló: ' + errMsg + '</span>');
+    }
+
+    q.indiceActual++;
+    actualizarUIProgresoMasivo();
+
+    // Si aún quedan elementos, aplicar la pausa con cuenta regresiva
+    if (q.indiceActual < q.items.length && q.activo && !q.pausado) {
+      iniciarPausaCuentaRegresiva(q.delaySegundos, function () {
+        procesarSiguienteEnCola();
+      });
+    } else if (q.indiceActual >= q.items.length) {
+      finalizarColaEnvioMasivo();
+    }
+  }, "json").fail(function (xhr, status, err) {
+    console.error("[EnvioMasivo] Error AJAX item:", status, err, xhr.responseText);
+    q.fallos++;
+    q.indiceActual++;
+    actualizarUIProgresoMasivo();
+    $("#txtProgresoMasivoEstado").html('<span style="color: #dc2626;"><i class="glyphicon glyphicon-remove"></i> Error de red/servidor al procesar el envío.</span>');
+
+    if (q.indiceActual < q.items.length && q.activo && !q.pausado) {
+      iniciarPausaCuentaRegresiva(q.delaySegundos, function () {
+        procesarSiguienteEnCola();
+      });
+    } else {
+      finalizarColaEnvioMasivo();
+    }
+  });
+}
+
+function iniciarPausaCuentaRegresiva(segundos, callback) {
+  var remaining = segundos;
+  $("#boxProgresoMasivoTimer").show();
+  $("#txtProgresoMasivoCountdown").text('Pausa de seguridad: ' + remaining + 's...');
+
+  if (window._queueEnvioMasivo.countdownId) clearInterval(window._queueEnvioMasivo.countdownId);
+
+  window._queueEnvioMasivo.countdownId = setInterval(function () {
+    var q = window._queueEnvioMasivo;
+    if (!q.activo || q.pausado) {
+      clearInterval(q.countdownId);
+      return;
+    }
+
+    remaining--;
+    if (remaining > 0) {
+      $("#txtProgresoMasivoCountdown").text('Próximo envío en ' + remaining + 's...');
+    } else {
+      clearInterval(q.countdownId);
+      $("#boxProgresoMasivoTimer").hide();
+      if (typeof callback === 'function') callback();
+    }
+  }, 1000);
+}
+
+function togglePausarColaEnvioMasivo() {
+  var q = window._queueEnvioMasivo;
+  if (!q.activo) return;
+
+  q.pausado = !q.pausado;
+  if (q.pausado) {
+    if (q.countdownId) clearInterval(q.countdownId);
+    $("#btnPausarEnvioMasivo").html('<i class="glyphicon glyphicon-play"></i> Reanudar').removeClass('btn-warning').addClass('btn-success');
+    $("#txtProgresoMasivoEstado").html('<span style="color: #f59e0b;"><i class="glyphicon glyphicon-pause"></i> Envío pausado por el usuario.</span>');
+  } else {
+    $("#btnPausarEnvioMasivo").html('<i class="glyphicon glyphicon-pause"></i> Pausar').removeClass('btn-success').addClass('btn-warning');
+    $("#txtProgresoMasivoEstado").html('<span style="color: #2563eb;"><i class="glyphicon glyphicon-refresh spin"></i> Reanudando cola...</span>');
+    procesarSiguienteEnCola();
+  }
+}
+
+function cancelarColaEnvioMasivo() {
+  var q = window._queueEnvioMasivo;
+  if (!q.activo) {
+    $("#progresoEnvioMasivoDialog").dialog('close');
+    return;
+  }
+
+  swal({
+    title: "¿Detener Envío?",
+    text: "¿Desea detener la cola de envío masivo? Los mensajes ya enviados no se revertirán.",
+    type: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#dc2626",
+    confirmButtonText: "Sí, Detener",
+    cancelButtonText: "Continuar enviando"
+  }, function (isConfirm) {
+    if (isConfirm) {
+      q.activo = false;
+      if (q.countdownId) clearInterval(q.countdownId);
+      $("#progresoEnvioMasivoDialog").dialog('close');
+      mostrarAlertaUI("Envío Detenido", "La cola de envíos fue detenida por el usuario. Éxitos: " + q.exitos + ", Fallidos: " + q.fallos, "info");
+    }
+  });
+}
+
+function finalizarColaEnvioMasivo() {
+  var q = window._queueEnvioMasivo;
+  q.activo = false;
+  if (q.countdownId) clearInterval(q.countdownId);
+
+  $("#txtProgresoMasivoPorcentaje").text('100%').removeClass('label-primary').addClass('label-success');
+  $("#barProgresoMasivo").css('width', '100%').text('100%').removeClass('progress-bar-striped active').css('background-color', '#16a34a');
+  $("#txtProgresoMasivoDestinatario").text('Todos los registros fueron procesados.');
+  $("#txtProgresoMasivoEstado").html('<span style="color: #16a34a; font-weight: bold;"><i class="glyphicon glyphicon-ok-sign"></i> ¡Proceso de difusión completado!</span>');
+  $("#boxProgresoMasivoTimer").hide();
+
+  setTimeout(function () {
+    $("#progresoEnvioMasivoDialog").dialog('close');
+    swal({
+      title: "¡Envío Masivo Finalizado!",
+      text: "Se procesaron todos los registros seleccionados.\n\n✓ Mensajes Enviados: " + q.exitos + "\n✗ Mensajes Fallidos / Sin Tel: " + q.fallos,
+      type: (q.fallos === 0 ? "success" : "warning"),
+      confirmButtonText: "Aceptar"
+    });
+  }, 1200);
 }
 
 

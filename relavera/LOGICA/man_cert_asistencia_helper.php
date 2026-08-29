@@ -129,23 +129,32 @@ if (!function_exists('man_cert_asistencia_resolver_evento')) {
             'tipo_certificado' => 'DE ASISTENCIA',
             'texto_certificado' => '',
             'mensaje_whatsapp' => '',
+            'mensaje_masivo' => '',
+            'intervalo_cola' => 5,
             'fecha_emision_texto' => 'Portovelo, El Oro, 08 de agosto de 2026.',
+            'area_firma2' => 'Área de Capacitación',
         );
         try {
             $manEve = $manEve !== null ? trim((string) $manEve) : '';
             if ($manEve !== '') {
                 $sql = "SELECT Man_ENom, IFNULL(Man_Ehor, '06:00:00') AS Man_EHor, Man_EFei, IFNULL(Man_EFef, Man_EFei) AS Man_EFef,
                                IFNULL(Man_Teve, 'DE ASISTENCIA') AS Man_Teve,
+                               IFNULL(Man_Afir, 'Área de Capacitación') AS Man_Afir,
                                IFNULL(Man_Tcrf, '') AS Man_Tcrf,
-                               IFNULL(Man_Wms, '') AS Man_Wms
+                               IFNULL(Man_Wms, '') AS Man_Wms,
+                               IFNULL(Man_Mmsg, '') AS Man_Mmsg,
+                               IFNULL(Man_Mdel, 5) AS Man_Mdel
                         FROM manifiesto_evento
                         WHERE Man_Eve = '" . addslashes($manEve) . "'
                         LIMIT 1";
             } else {
                 $sql = "SELECT Man_ENom, IFNULL(Man_Ehor, '06:00:00') AS Man_EHor, Man_EFei, IFNULL(Man_EFef, Man_EFei) AS Man_EFef,
                                IFNULL(Man_Teve, 'DE ASISTENCIA') AS Man_Teve,
+                               IFNULL(Man_Afir, 'Área de Capacitación') AS Man_Afir,
                                IFNULL(Man_Tcrf, '') AS Man_Tcrf,
-                               IFNULL(Man_Wms, '') AS Man_Wms
+                               IFNULL(Man_Wms, '') AS Man_Wms,
+                               IFNULL(Man_Mmsg, '') AS Man_Mmsg,
+                               IFNULL(Man_Mdel, 5) AS Man_Mdel
                         FROM manifiesto_evento
                         WHERE UPPER(IFNULL(Man_Vig, 'N')) = 'S' AND UPPER(IFNULL(Man_EEst, 'A')) = 'A'
                         LIMIT 1";
@@ -179,11 +188,20 @@ if (!function_exists('man_cert_asistencia_resolver_evento')) {
                 if (!empty($rowEv['Man_Teve'])) {
                     $out['tipo_certificado'] = trim((string) $rowEv['Man_Teve']);
                 }
+                if (!empty($rowEv['Man_Afir'])) {
+                    $out['area_firma2'] = trim((string) $rowEv['Man_Afir']);
+                }
                 if (!empty($rowEv['Man_Tcrf'])) {
                     $out['texto_certificado'] = trim((string) $rowEv['Man_Tcrf']);
                 }
                 if (!empty($rowEv['Man_Wms'])) {
                     $out['mensaje_whatsapp'] = trim((string) $rowEv['Man_Wms']);
+                }
+                if (!empty($rowEv['Man_Mmsg'])) {
+                    $out['mensaje_masivo'] = trim((string) $rowEv['Man_Mmsg']);
+                }
+                if (!empty($rowEv['Man_Mdel'])) {
+                    $out['intervalo_cola'] = (int) $rowEv['Man_Mdel'];
                 }
             }
         } catch (Exception $e) {
@@ -208,6 +226,7 @@ if (!function_exists('man_cert_asistencia_armar_params')) {
             'fecha_evento_texto' => isset($evData['fecha_texto']) ? $evData['fecha_texto'] : '',
             'fecha_emision_texto' => isset($evData['fecha_emision_texto']) ? $evData['fecha_emision_texto'] : '',
             'tipo_certificado' => isset($evData['tipo_certificado']) ? $evData['tipo_certificado'] : 'DE ASISTENCIA',
+            'area_firma2' => isset($evData['area_firma2']) ? $evData['area_firma2'] : 'Área de Capacitación',
             'texto_certificado' => isset($evData['texto_certificado']) ? $evData['texto_certificado'] : '',
             'mensaje_whatsapp' => isset($evData['mensaje_whatsapp']) ? $evData['mensaje_whatsapp'] : '',
         );
@@ -439,7 +458,8 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
         $pdf->SetX($x1);
         $pdf->Cell(70, 5, 'Gerencia General', 0, 0, 'C');
         $pdf->SetX($x2);
-        $pdf->Cell(70, 5, 'Área de Capacitación', 0, 1, 'C');
+        $areaFirma2 = !empty($params['area_firma2']) ? $params['area_firma2'] : 'Área de Capacitación';
+        $pdf->Cell(70, 5, $areaFirma2, 0, 1, 'C');
 
         $pdf->SetTextColor(100, 116, 139);
         $pdf->SetFont('helvetica', '', 8);

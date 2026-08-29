@@ -48,13 +48,66 @@ if (!function_exists('relavera_whatsapp_normalizar_numero_ec')) {
     }
 }
 
+if (!function_exists('relavera_ultramsg_request')) {
+    /**
+     * Realiza peticiones POST a la API de UltraMsg con doble capa (cURL PHP + fallback curl.exe)
+     * para asegurar compatibilidad TLS 1.2+ en entornos Windows / XAMPP.
+     */
+    function relavera_ultramsg_request($url, $params, $timeout = 60)
+    {
+        $jsonPayload = json_encode($params);
+
+        // Intento 1: cURL PHP
+        if (function_exists('curl_init')) {
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => $timeout,
+                CURLOPT_SSL_VERIFYHOST => 0,
+                CURLOPT_SSL_VERIFYPEER => 0,
+                CURLOPT_POST => 1,
+                CURLOPT_POSTFIELDS => $jsonPayload,
+                CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
+            ));
+            $response = curl_exec($curl);
+            $err = curl_error($curl);
+            curl_close($curl);
+
+            if (!$err && !empty($response)) {
+                $data = json_decode((string)$response, true);
+                if (is_array($data)) {
+                    return $data;
+                }
+            }
+        }
+
+        // Intento 2: Fallback a curl.exe de Windows
+        $tmpFile = tempnam(sys_get_temp_dir(), 'um_');
+        file_put_contents($tmpFile, $jsonPayload);
+        $cmd = 'curl.exe -s -k -X POST ' . escapeshellarg($url) . ' -H "Content-Type: application/json" -d @' . escapeshellarg($tmpFile);
+        $response = shell_exec($cmd);
+        @unlink($tmpFile);
+
+        if (!empty($response)) {
+            $data = json_decode((string)$response, true);
+            if (is_array($data)) {
+                return $data;
+            }
+        }
+        return false;
+    }
+}
+
 if (!function_exists('relavera_enviar_whatsapp_notif')) {
     /**
      * Envía un mensaje de texto por WhatsApp (UltraMsg messages/chat).
      *
      * @param string $numero Destino (formato esperado por la API)
      * @param string $mensaje Texto del mensaje
-     * @return bool
+     * @return bool|int|string
      */
     function relavera_enviar_whatsapp_notif($numero, $mensaje)
     {
@@ -63,25 +116,7 @@ if (!function_exists('relavera_enviar_whatsapp_notif')) {
             return false;
         }
         $params = array('token' => 'ao5aoi2f77trfaxc', 'to' => $numero, 'body' => $mensaje);
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://api.ultramsg.com/instance164295/messages/chat',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_SSL_VERIFYHOST => 0,
-            CURLOPT_SSL_VERIFYPEER => 0,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => json_encode($params),
-            CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
-        ));
-        $response = curl_exec($curl);
-        $err = curl_error($curl);
-        curl_close($curl);
-        if ($err) { return false; }
-        $data = json_decode((string)$response, true);
+        $data = relavera_ultramsg_request('https://api.ultramsg.com/instance164295/messages/chat', $params, 30);
         return (is_array($data) && isset($data['id'])) ? $data['id'] : null;
     }
 }
@@ -93,7 +128,7 @@ if (!function_exists('relavera_enviar_whatsapp_imagen_notif')) {
      * @param string $numero Destino
      * @param string $imageBase64 Base64 (sin prefijo data:) o URL pública
      * @param string $caption Leyenda bajo la imagen
-     * @return bool
+     * @return bool|int|string
      */
     function relavera_enviar_whatsapp_imagen_notif($numero, $imageBase64, $caption)
     {
@@ -109,26 +144,13 @@ if (!function_exists('relavera_enviar_whatsapp_imagen_notif')) {
         } else {
             $caption = substr($caption, 0, 1024);
         }
-        $params = array( 'token' => 'ao5aoi2f77trfaxc','to' => $numero, 'image' => $imageBase64, 'caption' => $caption, );
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://api.ultramsg.com/instance164295/messages/image',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 90,
-            CURLOPT_SSL_VERIFYHOST => 0,
-            CURLOPT_SSL_VERIFYPEER => 0,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => json_encode($params),
-            CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
-        ));
-        $response = curl_exec($curl);
-        $err = curl_error($curl);
-        curl_close($curl);
-        if ($err) { return false;}
-        $data = json_decode((string)$response, true);
+        $params = array(
+            'token'   => 'ao5aoi2f77trfaxc',
+            'to'      => $numero,
+            'image'   => $imageBase64,
+            'caption' => $caption,
+        );
+        $data = relavera_ultramsg_request('https://api.ultramsg.com/instance164295/messages/image', $params, 90);
         return (is_array($data) && isset($data['id'])) ? $data['id'] : null;
     }
 }
@@ -141,7 +163,7 @@ if (!function_exists('relavera_enviar_whatsapp_documento_notif')) {
      * @param string $documentBase64 Base64 del archivo (sin prefijo data:)
      * @param string $filename Nombre visible del archivo (ej. certificado.pdf)
      * @param string $caption Leyenda opcional
-     * @return bool|string
+     * @return bool|int|string
      */
     function relavera_enviar_whatsapp_documento_notif($numero, $documentBase64, $filename, $caption = '')
     {
@@ -162,35 +184,15 @@ if (!function_exists('relavera_enviar_whatsapp_documento_notif')) {
             $caption = substr($caption, 0, 1024);
         }
         $params = array(
-            'token' => 'ao5aoi2f77trfaxc',
-            'to' => $numero,
+            'token'    => 'ao5aoi2f77trfaxc',
+            'to'       => $numero,
             'filename' => $filename,
             'document' => (strpos($documentBase64, 'data:') === 0)
                 ? $documentBase64
                 : ('data:application/pdf;base64,' . $documentBase64),
-            'caption' => $caption,
+            'caption'  => $caption,
         );
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://api.ultramsg.com/instance164295/messages/document',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 120,
-            CURLOPT_SSL_VERIFYHOST => 0,
-            CURLOPT_SSL_VERIFYPEER => 0,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => json_encode($params),
-            CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
-        ));
-        $response = curl_exec($curl);
-        $err = curl_error($curl);
-        curl_close($curl);
-        if ($err) {
-            return false;
-        }
-        $data = json_decode((string) $response, true);
+        $data = relavera_ultramsg_request('https://api.ultramsg.com/instance164295/messages/document', $params, 120);
         return (is_array($data) && isset($data['id'])) ? $data['id'] : null;
     }
 }

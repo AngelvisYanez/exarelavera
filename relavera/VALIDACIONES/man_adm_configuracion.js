@@ -713,6 +713,15 @@ window.restablecerMensajeWhatsApp = function () {
     );
 };
 
+window.restablecerMensajeMasivo = function () {
+    $('#evt_Man_Mmsg').val(
+        "¡Hola *{nombre}*! 📢\n\n" +
+        "Te recordamos que el evento *\"{evento}\"* se llevará a cabo el día *{fecha}*.\n\n" +
+        "🏢 Proyecto: *{proyecto}* - ECOPARKMINING S.A.\n\n" +
+        "¡Te esperamos puntualmente! ✨"
+    );
+};
+
 function abrirModalEventos() {
     limpiarFormEvento();
     $('#eventosDialog').dialog('open');
@@ -797,8 +806,11 @@ function limpiarFormEvento() {
     $('#evt_Man_EFei').val('');
     $('#evt_Man_EFef').val('');
     $('#evt_Man_Teve').val('DE ASISTENCIA');
+    $('#evt_Man_Afir').val('ÁREA DE CAPACITACIÓN');
     $('#evt_Man_Tcrf').val('');
     $('#evt_Man_Wms').val('');
+    $('#evt_Man_Mmsg').val('');
+    $('#evt_Man_Mdel').val('5');
     $('#evt_Man_EEst').val('A');
 }
 
@@ -816,8 +828,11 @@ function editarEvento(id) {
     $('#evt_Man_EFei').val(evt.Man_EFei || '');
     $('#evt_Man_EFef').val(evt.Man_EFef || '');
     $('#evt_Man_Teve').val(evt.Man_Teve || 'DE ASISTENCIA');
+    $('#evt_Man_Afir').val(evt.Man_Afir || 'ÁREA DE CAPACITACIÓN');
     $('#evt_Man_Tcrf').val(evt.Man_Tcrf || '');
     $('#evt_Man_Wms').val(evt.Man_Wms || '');
+    $('#evt_Man_Mmsg').val(evt.Man_Mmsg || '');
+    $('#evt_Man_Mdel').val(evt.Man_Mdel || 5);
     $('#evt_Man_EEst').val(evt.Man_EEst || 'A');
 }
 
@@ -828,8 +843,12 @@ function guardarEvento() {
     var fei = $.trim($('#evt_Man_EFei').val());
     var fef = $.trim($('#evt_Man_EFef').val());
     var tip = $.trim($('#evt_Man_Teve').val()) || 'DE ASISTENCIA';
+    var afir = $.trim($('#evt_Man_Afir').val()) || 'ÁREA DE CAPACITACIÓN';
     var tcrf = $.trim($('#evt_Man_Tcrf').val());
     var msg = $.trim($('#evt_Man_Wms').val());
+    var mmsg = $.trim($('#evt_Man_Mmsg').val());
+    var mdel = parseInt($('#evt_Man_Mdel').val(), 10);
+    if (isNaN(mdel) || mdel < 1) mdel = 5;
     var est = 'A';
 
     if (!nom) {
@@ -865,8 +884,11 @@ function guardarEvento() {
         Man_EFei: fei,
         Man_EFef: fef,
         Man_Teve: tip,
+        Man_Afir: afir,
         Man_Tcrf: tcrf,
         Man_Wms: msg,
+        Man_Mmsg: mmsg,
+        Man_Mdel: mdel,
         Man_EEst: est
     };
 

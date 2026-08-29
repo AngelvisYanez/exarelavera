@@ -172,11 +172,11 @@ function ppto_persistencia_consultar($mysqli, $caso, $p) {
             if ($vista === 'mes') {
                 $where_mes_det = "pd.Pde_Mes = $mes";
                 $where_mes_ej = "pe.Pej_Mes = $mes";
-                $where_mes_proy = "pdm.pdm_mes = $mes";
+                $where_mes_proy = "pdm.Pdm_Mes = $mes";
             } else {
                 $where_mes_det = "pd.Pde_Mes <= $mes";
                 $where_mes_ej = "pe.Pej_Mes <= $mes";
-                $where_mes_proy = "pdm.pdm_mes <= $mes";
+                $where_mes_proy = "pdm.Pdm_Mes <= $mes";
             }
 
             $sql = "SELECT 
@@ -209,7 +209,7 @@ function ppto_persistencia_consultar($mysqli, $caso, $p) {
                         GROUP BY pd.Ppa_Cod
                     ) d ON p.Ppa_Cod = d.Ppa_Cod
                     LEFT JOIN (
-                        SELECT pd.Ppa_Cod AS Ppa_Cod, SUM(pdm.pdm_presupuesto_mensual) AS Proyectado
+                        SELECT pd.Ppa_Cod AS Ppa_Cod, SUM(pdm.Pdm_PreMensual) AS Proyectado
                         FROM pre_proyecto_detalles pd
                         INNER JOIN pre_proyecto_detalles_mes pdm ON pd.Pdp_Cod = pdm.Pdp_Cod
                         WHERE $where_pp_proy

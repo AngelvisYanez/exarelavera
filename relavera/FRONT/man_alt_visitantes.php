@@ -587,7 +587,7 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
                         </div>
                         <div class="signature-block">
                             <div class="signature-line"></div>
-                            <div class="signature-role">Área de Capacitación</div>
+                            <div class="signature-role"><?php echo htmlspecialchars(!empty($evData['area_firma2']) ? $evData['area_firma2'] : 'Área de Capacitación', ENT_QUOTES, 'UTF-8'); ?></div>
                             <div class="signature-company">ECOPARKMINING S.A.</div>
                         </div>
                     </div>
@@ -782,13 +782,13 @@ if (isset($_GET['buscarPersonaCedulaAjax'])) {
     if (!empty($ced)) {
         $fotosVisitante = array('MVis_Doc_Ced' => '', 'MVis_Doc_Ced_Rev' => '', 'MVis_Doc_Vot' => '', 'MVis_Doc_Fot' => '');
         try {
-            $resFV = $obBD_con1->consulta("SELECT MVis_Doc_Ced, MVis_Doc_Ced_Rev, MVis_Doc_Vot, MVis_Doc_Fot FROM manifiesto_visitante mv INNER JOIN persona p ON p.Prs_Cod = mv.Prs_Cod WHERE p.Prs_Ced = '$ced' AND mv.Emp_Cod = '$Ses_Emp_Cod' ORDER BY mv.MVis_Cod DESC", $obBD_conexion->conexion);
-            if ($resFV) {
+            $resFV = @$obBD_con1->consulta("SELECT * FROM manifiesto_visitante mv INNER JOIN persona p ON p.Prs_Cod = mv.Prs_Cod WHERE p.Prs_Ced = '$ced' AND mv.Emp_Cod = '$Ses_Emp_Cod' ORDER BY mv.MVis_Cod DESC", $obBD_conexion->conexion);
+            if ($resFV && mysqli_num_rows($resFV) > 0) {
                 while ($rowFV = $obBD_con1->fetch_assoc($resFV)) {
-                    if (empty($fotosVisitante['MVis_Doc_Ced']) && !empty($rowFV['MVis_Doc_Ced'])) $fotosVisitante['MVis_Doc_Ced'] = $rowFV['MVis_Doc_Ced'];
-                    if (empty($fotosVisitante['MVis_Doc_Ced_Rev']) && !empty($rowFV['MVis_Doc_Ced_Rev'])) $fotosVisitante['MVis_Doc_Ced_Rev'] = $rowFV['MVis_Doc_Ced_Rev'];
-                    if (empty($fotosVisitante['MVis_Doc_Vot']) && !empty($rowFV['MVis_Doc_Vot'])) $fotosVisitante['MVis_Doc_Vot'] = $rowFV['MVis_Doc_Vot'];
-                    if (empty($fotosVisitante['MVis_Doc_Fot']) && !empty($rowFV['MVis_Doc_Fot'])) $fotosVisitante['MVis_Doc_Fot'] = $rowFV['MVis_Doc_Fot'];
+                    if (isset($rowFV['MVis_Doc_Ced']) && empty($fotosVisitante['MVis_Doc_Ced']) && !empty($rowFV['MVis_Doc_Ced'])) $fotosVisitante['MVis_Doc_Ced'] = $rowFV['MVis_Doc_Ced'];
+                    if (isset($rowFV['MVis_Doc_Ced_Rev']) && empty($fotosVisitante['MVis_Doc_Ced_Rev']) && !empty($rowFV['MVis_Doc_Ced_Rev'])) $fotosVisitante['MVis_Doc_Ced_Rev'] = $rowFV['MVis_Doc_Ced_Rev'];
+                    if (isset($rowFV['MVis_Doc_Vot']) && empty($fotosVisitante['MVis_Doc_Vot']) && !empty($rowFV['MVis_Doc_Vot'])) $fotosVisitante['MVis_Doc_Vot'] = $rowFV['MVis_Doc_Vot'];
+                    if (isset($rowFV['MVis_Doc_Fot']) && empty($fotosVisitante['MVis_Doc_Fot']) && !empty($rowFV['MVis_Doc_Fot'])) $fotosVisitante['MVis_Doc_Fot'] = $rowFV['MVis_Doc_Fot'];
                 }
             }
         } catch (Exception $eFV) {
@@ -1278,6 +1278,94 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
     }
     responderJsonLimpio($resp);
 }
+
+// 8. Obtener datos del evento para envío masivo (mensaje y delay)
+if (isset($_POST['getDatosEventoEnvioMasivoAjax'])) {
+    $resp = array('success' => false, 'Man_Mmsg' => '', 'Man_Mdel' => 5, 'Man_ENom' => '');
+    try {
+        $manEve = isset($_POST['Man_Eve']) ? trim((string)$_POST['Man_Eve']) : '';
+        $evData = man_cert_asistencia_resolver_evento($obBD_con1, $obBD_conexion, $manEve);
+        $resp['success'] = true;
+        $resp['Man_ENom'] = isset($evData['nombre']) ? $evData['nombre'] : '';
+        $resp['Man_Mmsg'] = isset($evData['mensaje_masivo']) ? $evData['mensaje_masivo'] : '';
+        $resp['Man_Mdel'] = (isset($evData['intervalo_cola']) && (int)$evData['intervalo_cola'] > 0) ? (int)$evData['intervalo_cola'] : 5;
+    } catch (Exception $e) {
+        $resp['message'] = $e->getMessage();
+    }
+    responderJsonLimpio($resp);
+}
+
+// 9. Enviar mensaje masivo a un visitante individual (llamado en cola secuencial)
+if (isset($_POST['enviarMensajeMasivoVisitanteAjax'])) {
+    $resp = array('success' => false, 'message' => '');
+    try {
+        $MVis_Cod = isset($_POST['MVis_Cod']) ? (int)$_POST['MVis_Cod'] : 0;
+        $manEve = isset($_POST['Man_Eve']) ? trim((string)$_POST['Man_Eve']) : '';
+
+        if ($MVis_Cod <= 0) {
+            throw new Exception('Código de visitante inválido.');
+        }
+
+        $visitante = $obBD_con1->getRowConsulta(17, array($MVis_Cod), $obBD_conexion);
+        if (empty($visitante)) {
+            throw new Exception('No se encontró el registro del visitante.');
+        }
+        $obBD_con1->utf8_change_param($visitante);
+
+        $prsNom = isset($visitante['Prs_Nom']) ? trim((string)$visitante['Prs_Nom']) : '';
+        $prsApe = isset($visitante['Prs_Ape']) ? trim((string)$visitante['Prs_Ape']) : '';
+        $nombre = isset($visitante['nombre']) ? trim((string)$visitante['nombre']) : trim($prsNom . ' ' . $prsApe);
+        $cedula = isset($visitante['Prs_Ced']) ? trim((string)$visitante['Prs_Ced']) : '';
+
+        $telefono = '';
+        if (!empty($visitante['Prs_Tel_Base'])) {
+            $telefono = trim((string)$visitante['Prs_Tel_Base']);
+        } elseif (!empty($visitante['Prs_Tel'])) {
+            $telefono = trim((string)$visitante['Prs_Tel']);
+        } elseif (!empty($visitante['MVis_Tem'])) {
+            $telefono = trim((string)$visitante['MVis_Tem']);
+        }
+
+        if (empty($telefono)) {
+            throw new Exception("El visitante '$nombre' no tiene teléfono registrado.");
+        }
+
+        $telWa = relavera_whatsapp_normalizar_numero_ec($telefono);
+        if (empty($telWa)) {
+            throw new Exception("El teléfono '$telefono' no es un número de WhatsApp válido.");
+        }
+
+        $evData = man_cert_asistencia_resolver_evento($obBD_con1, $obBD_conexion, !empty($manEve) ? $manEve : (isset($visitante['Man_Eve']) ? $visitante['Man_Eve'] : null));
+
+        $plantilla = !empty($evData['mensaje_masivo']) ? $evData['mensaje_masivo'] : '';
+        if (empty($plantilla)) {
+            $plantilla = "¡Hola *{nombre}*! 👋\n\nTe recordamos que el evento *\"{evento}\"* se llevará a cabo el día *{fecha}*.\n\n🏢 Proyecto: *{proyecto}* - ECOPARKMINING S.A.\n\n¡Te esperamos puntualmente!";
+        }
+
+        $reemplazos = array(
+            '{nombre}'   => $nombre,
+            '{cedula}'   => $cedula,
+            '{evento}'   => isset($evData['nombre']) ? $evData['nombre'] : 'Evento',
+            '{fecha}'    => isset($evData['fecha_texto']) ? $evData['fecha_texto'] : date('d/m/Y'),
+            '{horas}'    => isset($evData['horas']) ? $evData['horas'] : '6',
+            '{proyecto}' => 'Relavera Comunitaria "El Tablón"'
+        );
+
+        $msgFinal = str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);
+
+        $okWa = relavera_enviar_whatsapp_notif($telWa, $msgFinal);
+        if (!$okWa) {
+            throw new Exception("Error al enviar mensaje por API de WhatsApp a $nombre ($telWa).");
+        }
+
+        $resp['success'] = true;
+        $resp['message'] = "Mensaje enviado exitosamente a $nombre ($telWa).";
+    } catch (Exception $e) {
+        $resp['success'] = false;
+        $resp['message'] = $e->getMessage();
+    }
+    responderJsonLimpio($resp);
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -1374,7 +1462,12 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="vis-btn-registrar-wrap">
+                                            <div class="vis-btn-registrar-wrap" style="display: flex; gap: 5px;">
+                                                <!--
+                                                <button id="btnEnvioMasivoTop" class="btn btn-primary vis-btn-registrar" type="button" onclick="abrirModalEnvioMasivo();" style="background-color: #2563eb; border-color: #1d4ed8;" title="Enviar mensaje de difusión por WhatsApp a los seleccionados">
+                                                    <i class="glyphicon glyphicon-bullhorn"></i> Envío Masivo
+                                                </button>
+                                                -->
                                                 <button id="btnAbrirModalRegistrar" class="btn btn-success vis-btn-registrar" type="button" onclick="abrirModalVisitante();">
                                                     <i class="glyphicon glyphicon-plus"></i> Registrar Visitante
                                                 </button>
@@ -1605,10 +1698,64 @@ if (isset($_POST['enviarCertificadoVisitanteEventoAjax'])) {
         </div>
     </div>
 
+    <!-- Diálogo / Barra de Progreso para Envío Masivo -->
+    <div id="progresoEnvioMasivoDialog" title="Envío Masivo WhatsApp" style="display: none;">
+        <div style="padding: 15px 10px;">
+            <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span id="txtProgresoMasivoContador" style="font-weight: bold; font-size: 13px; color: #1e3a8a;">
+                    <i class="glyphicon glyphicon-bullhorn"></i> Procesando cola de envíos...
+                </span>
+                <span id="txtProgresoMasivoPorcentaje" class="label label-primary" style="font-size: 12px; padding: 4px 8px; background-color: #2563eb;">
+                    0%
+                </span>
+            </div>
+
+            <!-- Barra de Progreso Bootstrap -->
+            <div class="progress" style="height: 22px; margin-bottom: 15px; border-radius: 4px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); background-color: #e2e8f0;">
+                <div id="barProgresoMasivo" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%; line-height: 22px; font-weight: bold; font-size: 11px; background-color: #2563eb;">
+                    0%
+                </div>
+            </div>
+
+            <!-- Estado actual del envío -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 12px;">
+                <div style="font-size: 11px; color: #475569; margin-bottom: 4px;">
+                    <b>Destinatario actual:</b> <span id="txtProgresoMasivoDestinatario" style="color: #0f172a; font-weight: bold;">Iniciando...</span>
+                </div>
+                <div style="font-size: 11px; color: #059669; font-weight: bold;">
+                    <span id="txtProgresoMasivoEstado"><i class="glyphicon glyphicon-refresh spin"></i> Preparando primer mensaje...</span>
+                </div>
+            </div>
+
+            <!-- Contador de Pausa / Countdown -->
+            <div id="boxProgresoMasivoTimer" style="text-align: center; margin-bottom: 15px; display: none;">
+                <span class="label label-warning" style="font-size: 11px; padding: 4px 12px; background-color: #f59e0b;">
+                    <i class="glyphicon glyphicon-time"></i> <span id="txtProgresoMasivoCountdown">Pausa de seguridad: 5s</span>
+                </span>
+            </div>
+
+            <!-- Resumen de envíos -->
+            <div style="display: flex; justify-content: space-around; font-size: 11px; color: #64748b; margin-bottom: 10px; background: #fff; border: 1px dashed #cbd5e1; padding: 6px; border-radius: 4px;">
+                <span>Exitosos: <b id="cntMasivoExitos" style="color: #16a34a;">0</b></span>
+                <span>Fallidos: <b id="cntMasivoFallos" style="color: #dc2626;">0</b></span>
+                <span>Pendientes: <b id="cntMasivoPendientes" style="color: #2563eb;">0</b></span>
+            </div>
+        </div>
+
+        <div style="text-align: right; border-top: 1px solid #e5e7eb; padding-top: 10px;">
+            <button id="btnPausarEnvioMasivo" type="button" class="btn btn-warning btn-sm" onclick="togglePausarColaEnvioMasivo();" style="margin-right: 5px;">
+                <i class="glyphicon glyphicon-pause"></i> Pausar
+            </button>
+            <button id="btnCancelarEnvioMasivo" type="button" class="btn btn-danger btn-sm" onclick="cancelarColaEnvioMasivo();">
+                <i class="glyphicon glyphicon-stop"></i> Detener
+            </button>
+        </div>
+    </div>
+
     <!-- JS Scripts -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=5"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=10"></script>
 </body>
 
 </html>

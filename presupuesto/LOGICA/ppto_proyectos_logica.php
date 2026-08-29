@@ -27,6 +27,9 @@ if (!isset($Ses_Usu_Cod) && isset($_SESSION['Ses_Usu_Cod'])) {
 
 $obBD = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 $mysqli = $obBD->conexion;
+if (function_exists('ppto_db_set_utf8')) {
+    ppto_db_set_utf8($mysqli);
+}
 ppto_schema_ensure($mysqli);
 ppto_schema_ensure_partida_porcentaje($mysqli);
 ppto_schema_ensure_partida_meses_prorrateo($mysqli);
@@ -559,7 +562,13 @@ if ($action === 'save_rubro') {
     if (!ppto_partida_es_destino_regla($mysqli, $Ppa_Cod, $Emp_Cod)) {
         ppto_json(array('status' => 'error', 'message' => 'Solo partidas Detalle activas pueden tener rubros de proyecto.'));
     }
-    $rubro = $mysqli->real_escape_string(trim(isset($_POST['Pdp_Rubro']) ? $_POST['Pdp_Rubro'] : ''));
+    $rubro_txt = trim(isset($_POST['Pdp_Rubro']) ? $_POST['Pdp_Rubro'] : '');
+    if (function_exists('ppto_pdf_a_utf8')) {
+        $rubro_txt = ppto_pdf_a_utf8($rubro_txt);
+    } elseif (function_exists('ppto_texto_reparar_mojibake')) {
+        $rubro_txt = ppto_texto_reparar_mojibake($rubro_txt);
+    }
+    $rubro = $mysqli->real_escape_string($rubro_txt);
     if ($rubro === '' && $Ppa_Cod > 0) {
         $r_desc = $mysqli->query("SELECT Ppa_Des AS Ppa_Des FROM pre_partidas WHERE Ppa_Cod=$Ppa_Cod AND Emp_Cod=$Emp_Cod LIMIT 1");
         if ($r_desc && ($row_desc = $r_desc->fetch_assoc())) {
