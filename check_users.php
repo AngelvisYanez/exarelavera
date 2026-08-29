@@ -8,23 +8,30 @@ require_once __DIR__ . '/DATA/MysqlDatos.php';
 $obMaster = new MysqlConexion();
 $obDatos = new MysqlDatos();
 
-echo "=== MASTER USERS ===\n";
-$users = $obDatos->getArrayConsultaSql("SELECT Usu_Cod, Usu_Ced, Usu_Est, Suc_Cod FROM usuarios LIMIT 20", $obMaster);
-echo json_encode($users, JSON_PRETTY_PRINT) . "\n";
+echo "=== EMPRESAS LIKE TORRES ===\n";
+$emp = $obDatos->getArrayConsultaSql("SELECT Emp_Cod, Emp_Nom, Dat_Dis FROM empresas WHERE Emp_Nom LIKE '%Torres%' OR Emp_Nom LIKE '%Carrion%'", $obMaster);
+echo json_encode($emp, JSON_PRETTY_PRINT) . "\n";
 
-echo "=== USER 22600781 in master ===\n";
-$u = $obDatos->getArrayConsultaSql("SELECT * FROM usuarios WHERE Usu_Ced = '22600781'", $obMaster);
-echo json_encode($u, JSON_PRETTY_PRINT) . "\n";
+echo "=== ALL EMPRESAS ===\n";
+$allEmp = $obDatos->getArrayConsultaSql("SELECT Emp_Cod, Emp_Nom, Dat_Dis FROM empresas LIMIT 20", $obMaster);
+echo json_encode($allEmp, JSON_PRETTY_PRINT) . "\n";
 
-echo "=== USER 1676514 in master ===\n";
-$u2 = $obDatos->getArrayConsultaSql("SELECT * FROM usuarios WHERE Usu_Ced = '1676514'", $obMaster);
-echo json_encode($u2, JSON_PRETTY_PRINT) . "\n";
-
-$obLocal = new MysqlConexion('ecoparkmining');
-echo "=== USER 22600781 in ecoparkmining ===\n";
-$ul = $obDatos->getArrayConsultaSql("SELECT * FROM usuarios WHERE Usu_Ced = '22600781'", $obLocal);
-echo json_encode($ul, JSON_PRETTY_PRINT) . "\n";
-
-echo "=== USER 1676514 in ecoparkmining ===\n";
-$ul2 = $obDatos->getArrayConsultaSql("SELECT * FROM usuarios WHERE Usu_Ced = '1676514'", $obLocal);
-echo json_encode($ul2, JSON_PRETTY_PRINT) . "\n";
+foreach ($emp as $e) {
+    $bdd = $e['Dat_Dis'];
+    echo "=== DB $bdd FOR EMP {$e['Emp_Nom']} ===\n";
+    $obEmp = new MysqlConexion($bdd);
+    $usersEmp = $obDatos->getArrayConsultaSql("SELECT u.Usu_Cod, u.Usu_Ced, u.Usu_Men, u.Usu_Est, p.Prs_Nom, p.Prs_Ape FROM usuarios u LEFT JOIN persona p ON u.Prs_Cod = p.Prs_Cod WHERE u.Usu_Ced IN ('22600781', '1676514')", $obEmp);
+    echo "Users in $bdd:\n" . json_encode($usersEmp, JSON_PRETTY_PRINT) . "\n";
+    
+    foreach ($usersEmp as $ue) {
+        $perfs = $obDatos->getArrayConsultaSql("SELECT up.Per_Cod, p.Per_Des FROM usuarperfi up LEFT JOIN perfiles p ON up.Per_Cod = p.Per_Cod WHERE up.Usu_Cod = " . (int)$ue['Usu_Cod'], $obEmp);
+        echo "Profiles for user {$ue['Usu_Cod']} ({$ue['Usu_Ced']}):\n" . json_encode($perfs, JSON_PRETTY_PRINT) . "\n";
+        
+        $pids = array_map(function($p){return $p['Per_Cod'];}, $perfs);
+        if (!empty($pids)) {
+            $pidsStr = implode(',', $pids);
+            $procs = $obDatos->getArrayConsultaSql("SELECT COUNT(*) as tot FROM perfiorgan WHERE Per_Cod IN ($pidsStr)", $obEmp);
+            echo "Total processes linked to profiles ($pidsStr): " . json_encode($procs) . "\n";
+        }
+    }
+}
