@@ -467,3 +467,6 @@ class MysqlDatos
         return "";
     }
 }
+
+#[AllowDynamicProperties]
+class MysqlDatosContab extends MysqlDatos {}

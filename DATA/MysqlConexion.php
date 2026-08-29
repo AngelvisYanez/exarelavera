@@ -49,104 +49,96 @@ class MysqlConexion{
             case 1:  //Constructor común (personalizado)
                 self::__construct2($args[0]);
                 break;
-            default: //Constructor por defecto corporativo
-                self::__construct3();
+            case 4:  //Constructor completo
+                self::__construct3($args[0], $args[1], $args[2], $args[3]);
+                break;
+            default:
+                self::__construct1();
                 break;
         }
     }
-    /* Carga configuracion externa si existe (produccion) */
-    private function loadConfig() {
-        $prodFile = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'conexion-produccion' . DIRECTORY_SEPARATOR . 'database.php';
-        if (file_exists($prodFile)) {
-            $config = require $prodFile;
-            if (is_array($config) && isset($config['host'], $config['user'], $config['pass'])) {
-                return $config;
+    /* Constructor por defecto */
+    function __construct1() {
+        $env = __DIR__ . '/../.env';
+        if (file_exists($env)) {
+            $vars = parse_ini_file($env);
+            if (!empty($vars['DB_HOST'])) {
+                self::__construct3(
+                    $vars['DB_NAME'] ?? self::bd,
+                    $vars['DB_HOST'],
+                    $vars['DB_USER'] ?? self::user,
+                    $vars['DB_PASS'] ?? self::pass
+                );
+                return;
             }
         }
-        if (getenv('DB_HOST') && getenv('DB_USER')) {
-            return array(
-                'host' => getenv('DB_HOST'),
-                'user' => getenv('DB_USER'),
-                'pass' => getenv('DB_PASS') !== false ? getenv('DB_PASS') : '',
-                'port' => getenv('DB_PORT') ? intval(getenv('DB_PORT')) : 3306
-            );
-        }
-        $isLinux = DIRECTORY_SEPARATOR === '/';
-        $serverHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '');
-        if ($isLinux || strpos($serverHost, 'exacontable.com') !== false) {
-            return array(
-                'host' => 'localhost',
-                'user' => 'wilsonbelduma',
-                'pass' => 'Pvhn713?6',
-                'port' => 3306
-            );
-        }
-        return array('host' => self::host, 'user' => self::user, 'pass' => self::pass);
+        self::__construct3(self::bd, self::host, self::user, self::pass);
     }
-    /* Constructor por defecto */
-    function __construct1(){
-        $cfg = $this->loadConfig();
-        $this->BaseDatos = self::bd;
-        $this->Servidor = $cfg['host'];
-        $this->Usuario = $cfg['user'];
-        $this->Clave = $cfg['pass'];
-        $this->conectar();
-    }
-    /* Constructor común (personalizado) */
+    /* Constructor común */
     function __construct2($bd) {
-        $cfg = $this->loadConfig();
+        $env = __DIR__ . '/../.env';
+        if (file_exists($env)) {
+            $vars = parse_ini_file($env);
+            if (!empty($vars['DB_HOST'])) {
+                self::__construct3(
+                    $bd,
+                    $vars['DB_HOST'],
+                    $vars['DB_USER'] ?? self::user,
+                    $vars['DB_PASS'] ?? self::pass
+                );
+                return;
+            }
+        }
+        self::__construct3($bd, self::host, self::user, self::pass);
+    }
+    /* Constructor completo */
+    function __construct3($bd, $host, $user, $pass) {
         $this->BaseDatos = $bd;
-        $this->Servidor = $cfg['host'];
-        $this->Usuario = $cfg['user'];
-        $this->Clave = $cfg['pass'];
+        $this->Servidor  = $host;
+        $this->Usuario   = $user;
+        $this->Clave     = $pass;
         $this->conectar();
     }
-    /* Constructor por defecto (corporativo)  @ param $master="master" */
-    function __construct3() {
-        $cfg = $this->loadConfig();
-        $this->BaseDatos = self::bdc;
-        $this->Servidor = $cfg['host'];
-        $this->Usuario = $cfg['user'];
-        $this->Clave = $cfg['pass'];
-        $this->conectar();
-    }
-    /* Conexión a la base de datos y selección de la base de datos */
+    /* Conexión a la base de datos */
     function conectar() {
-        if (!!$this->link()) $this->selectDb(); /* Conectamos al servidor, y seleccionamos la base de datos */
-        return $this->conexion; /* Si hemos tenido éxito conectando devuelve el identificador de la conexión, sino devuelve 0 */
-    }
-    /* Conexión UNICAMENTE a la base de datos */
-    function link() {
-        /* Conectamos al servidor */
-        @$this->conexion = mysqli_connect($this->Servidor, $this->Usuario, $this->Clave, $this->BaseDatos ?: null);
+        $t_start = microtime(true);
+        $this->conexion = @mysqli_connect($this->Servidor, $this->Usuario, $this->Clave, $this->BaseDatos);
+        $duration = microtime(true) - $t_start;
         if (!$this->conexion) {
-            $this->Error = "Ha fallado la conexión. " . mysqli_connect_error();
-            DebugBar::addTransactionEvent('Open Connection', array('is_success'=>false, 'error_message'=>$this->Error) + $this->getDB());
-        } else {
-            @mysqli_set_charset($this->conexion, 'utf8');
+            $this->Errno = mysqli_connect_errno();
+            $this->Error = "Ha fallado la conexión: " . mysqli_connect_error();
+            DebugBar::addTransactionEvent('DB Connect', array(
+                'is_success'    => false,
+                'error_message' => $this->Error,
+                'duration'      => $duration
+            ) + $this->getDB());
+            return 0;
         }
-        return $this->conexion; /* Si hemos tenido éxito conectando devuelve el identificador de la conexión, sino devuelve 0 */
-    }
-    /* Selecciona la base de datos */
-    function selectDb($db = null) {
-        /* Seleccionamos la base de datos */
-        $dbs = empty($db) ? $this->BaseDatos : $db;
-        if (!$this->conexion || !@mysqli_select_db($this->conexion, $dbs)) {
-            $this->Error = "Imposible abrir " . $dbs;
-            DebugBar::addTransactionEvent('Open Connection', array('is_success'=>false, 'error_message'=>$this->Error) + $this->getDB());
-            return false;
-        }
+        $this->Errno = 0;
         $this->Error = "";
-        return true;
+        @mysqli_set_charset($this->conexion, "latin1");
+        DebugBar::addTransactionEvent('DB Connect', array(
+            'is_success' => true,
+            'duration'   => $duration
+        ) + $this->getDB());
+        return $this->conexion;
+    }
+    /* Retorna la conexión activa */
+    function getConexion() {
+        return $this->conexion;
+    }
+    /* Retorna el estado de la conexión */
+    function estadoConexion() {
+        return ($this->conexion) ? true : false;
     }
     /* Cierra la conexión */
     function close() {
-        if ($this->conexion) {
-            mysqli_close($this->conexion);
+        if ($this->conexion && is_object($this->conexion) && $this->conexion instanceof mysqli) {
+            @mysqli_close($this->conexion);
             $this->conexion = 0;
         }
     }
-    /* Alias de compatibilidad para cerrar la conexión */
+    /* Compatibilidad con código antiguo que usa cerrar() */
     function cerrar() {
         $this->close();
     }
@@ -163,4 +155,7 @@ class MysqlConexion{
         );
     }
 }
+
+#[\AllowDynamicProperties]
+class MysqlConexionContab extends MysqlConexion {}
 ?>
