@@ -353,12 +353,7 @@ function loadAjusteCfg(cb) {
 }
 
 function simularAjuste(andApply) {
-  var proy = $('#rub_proy_id').val();
-  var ppe = $('#rub_ppe_id').val();
-  if (!proy || !ppe) {
-    toast('Seleccione proyecto y version.', false);
-    return;
-  }
+  requireProyectoYPpe(function() {
   var data = $.extend({
     action: andApply ? 'ajuste_aplicar' : 'ajuste_simular',
     todos_escenarios: 1
@@ -400,6 +395,7 @@ function simularAjuste(andApply) {
   }, 'json').fail(function() {
     toast('Error de red al simular ajuste.', false);
   });
+  }, 'Seleccione un proyecto.');
 }
 
 function renderPreciosRows(precios) {
@@ -515,7 +511,7 @@ function loadUltimaPublicacion() {
   if (!$('#pubUltimaMeta').length) return;
   var p = publicarParams();
   if (!p.Pro_Cod || !p.Ppe_Cod) {
-    $('#pubUltimaMeta').text('Seleccione proyecto y version para publicar.');
+    $('#pubUltimaMeta').text('Seleccione un proyecto para publicar.');
     return;
   }
   $.getJSON(API, $.extend({ action: 'ultima_publicacion' }, p), function(r) {
@@ -560,11 +556,8 @@ function renderPublicarPreview(prev) {
 }
 
 function previewPublicar() {
+  requireProyectoYPpe(function() {
   var p = publicarParams();
-  if (!p.Pro_Cod || !p.Ppe_Cod) {
-    toast('Seleccione proyecto y version.', false);
-    return;
-  }
   $.getJSON(API, $.extend({ action: 'preview_publicar' }, p), function(r) {
     if (r.status !== 'success') {
       toast(r.message || 'No se pudo generar la vista previa.', false);
@@ -572,14 +565,12 @@ function previewPublicar() {
     }
     renderPublicarPreview(r.preview);
   }).fail(function() { toast('Error de red al consultar vista previa.', false); });
+  }, 'Seleccione un proyecto.');
 }
 
 function ejecutarPublicar(confirmarRepublicacion) {
+  requireProyectoYPpe(function() {
   var p = publicarParams();
-  if (!p.Pro_Cod || !p.Ppe_Cod) {
-    toast('Seleccione proyecto y version.', false);
-    return;
-  }
   var postData = $.extend({ action: 'publish_aprobado' }, p);
   if (confirmarRepublicacion) {
     postData.confirmar_republicacion = '1';
@@ -605,6 +596,7 @@ function ejecutarPublicar(confirmarRepublicacion) {
     loadUltimaPublicacion();
     reloadRubrosSection();
   }, 'json').fail(function() { toast('Error de red al publicar.', false); });
+  }, 'Seleccione un proyecto.');
 }
 
 function pptoClaseEtiqueta(clase) {
@@ -749,12 +741,7 @@ function cerrarModalRubro() {
 }
 
 function abrirModalAgregarRubro() {
-  var proy = $('#rub_proy_id').val();
-  var ppe = $('#rub_ppe_id').val();
-  if (!proy || !ppe) {
-    toast('Seleccione proyecto y version antes de agregar rubros.', false);
-    return;
-  }
+  requireProyectoYPpe(function() {
   modalRubroModo = 'add';
   modalEditRubroCache = null;
   resetRubroModalPartidas();
@@ -772,6 +759,7 @@ function abrirModalAgregarRubro() {
   $('#modal_edit_meses').val(12);
   calcModalEditRubroPreview();
   $('#modalEditRubro').show();
+  }, 'Seleccione un proyecto antes de agregar rubros.');
 }
 
 function abrirModalEditRubro(x) {
@@ -810,8 +798,15 @@ function guardarModalEditRubro() {
   var meses = parseInt($('#modal_edit_meses').val(), 10) || 12;
   var mesesInicial = parseInt($('#modal_edit_meses_inicial').val(), 10) || 12;
   var grupoPpaId = parseInt($('#modal_edit_grupo_ppa_id').val(), 10) || 0;
-  if (!proy || !ppe) {
-    toast('Seleccione proyecto y version.', false);
+  if (!proy) {
+    toast('Seleccione un proyecto.', false);
+    return;
+  }
+  if (!ppe) {
+    ensureRubPpeId(function(ok) {
+      if (ok) guardarModalEditRubro();
+      else toast('No se pudo obtener la cabecera presupuestaria activa. Recargue la pagina (Ctrl+F5).', false);
+    });
     return;
   }
   if (!isAdd && (!pdpId || !ppaId)) {
@@ -1325,7 +1320,7 @@ function ensurePptoImportJs(cb) {
   }
   window.__pptoImportJsLoading = true;
   var s = document.createElement('script');
-  s.src = '../VALIDACIONES/ppto_proyectos_import.js?v=20260807k';
+  s.src = '../VALIDACIONES/ppto_proyectos_import.js?v=20260817a';
   s.onload = function() {
     window.__pptoImportJsLoaded = true;
     window.__pptoImportJsLoading = false;

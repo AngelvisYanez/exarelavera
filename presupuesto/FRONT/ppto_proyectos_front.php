@@ -1358,8 +1358,8 @@
 
 
 <!-- JS partido: nucleo + rubros al inicio; import diferido (no bloquea primera pintura) -->
-<script src="../VALIDACIONES/ppto_proyectos_core.js?v=20260808f"></script>
-<script src="../VALIDACIONES/ppto_proyectos_rubros.js?v=20260808f"></script>
+<script src="../VALIDACIONES/ppto_proyectos_core.js?v=20260817a"></script>
+<script src="../VALIDACIONES/ppto_proyectos_rubros.js?v=20260817a"></script>
 <script>
 (function(){
   function loadImportJs() {
@@ -1370,7 +1370,7 @@
     }
     window.__pptoImportJsLoading = true;
     var s = document.createElement('script');
-    s.src = '../VALIDACIONES/ppto_proyectos_import.js?v=20260808b';
+    s.src = '../VALIDACIONES/ppto_proyectos_import.js?v=20260817a';
     s.onload = function() {
       window.__pptoImportJsLoaded = true;
       window.__pptoImportJsLoading = false;

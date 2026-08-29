@@ -13,7 +13,7 @@ require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../../contabilidad/LOGICA/con_log_balances2.php');
 require_once(__DIR__ . '/../LOGICA/ppto_schema_logica.php');
 require_once(__DIR__ . '/../LOGICA/ppto_format_helpers.php');
-require_once(__DIR__ . '/../LOGICA/ppto_proyectos_cuadro_logica.php');
+require_once(__DIR__ . '/../LOGICA/ppto_proyecto_version_logica.php');
 
 if (!isset($Ses_Dat_Dis) && isset($_SESSION['Ses_Dat_Dis'])) {
     $Ses_Dat_Dis = $_SESSION['Ses_Dat_Dis'];
@@ -39,8 +39,14 @@ if (!in_array($escenario, array('esperada', 'proyectada', 'real'), true)) {
     $escenario = 'esperada';
 }
 
-if ($Pro_Cod === '' || $Ppe_Cod <= 0) {
-    die('Seleccione proyecto y version antes de exportar.');
+if ($Ppe_Cod <= 0) {
+    $Ppe_Cod = ppto_proy_version_buscar_activa($mysqli, $Emp_Cod, (int)date('Y'));
+}
+if ($Pro_Cod === '') {
+    die('Seleccione un proyecto antes de exportar.');
+}
+if ($Ppe_Cod <= 0) {
+    die('No hay cabecera presupuestaria activa.');
 }
 
 $data = ppto_proy_cuadro_cargar($mysqli, $Emp_Cod, $Pro_Cod, $Ppe_Cod, $cuadro_vista, $cuadro_mes, $anio_precio);
