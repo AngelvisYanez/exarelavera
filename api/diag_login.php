@@ -9,55 +9,30 @@ try {
 
     $api = new DataAPI('exa');
     
-    // Create api_tokens table if not exists
-    $api->query("
-        CREATE TABLE IF NOT EXISTS `api_tokens` (
-          `id` int(11) NOT NULL AUTO_INCREMENT,
-          `Emp_Cod` int(11) NOT NULL,
-          `nombre` varchar(100) NOT NULL,
-          `token_hash` char(64) NOT NULL,
-          `token_prefix` varchar(12) NOT NULL,
-          `limite_tipo` enum('D','M','NONE') NOT NULL DEFAULT 'NONE',
-          `limite_cantidad` int(11) NOT NULL DEFAULT 0,
-          `usos_hoy` int(11) NOT NULL DEFAULT 0,
-          `usos_mes` int(11) NOT NULL DEFAULT 0,
-          `ultimo_uso` datetime DEFAULT NULL,
-          `modulos` text DEFAULT NULL,
-          `activo` tinyint(1) NOT NULL DEFAULT 1,
-          `creado_el` datetime NOT NULL,
-          `expira_en` datetime DEFAULT NULL,
-          PRIMARY KEY (`id`),
-          UNIQUE KEY `uk_token_hash` (`token_hash`),
-          KEY `idx_empresa` (`Emp_Cod`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    ");
+    // Check tables
+    $tables = $api->query("SHOW TABLES LIKE '%api_token%'");
 
     $tokenRaw = "8e316143f520292e0f3ade7c548b1918e622348df03ffb3ef6fb6d4e1aec99a8";
     $tokenHash = hash('sha256', $tokenRaw);
 
-    // Delete existing with same prefix or hash to be clean
-    $api->query("DELETE FROM api_tokens WHERE token_hash = '$tokenHash' OR token_prefix = '8e316143'");
+    $sql = "INSERT INTO `api_tokens` (`Emp_Cod`, `nombre`, `token_hash`, `token_prefix`, `limite_tipo`, `limite_cantidad`, `modulos`, `activo`, `creado_el`) VALUES (620, 'ERP Locator Token', '$tokenHash', '8e316143', 'NONE', 0, '[\"*\"]', 1, NOW())";
+    
+    $res = $api->datos->consulta($sql, $api->conexion);
+    $err = $api->conexion->Error;
+    $errno = $api->conexion->Errno;
 
-    $inserted = $api->insert('api_tokens', [
-        'Emp_Cod' => 620,
-        'nombre' => 'ERP Locator Token',
-        'token_hash' => $tokenHash,
-        'token_prefix' => substr($tokenRaw, 0, 8),
-        'limite_tipo' => 'NONE',
-        'limite_cantidad' => 0,
-        'modulos' => json_encode(['*']),
-        'activo' => 1,
-        'creado_el' => date('Y-m-d H:i:s')
-    ]);
-
-    $mgr = new APITokenManager('exa');
+    $mgr = new APITokenManager();
     $val = $mgr->validate($tokenRaw, false);
 
     echo json_encode([
         'success' => true,
-        'inserted' => $inserted,
+        'tables' => $tables,
+        'sql' => $sql,
+        'res' => $res !== false,
+        'err' => $err,
+        'errno' => $errno,
         'validation' => $val,
-        'rows' => $api->query("SELECT id, Emp_Cod, nombre, token_prefix, activo, creado_el FROM api_tokens")
+        'tokens' => $api->query("SELECT * FROM api_tokens")
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 } catch (\Throwable $e) {
     http_response_code(500);
