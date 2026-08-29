@@ -15,7 +15,7 @@ if (!function_exists('groupBy')) {
         if (is_array($array)) {
             foreach ($array as $element) {
                 if (is_object($element)) {
-                    $groupKey = $element->$key;
+                    $groupKey = isset($element->$key) ? $element->$key : null;
                 } elseif (is_array($element)) {
                     $groupKey = isset($element[$key]) ? $element[$key] : null;
                 } else {
@@ -71,16 +71,18 @@ class Class_Sys_Menu extends MysqlDatos{
         return $menu;
     }
     function setMenuPages(&$menu,$Org_Cod,$Organiza,$Procesos){
-        if (isset($Organiza[$Org_Cod]))
-        foreach ($Organiza[$Org_Cod] AS $Org){
-            $item=new TreeMenuItem(array('id'=>$Org['Org_Cod'],'label'=>$Org['Org_Des'],'icon'=>$Org['Org_Ico'],'order'=>$Org['Org_Ord'],'itemType'=>'G'));
-            $this->setMenuPages($item,$Org['Org_Cod'],$Organiza,$Procesos);
-            $menu->addPage($item);
+        if (isset($Organiza[$Org_Cod])) {
+            foreach ($Organiza[$Org_Cod] AS $Org){
+                $item=new TreeMenuItem(array('id'=>$Org['Org_Cod'],'label'=>$Org['Org_Des'],'icon'=>$Org['Org_Ico'],'order'=>$Org['Org_Ord'],'itemType'=>'G'));
+                $this->setMenuPages($item,$Org['Org_Cod'],$Organiza,$Procesos);
+                $menu->addPage($item);
+            }
         }
-        if (isset($Procesos[$Org_Cod]))
-        foreach ($Procesos[$Org_Cod] AS $Pcs){
-            $item=new TreeMenuItem(array('id'=>$Pcs['Pcs_Cod'],'label'=>$Pcs['Pcs_Lin'],'title'=>$Pcs['Pcs_Det'],'icon'=>$Pcs['Pcs_Ico'],'order'=>$Pcs['Pcs_Ord'],'itemType'=>'D','href'=>$Pcs["Rut_Des"].$Pcs["Pcs_Nom"]));
-            $menu->addPage($item);
+        if (isset($Procesos[$Org_Cod])) {
+            foreach ($Procesos[$Org_Cod] AS $Pcs){
+                $item=new TreeMenuItem(array('id'=>$Pcs['Pcs_Cod'],'label'=>$Pcs['Pcs_Lin'],'title'=>$Pcs['Pcs_Det'],'icon'=>$Pcs['Pcs_Ico'],'order'=>$Pcs['Pcs_Ord'],'itemType'=>'D','href'=>$Pcs["Rut_Des"].$Pcs["Pcs_Nom"]));
+                $menu->addPage($item);
+            }
         }
     }
     function menuToHtml($case,$menu,$class,$itemClass){
@@ -94,21 +96,29 @@ class Class_Sys_Menu extends MysqlDatos{
     }
     function menuToHtml1($menu,$itemClass){
         $res="";
-        $item=$menu->items;
-        foreach($item AS $items){
-            $icon=$items->icon==""?"menu-icon fa fa-caret-right":$items->icon;
-            $res.="<li class='".$itemClass."'>";
-            if($items->itemType=="G"){
-                $res.="<a href='#' class='dropdown-toggle'><i class='".$icon."'></i><span class='menu-text'>".$items->label."</span><b class='arrow fa fa-angle-down'></b></a>";
-                $res.="<b class='arrow'></b>";
-                $res.="<ul class='submenu'>";
-                $res.=$this->menuToHtml1($items,$itemClass);
-                $res.="</ul>";
-            }else{
-                $res.="<a href='#' data-url='".$items->href."'><i class='".$icon."'></i><span class='menu-text'>".$items->label."</span></a>";
-                $res.="<b class='arrow'></b>";
+        $pages = $menu->getPages();
+        if (is_array($pages)) {
+            foreach($pages AS $items){
+                $icon = $items->getIcon();
+                if (empty($icon)) {
+                    $icon = "menu-icon fa fa-caret-right";
+                }
+                $label = $items->getLabel();
+                $itemType = $items->getItemType();
+                $href = $items->getHref();
+                $res .= "<li class='".$itemClass."'>";
+                if ($itemType == "G") {
+                    $res .= "<a href='#' class='dropdown-toggle'><i class='".$icon."'></i><span class='menu-text'>".$label."</span><b class='arrow fa fa-angle-down'></b></a>";
+                    $res .= "<b class='arrow'></b>";
+                    $res .= "<ul class='submenu'>";
+                    $res .= $this->menuToHtml1($items, $itemClass);
+                    $res .= "</ul>";
+                } else {
+                    $res .= "<a href='#' data-url='".$href."'><i class='".$icon."'></i><span class='menu-text'>".$label."</span></a>";
+                    $res .= "<b class='arrow'></b>";
+                }
+                $res .= "</li>";
             }
-            $res.="</li>";
         }
         return $res;
     }
