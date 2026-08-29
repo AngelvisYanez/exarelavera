@@ -7,6 +7,28 @@
 require_once (__DIR__ . '/../../auditoria/LOGICA/aud_log_auditoria.php');
 require_once (__DIR__ . '/../../skins/php/TreeMenu.php');
 require_once (__DIR__ . '/adm_sql_menu.php');
+require_once (__DIR__ . '/../../Librerias/procedimientos/almacenados_standar.php');
+
+if (!function_exists('groupBy')) {
+    function groupBy($array, $key) {
+        $result = array();
+        if (is_array($array)) {
+            foreach ($array as $element) {
+                if (is_object($element)) {
+                    $groupKey = $element->$key;
+                } elseif (is_array($element)) {
+                    $groupKey = isset($element[$key]) ? $element[$key] : null;
+                } else {
+                    continue;
+                }
+                if ($groupKey !== null) {
+                    $result[$groupKey][] = $element;
+                }
+            }
+        }
+        return $result;
+    }
+}
 
 class Class_Sys_Menu extends MysqlDatos{  
     function __construct() {
@@ -69,56 +91,26 @@ class Class_Sys_Menu extends MysqlDatos{
                 return $this->menuToHtml1($menu,$menu->itemClass);
             default: return '';
         }
-    } 
-    function menuToHtml1($menu,$itemClass=''){
-        $html = array();
-        $html[] ='<ul class="'.$menu->getClass().'">';
-        foreach ($menu->getPages() as $page) {
-            //if($this->navigation()->accept($page)) {  
-                $dropdown = $page->hasPages();
-                if(!$page->isVisible() || (!$page->getHref()&&!$dropdown) || !$page->hasProccess()) { continue; } // visibility of the page
-                $icon = $page->getIcon();
-                $active=$page->isActive()||($dropdown?$page->isChildActive():false);
-                
-                $html[] = '<li class="'.$itemClass.' '. ($active ? 'active' : ''). ($dropdown&&$active ? ' open' :'').'" >';
-                $html[] = '<a ' . ($dropdown ? 'href="#" class="dropdown-toggle"' : 'href="'.$page->getHref().'"').' >';
-                $html[] = (!empty($icon) ? '<i class="menu-icon '.$icon.'"></i>' : '<i class="menu-icon fa fa-angle-double-right"></i>');
-                $html[] = '<span class="menu-text">'.$page->getLabel().'</span>';
-
-                if ($dropdown) { $html[] = '<b class="arrow fa fa-angle-down"></b>'; }
-                $html[] = '</a>';
-                if ($dropdown) {$html[] = '<b class="arrow"></b>';}	 
-                if (!$dropdown) { $html[] = '</li>'; continue; }
-                $html[] = $this->createSubmenu1($page->getPages(),$itemClass /*,$this->navigation()*/);		
-                $html[] = "</li>";
-            //}
+    }
+    function menuToHtml1($menu,$itemClass){
+        $res="";
+        $item=$menu->items;
+        foreach($item AS $items){
+            $icon=$items->icon==""?"menu-icon fa fa-caret-right":$items->icon;
+            $res.="<li class='".$itemClass."'>";
+            if($items->itemType=="G"){
+                $res.="<a href='#' class='dropdown-toggle'><i class='".$icon."'></i><span class='menu-text'>".$items->label."</span><b class='arrow fa fa-angle-down'></b></a>";
+                $res.="<b class='arrow'></b>";
+                $res.="<ul class='submenu'>";
+                $res.=$this->menuToHtml1($items,$itemClass);
+                $res.="</ul>";
+            }else{
+                $res.="<a href='#' data-url='".$items->href."'><i class='".$icon."'></i><span class='menu-text'>".$items->label."</span></a>";
+                $res.="<b class='arrow'></b>";
+            }
+            $res.="</li>";
         }
-        $html[] = '</ul><!-- /.nav-list -->'; 
-        return join('', $html);
-    } 
-    function createSubmenu1($pages,$itemClass=''/*,$navigation*/){	
-        $html[] = '<ul class="submenu">';
-        $SubDropdown = false;
-        foreach ($pages as $subpage) {                
-                $SubDropdown = $subpage->hasPages();
-                $SubIcon = $subpage->getIcon();
-                $SubActive=$subpage->isActive()||($SubDropdown?$subpage->isChildActive():false);
-                //if($navigation->accept($subpage)) {                        
-                        if (!$subpage->isVisible() || (!$subpage->getHref()&&!$SubDropdown) || ($SubDropdown&&!$subpage->hasItemType('D')) ) { continue; }// visibility of the sub-page
-                        if ($subpage->getLabel() == 'divider') { $html[] = '<li class="divider"></li>'; continue; }
-                        $html[] = '<li class="'.$itemClass.' '. ($SubActive ? 'active' : ''). ($SubDropdown&&$SubActive ? ' open' :'').'" >';
-                        $html[] = '<a ' . ($SubDropdown ? 'href="#" class="dropdown-toggle"' : ' class="menu-link" target="contenido" href="'.$subpage->getHref().'"').' >';
-                        $html[] = (!empty($SubIcon) ? '<i class="menu-icon '.$SubIcon.'"></i>' : '<i class="menu-icon fa fa-angle-double-right"></i>');
-                        $html[] = '<span class="menu-text">'.$subpage->getLabel().'</span>';
-                        if ($SubDropdown) {$html[] = '<b class="arrow fa fa-angle-down"></b>';}
-                        $html[] = "</a>";
-                        if ($SubDropdown) { $html[] = '<b class="arrow"></b>'; }	 
-                        if (!$SubDropdown) { $html[] = '</li>'; continue; }
-                        $html[] = $this->createSubmenu1($subpage->getPages(),$itemClass /*,$navigation*/);
-                        $html[] = "</li>";
-               // }
-        }	 
-        $html[] = "</ul>";
-        return join('', $html);
+        return $res;
     }
 }
+?>
