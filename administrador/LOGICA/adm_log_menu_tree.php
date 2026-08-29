@@ -1,11 +1,12 @@
 <?Php
 /**
-* Descripci�n: Cargar el menu del sistema inform�tico
-* Fecha de actualizaci�n:	2016-12-25
+* Descripción: Cargar el menu del sistema informático
+* Fecha de actualización:	2016-12-25
 * Desarrollador:	 Erik Niebla
 */
-require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
-require_once ('../../skins/php/TreeMenu.php');
+require_once (__DIR__ . '/../../auditoria/LOGICA/aud_log_auditoria.php');
+require_once (__DIR__ . '/../../skins/php/TreeMenu.php');
+require_once (__DIR__ . '/adm_sql_menu.php');
 
 class Class_Sys_Menu extends MysqlDatos{  
     function __construct() {
@@ -118,54 +119,6 @@ class Class_Sys_Menu extends MysqlDatos{
                // }
         }	 
         $html[] = "</ul>";
-        return join(PHP_EOL, $html);
-    }
-    
-    
-    function sentencias_men($id,$Par_Sql){
-        switch($id){
-            case 1:
-                $sql = "(SELECT organizado.Org_Det, organizado.Org_Ord, organizado.Org_Des, organizado.Org_Niv, organizado.Org_Cod, organizado.Org_Img, Org_Ico,
-                    organizado.Org_Ime FROM organizado WHERE organizado.Org_Cod IN (SELECT organizado.Org_Niv FROM organizado WHERE organizado.Org_Cod IN 
-                    (SELECT organizado.Org_Niv FROM procesos INNER JOIN perfiorgan ON (procesos.Pcs_Cod = perfiorgan.Pcs_Cod) INNER JOIN organizado ON
-                     (procesos.Org_Cod = organizado.Org_Cod) WHERE (".$Par_Sql[1]."))) ORDER BY organizado.Org_Ord) 
-                     UNION DISTINCT
-                     (SELECT organizado.Org_Det, organizado.Org_Ord, organizado.Org_Des, organizado.Org_Niv, organizado.Org_Cod, organizado.Org_Img, Org_Ico,
-                    organizado.Org_Ime FROM organizado WHERE organizado.Org_Cod IN  
-                    (SELECT organizado.Org_Niv FROM procesos INNER JOIN perfiorgan ON (procesos.Pcs_Cod = perfiorgan.Pcs_Cod) INNER JOIN organizado ON
-                     (procesos.Org_Cod = organizado.Org_Cod) WHERE (".$Par_Sql[1].")) ".(empty($Par_Sql[0])?'':"AND organizado.Org_Niv = $Par_Sql[0]")." ORDER BY organizado.Org_Ord)";
-                //echo $sql;                
-                return $sql;
-            case 2:    
-                $sql="SELECT DISTINCT
-                      organizado.Org_Det,
-                      organizado.Org_Ord,
-                      organizado.Org_Des,
-                      organizado.Org_Niv,
-                      organizado.Org_Cod,
-                      organizado.Org_Img,
-                      organizado.Org_Ime,
-                      organizado.Org_Ico
-                    FROM
-                      organizado
-                    WHERE
-                      ".(empty($Par_Sql[0])?'':"organizado.Org_Niv=$Par_Sql[0] AND")." Org_Mod='A' ORDER BY organizado.Org_Niv,IF(organizado.Org_Niv=0,organizado.Org_Ord,organizado.Org_Cod)";
-                //echo $sql;   
-                return $sql;
-            case 3:    
-                $sql = "SELECT DISTINCT procesos.Pcs_Cod, procesos.Org_Cod, procesos.Pcs_Ord, procesos.Pcs_Lin, rutas.Rut_Des,
-                        procesos.Pcs_Nom, procesos.Pcs_Img, procesos.Pcs_Det,Pcs_Ico
-                        FROM
-                          rutas
-                          INNER JOIN procesos ON (rutas.Rut_Cod = procesos.Rut_Cod)
-                          INNER JOIN perfiorgan ON (procesos.Pcs_Cod = perfiorgan.Pcs_Cod)
-                        WHERE
-                        procesos.Pcs_Est='A' AND procesos.Pcs_Tip = '$Par_Sql[2]'
-                        ".(empty($Par_Sql[0])?'':"AND procesos.Org_Cod=$Par_Sql[0]")." AND (".$Par_Sql[1].")
-                        ORDER BY procesos.Pcs_Ord";			
-                //echo $sql;   
-                return $sql;    
-                
-        }
+        return join('', $html);
     }
 }
