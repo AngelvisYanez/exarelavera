@@ -36,6 +36,7 @@ require_once dirname(__file__).'/../Db.php';
  * @copyright  Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
+#[AllowDynamicProperties]
 abstract class Zend_Db_Adapter_Abstract
 {
 

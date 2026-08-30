@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 	require_once('../../auditoria/LOGICA/aud_log_auditoria.php');
 	require_once ("fac_sql_aper_caja.php");
 
@@ -74,7 +74,7 @@ class Class_Log_Datos_Tes extends MysqlDatos{
 		
 		$this->free_result($result);
 		
-		return $row;
+		return is_array($row) ? $row : array();
 	}*/
 
 	/**

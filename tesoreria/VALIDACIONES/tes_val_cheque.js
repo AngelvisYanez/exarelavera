@@ -30,7 +30,7 @@ function validar_cheques(form,asicod,asival)
 					{
 						error=1;
  						if (dato.type=="hidden") { mensaje="Escoja el Banco que le corresponde a cada cheque"; } else { mensaje=''; dato.focus(); }
-						alert("Falta llenar Informacion necesaria...\n" + mensaje);
+						$.alert("Falta llenar Informacion necesaria...<br>" + mensaje,null,'warning');
 						mensaje='';
 						return;
 					}
@@ -49,7 +49,7 @@ function validar_cheques(form,asicod,asival)
 				}
 			if (redondear(total,2) != redondear(asival[j],2) && (ndatos > 0))
 				{
-				alert("El valor de los cheques de la cuenta: " + comboban.options[indice].text.toUpperCase() + ", es mayor o menor al total de su respectivo asiento contable.\nEl total máximo es: $" + redondear(asival[j],2) + "\nValor Total de los cheques: $" + redondear(total,2));
+				$.alert("El valor de los cheques de la cuenta: " + comboban.options[indice].text.toUpperCase() + ", es mayor o menor al total de su respectivo asiento contable.<br>El total máximo es: $" + redondear(asival[j],2) + "<br>Valor Total de los cheques: $" + redondear(total,2),null,'error');
 				error=1;
 				}
 			total=0;
@@ -57,7 +57,7 @@ function validar_cheques(form,asicod,asival)
 
 	if (ndatos < 1)
 	{
-		alert("Ingrese por lo menos un cheque...");
+		$.alert("Ingrese por lo menos un cheque...",null,'warning');
 		error=1;
 	}
 	if (error!=1)
@@ -208,7 +208,7 @@ function nueva_fila_cheque(contenido,cod_prv,nom_prv,cmb_cod,cmb_des,unicoprv,co
 		{
 			seleccionar_valor_uno(combo,cod_ban,cod_asi,asi_val,v_cheque,total,n_cheque,cheques);
 		}
-	} else { alert("Los Cheques deben ser emitidos unicamente al Proveedor titular en el Comprobante"); }
+	} else { $.alert("Los Cheques deben ser emitidos unicamente al Proveedor titular en el Comprobante",null,'warning'); }
 }
 
 function cont_filas(contador)

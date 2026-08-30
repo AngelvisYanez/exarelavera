@@ -31,7 +31,7 @@ if(isset($Are_Cod)){?>
 		<font STYLE="writing-mode: tb-rl; filter: flipv() fliph()"><?php echo $row_rs_cam_ing['Cam_Des'];?></font>			
 		</td>		
 			<?php if ($vis[$i] == "N"){ //Control para ocultar los rubros q poseen "Cam_Vis=N" de la tabla Campo_rol?> 
-					<script language="javascript">
+					<script type="text/javascript">
 						ShowHide('td[<?php echo $i?>]');
 					</script>
 			<?php
@@ -85,7 +85,7 @@ if(isset($Are_Cod)){?>
 	
 	<input type="text" name="hdd_ing_egr[<?php echo $cont;?>,<?php echo $cod; ?>]" style="border:none;text-align:right" id="hdd_ing_egr[<?php echo $cont;?>,<?php echo $cod; ?>]" size="4" value="<?php  if( $row_rs_mapeo['Map_Ide']==$cod){echo $sueldo;}else{ /*echo $porc/100;*/ }?>" onKeyPress="return validar_decimal(event)" onkeyUp="<?php echo formula_rol($cont, $cod, $obBD_con1, $obBD_conexion);?> ;toNextField(this.value,<?php echo $cont;?>,'hdd_t_ingre','txt_t_ingre','hdd_t_egre','txt_t_egre'); cal_li(<?php echo $cont;?>,'txt_t_ingre','txt_t_egre','txt_t_liq');SumaCamposRol(this.form,  <?php echo $total_rs_per_rol;?>);  SumaColumnasRol(this.form, <?php echo $total_rs_per_rol;?>, <?php echo $cod;?>)" tabindex="<?php if ($vis[$cont_caja_ingre] != "N"){ echo $cont;}?>" title="hdd_ing_egr[<?php echo $cont;?>,<?php echo $cod; ?>]" class="Fondo"/>	</td>
 	<?php if ($vis[$cont_caja_ingre] == "N"){ //Control para ocultar los rubros q poseen "Cam_Vis=N" de la tabla Campo_rol ?> 		
-		<script language="javascript">
+		<script type="text/javascript">
 			ShowHide('det[<?php echo $td_cont;?>]');			
 		</script>
 	<?php }//Fin if ($vis[$cont_caja_ingre] == "N")?>
@@ -174,7 +174,7 @@ if(isset($Are_Cod)){?>
 </table>
 
 <?php }else{
-	echo error_alerta("<< Error de componente: tes_com_det_rolpagos.php >> <br>Descripción: No se ha definido la Propiedad: 	
+	echo error_alerta("<< Error de componente: tes_com_det_rolpagos.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: 	
 		Are_Cod<br> Hoy: Variable que contiene el Tipo de Rol de Pagos", 2);
  }?>
  

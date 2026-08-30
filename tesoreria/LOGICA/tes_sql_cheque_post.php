@@ -441,8 +441,7 @@ function sentencias_che($id, $Par_Sql) {
         case 345:
             if ($Par_Sql[3] == 'd') {
                 $Par_Sql[3] = "(Prs_Ape like '%$Par_Sql[0]%' OR Prs_Nom like '%$Par_Sql[0]%')";
-            }
-            if ($Par_Sql[3] == 'd') {
+            } elseif ($Par_Sql[3] == 'c') {
                 $Par_Sql[3] = "Com_Num='$Par_Sql[0]'";
             }
             if ($Par_Sql[3] == 'n') {

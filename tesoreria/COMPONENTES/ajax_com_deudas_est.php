@@ -14,7 +14,7 @@ if ((isset($hdd_save2)) && !(isset($proye)) || isset($proye))
 	$rs_deuda = $obBD_con1->consulta(sentencias_tes(55, $obBD_con1->parametros($Cli_Cod)), $obBD_conexion->conexion);
 	$row_rs_deuda = $obBD_con1->registros();
 	$total_rs_deuda = $obBD_con1->numregistros();
-	/* Configuración del modulo de tesoreria */
+	/* Configuraciï¿½n del modulo de tesoreria */
 	$rs_confi_teso = $obBD_con1->consulta(sentencias_tes(46, ''), $obBD_conexion->conexion);
 	$row_rs_confi_teso = $obBD_con1->registros();
 	?>
@@ -141,7 +141,6 @@ if ((isset($hdd_save2)) && !(isset($proye)) || isset($proye))
 				$rs_interes = $obBD_con1->consulta(sentencias_tes(58, $obBD_con1->parametros($Cli_Cod.'*'.
 				$Nge_Cod.'*'.$row_rs_deuda['Asi_Int'].'*'.$Pro_Cod)), $obBD_conexion->conexion);
 				$row_rs_interes = $obBD_con1->registros();
-				$row_rs_interes['$Dias_Mora'];
 				$total_rs_interes = $obBD_con1->numregistros();
 				/****************************************************************/
 					
@@ -250,7 +249,7 @@ if ((isset($hdd_save2)) && !(isset($proye)) || isset($proye))
   </tr>
   <tr>
     <td class="LetraNegra Estilo1">
-  Para mayor seguridad verificar la proyección de intereses  en la opción... <span class="Estilo2">&iexcl;Click aqui! proyecci&oacute;n de inter&eacute;s diario</span></td>
+  Para mayor seguridad verificar la proyecciï¿½n de intereses  en la opciï¿½n... <span class="Estilo2">&iexcl;Click aqui! proyecci&oacute;n de inter&eacute;s diario</span></td>
   </tr>
 </table>
 </fieldset>
@@ -385,7 +384,7 @@ for($j=0;$j<=10;$j++)
    <td width="20%"><?php  echo $fecha; ?>  </td>
     <td width="20%">
 	<?Php  
-	  /*** Calculo de diferencia de días ***************************************************************/
+	  /*** Calculo de diferencia de dï¿½as ***************************************************************/
 	   $Fecha=explode('-',$row_rs_deuda_pro['Deu_Fec']);
 			$Fecha2=explode('-',$fecha);
 	  		$timestamp1 = mktime(0,0,0,$Fecha[1],$Fecha[2],$Fecha[0]);

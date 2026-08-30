@@ -208,7 +208,7 @@
 	$xml->formatOut=true;
 	$strings_xml=$xml->saveXML();
 	
-	$xml->save($archivo)	
+	$xml->save($archivo);
 	//echo "Archivo XML generado correspondiente a <strong>".mes($mes, 1)."</strong> del <strong>".$anio."</strong>  <a href=".$archivo." target='_blank'><img src='../../mascaras/model1/imagenes/download.gif' title='Descargar XML'></a>"; 
 //}
 ?>

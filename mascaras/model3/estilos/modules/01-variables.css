@@ -1,0 +1,125 @@
+﻿/**
+ * Model3 - Default Theme Variables
+ * Unified design tokens for all ERP modules
+ * 
+ * This file defines the standard CSS custom properties that should be used
+ * across all modules in the system. It provides a consistent look and feel
+ * while allowing for easy customization through variable overrides.
+ * 
+ * Usage:
+ * - Include this file in all modules
+ * - Override variables as needed for specific modules
+ * - Use the defined variables throughout your CSS
+ */
+
+/* ============================================
+   GLOBAL VARIABLES (available everywhere)
+   ============================================ */
+:root {
+  /* Primary Color Palette */
+  --v2-brand-primary: #4a88b5;
+  --v2-brand-primary-dark: #2f6f96;
+  --v2-brand-primary-light: #6ba3cc;
+  --v2-brand-secondary: #5d7289;
+  
+  /* Semantic Colors */
+  --v2-color-success: #87B87F;
+  --v2-color-success-light: #DDFAE2;
+  --v2-color-danger: #D15B47;
+  --v2-color-danger-light: #FADDDD;
+  --v2-color-warning: #FFB752;
+  --v2-color-warning-light: #FFAA55;
+  --v2-color-info: #6FB3E0;
+  --v2-color-info-light: #bcd8f4;
+  --v2-color-purple: #9063a7;
+  --v2-color-gray: #a9a9a9;
+  
+  /* Typography */
+  --v2-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --v2-font-size-xs: 11px;
+  --v2-font-size-sm: 12px;
+  --v2-font-size-base: 13px;
+  --v2-font-size-md: 14px;
+  --v2-font-size-lg: 16px;
+  --v2-font-size-xl: 18px;
+  
+  /* Spacing */
+  --v2-spacing-xs: 2px;
+  --v2-spacing-sm: 4px;
+  --v2-spacing-md: 8px;
+  --v2-spacing-lg: 12px;
+  --v2-spacing-xl: 16px;
+  
+  /* Borders and Radii */
+  --v2-border-radius: 10px;
+  --v2-border-radius-sm: 6px;
+  --v2-border-radius-lg: 12px;
+  
+  /* Shadows */
+  --v2-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --v2-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --v2-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  
+  /* Focus states */
+  --v2-focus-ring: 0 0 0 3px rgba(74, 136, 181, 0.25);
+}
+
+/* ============================================
+   PANEL-SPECIFIC VARIABLES
+   ============================================ */
+.panel.panel-main.exa-ui-panel {
+  /* Background Colors */
+  --v2-bg-page: #dbe5f1;
+  --v2-bg-panel: #eef3f8;
+  --v2-bg-grid: #f8fafc;
+  --v2-bg-input: #ffffff;
+  --v2-bg-readonly: #e4e8ee;
+  
+  /* Brand Colors */
+  --v2-brand: var(--v2-brand-primary);
+  --v2-brand-dark: var(--v2-brand-primary-dark);
+  --v2-brand-soft: #e4edf6;
+  --v2-brand-muted: #c5dce9;
+  
+  /* Surface Colors */
+  --v2-surface: var(--v2-bg-panel);
+  --v2-surface-alt: #eef1f6;
+  --v2-surface-hover: #f0f4f8;
+  --v2-surface-input: var(--v2-bg-input);
+  --v2-celeste-page: var(--v2-bg-page);
+  
+  /* Border Colors */
+  --v2-border: #d9e3ea;
+  --v2-border-light: #d9e3ea;
+  
+  /* Text Colors */
+  --v2-text: #1e293b;
+  --v2-text-muted: #64748b;
+  
+  /* Grid-Specific */
+  --v2-grid-header-dark-bg: #5d7289;
+  --v2-grid-header-dark-gradient: linear-gradient(to bottom, #647b94, #556b83);
+  --v2-grid-header-dark-text: #ffffff;
+  --v2-grid-header-dark-border: #556b83;
+  --v2-grid-row-pagado-bg: #dcefe2;
+  --v2-grid-row-vencido-bg: #f3dede;
+  --v2-grid-footer-font-size: 15px;
+  --v2-grid-footer-font-weight: 600;
+  
+  /* Border Radius */
+  --v2-radius: 10px;
+  --v2-radius-sm: 6px;
+  
+  /* Elevation */
+  --v2-elev-border: 1px solid #d6e0ea;
+  --v2-elev-shadow: var(--v2-shadow-sm);
+  
+  /* Font */
+  --v2-font: var(--v2-font-family);
+  
+  /* Apply base styles */
+  font-family: var(--v2-font);
+  color: var(--v2-text);
+  -webkit-font-smoothing: antialiased;
+}
+

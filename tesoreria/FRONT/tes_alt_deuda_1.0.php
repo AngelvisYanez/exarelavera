@@ -173,7 +173,7 @@ $hoy = date("Y-m-d");
         <TITLE><?Php echo "Ccxcc Deudas Iniciales [EXA]"; ?></TITLE>
 	    <meta charset="UTF-8">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>       
-        <script language="javascript" src="../VALIDACIONES/tes_val_deuda_1.0.js?X=2"></script>
+        <script type="text/javascript" src="../VALIDACIONES/tes_val_deuda_1.0.js?X=2"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">

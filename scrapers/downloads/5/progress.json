@@ -1,0 +1,17 @@
+{
+  "status": "running",
+  "progress_msg": "Iniciando sesion en SRI...",
+  "total_found": 0,
+  "xmls_downloaded": 0,
+  "pdfs_downloaded": 0,
+  "events": [
+    {
+      "time": 1783977313.279781,
+      "progress_msg": "Iniciando navegador Playwright..."
+    },
+    {
+      "time": 1783977313.9012299,
+      "progress_msg": "Iniciando sesion en SRI..."
+    }
+  ]
+}

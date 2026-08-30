@@ -1,8 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php 
 /**
-* Descripción: Permite consultar el total de cmpras realizadas a proveedores
-* Fecha de actualización:	2015-09-02
+* Descripciï¿½n: Permite consultar el total de cmpras realizadas a proveedores
+* Fecha de actualizaciï¿½n:	2015-09-02
 * Desarrollador:	Jose Cumbicos
 */	
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -11,7 +11,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php');
 
 /** 
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 /** 
@@ -19,7 +19,7 @@ $thisPost = new Post_Block;
 */  
 $obBD_conexion = new Class_Log_Conexion_Tes($Ses_Dat_Dis);
 /**
-* Creación del Objeto para consultas
+* Creaciï¿½n del Objeto para consultas
 */
 $obBD_con1 =  new Class_Log_Datos_Tes; 
 
@@ -35,7 +35,7 @@ $rs_anios = $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod, $obBD_conexion);
 <head>
 	<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>        		  
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>        		  
 		<link rel="stylesheet" type="text/css" href="../../Librerias/jquery/modal/css/modal.css">
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/jquery.js"></script>
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/modal.js"></script>        
@@ -176,7 +176,7 @@ $rs_anios = $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod, $obBD_conexion);
 <table width="1500" border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed;" >
 <thead>
   <tr class="Cabecera1" align="center">
-    <td width="8%" rowspan="2" align="left" valign="middle"><strong>Cédula/R.U.C.</strong></td>
+    <td width="8%" rowspan="2" align="left" valign="middle"><strong>Cï¿½dula/R.U.C.</strong></td>
     <td width="20%" rowspan="2" align="left" valign="middle"><strong>Apellidos/Nombre</strong></td>
     <td colspan="2"><strong>Enero</strong></td>
     <td colspan="2"><strong>Febrero</strong></td>

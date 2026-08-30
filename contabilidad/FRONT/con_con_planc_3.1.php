@@ -96,7 +96,7 @@ if (isset($getDuplicateds)){
                                         $row_plan = $obBD_con1->getArrayConsulta(364, $Ses_Emp_Cod."* AND Pla_Est='A'",$obBD_conexion);
                                         echo '<select name="sel_planes" id="sel_planes" class="form-control input-xs">';
                                         foreach($row_plan as $plan){
-                                            echo '<option value="'.$plan[Pla_Cod].'" data--pla_-obs="'.$plan[Pla_Obs].'" data--pla_-cod="'.$plan[Pla_Cod].'" data--pla_-est="'.$plan[Pla_Est].'" data--pla_-fec="'.$plan[Pla_Fec].'">'.$plan[Pla_Obs].'</option>';
+                                            echo '<option value="'.$plan['Pla_Cod'].'" data--pla_-obs="'.$plan['Pla_Obs'].'" data--pla_-cod="'.$plan['Pla_Cod'].'" data--pla_-est="'.$plan['Pla_Est'].'" data--pla_-fec="'.$plan['Pla_Fec'].'">'.$plan['Pla_Obs'].'</option>';
                                         }
                                         echo '</select>';
                                         ?>
@@ -107,7 +107,7 @@ if (isset($getDuplicateds)){
                                         <label class="col-xs-3 label-xs">C&oacute;digo: </label>
                                         <div class="col-xs-9">
                                             <span name="Pla_Cod" class="form-control input-xs">
-                                                <?php echo $row_plan[0][Pla_Cod] ?>
+                                                <?php echo $row_plan[0]['Pla_Cod'] ?>
                                             </span>
                                         </div>
                                     </div>
@@ -115,13 +115,13 @@ if (isset($getDuplicateds)){
                                         <label class="col-xs-3 label-xs">Fecha: </label>
                                         <div class="col-xs-3">
                                             <span name="Pla_Fec" class="form-control input-xs">
-                                                <?php echo $row_plan[0][Pla_Fec] ?>
+                                                <?php echo $row_plan[0]['Pla_Fec'] ?>
                                             </span>
                                         </div>
                                         <label class="col-xs-2 label-xs">Estado: </label>
                                         <div class="col-xs-4">
                                             <span name="Pla_Est" class="form-control input-xs">
-                                                <?php echo $row_plan[0][Pla_Est] ?>
+                                                <?php echo $row_plan[0]['Pla_Est'] ?>
                                             </span>
                                         </div>
                                     </div>

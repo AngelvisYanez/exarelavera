@@ -45,14 +45,14 @@ if (isset($Comprobar))
 		<link href="../../Estilos/Interfaz1.css" rel="stylesheet" type="text/css">
 		<link href="../../mascaras/model1/estilos/estilo1.css" rel="stylesheet" type="text/css">
 		<link href="../../mascaras/model1/estilos/interfaz.css" rel="stylesheet" type="text/css">		
-		<script language="javascript" src="../Librerias/java.js"></script>
-		<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../Librerias/java.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	<?php 
 if (isset($hdd_save)) 
 { ?>
-	<script language="javascript">
+	<script type="text/javascript">
 	ir('tes_alt_vendedor.php');
 	</script>
 <?Php 
@@ -169,11 +169,11 @@ if (!(isset($Comprobar)) || $total_rs_comprobar > 0)
 	   <br>
 	   <FIELDSET>
        <LEGEND>
-       <label class="Titulos2">Punto de Impresión</label>
+       <label class="Titulos2">Punto de Impresiï¿½n</label>
        </LEGEND>
 	   <table width="257">
 	     <tr>
-        <td width="136" class="Etiqueta1"><span class="Asterisco">*</span> Ubicación:</td>
+        <td width="136" class="Etiqueta1"><span class="Asterisco">*</span> Ubicaciï¿½n:</td>
         <td width="86"><label>
 				 <?Php //Consulta del vendedor en base al punto de impresion
 	             $rs_ven_punto = consultas_tes(463, '');

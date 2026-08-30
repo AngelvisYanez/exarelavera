@@ -1,4 +1,5 @@
 <?Php
+if (!function_exists('mensaje_requerido')) return;
 /* Componente para la busqueda de personas:estudiante, cliente, proveedor, etc */
 ?>
 <FIELDSET>

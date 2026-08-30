@@ -3,7 +3,7 @@
  * @abstract Permite realizar el registro de productores de fruta
  * @author Erik Niebla
  * @version 1.0
- * Fecha de creación  2018-05-18
+ * Fecha de creaciï¿½n  2018-05-18
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/fac_log_retencion.php');
@@ -53,7 +53,7 @@ if(isset($saveDocument)){
         require_once('../LOGICA/fac_log_electronica.php');
         $obBD_elect =  new Class_Log_Datos_Retencion_Elect();        
         $claveAcceso = $obBD_elect->getClaveAcceso($Aut_Cod, $Ret_Fec, $Ret_Num, $obBD_conexion);
-        if(empty($claveAcceso)) $responce['message']="Error al generar <u>Clave de Acceso</u> del <i>Comprobante Electrónico</i>!";
+        if(empty($claveAcceso)) $responce['message']="Error al generar <u>Clave de Acceso</u> del <i>Comprobante Electrï¿½nico</i>!";
     }
     
     if(empty($vendedor['Vnd_Cod'])){ $resp['message']="No tiene permisos de Vendedor!";  }
@@ -109,7 +109,7 @@ if(isset($saveDocument)){
     $obBD_con1->echoJson($resp);
 }
 
-/* Valida numero de retención */	
+/* Valida numero de retenciï¿½n */	
 if(isset($validaRetNum)){   
     $autoriz = $Aut_Data;
     $electronica=(isset($autoriz['Aut_Tem']) && $autoriz['Aut_Tem']=='E');
@@ -122,7 +122,7 @@ if(isset($validaRetNum)){
         if(!empty($Ret_Num)){
             $num_existe_gencod=$obBD_con1->getRowConsulta('retencion.selectCountWhere',array('where'=>array('Aut_Sri'=>$autoriz['Aut_Sri'], 'Ret_Num'=>$Ret_Num),'setWhere'=>array('setSucCod')), $obBD_conexion); //Consulto si ya existe un codigo generado en las retenciones basado en una autorizacion otorgada por el SRI 
             if($num_existe_gencod['total']*1>0){                
-                $resp['success']=false; $resp['message']="La Retención Número $Ret_Num ya Existe en el Sistema!";
+                $resp['success']=false; $resp['message']="La Retenciï¿½n Nï¿½mero $Ret_Num ya Existe en el Sistema!";
             }
         }else{            
             $resp['success']=true; 
@@ -139,19 +139,19 @@ $rs_periodo = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('setW
 <HEAD>		
     <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-    <script>var Cof_Con='<?php echo $cof['Cof_Con']; ?>', hoy='<?php echo $hoy; ?>';</script> 
-    <script>var extraSearch=[{ label: $.createIcon('pencil'), name: 'act01', width: 15, viewable: false, formatter: 'gridButton', formatoptions:{action:'editRetencion', data:'Ret_Cod', title:'Editar Retención', conditional: function(o){ return o.Ret_Est !== 'I' && o.Ret_Aut !== 'S'; }, caseFalse:/*[{col:'Ret_Est',eval:"==='I'",icon:'remove red',title:'Anulado/Inactivo'},{col:'Ret_Aut',eval:"==='S'"}]*/function(o){ if(o.Ret_Est==='I') return '<i class="glyphicon glyphicon-remove red" title="Anulado/Inactivo"></i>'; if(o.Ret_Aut==='S') return '<i class="fa fa-globe green" title="Retención Electronica Validada"></i>'; return ''; } } }];</script>   
-    <script language="javascript" src="../VALIDACIONES/fac_val_rete_finan.js"></script>
+    <script>var Cof_Con=<?php echo json_encode($cof['Cof_Con']); ?>, hoy=<?php echo json_encode($hoy); ?>;</script> 
+    <script>var extraSearch=[{ label: $.createIcon('pencil'), name: 'act01', width: 15, viewable: false, formatter: 'gridButton', formatoptions:{action:'editRetencion', data:'Ret_Cod', title:'Editar Retenciï¿½n', conditional: function(o){ return o.Ret_Est !== 'I' && o.Ret_Aut !== 'S'; }, caseFalse:/*[{col:'Ret_Est',eval:"==='I'",icon:'remove red',title:'Anulado/Inactivo'},{col:'Ret_Aut',eval:"==='S'"}]*/function(o){ if(o.Ret_Est==='I') return '<i class="glyphicon glyphicon-remove red" title="Anulado/Inactivo"></i>'; if(o.Ret_Aut==='S') return '<i class="fa fa-globe green" title="Retenciï¿½n Electronica Validada"></i>'; return ''; } } }];</script>   
+    <script type="text/javascript" src="../VALIDACIONES/fac_val_rete_finan.js"></script>
     <style></style>
 </HEAD>
 <BODY>
     <div class="panel panel-main">
-        <div class="panel-heading exa-header"><h3 class="panel-title">&raquo;  Modificar Retención Financiera</h3></div>
+        <div class="panel-heading exa-header"><h3 class="panel-title">&raquo;  Modificar Retenciï¿½n Financiera</h3></div>
         <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
             <?php if(count($row_rs_autorizaci)==0){?>
             <link rel="stylesheet" href="../../framework/jquery/bootstrap/info.tabs.css" />
             <div class="vcenter center" style="height:300px;margin-bottom: 25px;">
-                <?php echo error_alerta("Usted no tiene Autorizaciones activas para los documentos de retención", 2, true);?>
+                <?php echo error_alerta("Usted no tiene Autorizaciones activas para los documentos de retenciï¿½n", 2, true);?>
             </div>    
             <?php }else{ ?>  
             <div class="row" id="divSearch">

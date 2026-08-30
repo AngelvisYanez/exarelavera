@@ -203,15 +203,15 @@
 			}
 			
 			 if($rs_infoCliente['Prs_Dir']!=''){
-				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Dirección'>".mb_convert_encoding($rs_infoCliente['Prs_Dir'], 'UTF-8', 'ISO-8859-1')."</".$Eti_infoAdicional[0].">";	
+				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Direcciï¿½n'>".mb_convert_encoding($rs_infoCliente['Prs_Dir'], 'UTF-8', 'ISO-8859-1')."</".$Eti_infoAdicional[0].">";	
 			 }else{
-				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Dirección'>-</".$Eti_infoAdicional[0].">";	
+				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Direcciï¿½n'>-</".$Eti_infoAdicional[0].">";	
 			 }
 			 
 			 if($rs_infoCliente['Prs_Tel']!=''){
-				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Teléfono'>".$rs_infoCliente['Prs_Tel']."</".$Eti_infoAdicional[0].">"; 
+				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Telï¿½fono'>".$rs_infoCliente['Prs_Tel']."</".$Eti_infoAdicional[0].">"; 
 			 }else{
-				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Teléfono'>-</".$Eti_infoAdicional[0].">"; 
+				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Telï¿½fono'>-</".$Eti_infoAdicional[0].">"; 
 			 }			 
 			 if($rs_infoCliente['Prs_Cor']!=''){
 				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Email'>".$rs_infoCliente['Prs_Cor']."</".$Eti_infoAdicional[0].">"; 
@@ -219,9 +219,9 @@
 				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Email'>-</".$Eti_infoAdicional[0].">"; 
 			 }			 			 
 			 if($rs_infoCliente['Vet_Obs']!=''){
-				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Observación'>".$rs_infoCliente['Vet_Obs']."</".$Eti_infoAdicional[0].">"; 
+				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Observaciï¿½n'>".$rs_infoCliente['Vet_Obs']."</".$Eti_infoAdicional[0].">"; 
 			 }else{
-				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Observación'>-</".$Eti_infoAdicional[0].">"; 
+				$armado_xml.="<".$Eti_infoAdicional[0]." nombre='Observaciï¿½n'>-</".$Eti_infoAdicional[0].">"; 
 			 }
 
 		$armado_xml .="</".$Eti_raiz[3].">";  //</infoAdicional>
@@ -240,7 +240,7 @@
 	$xml->formatOut=true;
 	$strings_xml=$xml->saveXML();
 	
-	$xml->save($archivo)	
+	$xml->save($archivo);
 	//echo "Archivo XML generado correspondiente a <strong>".mes($mes, 1)."</strong> del <strong>".$anio."</strong>  <a href=".$archivo." target='_blank'><img src='../../mascaras/model1/imagenes/download.gif' title='Descargar XML'></a>"; 
 //}
 ?>

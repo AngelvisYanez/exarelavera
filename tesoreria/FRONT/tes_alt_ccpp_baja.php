@@ -529,7 +529,7 @@ if(isset($protestarChe)){
 
     $obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
   } else {
-    $response['message'] = "Advertencia: Hace falta un periodo contable para el año actual";
+    $response['message'] = "Advertencia: Hace falta un periodo contable para el aï¿½o actual";
     $response['pec_ban']="no";
   }
 
@@ -601,14 +601,14 @@ if(isset($migrado)){
 
 <head>
 	<TITLE>
-		<?Php echo $Ses_Sys_Nom; ?>
+		<?php echo $Ses_Sys_Nom; ?>
 	</TITLE>
 	<link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
-	<?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
   <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
   <script src="../VALIDACIONES/tes_val_alt_ccpp_lotes.js?a=27"></script>
   <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
-  <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+  <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
   <script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
   <style>
   .txt-green{
@@ -779,7 +779,7 @@ if(isset($migrado)){
 		<div class="row">
 			<div class="col-sm-12">
 				<div class="row">
-					<form class="form-horizontal normal" name="formPagos" id="formPagos" method="post" action="javascript:$.createDialogConfirm('¿Est&aacute; seguro que desea guardar los datos?',null,guardarPago)">
+					<form class="form-horizontal normal" name="formPagos" id="formPagos" method="post" action="javascript:$.createDialogConfirm('ï¿½Est&aacute; seguro que desea guardar los datos?',null,guardarPago)">
 						<input name="tip_trans" id="tip_trans" value="add" type="text" style="display:none;" />
 						<input name="Com_Cod" id="Com_Cod" value="add" type="text" style="display:none;" />
 						<div class="col-sm-12">
@@ -797,7 +797,7 @@ if(isset($migrado)){
                                 {
                                   foreach($rows_periodos as $row){
                                     ?>
-														<?echo "<option value='$row[Pec_Cod]' data-pla-cod='$row[Pla_Cod]' data-pec-fei='$row[Pec_Fei]' data-pec-fef='$row[Pec_Fef]'  data-periodo='$row[priodo_m]'>$row[priodo_m]</option>";?>
+														<?php echo "<option value='$row[Pec_Cod]' data-pla-cod='$row[Pla_Cod]' data-pec-fei='$row[Pec_Fei]' data-pec-fef='$row[Pec_Fef]'  data-periodo='$row[priodo_m]'>$row[priodo_m]</option>";?>
 
 														<?php }
                                 }?>
@@ -873,7 +873,7 @@ if(isset($migrado)){
 												<label class="col-sm-3 control-label label-sm required" for="Tia_Cod">Tipo Comprobante:</label>
 												<div class="col-sm-4">
 													<select id="Tia_Cod" name="Tia_Cod" class="form-control input-xs" required="" onchange="">
-														<?Php
+														<?php 
                                 $row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(4, "ALL", $obBD_conexion);
                                 foreach ($row_rs_tipo_asien2 as $row)
                                 { ?>
@@ -890,7 +890,7 @@ if(isset($migrado)){
 												<label class="col-sm-3 control-label label-sm required" for="Pag_Cod">Tipo de pago:</label>
 												<div class="col-sm-3">
 													<select id="Pag_Cod" name="Pag_Cod" class="form-control input-xs" required="" onchange="enableDisableCampos()">
-														<?Php
+														<?php 
                                 $row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(5, "", $obBD_conexion);
                                 foreach ($row_rs_tipo_asien2 as $row)
                                 { ?>
@@ -920,7 +920,7 @@ if(isset($migrado)){
 												<div class="col-sm-4">
 													<select id="Ban_Cod" name="Ban_Cod" class="form-control input-xs ed_element ed_CHE ed_TRF ed_TDC ed_NDD" required="" onchange=""
 													 disabled>
-														<?Php
+														<?php 
                                 $row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(9, array('Ban_Tip'=>'B'), $obBD_conexion);
                                 foreach ($row_rs_tipo_asien2 as $row)
                                 { ?>
@@ -1236,7 +1236,7 @@ if(isset($migrado)){
 					</td>
 					<td>
 						<span>
-							<?echo $Ses_Emp_Nom;?>
+							<?php echo $Ses_Emp_Nom;?>
 						</span>
 					</td>
 				</tr>
@@ -1246,7 +1246,7 @@ if(isset($migrado)){
 					</td>
 					<td>
 						<span>
-							<?$fecha=explode('-',$hoy); echo dias(calcula_numero_dia_semana($fecha[2],$fecha[1],$fecha[0]),1).', '.$fecha[2].' de '.mes($fecha[1],1).' de '.$fecha[0]; ?>
+							<?php $fecha=explode('-',$hoy); echo dias(calcula_numero_dia_semana($fecha[2],$fecha[1],$fecha[0]),1).', '.$fecha[2].' de '.mes($fecha[1],1).' de '.$fecha[0]; ?>
 						</span>
 					</td>
 				</tr>

@@ -46,7 +46,7 @@ if (!empty($req_avance['guardarAvance'])) {
     // Escapar después de usar la conexión (charset UTF-8 ya aplicado) para no truncar tildes
     $conn = isset($obBD_conexion->conexion) ? $obBD_conexion->conexion : null;
     if ($conn) {
-        @mysqli_set_charset($conn, 'utf8');
+        mysqli_set_charset($conn, 'utf8');
         $desc_safe = mysqli_real_escape_string($conn, $desc_raw);
     } else {
         $desc_safe = addslashes($desc_raw);
@@ -696,7 +696,7 @@ if (!empty($_REQUEST['crearTareaAdicional'])) {
 
 <script type="text/javascript">
 (function () {
-    var urlBase = '<?php echo str_replace("'", "\\'", $_SERVER['PHP_SELF']); ?>';
+    var urlBase = <?php echo json_encode($_SERVER['PHP_SELF']); ?>;
     var rowsAll = [];
     var sinVinculoFlag = false;
     /** Lista unificada de archivos a subir (seleccionados + pegados). Una sola fuente para evitar duplicados y permitir eliminar. */

@@ -72,8 +72,8 @@ $app->get('/v1/admin/conexion/estado', function () use ($app, $dbConfigFile, $pe
         [$conn, $err] = conectarConTimeout($cfg['host'], $cfg['user'], $cfg['pass'], intval($cfg['port'] ?? 3306));
         if ($conn) {
             $conectado = true;
-            $serverInfo = @mysqli_get_server_info($conn);
-            @mysqli_close($conn);
+            $serverInfo = mysqli_get_server_info($conn);
+            mysqli_close($conn);
         } else {
             $error = $err;
         }
@@ -144,7 +144,7 @@ $app->post('/v1/admin/conexion/activar', function () use ($app, $perfilesDir, $d
         [$conn, $connErr] = conectarConTimeout($perfil['host'], $perfil['user'], $perfil['pass'], intval($perfil['port'] ?? 3306));
         $nuevaConexionOk = $conn !== null;
         if ($conn) {
-            @mysqli_close($conn);
+            mysqli_close($conn);
         }
         echo json_encode([
             'success' => true,
@@ -184,14 +184,14 @@ $app->post('/v1/admin/conexion/eliminar', function () use ($app, $perfilesDir) {
     }
 });
 function conectarConTimeout($host, $user, $pass, $port, $database = null, $timeout = 5) {
-    $conn = @mysqli_init();
+    $conn = mysqli_init();
     if (!$conn) return [null, 'No se pudo inicializar mysqli'];
-    @mysqli_options($conn, MYSQLI_OPT_CONNECT_TIMEOUT, $timeout);
-    @mysqli_options($conn, MYSQLI_OPT_READ_TIMEOUT, $timeout);
+    mysqli_options($conn, MYSQLI_OPT_CONNECT_TIMEOUT, $timeout);
+    mysqli_options($conn, MYSQLI_OPT_READ_TIMEOUT, $timeout);
     $connected = @mysqli_real_connect($conn, $host, $user, $pass, $database, $port);
     if (!$connected) {
-        $err = @mysqli_connect_error() ?: 'Conexión fallida (timeout o servidor no accesible)';
-        @mysqli_close($this->conexion)
+        $err = mysqli_connect_error() ?: 'Conexión fallida (timeout o servidor no accesible)';
+        mysqli_close($conn);
         return [null, $err];
     }
     return [$conn, null];
@@ -212,8 +212,8 @@ $app->post('/v1/admin/conexion/test', function () use ($app) {
             ]);
             return;
         }
-        $serverInfo = @mysqli_get_server_info($conn);
-        @mysqli_close($this->conexion)
+        $serverInfo = mysqli_get_server_info($conn);
+        mysqli_close($conn);
         echo json_encode([
             'success' => true,
             'message' => 'Conexión exitosa',

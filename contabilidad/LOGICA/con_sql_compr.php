@@ -868,10 +868,6 @@ WHERE reniva_pla.Ren_Cod='$Par_Sql[0]' AND Pla_Cod='$Par_Sql[1]' AND reniva_pla.
 		/* 
 		* Consulta el total de RENTA en ventas
 		*/
-		case 369:
-		/* 
-		* Consulta el total de RENTA en ventas
-		*/
 		$sql = "SELECT det_plan.Pla_Cod,comprobantes.Com_Cod,Com_Fec,Com_Con,Com_Obs,
                             CONCAT(Tia_Abr,'-',IF(CHAR_LENGTH(MONTH(Com_Fec))=1,CONCAT('0',CAST(MONTH(Com_Fec) AS char)),CAST(MONTH(Com_Fec) AS char)),'-',CAST(Com_Num AS char)) as Com_Codigo,
                             SUM(IF(Asi_Deh='D',Asi_Val,0)) AS Debe,SUM(IF(Asi_Deh='H',Asi_Val,0)) AS Haber,SUM(IF(Asi_Deh='D',Asi_Val,0))-SUM(IF(Asi_Deh='H',Asi_Val,0)) AS Diferencia,

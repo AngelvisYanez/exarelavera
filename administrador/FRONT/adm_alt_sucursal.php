@@ -368,7 +368,7 @@ if (isset($sucuAjax)) {
             data["Dat_Cod"] = $("#Dat_Cod").val();
             //console.log(data);
             $('#btnGuardaSuc').attr('disabled', 'disabled');
-            $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", data, function(response) {
+            $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", data, function(response) {
                     if (response['success'] === true) {
                         $.alert("Transaccion Realizada con &Eacute;xito!");
                         $('#sucForm')[0].reset();
@@ -405,7 +405,7 @@ if (isset($sucuAjax)) {
         }
         $(document).ready(function() {
             $("#list").jqGrid({
-                url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                 mtype: "GET",
                 datatype: "json",
                 regional: 'es', //ajaxRowOptions: { async: true },
@@ -483,7 +483,7 @@ if (isset($sucuAjax)) {
             });
             $("#list").jqGrid('bindKeys');
             $("#sucu").jqGrid({
-                url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                 mtype: "GET",
                 datatype: "local",
                 regional: 'es',

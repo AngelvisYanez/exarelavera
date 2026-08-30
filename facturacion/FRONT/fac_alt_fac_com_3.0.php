@@ -990,9 +990,9 @@ if (isset($saldoCCxPP)) {
         var array_documentos = <?php echo json_encode($array_documentos); ?>;
     </script>
 
-    <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
     <script type="text/javascript" src="../VALIDACIONES/fac_val_factu.js?gh=99"></script>
-    <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/cedulaRuc.js"></script>
 </HEAD>
 
 <BODY>
@@ -1516,7 +1516,7 @@ if (isset($saldoCCxPP)) {
             formData.append("agrupa", $('#agrupa').is(':checked') ? 'S' : 'N');
             $("#loader").show();
             $.ajax({
-                url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+                url: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
                 type: "post",
                 dataType: "json",
                 data: formData,

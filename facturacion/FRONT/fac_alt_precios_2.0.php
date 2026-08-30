@@ -339,7 +339,7 @@ if(isset($_POST["import"])){
         <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
 <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>                   
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-        <script language="javascript" src="../VALIDACIONES/fac_val_precios_2.0.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_precios_2.0.js"></script>
         <style type="text/css">                     
             .pagination>li>a, .pagination>li>span {padding: 4px 2px;}
             .pagination {/*display: block;*/margin:0;padding: 0;}

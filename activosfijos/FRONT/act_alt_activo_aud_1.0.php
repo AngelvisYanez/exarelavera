@@ -1,9 +1,9 @@
 <?Php
 /**********************************************************************
  * Alias: Control de Custodia de Activos Fijos                        *
- * Descripción: Permite verificar los activos dados al personal       *
+ * Descripciï¿½n: Permite verificar los activos dados al personal       *
  * Desarrollador: Didimo Zamora                                       *
- * Fecha de actualización:	2013/07/09                                *
+ * Fecha de actualizaciï¿½n:	2013/07/09                                *
  *********************************************************************/
 
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -20,7 +20,7 @@ $obBD_conexion = new Class_Log_Conexion_Cch($Ses_Dat_Dis);
  */
 $obBD_con1 = new Class_Log_Datos_ActAu;
 /**
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block; 
 
@@ -89,7 +89,7 @@ $hoy = date("Y-m-d");
 			 	  
 	     }
 /**
- * Controla el reenvio de la página
+ * Controla el reenvio de la pï¿½gina
  */
 if ($thisPost->postBlock($_POST['postID'])) { 
 //Proceso de guardar auditoria de tenencia de activos.
@@ -112,7 +112,7 @@ if ($thisPost->postBlock($_POST['postID'])) {
 			$obBD_con1->operacionobBD(7,$id_Aud.'*'.$cant_act[$j].'*'.$Est_Cod[$j].'*'.trim($Con_Obs[$j]).'*'.$Est_Act[$j],$obBD_conexion);					
 		}		
 		/**
-		 * Fin de la Transacción
+		 * Fin de la Transacciï¿½n
 		 */
 		$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 	}
@@ -123,7 +123,7 @@ if ($thisPost->postBlock($_POST['postID'])) {
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom;?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
         <script type="text/javascript"> 
@@ -162,7 +162,7 @@ if(count($rs_auditore)>0){
                     	<td width="153"><input name="op_opciones" type="radio" value="1" onClick="setfocus(this.form.txt_busqueda)" checked>
                             <span class="LetraNegra">Apellidos</span></td>
                         <td width="179"><input type="radio" name="op_opciones" value="2" <?Php if($op_opciones==2){ echo "checked";}?> onClick="setfocus(this.form.txt_busqueda)">
-                            <span class="LetraNegra">Cédula</span></td>
+                            <span class="LetraNegra">Cï¿½dula</span></td>
                   	</tr>
                   	</table>
                 </td>
@@ -189,7 +189,7 @@ if(count($rs_auditore)>0){
         </LEGEND>
         <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader03">
       	<thead>
-              <th width="15%">Cód. Int.</th>
+              <th width="15%">Cï¿½d. Int.</th>
               <th width="14%">C&eacute;dula</th>
               <th width="67%">Custodio</th>
               <th>&nbsp;</th>         
@@ -237,7 +237,7 @@ if(count($rs_auditore)>0){
         <tr>
             <td></td>
             <td>&nbsp;</td>
-            <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+            <td align="center"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
             <td> </td>
         </tr>
 <?php
@@ -275,7 +275,7 @@ if(count($rs_auditore)>0){
 	?>
 	<table width="100%" border="0" cellpadding="0" cellspacing="0" >      
 		<tr>
-			<td width="14%" class="Etiqueta1">Institución:</td>
+			<td width="14%" class="Etiqueta1">Instituciï¿½n:</td>
 			<td width="27%" >&nbsp;<span class="Etiqueta1"><?php echo $rs_instituc['Emp_Nom'];?></span></td>
 			<td width="10%" class="Etiqueta1"  > </td>  
 			<td width="49%" class="Etiqueta1"  > </td>  
@@ -298,7 +298,7 @@ if(count($rs_auditore)>0){
 	<thead>
 		<th width="4%" align="center">Ord.</th>
 		<th width="13%" align="center"> Cod. Int.</th>
-		<th width="24%" align="center">Descripción del Activo</th>     	  
+		<th width="24%" align="center">Descripciï¿½n del Activo</th>     	  
 		<th width="13%" align="center"> Estado</th> 
 		<th width="8%" align="center"> Auditor Estado</th>                  
 		<th width="32%" align="center" lign="center" >Observaciones</th>            
@@ -411,7 +411,7 @@ else{
 		</tr>
 		<tr>
 			<td align="center"><input  name="img" id="img" type="image" src="../../mascaras/model1/imagenes/32x32/advertencia.PNG"><span class="LetraNegra">
-		Ud. no está autorizado.</span></td>
+		Ud. no estï¿½ autorizado.</span></td>
 		</tr>
 	</table>   
 <?Php

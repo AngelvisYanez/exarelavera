@@ -35,7 +35,7 @@
 			/**
 			* Consulta de los datos del detalle 
 			*/
-			$sl = "SELECT (sum(Cop_Imp) - 
+			$sql = "SELECT (sum(Cop_Imp) - 
 			(sum((Cop_Imp * Cop_Des) /100) + sum((Cop_Imp * Cop_Dec) /100))) as Cop_Imp, Iva_Sri, Iva_Por FROM compras, det_compra, iva
 			WHERE compras.Cop_Cod = det_compra.Cop_Cod AND det_compra.Iva_Cod = iva.Iva_Cod AND det_compra.Cop_Cod = $Par_Sql[0] AND det_compra.Adq_Cod !=13 GROUP BY Iva_Sri, Iva_Por";
 			return $sql;
@@ -84,7 +84,7 @@ FROM
 								";/*En esta SQL se agrego GROUP BY Ren_Sri, Ren_Por, Ret_Num, Aut_Sri, Ret_Fec para unificar 
 								en caso de que a una retencion se le agregue 2 codigos de los mismos */
 	//echo $detalle_xml_233;
-			return $detalle_xml_233;
+			return $sql;
 			break;
 
 			case 234:

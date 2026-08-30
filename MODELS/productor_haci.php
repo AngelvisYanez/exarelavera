@@ -1,5 +1,4 @@
 <?php 
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class productor_haci extends AbstractModel{
     protected $_name = 'productor_haci'; 
@@ -24,7 +23,7 @@ class productor_haci extends AbstractModel{
     public function formatData($data, $type, $allData=null){ 
         return ($type=='I')?$data:$data;
     }
-    public function sqlByNombre($id,$Par_Sql){
+    public function sqlByNombre($id,$Par_Sql,$cond=null){
         $sql="";
         switch($id){
             case "":
@@ -44,7 +43,7 @@ class productor_haci extends AbstractModel{
         //echo $sql."<br/>";
         return $sql;
     }
-    public function sqlByNumero($id,$Par_Sql){
+    public function sqlByNumero($id,$Par_Sql,$cond=null){
         $sql="";
         switch($id){
             case 0:

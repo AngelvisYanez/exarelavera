@@ -661,7 +661,7 @@ $lista_actividades = $obBD_con1->getArrayConsulta(2, array('Emp_Cod' => $Ses_Emp
 
 <script type="text/javascript">
 $(function () {
-    var urlBase = '<?php echo str_replace("'", "\\'", $_SERVER['PHP_SELF']); ?>';
+    var urlBase = <?php echo json_encode($_SERVER['PHP_SELF']); ?>;
     var todasActividades = <?php echo json_encode($lista_actividades); ?>;
     var select2Opts = { language: { noResults: function() { return 'No se encontraron resultados'; }, searching: function() { return 'Buscando...'; } }, allowClear: true };
     function initSelect2Buscable($el, extra) {
@@ -700,7 +700,7 @@ $(function () {
         var dcl = $('#Dcl_Cod').val(), fecIni = $('#Con_Fecha_Inicio').val(), fecFin = $('#Con_Fecha_Fin').val();
         if (!dcl || !fecIni) { alert('Cliente y fecha inicio son obligatorios.'); return; }
         syncConMesesAnual();
-        public $btn = $(this);
+        var $btn = $(this);
         $btn.prop('disabled', true);
         $.post(urlBase, {
             guardarContrato: 1, Con_Cod: $('#Con_Cod').val(), Dcl_Cod: dcl, Con_Numero: $('#Con_Numero').val(),
@@ -761,7 +761,7 @@ $(function () {
         });
         $('#actividadesPorServicio').html(html || '<p class="text-muted">No hay actividades configuradas.</p>');
         $('#actividadesPorServicio .chk-actividad-contrato').off('change').on('change', function () {
-            public $chk = $(this), act = parseInt($chk.data('act'), 10), ser = parseInt($chk.data('ser'), 10);
+            var $chk = $(this), act = parseInt($chk.data('act'), 10), ser = parseInt($chk.data('ser'), 10);
             if ($chk.is(':checked')) {
                 estadoConfig.seleccionados[act] = { Act_Cod: act, Ser_Cod: ser };
                 delete estadoConfig.serviciosEliminados[ser];
@@ -835,7 +835,7 @@ $(function () {
     $('#btnPrecargarRegimen').on('click', function () {
         var con = $('#modalConCod').val(), reg = $(this).data('reg');
         if (!con || !reg) { alert('No hay régimen asignado al cliente. Asigne el régimen en Admin > Clientes.'); return; }
-        public $btn = $(this);
+        var $btn = $(this);
         $btn.prop('disabled', true);
         $('#lblPrecargarResult').text('Cargando...');
         $.post(urlBase, { precargarActividadesRegimen: 1, Con_Cod: con, Reg_Cod: reg }, function (r) {
@@ -860,7 +860,7 @@ $(function () {
     });
 
     function mostrarModalServicios() {
-        public $modal = $('#modalVerServicios');
+        var $modal = $('#modalVerServicios');
         $modal.appendTo('body');
         $modal.addClass('in').css({ display: 'block', visibility: 'visible' }).attr('aria-hidden', 'false');
         $('body').addClass('modal-open');
@@ -872,7 +872,7 @@ $(function () {
         });
     }
     function ocultarModalServicios() {
-        public $modal = $('#modalVerServicios');
+        var $modal = $('#modalVerServicios');
         $modal.removeClass('in').css({ display: 'none', visibility: 'hidden' }).attr('aria-hidden', 'true');
         $('body').removeClass('modal-open');
         $('#modalVerServiciosBackdrop').remove();
@@ -881,7 +881,7 @@ $(function () {
     $(document).on('click', '.btn-ver-servicios', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        public $btn = $(this);
+        var $btn = $(this);
         var con = parseInt($btn.attr('data-con') || $btn.data('con') || 0, 10);
         var cliente = ($btn.attr('data-cliente') || $btn.data('cliente') || '').toString();
         var num = ($btn.attr('data-num') || $btn.data('num') || '').toString();
@@ -927,7 +927,7 @@ $(function () {
     });
 
     function mostrarModalModificar() {
-        public $modal = $('#modalModificarContrato');
+        var $modal = $('#modalModificarContrato');
         $modal.appendTo('body');
         $modal.addClass('modal-in').css({ display: 'block', visibility: 'visible' }).attr('aria-hidden', 'false');
         $('body').addClass('modal-open');
@@ -939,14 +939,14 @@ $(function () {
         });
     }
     function ocultarModalModificar() {
-        public $modal = $('#modalModificarContrato');
+        var $modal = $('#modalModificarContrato');
         $modal.removeClass('modal-in').css({ display: 'none', visibility: 'hidden' }).attr('aria-hidden', 'true');
         $('body').removeClass('modal-open');
         $('#modalModificarBackdrop').remove();
         $(document).off('keydown.cerrarModalModificar');
     }
     $(document).on('click', '.btn-modificar-contrato', function () {
-        public $t = $(this);
+        var $t = $(this);
         $('#modalCon_Cod').val($t.data('con'));
         $('#modalDcl_Cod').val($t.data('dcl'));
         $('#modalClienteNombre').text($t.data('cliente') || '');
@@ -977,7 +977,7 @@ $(function () {
         if (!con || !fecIni) { alert('Fecha inicio es obligatoria.'); return; }
         var mesesModal = [];
         $('#modalModificarContrato .modal-mes-anual:checked').each(function () { mesesModal.push($(this).val()); });
-        public $btn = $(this);
+        var $btn = $(this);
         $btn.prop('disabled', true);
         $.post(urlBase, {
             guardarContrato: 1, Con_Cod: con, Dcl_Cod: $('#modalDcl_Cod').val(), Con_Numero: $('#modalCon_Numero').val(),
@@ -1029,7 +1029,7 @@ $(function () {
     });
 
     $(document).on('click', '.btn-quitar-servicio', function () {
-        public $btn = $(this), serCod = parseInt($btn.data('ser'), 10), con = $('#modalConCod').val();
+        var $btn = $(this), serCod = parseInt($btn.data('ser'), 10), con = $('#modalConCod').val();
         if (!serCod || !con) return;
         if (!confirm('¿Quitar este servicio? Las actividades asociadas se desmarcarán. Los cambios se guardarán al pulsar Guardar.')) return;
         estadoConfig.serviciosEliminados[serCod] = true;
@@ -1042,7 +1042,7 @@ $(function () {
     $('#btnGuardarServiciosActividades').on('click', function () {
         var con = $('#modalConCod').val();
         if (!con) { alert('Seleccione un contrato.'); return; }
-        public $btn = $(this);
+        var $btn = $(this);
         $btn.prop('disabled', true);
         var actividadesActuales = estadoConfig.actividades || [];
         var mapActual = {};
@@ -1099,7 +1099,7 @@ $(function () {
     $('#btnGenerarPropuesta').on('click', function () {
         var con = $('#selContratoPropuesta').val();
         if (!con) { alert('Seleccione un contrato.'); return; }
-        public $btn = $(this);
+        var $btn = $(this);
         $btn.prop('disabled', true);
         $.get(urlBase, { datosPropuestaServiciosAdicionales: 1, Con_Cod: con }, function (r) {
             $btn.prop('disabled', false);
@@ -1192,7 +1192,7 @@ $(function () {
         var filas = $('#contenidoPropuesta .chk-servicio-adicional:checked').closest('tr');
         var seleccionados = [];
         filas.each(function () {
-            public $tr = $(this);
+            var $tr = $(this);
             seleccionados.push({
                 Act_Cod: $tr.data('act'),
                 Act_Nombre: $tr.data('actnombre') || $tr.find('td:first').text(),
@@ -1213,7 +1213,7 @@ $(function () {
         var filas = $('#contenidoPropuesta .chk-servicio-adicional:checked').closest('tr');
         var seleccionados = [];
         filas.each(function () {
-            public $tr = $(this);
+            var $tr = $(this);
             seleccionados.push({
                 Act_Cod: $tr.data('act'),
                 Act_Nombre: $tr.data('actnombre') || $tr.find('td:first').text(),

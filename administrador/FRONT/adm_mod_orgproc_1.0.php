@@ -196,7 +196,7 @@ if(isset($ajax_op2))
         </FIELDSET>
         <button type="button" class="btn btn-primary fileinput-button" title="Guardar" onclick="if (validar_options(this.form) == true){ if (document.getElementById('pagina').checked == true){ validar_requeridos(this.form, 'Pcs_Lin*Pcs_Nom*Rut_Cod*Pcs_Tip*Tpr_Cod*Pcs_Det', 1)} else {validar_requeridos(this.form, 'Pcs_Lin*Pcs_Nom2*Rut_Cod*Pcs_Tip*Tpr_Cod*Pcs_Det', 1)} }" value="Guardar"><i class=" icon-book icon-white"></i><span>&nbsp;&nbsp;Guardar&nbsp;&nbsp;</span></button>
 	     </form>
-      <script language="javascript">
+      <script type="text/javascript">
 		 ShowHide('Pcs_Nom'); 	 
 	  </script>
     </div>
@@ -318,7 +318,7 @@ if (isset($nproceso))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>								
-		<script language="javascript" src="../VALIDACIONES/adm_val_orgproc.js"></script>	
+		<script type="text/javascript" src="../VALIDACIONES/adm_val_orgproc.js"></script>	
 		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>	
          <!--Librerias para interfaz -->               
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
@@ -332,6 +332,7 @@ if (!isset($np))
 {
 	$np=0;
 }
+$rs_direc = array();
 /* 
 * Cargado de los nodos - Codigo Empresa, Nodo Padre 
 */
@@ -544,7 +545,7 @@ if (isset($np))
   if (count($rs_procesos) == 0)
   {
 	?>    
-    <script language="javascript">
+    <script type="text/javascript">
 	 ShowHide('id_proceso'); 	 
 	</script>
   <?Php

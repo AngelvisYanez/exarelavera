@@ -75,7 +75,7 @@ if(isset($productos)){
 												<select name="Con_Cod" class="form-control input-xs" id="Con_Cod">
 													<option value="nombre">Por producto</option>
 													<option value="con_des">Por centro de consumo</option>
-												<select>
+												</select>
 												</div>
 										</div>
 									</div>	
@@ -96,7 +96,7 @@ if(isset($productos)){
 											</div>
 
 											<div class="col-xs-2">
-											  <div class=""><button type="button" id="Con_Cods" onclick="kardexGrid.setGridParam({postData:$('#formFiltros').getData('productos')}); kardexGrid.trigger('reloadGrid', [{page:1}]); setCaption(); "class="btn btn-sm btn-success" title="Ejecutar Búsqueda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
+											  <div class=""><button type="button" id="Con_Cods" onclick="kardexGrid.setGridParam({postData:$('#formFiltros').getData('productos')}); kardexGrid.trigger('reloadGrid', [{page:1}]); setCaption(); "class="btn btn-sm btn-success" title="Ejecutar Bï¿½squeda"><span class="glyphicon glyphicon-search"></span> &nbsp;Filtrar</button></div>
 											</div>
 										  </div>
 									</div>
@@ -136,7 +136,7 @@ if(isset($productos)){
 								$('#fin').datepicker("setDate", new Date()); 
 								
                                 kardexGrid.createGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET", datatype: "json", regional : 'es',//ajaxRowOptions: { async: true },
                                     postData: $('#formFiltros').getData('productos'),
                                     autowidth : true, shrinkToFit: true, height: 270,responsive:true,footerRow:true,

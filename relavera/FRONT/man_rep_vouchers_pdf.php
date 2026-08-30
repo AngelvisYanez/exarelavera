@@ -66,6 +66,9 @@ function comprimirImagenVoucher($img_path, $temp_dir) {
 
 $temp_dir_imgs = sys_get_temp_dir() . '/v_pdf_' . uniqid();
 @mkdir($temp_dir_imgs);
+if (!is_dir($temp_dir_imgs)) {
+    error_log("No se pudo crear directorio temporal: $temp_dir_imgs");
+}
 $imgs_temporales = array();
 
 $Fec_Des = isset($_GET['Fec_Des']) ? $_GET['Fec_Des'] : '';

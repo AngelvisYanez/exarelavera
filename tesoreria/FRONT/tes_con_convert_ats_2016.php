@@ -174,7 +174,7 @@ if(isset($_FILES)&&!empty($_FILES)){
                 <script src="../../framework/plugins/ace-editor/ace-1.2/ace.js"></script>
                 <script src="../../framework/plugins/ace-editor/vkbeautify-0.99.js"></script>
                 <!--<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />-->
-                <script language="JavaScript">
+                <script type="text/javascript">
 		
 		</script>
 	</HEAD>
@@ -255,7 +255,7 @@ if(isset($_FILES)&&!empty($_FILES)){
         //formData.append(f.attr("name"), $(this)[0].files[0]);
         $("#loader").show();
 		$.ajax({
-            url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+            url: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
             type: "post", dataType: "json", data: formData, cache: false, contentType: false, processData: false
         }).done(function(response){
 			$("#loader").fadeOut("slow");

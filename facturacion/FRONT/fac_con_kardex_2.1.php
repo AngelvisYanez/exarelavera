@@ -679,7 +679,7 @@ $bodegas = $obBD_con1->getArrayConsulta(5008, array('usu_cod' => $Ses_Usu_Cod, '
       $('#ini').val('2015-01-01'); //$('#ini').datepicker("setDate", new Date(today.getTime() - (30 * 24 * 3600 * 1000)));
       $('#fin').datepicker("setDate", new Date());
       $('#kardex').jqGrid('setCaption', data['Ite_Lar'] + ' - ' + 'Desde ' + $('#ini').val() + ' Hasta ' + $('#fin').val());
-      $.getDataJson('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>', {
+      $.getDataJson('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>', {
         Pro_Cod: data['Pro_Cod'],
         ajaxProd: true
       }, function(response) {

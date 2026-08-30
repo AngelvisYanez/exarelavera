@@ -57,7 +57,10 @@ if(isset($getDetalleComprobante)){
         <!--TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE-->
         <TITLE><?Php echo "Costo Venta Elimiar [EXA]"; ?></TITLE>
         <meta charset= "UTF-8">
-        <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php")?>  
+        <?php
+        $mask_model = 'model1';
+        require_once("../../mascaras/unified-loader.php");
+        ?>
         <style>#tabsInsert.ui-widget-content{background:none !important;} .ui-tabs-panel{padding-bottom: 0 !important;}.ui-tabs-nav{padding-top: 0 !important;}.ui-tabs .ui-tabs-panel{padding: 5px;}</style>
         <script type="text/ecmascript" src="../VALIDACIONES/con_val_baj_costoventa.js"></script>
     </head>

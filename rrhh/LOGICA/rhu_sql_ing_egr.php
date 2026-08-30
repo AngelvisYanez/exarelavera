@@ -70,7 +70,6 @@ function sentencias_rrhh_ing_egr($id,$Par_Sql)
             break;
         case 10:
             $sql="SELECT * FROM map_system WHERE Map_Est='A' AND Emp_Cod='$Par_Sql[0]';";
-            echo $sql.'<br/>';
             break;
         case 11:
             $sql="SELECT * FROM areas_rrhh WHERE Are_Est='A' AND Emp_Cod like '$Par_Sql[0]'";

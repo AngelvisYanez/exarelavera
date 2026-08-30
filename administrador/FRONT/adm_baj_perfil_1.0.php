@@ -2,10 +2,10 @@
 <?php     
 /* 
 * Alias:					Modificar
-* Descripción: 				Permite activar y desactivar los procesos
-* Fecha de actualización:	2011-03-12
+* Descripciï¿½n: 				Permite activar y desactivar los procesos
+* Fecha de actualizaciï¿½n:	2011-03-12
 * Desarrollador:			Lewis Chimarro
-* Fecha de actualización:	2013-06-24
+* Fecha de actualizaciï¿½n:	2013-06-24
 * Desarrollador:			Fabian Gallardo G.
 */
 
@@ -25,7 +25,7 @@ $obBD_conexion = new Class_Log_Conexion_Admp($Ses_Dat_Dis);
 $obBD_con1 =  new Class_Log_Datos_Admp; 	  
 
 /*
-* Creación del objeto para evitar el reenvio
+* Creaciï¿½n del objeto para evitar el reenvio
 */
 $thisPost = new Post_Block;
 
@@ -50,7 +50,7 @@ if (isset($ajax_op))
           <td width="87%" class="LetraNegra"><?Php echo $row_rs_perfil['Per_Des']; ?></td>
         </tr>
         <tr>
-          <td width="13%" class="Etiqueta1">Observación:&nbsp;</td>
+          <td width="13%" class="Etiqueta1">Observaciï¿½n:&nbsp;</td>
           <td width="87%" class="LetraNegra"><?Php 
 		  	if($row_rs_perfil['Per_Obs'] == ""){ 
 				echo "(ninguna)";
@@ -121,7 +121,7 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php")?>        
 		<script src="../LOGICA/TreeMenu.js" language="JavaScript" type="text/javascript"></script>
-		<script language="javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
+		<script type="text/javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
 		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>	
         <!--Librerias para interfaz -->               
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
@@ -154,7 +154,7 @@ if ($thisPost->postBlock($_POST['postID']) && isset($hdd_save))
 </legend>
 <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader03">
 	<thead>
-		<th width="4%">Cód. Int. </th>
+		<th width="4%">Cï¿½d. Int. </th>
 		<th>Perfiles</th>
 		<th width="2%">&nbsp;</th>
 	</thead>

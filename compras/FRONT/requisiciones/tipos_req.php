@@ -274,9 +274,9 @@ $mes = date("m");
         <script type="text/ecmascript" src="/Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
         <script type="text/javascript" src="/framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/ecmascript" src="/Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
-        <script language="javascript" src="/Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="/Librerias/validaciones/validacion.js"></script>
         <script type="text/javascript" src="/framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
-        <script language="javascript" src="../../VALIDACIONES/requisiciones/tipos.js?x=x11"></script>
+        <script type="text/javascript" src="../../VALIDACIONES/requisiciones/tipos.js?x=x11"></script>
         <script type="text/javascript">
         	$('#documentoMain').hide();
           loadTasks();    	

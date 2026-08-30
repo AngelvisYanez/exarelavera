@@ -1,4 +1,4 @@
-﻿<?Php 
+<?Php 
 /**
  * Logica de las paginas que tienen que ver con las faltas
  *
@@ -68,7 +68,7 @@ class Class_Log_Datos_Deu extends MysqlDatos{
 		
 		$this->free_result($result);
 		
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**
@@ -268,7 +268,6 @@ class Class_Log_Datos_Deu extends MysqlDatos{
 					}
 				}
 			}
-			echo mysqli_error($obBD_conexion->conexion);
 			$this->fin_transaccion_nomsn($obBD_conexion->conexion);
 		}
 	}

@@ -54,12 +54,13 @@ if (isset($getRolDetail)) {
             $totalSemanal = $obBD_con1->getRowConsulta(53, $dataSemanal, $obBD_conexion);
             $persona['labores_total'] = $totalSemanal['totalSemanal'];
 
-            if (!empty($persona['labores_total'])) {
-                if ($persona['medio_tiempo'] == '1') {
-                    $diferencia = number_format($persona['labores_total'] - (($persona['sueldo'] * 12) / $semanas / 2), 2);
-                } else {
-                    $diferencia = number_format($persona['labores_total'] - ($persona['sueldo'] * 12) / $semanas, 2);
-                }
+                if (!empty($persona['labores_total'])) {
+                    $semanas = 52;
+                    if ($persona['medio_tiempo'] == '1') {
+                        $diferencia = number_format($persona['labores_total'] - (($persona['sueldo'] * 12) / $semanas / 2), 2);
+                    } else {
+                        $diferencia = number_format($persona['labores_total'] - ($persona['sueldo'] * 12) / $semanas, 2);
+                    }
 
                 if ($diferencia > 0) {
                     $persona['labores_ingreso'] = $diferencia;

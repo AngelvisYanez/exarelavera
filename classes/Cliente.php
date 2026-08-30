@@ -51,12 +51,12 @@ class ClienteClass {
         $this->datos->inicio_transaccion($this->conexion);
         $this->datos->operacionobBD(19,$data,$this->conexion);
         $data['Prs_Cod'] = $this->datos->insercionid($this->conexion);
-        $this->datos->operacionobBD(12,$body["Prs_Ced"].'*'.$body["Prs_Nom"].'*'.$body["Prs_Ape"].'*'.$body["Prs_Sex"].'*'.$body["Prs_Dir"].'*'.$body["Prs_Tel"].'*'.$body["Prs_Te2"].'*'.$body["Prs_Cel"].'*'.$body["Ciu_Cod"].'*'.$body["Ide_Cod"].'*'.(empty($pers['Prs_Cor'])&&!empty($body["Prs_Cor"])?$body["Prs_Cor"]:'').'*'.$data['Prs_Cod'],$this->conexion);
+        $this->datos->operacionobBD(12,$body["Prs_Ced"].'*'.$body["Prs_Nom"].'*'.$body["Prs_Ape"].'*'.$body["Prs_Sex"].'*'.$body["Prs_Dir"].'*'.$body["Prs_Tel"].'*'.$body["Prs_Te2"].'*'.$body["Prs_Cel"].'*'.$body["Ciu_Cod"].'*'.$body["Ide_Cod"].'*'.(empty($body['Prs_Cor'])&&!empty($body["Prs_Cor"])?$body["Prs_Cor"]:'').'*'.$data['Prs_Cod'],$this->conexion);
         $this->datos->operacionobBD(20,$data,$this->conexion);
         $this->datos->fin_transaccion_nomsn($this->conexion);
-        if ($this->datos->Error == 0) { $responce['success'] = true; }
-        else{ $responce['success'] = false; $responce['message'] = "No se ha logrado realizar la Transaccion".$this->datos->MsgError; }
-        $this->datos->echoJson($responce);
+        if ($this->datos->Error == 0) { $response['success'] = true; }
+        else{ $response['success'] = false; $response['message'] = "No se ha logrado realizar la Transaccion".$this->datos->MsgError; }
+        $this->datos->echoJson($response);
     }
 
     public function updateCliente($body){
@@ -65,9 +65,9 @@ class ClienteClass {
         $this->datos->operacionobBD(12,mb_convert_encoding($body["Prs_Ced"].'*'.$body["Prs_Nom"].'*'.$body["Prs_Ape"].'*'.$body["Prs_Sex"].'*'.$body["Prs_Dir"].'*'.$body["Prs_Tel"].'*'.$body["Prs_Te2"].'*'.$body["Prs_Cel"].'*'.$body["Ciu_Cod"].'*'.$body["Ide_Cod"].'*'.(!empty($body["Prs_Cor"])?$body["Prs_Cor"]:'').'*'.$body["Prs_Cod"], 'ISO-8859-1', 'UTF-8'),$this->conexion); 
         $this->datos->operacionobBD(26,$body["Prs_Cod"].'*'.$body["Cli_Tic"].'*'.$body["Cli_Con"].'*'.$body["Cli_Cod"].'*'.$body["Prs_Cor"],$this->conexion); 
         $this->datos->fin_transaccion_nomsn($this->conexion->conexion);
-        if ($this->datos->Error == 0) { $responce['success'] = true; }
-        else{ $responce['success'] = false; $responce['message'] = "No se ha logrado realizar la Transaccion"; }
-        $this->datos->echoJson($responce);
+        if ($this->datos->Error == 0) { $response['success'] = true; }
+        else{ $response['success'] = false; $response['message'] = "No se ha logrado realizar la Transaccion"; }
+        $this->datos->echoJson($response);
     }
     
 }

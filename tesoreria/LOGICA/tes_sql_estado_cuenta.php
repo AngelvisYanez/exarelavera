@@ -53,7 +53,7 @@ if (!function_exists('sentencias_estado_cuenta_proveedor')) {
                     "asientos.Asi_Val AS TOTAL, " .
                     "0 AS ABONO, " .
                     "DATEDIFF(CURDATE(), ccpp_pagar.Cpp_Ven) AS Dias_Vencimiento, " .
-                    "(SELECT COALESCE(SUM(det_ccpp_p.Pag_Val), 0) FROM det_ccpp_p WHERE det_ccpp_p.Cpp_Cod = ccpp_pagar.Cpp_Cod) AS Abono_Factura, " .
+                    "IFNULL(abonos_f.Pag_Sum, 0) AS Abono_Factura, " .
                     "1 AS Orden_Tipo " .
                     "FROM proveedore " .
                     "INNER JOIN compras ON (proveedore.Prv_Cod = compras.Prv_Cod) " .
@@ -61,6 +61,7 @@ if (!function_exists('sentencias_estado_cuenta_proveedor')) {
                     "INNER JOIN comprobantes ON (ccpp_pagar.Com_Cod = comprobantes.Com_Cod) " .
                     "INNER JOIN tipo_asien ON (comprobantes.Tia_Cod = tipo_asien.Tia_Cod) " .
                     "INNER JOIN asientos ON (comprobantes.Com_Cod = asientos.Com_Cod AND asientos.Asi_Deh = 'H') " .
+                    "LEFT JOIN (SELECT Cpp_Cod, SUM(Pag_Val) AS Pag_Sum FROM det_ccpp_p GROUP BY Cpp_Cod) abonos_f ON ccpp_pagar.Cpp_Cod = abonos_f.Cpp_Cod " .
                     "WHERE proveedore.Prv_Cod = " . $Prv_Cod . " AND proveedore.Emp_Cod = '" . $Emp_Cod . "' " .
                     "AND (compras.Cop_Est = 'A' OR compras.Cop_Est = 'E') " .
                     "AND (comprobantes.Com_Est = 'A' OR comprobantes.Com_Est = 'E') " .
@@ -74,8 +75,8 @@ if (!function_exists('sentencias_estado_cuenta_proveedor')) {
                     "NULL AS Fecha_Venc, " .
                     "'Pago' AS Tipo, " .
                     "IFNULL(comprobantes.Com_Obs, '') AS Documento, " .
-                    "(SELECT banco.Ban_Cue FROM det_ccpp_p d2 INNER JOIN cheques ON cheques.Asi_Cod = d2.Asi_Cod INNER JOIN banco ON cheques.Ban_Cod = banco.Ban_Cod WHERE d2.Com_Cod = comprobantes.Com_Cod LIMIT 1) AS Cuenta_Bancaria, " .
-                    "(SELECT cheques.Che_Fec FROM det_ccpp_p d2 INNER JOIN cheques ON cheques.Asi_Cod = d2.Asi_Cod WHERE d2.Com_Cod = comprobantes.Com_Cod LIMIT 1) AS Fecha_Cheque, " .
+                    "cheq_info.Ban_Cue AS Cuenta_Bancaria, " .
+                    "cheq_info.Che_Fec AS Fecha_Cheque, " .
                     "0 AS TOTAL, " .
                     "SUM(det_ccpp_p.Pag_Val) AS ABONO, " .
                     "NULL AS Dias_Vencimiento, " .
@@ -87,6 +88,9 @@ if (!function_exists('sentencias_estado_cuenta_proveedor')) {
                     "INNER JOIN ccpp_pagar ON (det_ccpp_p.Cpp_Cod = ccpp_pagar.Cpp_Cod) " .
                     "INNER JOIN compras ON (ccpp_pagar.Cop_Cod = compras.Cop_Cod) " .
                     "INNER JOIN proveedore ON (compras.Prv_Cod = proveedore.Prv_Cod) " .
+                    "LEFT JOIN (SELECT d2.Com_Cod, MIN(cheques.Che_Fec) AS Che_Fec, MIN(banco.Ban_Cue) AS Ban_Cue " .
+                    "           FROM det_ccpp_p d2 INNER JOIN cheques ON cheques.Asi_Cod = d2.Asi_Cod INNER JOIN banco ON cheques.Ban_Cod = banco.Ban_Cod " .
+                    "           GROUP BY d2.Com_Cod) cheq_info ON cheq_info.Com_Cod = comprobantes.Com_Cod " .
                     "WHERE proveedore.Prv_Cod = " . $Prv_Cod . " AND proveedore.Emp_Cod = '" . $Emp_Cod . "' " .
                     "AND comprobantes.Com_Est = 'A' " .
                     "AND comprobantes.Com_Fec BETWEEN '" . $fec_ini . "' AND '" . $fec_fin . "' " .

@@ -5,7 +5,7 @@
  * 
  * @author Lewis Chimarro
  * @version 1.0
- * Fecha de actualización:	2012-06-01
+ * Fecha de actualizaciï¿½n:	2012-06-01
  * 
  * @package tesoreria.FRONT
  */
@@ -49,7 +49,7 @@ if (isset($hdd_save))
 		$obBD_con1->operacionobBD(2, $Tip_Des.'*'.$Tip_Obs, $obBD_conexion);
 		
 		/**
-		* fin de la transacción 
+		* fin de la transacciï¿½n 
 		*/
 		$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 	}
@@ -67,7 +67,7 @@ if (isset($ajax_mar))
 	
 	if (count($row_rs_con_mar) > 0)
 	{ ?>
-		<input name="Mar_Des" type="text" id="Mar_Des" value="" size="30" maxlength="30" style="text-transform:uppercase" onBlur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&Mar_Des=' + this.value,'div_mar')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	¡La marca: <?php echo strtoupper($Mar_Des); ?> ya existe!  
+		<input name="Mar_Des" type="text" id="Mar_Des" value="" size="30" maxlength="30" style="text-transform:uppercase" onBlur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_mar=1&Mar_Des=' + this.value,'div_mar')">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	ï¿½La marca: <?php echo strtoupper($Mar_Des); ?> ya existe!  
 	<?php
 	}
 	else
@@ -76,7 +76,7 @@ if (isset($ajax_mar))
 	<?php	
 		}					
 		?>
-        <script language="javascript">
+        <script type="text/javascript">
 			document.getElementById('btnGuardar').disabled=false;
 		</script>
         <?php
@@ -87,7 +87,7 @@ exit();
 <HTML>
 	<HEAD>
     	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {

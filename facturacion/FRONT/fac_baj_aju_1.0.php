@@ -91,6 +91,10 @@ if (isset($txt_busqueda))
 		*/
 		$rs_buspro = $obBD_con1->getArrayConsulta(1056, $txt_busqueda.'*'.$ini.'*'.$fin, $obBD_conexion);	
 }
+else
+{
+	$rs_buspro = array();
+}
 
 if(isset($ajx_det)){
 	
@@ -133,10 +137,10 @@ if(isset($ajx_det)){
 		<TITLE><?Php echo "Ajustes Anular [EXA]"; ?></TITLE>
         <meta charset="UTF-8">
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>		
-		<script language="javascript" src="../VALIDACIONES/fac_val_aju.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_aju.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	    <!--Librerias para calendario -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script>         
         <script>

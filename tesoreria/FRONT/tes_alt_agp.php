@@ -228,7 +228,7 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
 
                                  <!-- Text input-->
                                 <div class="form-group">
-                                  <label class="col-sm-4 control-label label-sm required" for="Cop_Fec">Fec. Emisión:</label>  
+                                  <label class="col-sm-4 control-label label-sm required" for="Cop_Fec">Fec. Emisiï¿½n:</label>  
                                   <div class="col-sm-4">                                    
                                           <input id="Gas_Fec" name="Gas_Fec" class="form-control input-sm dateType" placeholder="0000-00-00" required>
                                                                       
@@ -272,7 +272,7 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
 
                                 <!-- Textarea -->
                                 <div class="form-group">
-                                  <label class="col-sm-4 control-label" for="Gas_Obs">Observación:</label>
+                                  <label class="col-sm-4 control-label" for="Gas_Obs">Observaciï¿½n:</label>
                                   <div class="col-sm-8">                     
                                     <textarea class="form-control" id="Gas_Obs" name="Gas_Obs"></textarea>
                                   </div>
@@ -338,11 +338,11 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
                         $(document).ready(function () {
                             var jgrid=$('#gastosGrid');
                             jgrid.jqGrid({
-                                url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                 mtype: "GET", datatype: "json", regional : 'es',responsive:true,
                                 autowidth : true, shrinkToFit: true,height:325,postData: $('#formSearch').getData('GastosAjax'),caption:'Documentos Registrados',hidegrid:false,
                                 cmTemplate: {sortable:true},colModel: [
-                                    { label: 'Cód.Int.', name: 'Gas_Cod', key: true,hidden:true,viewable: false },
+                                    { label: 'Cï¿½d.Int.', name: 'Gas_Cod', key: true,hidden:true,viewable: false },
                                     { label: 'Prv_Cod', name: 'Prv_Cod', hidden:true,viewable: false },
                                     { label: 'Agp_Cod', name: 'Agp_Cod', hidden:true,viewable: false },
                                     { label: 'Mes', name: 'Mes', width: 40 },
@@ -351,7 +351,7 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
                                     { label: 'Doc.Num.', name: 'Gas_Num', width: 90,align:"center" },                        
                                     { label: 'T.Gasto', name: 'Agp_Nom',align:"center" , width: 30 },                                     
                                     { label: 'B.Imponible', name: 'Gas_Val', width: 60,align:"right" , formatter:'currency', decimalPlaces: '2', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.'},summaryTpl: "{0}", summaryType: "sum",summaryRound:'2', summaryRoundType: 'round' },
-                                    { label: 'Observación', name: 'Gas_Obs', width: 100, hidden:true },
+                                    { label: 'Observaciï¿½n', name: 'Gas_Obs', width: 100, hidden:true },
                                         { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 60, align: 'center',viewable: false,
                                             formatter:function (cellvalue, options, rowObject) { 
                                                 var clic='editGasto($("#gastosGrid").jqGrid("getRowData",'+rowObject.Gas_Cod+'))';
@@ -383,7 +383,7 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
         </div>
     </div>
     <!--INICIO DEL DIALOGO BUSCAR PROVEEDOR--> 
-    <div id="provDialog" title="Búsqueda de Proveedores">  
+    <div id="provDialog" title="Bï¿½squeda de Proveedores">  
       <form class="form-horizontal normal"> 
         <fieldset>
 		<legend>Filtros</legend>
@@ -391,7 +391,7 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
                     <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>  
                     <div class="col-xs-8 radioset" >
                           <input id="rad1" name="op_opciones" type="radio" value="d" checked="" onclick="setfocus(this.form.search)" alt="" /><label for="rad1">&nbsp;&nbsp;Apellido&nbsp;&nbsp;</label>
-                          <input id="rad2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" /><label for="rad2">&nbsp;&nbsp;Cédula/R.U.C.&nbsp;&nbsp;</label>
+                          <input id="rad2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" /><label for="rad2">&nbsp;&nbsp;Cï¿½dula/R.U.C.&nbsp;&nbsp;</label>
                     </div>
                 </div>
                 <div class="form-group">
@@ -409,10 +409,10 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
     <script type="text/javascript">
         $(document).ready(function() {               
                 $.createSearchDialog('#provDialog',[
-                        { label: 'Cód.Int.', name: 'Prv_Cod', key: true,hidden:true,viewable: true },                                
-                        { label: 'Cédula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
+                        { label: 'Cï¿½d.Int.', name: 'Prv_Cod', key: true,hidden:true,viewable: true },                                
+                        { label: 'Cï¿½dula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
                         { label: 'Proveedor', name: 'proveedor', width: 190, cellattr: function (rowId, tv, rawObject, cm, rdata) { return 'style="white-space: normal;"'; }},                   
-                        { label: 'Dirección', name: 'Prs_Dir',hidden:true,viewable: true },                      
+                        { label: 'Direcciï¿½n', name: 'Prs_Dir',hidden:true,viewable: true },                      
                             { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center',viewable: false,
                                 formatter:function (cellvalue, options, rowObject) { 
                                     var clic='selectProvee($("#provGrid").jqGrid("getRowData",'+rowObject.Prv_Cod+'))';
@@ -427,10 +427,10 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
     <script type="text/javascript" src="../../framework/jquery/jquery.plugins/MaskedInput/jquery.maskedinput.1.4.1.min.js"></script> 
    <script type="text/javascript">
        function loadTotales(){
-           $('#agpTotales').load("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{totales:true,Emp_Cod:<?php echo  $Ses_Emp_Cod; ?>,Fec_Ini:$('#Fec_Ini').val(),Fec_Fin:$('#Fec_Fin').val()});
+           $('#agpTotales').load("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{totales:true,Emp_Cod:<?php echo  $Ses_Emp_Cod; ?>,Fec_Ini:$('#Fec_Ini').val(),Fec_Fin:$('#Fec_Fin').val()});
        }  
        function generaXml(){            
-            $.get("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$("#formXml").getData('xml'), function(response){	
+            $.get("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$("#formXml").getData('xml'), function(response){	
                 if(response['success']===true){$.downloadFile(response['xml'], response['name']); $('#xmlDialog').dialog('close');}
 		else{alert("No se logro generar el Xml!");}
             },'json').fail(function(error) {alert("El Servidor ha fallado en responder!");});
@@ -442,14 +442,14 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
             $('#limits').html('Desde el '+$("#Fec_Ini").val()+' hasta el '+$("#Fec_Fin").val());
        }
        function loadCiud(cod){           
-                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{Pro_Cod:cod,loadCiud:true}, function(response){	
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{Pro_Cod:cod,loadCiud:true}, function(response){	
                     if(response['success']===true){
                        $('#Ciu_Cod').html(response['html']);
                     }else{$.alert();}
                 },'json').fail(function(error) {$.alert();});         
        }
        function deleteGasto(cod){          
-                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{delete:true,Gas_Cod:cod}, function(response){	
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{delete:true,Gas_Cod:cod}, function(response){	
                     if(response['success']===true){                        
                         $("#gastosGrid").jqGrid('setGridParam',{page:1}).trigger('reloadGrid');                        
                         $.alert("El Registro se ha Eliminado con Exito!");
@@ -462,7 +462,7 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
                var data=$('#formAGP').getData('save');
                data['Fec_Ini']=$('#Fec_Ini').val();
                data['Fec_Fin']=$('#Fec_Fin').val();
-                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function(response){	
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function(response){	
                     if(response['success']===true){
                         $('#formAGP')[0].reset();
                         $("#gastosGrid").jqGrid('setGridParam',{page:1}).trigger('reloadGrid');                        
@@ -520,9 +520,9 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
             </div>
             <!-- Text input-->
             <div class="form-group">
-              <label class="col-sm-3 control-label label-sm required" for="Emp_Ruc">Identificación:</label>  
+              <label class="col-sm-3 control-label label-sm required" for="Emp_Ruc">Identificaciï¿½n:</label>  
               <div class="col-sm-4">                                    
-                   <input name="Emp_Ruc" class="form-control input-xs" placeholder="RUC/Cédula" value="<?php echo $empresa['Emp_Ruc']; ?>" type="text" required />
+                   <input name="Emp_Ruc" class="form-control input-xs" placeholder="RUC/Cï¿½dula" value="<?php echo $empresa['Emp_Ruc']; ?>" type="text" required />
               </div>                                 
             </div> 
             
@@ -551,15 +551,15 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
             
             <!-- Text input-->
             <div class="form-group">
-              <label class="col-sm-3 control-label label-sm required" for="Dir_Inter">Dir. Intersección:</label>  
+              <label class="col-sm-3 control-label label-sm required" for="Dir_Inter">Dir. Intersecciï¿½n:</label>  
               <div class="col-sm-9">                                    
-                   <input name="Dir_Inter" class="form-control input-xs" placeholder="Calle Intersección" value="" type="text" required />
+                   <input name="Dir_Inter" class="form-control input-xs" placeholder="Calle Intersecciï¿½n" value="" type="text" required />
               </div>                                 
             </div>
             
              <!-- Text input-->
             <div class="form-group">
-              <label class="col-sm-3 control-label label-sm required" for="Pas_Cod">País:</label>  
+              <label class="col-sm-3 control-label label-sm required" for="Pas_Cod">Paï¿½s:</label>  
               <div class="col-sm-3">                                    
                   <select id="Pas_Cod" name="Pas_Cod" class="form-control input-xs" disabled>
                       <?php $paises = $obBD_con1->getArrayConsulta(27,'', $obBD_conexion); ?>
@@ -599,7 +599,7 @@ $empresa = $obBD_con1->getRowConsulta(26, $Ses_Suc_Cod, $obBD_conexion);
             
             <!-- Text input-->
             <div class="form-group">
-              <label class="col-sm-3 control-label label-sm" for="Emp_Tel">Teléfono:</label>  
+              <label class="col-sm-3 control-label label-sm" for="Emp_Tel">Telï¿½fono:</label>  
               <div class="col-sm-3">                                    
                   <input id="Emp_Tel" name="Emp_Tel" class="form-control input-xs" placeholder="9999999999" value="<?php echo ($empresa['Suc_Te1']); ?>" type="text" />
               </div>                                 

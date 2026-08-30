@@ -3,7 +3,6 @@
 namespace Mpdf\Writer;
 
 use Mpdf\Strict;
-
 use Mpdf\Mpdf;
 use Mpdf\Pdf\Protection;
 
@@ -33,14 +32,14 @@ final class BaseWriter
 		if ($this->mpdf->state === 2) {
 			$this->endPage($s, $ln);
 		} else {
-			$this->mpdf->buffer .= $s . ($ln ? "\n" : '');
+			$this->mpdf->buffer->append($s, $ln);
 		}
 	}
 
 	public function string($s)
 	{
 		if ($this->mpdf->encrypted) {
-			$s = $this->protection->rc4($this->protection->objectKey($this->mpdf->_current_obj_id), $s);
+			$s = $this->protection->rc4($this->protection->objectKey($this->mpdf->currentObjectNumber), $s);
 		}
 
 		return '(' . $this->escape($s) . ')';
@@ -54,16 +53,16 @@ final class BaseWriter
 
 		// Begin a new object
 		if (!$onlynewobj) {
-			$this->mpdf->offsets[$obj_id] = strlen($this->mpdf->buffer);
+			$this->mpdf->offsets[$obj_id] = $this->mpdf->buffer->getLength();
 			$this->write($obj_id . ' 0 obj');
-			$this->mpdf->_current_obj_id = $obj_id; // for later use with encryption
+			$this->mpdf->currentObjectNumber = $obj_id; // for later use with encryption
 		}
 	}
 
 	public function stream($s)
 	{
 		if ($this->mpdf->encrypted) {
-			$s = $this->protection->rc4($this->protection->objectKey($this->mpdf->_current_obj_id), $s);
+			$s = $this->protection->rc4($this->protection->objectKey($this->mpdf->currentObjectNumber), $s);
 		}
 
 		$this->write('stream');
@@ -75,7 +74,7 @@ final class BaseWriter
 	{
 		$s = $this->utf8ToUtf16BigEndian($s, true);
 		if ($this->mpdf->encrypted) {
-			$s = $this->protection->rc4($this->protection->objectKey($this->mpdf->_current_obj_id), $s);
+			$s = $this->protection->rc4($this->protection->objectKey($this->mpdf->currentObjectNumber), $s);
 		}
 
 		return '(' . $this->escape($s) . ')';

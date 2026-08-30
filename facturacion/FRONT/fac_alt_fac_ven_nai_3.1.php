@@ -3,7 +3,7 @@
  * @abstract Permite realizar el registro de un proceso de facturaciï¿½n de viajes
  * @author Erick Cordova
  * @version 2.0
- * Fecha de creación  2017-07-25
+ * Fecha de creaciï¿½n  2017-07-25
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/fac_log_factura.php');
@@ -93,7 +93,7 @@ if(isset($prfAjax)){
     $obBD_con1->echoLog($responce);
 }
 
-//Sección para listar los clientes registrados en la empresa
+//Secciï¿½n para listar los clientes registrados en la empresa
 if(isset($clieAjax)){
     $response=$obBD_con1->getPageGrid(1, $Prs_Ced.'*'.$Ses_Emp_Cod.'*'.$op_opciones, $obBD_conexion, $page, $rows);
     $Sel=$obBD_con1->select()->from('viaje',array('Viajes'=>$obBD_con1->expr('COUNT(Via_Cod)')));
@@ -134,13 +134,13 @@ if(isset($guardaClieAjax)){
         $data['Cli_Cod'] = $obBD_con1->insercionid ($obBD_conexion->conexion);
         $data['cliente'] = trim($data['Prs_Ape'].' '.$data['Prs_Nom']);
     $obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
-    if($obBD_con1->Error==0) {$responce=array('success'=>true,'clie'=>$data);} else {$responce=array('success'=>false,'message'=>'No se pudo realizar la transacción!','error'=>$obBD_con1->MsgError);}
+    if($obBD_con1->Error==0) {$responce=array('success'=>true,'clie'=>$data);} else {$responce=array('success'=>false,'message'=>'No se pudo realizar la transacciï¿½n!','error'=>$obBD_con1->MsgError);}
     utf8_encode_deep($responce); echo json_encode($responce);exit();
 }
-//Sección para extraer el Pun_Cod y Vnd_Cod del usuario sobre la tabla vendedor
+//Secciï¿½n para extraer el Pun_Cod y Vnd_Cod del usuario sobre la tabla vendedor
 $rs_Punto = $obBD_con1->getRowConsulta(7,$Ses_Prs_Cod.'*'.$Ses_Suc_Cod, $obBD_conexion);
 
-//Sección para obtener el número de secuencia
+//Secciï¿½n para obtener el nï¿½mero de secuencia
 if(isset($numeroSec)){
     $response=$obBD_con1->getRowConsulta(9,$Ses_Prs_Cod.'*'.$Ses_Suc_Cod.'*'.$Tic_Cod.'*'.$Aut_Cod,$obBD_conexion);
     if(isset($Aut_Sri)) $response['Aut_Sri']=$Aut_Sri;
@@ -150,7 +150,7 @@ if(isset($numeroSec)){
     echo json_encode($response);
     exit();
 }
-//Sección para comprobar si el número de secuencia ya se encuentra registado
+//Secciï¿½n para comprobar si el nï¿½mero de secuencia ya se encuentra registado
 if(isset($existeNumdoc)){
     $rs_numdocumento=$obBD_con1->getRowConsulta(11,$Ses_Suc_Cod.'*'.$Aut_Sri.'*'.$Vet_Num.'**'.$Pun_Sri,$obBD_conexion);
     if($rs_numdocumento['total']*1>0){$response['existe']=true;}else{$response['existe']=false;}
@@ -198,8 +198,9 @@ if(isset($proAjax)){
     }
     utf8_encode_deep($responce['rows']); echo json_encode($responce); exit();
 }
-$ivas= $obBD_con1->getArrayConsulta(16,"",$obBD_conexion);      //Sección para obtener los ivas de la tabla iva
-$bankos= $obBD_con1->getArrayConsulta(18,"",$obBD_conexion);    //Sección para obtener los bancos de la tabla bancos
+$ivas= $obBD_con1->getArrayConsulta(16,"",$obBD_conexion);      //Secciï¿½n para obtener los ivas de la tabla iva
+$bankos= $obBD_con1->getArrayConsulta(18,"",$obBD_conexion);    //Secciï¿½n para obtener los bancos de la tabla bancos
+$tipospago= array();
 
 if(isset($buscarCuentas)){
     $contado1=$obBD_con1->getArrayConsulta(19,$Pla_Cod.'*'.$Ses_Emp_Cod,$obBD_conexion);
@@ -243,7 +244,7 @@ if(isset($getDataPunto)){
 }
 
 
-/* Sección para realizar el guardado */
+/* Secciï¿½n para realizar el guardado */
 if(isset($saveDocument)){
 	 $obBD_con1->validaCierrePeriodo('ventas','Caj_Fec','Vet_Cod',$Caj_Fec,null,$obBD_conexion);
     /* Creacion de Objetos de Conexiones para Proceso de Guardado de Venta*/
@@ -286,8 +287,8 @@ if(isset($saveDocument)){
              //$claveAcceso=$obBD_con1->getDocClaveAcceso($Ses_Emp_Cod, $Ses_Suc_Cod, $Tic_Sri, $Aut_Cod, $Caj_Fec, $Vet_Num, $obBD_conexion);
             $claveAcceso = $obBD_elect->getClaveAcceso($Aut_Cod, $Caj_Fec, $Vet_Num, $obBD_conexion);
             if(empty($claveAcceso))
-               $responce['message']="Error al generar <u>Clave de Acceso</u> del <i>Comprobante Electrónico</i>!";
-               //if(!$obBD_con1->createUsuCliente($Ses_Emp_Cod, $Ses_Suc_Cod, $Prs_Cod, $Prs_Ced, $obBD_conexion)) $responce['message']='Error al crear usuario de <u>Comprobantes Electrónicos</u>!';
+               $responce['message']="Error al generar <u>Clave de Acceso</u> del <i>Comprobante Electrï¿½nico</i>!";
+               //if(!$obBD_con1->createUsuCliente($Ses_Emp_Cod, $Ses_Suc_Cod, $Prs_Cod, $Prs_Ced, $obBD_conexion)) $responce['message']='Error al crear usuario de <u>Comprobantes Electrï¿½nicos</u>!';
          }
          if (!empty($input_autorizacion)) {
             $Vet_Aut='S';
@@ -522,7 +523,7 @@ if(isset($comprasReembolsoAjax)){
         <link rel="stylesheet" href="../../framework/jquery/bootstrap/popover/jquery.flyout.css">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
-        <script language="javascript" src="../VALIDACIONES/fac_val_factura.js?v=35"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_factura.js?v=35"></script>
 
         <script>
         $('.panel-main').hide();
@@ -620,7 +621,7 @@ if(isset($comprasReembolsoAjax)){
                                         </div>
                                     </div>
                                     <div class="form-group cuen_ban" style="display: none;">
-                                          <label class="col-xs-3 control-label label-xs required">Número:</label>
+                                          <label class="col-xs-3 control-label label-xs required">Nï¿½mero:</label>
                                           <div class="col-xs-6">
                                               <div class="input-group input-group-xs">
                                                   <input type="text" id="Vet_Che" name="Vet_Che" onchange="" class="form-control input-xs">
@@ -637,7 +638,7 @@ if(isset($comprasReembolsoAjax)){
                                           </div>
                                       </div>
                                       <div class="form-group pagoCredito obs_credito" style="display: none;">
-                                          <label class="col-xs-3 control-label label-xs">Observación:</label>
+                                          <label class="col-xs-3 control-label label-xs">Observaciï¿½n:</label>
                                           <div class="col-xs-9">
                                               <textarea name="Cpc_Obs" class="form-control input-xs"></textarea>
                                           </div>
@@ -709,7 +710,7 @@ if(isset($comprasReembolsoAjax)){
                                         <fieldset class="exa-fieldset" id="clieFormTemp">
                                             <legend class="Titulos2">Datos del Cliente</legend>
                                             <div class="form-group">
-                                                <label class="col-xs-2 control-label label-xs required">Cédula/RUC:</label>
+                                                <label class="col-xs-2 control-label label-xs required">Cï¿½dula/RUC:</label>
                                                 <div class="col-xs-7" >
                                                   <input name="Prs_Cod" type="text" style="display:none;" />
                                                   <input name="Prs_Cor" type="text" style="display:none;" />
@@ -731,7 +732,7 @@ if(isset($comprasReembolsoAjax)){
                                                 <div class="col-xs-10" ><span id="Cliente" name="cliente" class="form-control input-xs databind datatitle"></span></div>
                                             </div>
                                             <div class="form-group">
-                                                <label class="col-xs-2 control-label label-xs">Dirección:</label>
+                                                <label class="col-xs-2 control-label label-xs">Direcciï¿½n:</label>
                                                 <div class="col-xs-4" ><span name="Prs_Dir" type="text" class="form-control input-xs databind datatitle"></span></div>
                                                 <label class="col-xs-1 control-label label-xs">Correo:</label>
                                                 <div class="col-xs-5" ><span name="Prs_Cor" type="text" class="form-control input-xs databind datatitle"></span></div>
@@ -783,7 +784,7 @@ if(isset($comprasReembolsoAjax)){
 
                                             </div>
                                             <div class="form-group">
-                                                <label class="col-xs-2 control-label label-xs required">Número:</label>
+                                                <label class="col-xs-2 control-label label-xs required">Nï¿½mero:</label>
                                                 <div class="col-xs-5" >
                                                     <div class="input-group input-group-xs">
                                                         <span id="Pun_Sri" name="Pun_Sri" class="input-group-addon alert-info"></span>
@@ -830,7 +831,7 @@ if(isset($comprasReembolsoAjax)){
                                 <div class="col-md-7 col-xs-12">
                                     <form id="reteFormTemp" action="javascript:" class="formDatos form-horizontal normal">
                                     <fieldset class="exa-fieldset">
-                                        <legend class="Titulos2">Datos de la Retención</legend>
+                                        <legend class="Titulos2">Datos de la Retenciï¿½n</legend>
                                         <input type="text" name="Ret_Cod" style="display: none;" id="Ret_Cod" />
                                         <input type="text" name="Ret_Xml" style="display: none;"  />
                                         <input type="text" name="Aut_Cod" style="display: none;" id="Aut_Cod_Old" />
@@ -855,7 +856,7 @@ if(isset($comprasReembolsoAjax)){
                                             <div class="col-xs-4">
                                               <div class="input-group">
                                                   <input id="Ret_Fec" name="Ret_Fec" type="text" class="form-control input-xs readOnly ret_field datepickers"  required=""  pattern="[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[01])" />
-                                                  <span class="input-group-addon input-xs" title="Fecha de la Retención"><i class="glyphicon glyphicon-info-sign blue"></i></span>
+                                                  <span class="input-group-addon input-xs" title="Fecha de la Retenciï¿½n"><i class="glyphicon glyphicon-info-sign blue"></i></span>
                                               </div>
                                             </div>
                                         </div>
@@ -882,7 +883,7 @@ if(isset($comprasReembolsoAjax)){
                                                     <span class="input-group-addon bold alert-info">=&nbsp;Retenido:</span>
                                                     <input id="Ren_Tot" name="Ren_Tot" type="text" class="form-control span" style="text-align: right;" readonly=""  />
                                                     <span class="input-group-btn">
-                                                        <button type="button" onclick="$('#retDetaDialog').dialog('open')" class="btn btn-info" title="Ver Detalle Retención" tabindex="-1"><span class="glyphicon glyphicon-eye-open"></span></button>
+                                                        <button type="button" onclick="$('#retDetaDialog').dialog('open')" class="btn btn-info" title="Ver Detalle Retenciï¿½n" tabindex="-1"><span class="glyphicon glyphicon-eye-open"></span></button>
                                                     </span>
                                                 </div>
                                             </div>
@@ -935,10 +936,10 @@ if(isset($comprasReembolsoAjax)){
                                                     <option value="">Seleccione...</option>
                                                    <?php foreach($rs_pag_sri as $row){
                                                      $selected='';
-                                                      if ($row[Tpc_Sri]==1) {
+                                                       if ($row['Tpc_Sri']==1) {
                                                         $selected='Selected';
                                                       }
-                                                       echo "<option value='$row[Tpc_Cod]' ".$selected."  >$row[Tpc_Sri] - $row[Tpc_Des]</option>";
+                                                        echo "<option value='".$row['Tpc_Cod']."' ".$selected."  >".$row['Tpc_Sri']." - ".$row['Tpc_Des']."</option>";
                                                     } ?>
                                                 </select>
                                             </div>
@@ -969,9 +970,9 @@ if(isset($comprasReembolsoAjax)){
                 <div class="row">
                     <div class="col-xs-6" id="resultContent">
                         <fieldset class="exa-fieldset">
-                            <legend class="Titulos2">Resultado De la Transacción</legend>
+                            <legend class="Titulos2">Resultado De la Transacciï¿½n</legend>
                             <div>
-                                <h4 style="text-align: center; font-weight: 900;">El Documento se guardo con Éxito!</h4>
+                                <h4 style="text-align: center; font-weight: 900;">El Documento se guardo con ï¿½xito!</h4>
                                 <p class="form-control-static resp" data-name="Tic_Des"></p>
                                 <p class="resp"><span>&raquo;Fec:</span><span style="color:coral;" class="databind" data-name="Vet_Fec"></span></p>
                                 <p class="resp"><span>&raquo;Num:</span><span style="color:teal;" class="databind" data-name="Vet_Num"></span></p>
@@ -1003,7 +1004,7 @@ if(isset($comprasReembolsoAjax)){
                             <div class="form-group">
                                 <label class="col-xs-3 control-label label-xs">Numero:</label>
                                 <div class="col-xs-4"><span name="Vet_Num" type="text" class="form-control input-xs "></span></div>
-                                <label class="col-xs-2 control-label label-xs">Autorización:</label>
+                                <label class="col-xs-2 control-label label-xs">Autorizaciï¿½n:</label>
                                 <div class="col-xs-3"><span name="Vet_Aut" type="text" class="form-control input-xs "></span></div>
                             </div>
                             <div class="form-group">
@@ -1030,7 +1031,7 @@ if(isset($comprasReembolsoAjax)){
                 <div class="row">
                     <div class="col-xs-6">
                         <fieldset class="exa-fieldset" id="retForm">
-                            <legend class="Titulos2">Datos de la Retención</legend>
+                            <legend class="Titulos2">Datos de la Retenciï¿½n</legend>
                             <div class="form-group">
                                 <label class="col-xs-2 control-label label-xs">Numero:</label>
                                 <div class="col-xs-4" ><span name="Ret_Num"  class="form-control input-xs" ></span></div>
@@ -1063,7 +1064,7 @@ if(isset($comprasReembolsoAjax)){
                         <fieldset class="exa-fieldset" >
                             <legend class="Titulos2">Datos del Comprobante</legend>
                             <div class="form-group">
-                                <label class="col-xs-3 control-label label-xs">Cód. Comp.:</label>
+                                <label class="col-xs-3 control-label label-xs">Cï¿½d. Comp.:</label>
                                 <div class="col-xs-3"><span name="Codigo" type="text" class="form-control input-xs "></span></div>
                                 <label class="col-xs-3 control-label label-xs">Fecha:</label>
                                 <div class="col-xs-3"><span name="Com_Fec" type="text" class="form-control input-xs "></span></div>
@@ -1075,7 +1076,7 @@ if(isset($comprasReembolsoAjax)){
                                 <div class="col-xs-3"><span name="Com_Val" type="text" class="form-control input-xs "></span></div>
                             </div>
                             <div class="form-group">
-                                <label class="col-xs-3 control-label label-xs">Observación:</label>
+                                <label class="col-xs-3 control-label label-xs">Observaciï¿½n:</label>
                                 <div class="col-xs-9"><span name="Com_Con" type="text" class="form-control input-xs "></span></div>
                             </div>
                             <table id="asiento"></table>
@@ -1085,9 +1086,9 @@ if(isset($comprasReembolsoAjax)){
                                 height:75,postData: {CheListAjax:true},caption:'Asiento Contable <button id="btnComPrint" onclick="$.imprimirUrl($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir</button>',
                                 rowNum: 10000, footerrow: true, userDataOnFooter: true,
                                 colModel: [
-                                    { label: 'Cód.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },
+                                    { label: 'Cï¿½d.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },
                                     { label: 'Tipo', name: 'Asi_Deh', hidden:true },
-                                    { label: 'Código', name: 'Pld_Cdc', width: 45 },
+                                    { label: 'Cï¿½digo', name: 'Pld_Cdc', width: 45 },
                                     { label: 'Cuenta', name: 'Pld_Des', width: 130  },
                                     { label: 'Glosa', name: 'Glosa', width: 130},
                                     { label: 'Debe', name: 'Debe', width: 65, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"},
@@ -1102,7 +1103,7 @@ if(isset($comprasReembolsoAjax)){
             </div>
             </div>
         </div>
-        <!-- Inicio del diálogo para buscar viajes -->
+        <!-- Inicio del diï¿½logo para buscar viajes -->
         <div id="viajesDialog" title="B&uacute;squeda de Viajes" style="display: none;">
             <form id="viajesForm" class="form-horizontal normal" action="javascript:$.Search('viajes')">
                 <input type="text" name="Cli_Cod" class="hidden" />
@@ -1132,17 +1133,17 @@ if(isset($comprasReembolsoAjax)){
                 </fieldset>
             </form>
         </div>
-        <!-- Inicio del diálogo para buscar viajes -->
+        <!-- Inicio del diï¿½logo para buscar viajes -->
         <div id="viajesSelectedDialog" title="Viajes Seleccionados"></div>
-        <!-- Inicio del diálogo para buscar clientes -->
+        <!-- Inicio del diï¿½logo para buscar clientes -->
         <div id="clieDialog" title="B&uacute;squeda de Cliente"><form class="form-horizontal normal"> </form></div>
-        <!-- Inicio del diálogo para buscar proformas -->
+        <!-- Inicio del diï¿½logo para buscar proformas -->
         <div id="prfDialog" title="B&uacute;squeda de Proformas"></div>
         <script>
             //Dialog buscar clientes
             $.createSearchDialog('clieDialog',[
                 { label: 'C&oacute;d.Int.', name: 'Cli_Cod', key: true, width: 15,align:"center",hidden:true },
-                { label: 'Cédula/RUC', name: 'Prs_Ced', width: 50 },
+                { label: 'Cï¿½dula/RUC', name: 'Prs_Ced', width: 50 },
                 { label: 'Cliente', name: 'cliente', width: 100},
                 { label: 'Direcc.', name: 'Prs_Dir', width: 60 },
                 { label:'&nbsp;', name: 'act1', width: 20, align: 'center',viewable: false, formatter:'gridButton', formatoptions:{action:selectCliente} }
@@ -1155,14 +1156,14 @@ if(isset($comprasReembolsoAjax)){
             }
         </script>
 
-        <!-- Inicio del diálogo para registrar clientes -->
+        <!-- Inicio del diï¿½logo para registrar clientes -->
         <div id="clieCreateDialog" title="Registrar Cliente" style="display:none;">
             <form class="form-horizontal normal" id="clieCreateForm" action="javascript:if(validaNoIdentif($('#Prs_Ced').val())['success']){ guardaCliente(); }else{ $('#Prs_Ced').flyout('show').focus() }">
                 <input name="Prs_Cod" type="text" class="hidden" />
                 <fieldset class="exa-fieldset" >
                     <legend class="Titulos2">Datos del Cliente</legend>
                     <div class="form-group">
-                        <label class="col-xs-3 control-label label-xs required">Cédula/RUC:</label>
+                        <label class="col-xs-3 control-label label-xs required">Cï¿½dula/RUC:</label>
                         <div class="col-xs-5" >
                             <div class="input-group input-group-xs">
                                 <input id="Prs_Ced" name="Prs_Ced" type="text" class="form-control input-xs" onchange="if(validaNoIdentif(this.value)['success']){ $('#Ide_Cod').val(this.value.length===10?2:1); $('#Cli_Tic').val(validaNoIdentif(this.value)['tipo_abrev']==='NA'?'N':'J').trigger('change'); $(this).fieldValid(true); searchCliente(this.value); }else{ $('#Ide_Cod').val(''); $('#Cli_Tic').val(''); $(this).fieldValid(false,validaNoIdentif(this.value)['message']); };" required="" />
@@ -1195,7 +1196,7 @@ if(isset($comprasReembolsoAjax)){
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razón Social:</span></label>
+                        <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razï¿½n Social:</span></label>
                         <div class="col-xs-9" ><input name="Prs_Ape" type="text" class="form-control input-xs" required="" /></div>
                     </div>
                     <div class="form-group natural">
@@ -1254,7 +1255,7 @@ if(isset($comprasReembolsoAjax)){
             $('#For_Cod').val(1).trigger('change');
         </script>
         <!--INICIO DEL DIALOGO BUSCAR CUENTA-->
-        <div id="codiDialog" title="B&uacute;squeda de Códigos Retención">
+        <div id="codiDialog" title="B&uacute;squeda de Cï¿½digos Retenciï¿½n">
             <form class="form-horizontal normal"><input type="text" name="Pla_Cod" class="placod" style="display: none;"/>
             <fieldset class="exa-fieldset">
                     <legend class="Titulos2">Filtros</legend>
@@ -1280,7 +1281,7 @@ if(isset($comprasReembolsoAjax)){
 
 
 
-        <div id="changeReteDialog" title="Cambiar valor de Retención" style="display:none;">
+        <div id="changeReteDialog" title="Cambiar valor de Retenciï¿½n" style="display:none;">
             <form class="form-horizontal normal" id='form_change_rete' action="javascript:CambiarRetencion(this)">
                 <input type="text" name="index" class="hidden">
 
@@ -1303,9 +1304,9 @@ if(isset($comprasReembolsoAjax)){
 
         <script>
             $.createSearchDialog('codiDialog',[
-                { label: 'Cód.Int.', name: 'Ren_Cod', key: true, width: 25,align:"center" },
-                { label: 'Código', name: 'Ren_Sri', width: 25, align:"center" },
-                { label: 'Descripción', name: 'Ren_Con', width: 100 },
+                { label: 'Cï¿½d.Int.', name: 'Ren_Cod', key: true, width: 25,align:"center" },
+                { label: 'Cï¿½digo', name: 'Ren_Sri', width: 25, align:"center" },
+                { label: 'Descripciï¿½n', name: 'Ren_Con', width: 100 },
                 { label: 'Porc.(%)', name: 'Ren_Por', width: 25,align:"center" },
                 { label: 'Adq.', name: 'Ren_Tipo', width: 30,align:"center" },
                 { label: 'Tipo', name: 'Ren_Rete', width: 30,align:"center"},
@@ -1318,13 +1319,13 @@ if(isset($comprasReembolsoAjax)){
                     }
                   }
                 }
-            ],null,null,null,null,{ title:'Búsqueda', options:[] });
+            ],null,null,null,null,{ title:'Bï¿½squeda', options:[] });
 
 
         </script>
 
 
-        <!-- Inicio de diálogo para buscar un producto -->
+        <!-- Inicio de diï¿½logo para buscar un producto -->
         <div id="proDialog" title="B&uacute;squeda de Productos">
             <form class="form-horizontal normal">
                 <input type="text" name="Pla_Cod" class="placod" style="display: none;" />
@@ -1334,7 +1335,7 @@ if(isset($comprasReembolsoAjax)){
             // Dialog para buscar productos
            $.createSearchDialog('proDialog',[
             { label: 'C&oacute;d.Int.', name: 'Pro_Cod', key: true, width: 20,align:"center",hidden:true },
-            { label: 'Descripción', name: 'Ite_Lar', width: 180, classes:'highlightSearch' },
+            { label: 'Descripciï¿½n', name: 'Ite_Lar', width: 180, classes:'highlightSearch' },
             { label: 'Detalle', name: 'Pro_Obs', width: 70, classes:'highlightSearch'},
             { label: 'Marca', name: 'Mar_Des', width: 40},
             { label: 'Categ.', name: 'Cat_Des', width: 30,align:"center" },
@@ -1356,7 +1357,7 @@ if(isset($comprasReembolsoAjax)){
         </div>
 
         <!-- DIALOGO DETALLE RETENCION -->
-        <div id="retDetaDialog" title="Retención">
+        <div id="retDetaDialog" title="Retenciï¿½n">
             <div class="condensed-header">
                 <table id="retencion"></table>
             </div>
@@ -1365,22 +1366,22 @@ if(isset($comprasReembolsoAjax)){
 
 
                 var opts={
-                    height:75,caption:'Detalle Retención', sortable:true, sortname: 'Ren_Rete', sortorder: "desc", footerrow:true,
+                    height:75,caption:'Detalle Retenciï¿½n', sortable:true, sortname: 'Ren_Rete', sortorder: "desc", footerrow:true,
                     colModel: [
-                        { label: 'Cód.Int.', name: 'Ren_Cod', key: true, width: 15, align:"center", hidden:true },
-                        { label: 'Cód.Int.', name: 'Ren_Ret', width: 15, align:"center", hidden:true },
+                        { label: 'Cï¿½d.Int.', name: 'Ren_Cod', key: true, width: 15, align:"center", hidden:true },
+                        { label: 'Cï¿½d.Int.', name: 'Ren_Ret', width: 15, align:"center", hidden:true },
                         { label: 'Ret.', name: 'Ren_Rete', width: 15, align: 'center' },
-                        { label: 'Código ', name: 'Ren_Sri', width: 15, align: 'center' },
-                        { label: 'Descripción ', name: 'Ren_Con', width: 50 },
+                        { label: 'Cï¿½digo ', name: 'Ren_Sri', width: 15, align: 'center' },
+                        { label: 'Descripciï¿½n ', name: 'Ren_Con', width: 50 },
                         { label: 'Importe', name: 'Ren_Imp', width: 30, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"},
                         { label: 'Porc.(%)', name: 'Ren_Por', width: 20, align: 'right' },
-                        { label: 'Retención.', name: 'Ren_Val', width: 30, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"}
+                        { label: 'Retenciï¿½n.', name: 'Ren_Val', width: 30, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"}
                     ],
                     loadComplete: function (){ $(this).setGridSummary(['Ren_Val'],{Ren_Por:"<div style='text-align:right;'>TOTAL:</div>"}); }
                 };
-                $('#reteresult').createGrid($.extend(opts,{caption:'Detalle Retención <button id="btnRetPrint" onclick="$.imprimirUrl($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right hidden" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir</button><button id="btnRetXml" onclick="window.open($(this).data(\'url\'));" class="btn btn-success btn-xs pull-right" style="margin-top: -2px; display:none; margin-right:2px; "><i class="glyphicon glyphicon-download-alt"></i> Descargar XML</button>'}),true);
+                $('#reteresult').createGrid($.extend(opts,{caption:'Detalle Retenciï¿½n <button id="btnRetPrint" onclick="$.imprimirUrl($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right hidden" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir</button><button id="btnRetXml" onclick="window.open($(this).data(\'url\'));" class="btn btn-success btn-xs pull-right" style="margin-top: -2px; display:none; margin-right:2px; "><i class="glyphicon glyphicon-download-alt"></i> Descargar XML</button>'}),true);
                 $('#reteresult').getFootRow(true);
-                $('#retencion').createGrid($.extend(opts,{height:219,width:593,responsive:false,caption:'Detalle Retención <button type="button" role="button" tabindex="-1" class="ui-button ui-widget ui-state-default ui-corner-all pull-right" title="Cerrar Ventana" onclick="$(\'#retDetaDialog\').dialog(\'close\')"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span></button>'}),true);
+                $('#retencion').createGrid($.extend(opts,{height:219,width:593,responsive:false,caption:'Detalle Retenciï¿½n <button type="button" role="button" tabindex="-1" class="ui-button ui-widget ui-state-default ui-corner-all pull-right" title="Cerrar Ventana" onclick="$(\'#retDetaDialog\').dialog(\'close\')"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span></button>'}),true);
                 $('#retencion').getFootRow(true);
                 $('#detaRete').createGrid($.extend(opts,{height:'auto',width:550,responsive:false,caption:null,rownumbers:false}),true);
                 $('#detaRete').getFootRow(true);

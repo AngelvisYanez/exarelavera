@@ -121,7 +121,7 @@ function agregarRango() {
     // Calcular el inicio del nuevo rango basándose en el último
     var ultimoFin = parseInt($("#rango" + numRangos + "Fin").val());
     if (!ultimoFin || isNaN(ultimoFin)) {
-        alert("Por favor complete el rango anterior antes de agregar uno nuevo");
+        $.alert("Por favor complete el rango anterior antes de agregar uno nuevo",null,'warning');
         return;
     }
     
@@ -144,7 +144,7 @@ function eliminarUltimoRango() {
         // Siempre reconstruir el grid cuando se elimina un rango
         reconstruirGrid();
     } else {
-        alert("Debe haber al menos un rango");
+        $.alert("Debe haber al menos un rango",null,'warning');
     }
 }
 

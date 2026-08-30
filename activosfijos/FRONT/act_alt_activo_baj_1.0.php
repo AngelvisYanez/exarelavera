@@ -1,13 +1,13 @@
 <?php 
 /** 
  * Alias:	Insertarr
- * Descripción: Permite el ingreso de mantenimiento del activo.
+ * Descripciï¿½n: Permite el ingreso de mantenimiento del activo.
  * Desarrollador:	Didimo Zamora
  * **********************************
- * Fecha de actualización:	2011-04-21
- * Desarrollador: Dídimo Zamora M.
- * Fecha de actualización:	2013-05-28
- * Fecha de actualización:	2013-08-07
+ * Fecha de actualizaciï¿½n:	2011-04-21
+ * Desarrollador: Dï¿½dimo Zamora M.
+ * Fecha de actualizaciï¿½n:	2013-05-28
+ * Fecha de actualizaciï¿½n:	2013-08-07
  */
  
 //Variables de Sesion estaticas 
@@ -25,7 +25,7 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
  */
 $obBD_con1 =  new Class_Log_Datos_Con;
 /** 
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block;
 /**
@@ -47,10 +47,10 @@ if ($thisPost->postBlock($_POST['postID'])){
 				 
 				 switch($destino){
 					 case 0:
-					 	$Baj_Des="Donación";
+					 	$Baj_Des="Donaciï¿½n";
 					 break;
 					 case 1:
-					 	$Baj_Des="Destrucción";
+					 	$Baj_Des="Destrucciï¿½n";
 					 break;
 					 case 2:
 					 	$Baj_Des="Venta";
@@ -119,7 +119,7 @@ if ($thisPost->postBlock($_POST['postID'])){
 		{			
 			if (isset($Cam_Cod)){
 			 /**
-			  * Busqueda del activo x medio del  código del campo
+			  * Busqueda del activo x medio del  cï¿½digo del campo
 			  */
 		 	$rs_buscar = $obBD_con1->getArrayConsulta(471,$Cam_Cod.'*'.$txt_busqueda, $obBD_conexion);		
 			}
@@ -128,7 +128,7 @@ if ($thisPost->postBlock($_POST['postID'])){
 	 }else
 		{
 		/** 
-		 * Consulta realizada en base al código seleccionado 
+		 * Consulta realizada en base al cï¿½digo seleccionado 
 		 */
 			if (isset($codigo))
 			{
@@ -142,7 +142,7 @@ if ($thisPost->postBlock($_POST['postID'])){
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom;?></TITLE>
 			<?Php require_once("../../mascaras/model1/estilos/estilos.php");?>
-            <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+            <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
             <script type="text/javascript" src="../VALIDACIONES/act_val_activo_baj.js"></script>
             <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>            
             <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script>             
@@ -187,11 +187,11 @@ if ($thisPost->postBlock($_POST['postID'])){
 			<table width="633" border="0">
 				<tr>
 					<td width="105"><input name="op_opciones" type="radio" value="d"  checked  onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">              
-                    <span class="LetraNegra">Descripción</span> <input name="op_cam" id="op_cam" type="hidden" value="d"></td>
+                    <span class="LetraNegra">Descripciï¿½n</span> <input name="op_cam" id="op_cam" type="hidden" value="d"></td>
 					<td width="125"><input type="radio" name="op_opciones" value="cb" <?Php if($op_opciones== 'cb'){?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);">
-                    <span class="LetraNegra">Código de Barra</span></td>
+                    <span class="LetraNegra">Cï¿½digo de Barra</span></td>
 					<td width="122"><input type="radio" name="op_opciones" value="cs" <?Php if($op_opciones== 'cs'){?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.txt_busqueda);" >
-                    <span class="LetraNegra">Código Secuencial</span></td>
+                    <span class="LetraNegra">Cï¿½digo Secuencial</span></td>
                     <td width="263"><input type="radio" name="op_opciones" value="ns" <?Php if($op_opciones== 'ns'){  ?> checked <?php } ?> onClick="document.getElementById('op_cam').value=this.value; busquedaCampos();setfocus(this.form.Cam_Cod);">
                     <span class="LetraNegra">Por Campo</span>
 <?Php
@@ -244,7 +244,7 @@ if (isset($txt_busqueda)){?>
 		<table width="100%" border="0" cellpadding="0" cellspacing="0" class="fixedHeader01">
 		<thead>
 		<tr>
-			<th width="5%">Cód. Int.</th>
+			<th width="5%">Cï¿½d. Int.</th>
 			<th width="35">SubGrupo</th>
 			<th width="40">Descripci&oacute;n </th>
 			<th width="20">Secuencial</th>
@@ -294,7 +294,7 @@ if (isset($txt_busqueda)){?>
 		<tr>
 			<td> </td>
 			<td> </td>
-			<td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+			<td align="center"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
 			<td> </td>
 			<td> </td>
 		</tr>
@@ -343,13 +343,13 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');?>
 			<td colspan="3"> </td>
 		</tr>
 		<tr>
-			<td width="20%" class="Etiqueta1"> Código Activo:</td>
+			<td width="20%" class="Etiqueta1"> Cï¿½digo Activo:</td>
 			<td class="LetraNegra">&nbsp;<?php echo $row_rs_consultar["Act_Cdc"]?>
             <input id="Act_Cod" name="Act_Cod" type="hidden" value="<?Php echo $codigo;?>" ></td>
 			<td></td>
 		</tr>
 		<tr>
-			<td width="20%" class="Etiqueta1"> Descripción:</td>
+			<td width="20%" class="Etiqueta1"> Descripciï¿½n:</td>
 			<td class="LetraNegra">&nbsp;<?php echo $row_rs_consultar["Act_Des"]?></td>
 			<td></td>
 		</tr>
@@ -393,7 +393,7 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');?>
 			<td></td>
 		</tr>       
 		<tr>
-			<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Informe Técnico:</td>
+			<td width="20%" class="Etiqueta1"><span class="Asterisco">*</span>Informe Tï¿½cnico:</td>
 			<td class="LetraNegra">&nbsp;<textarea id="Baj_Inf" name="Baj_Inf" cols="100" rows="10"></textarea></td>
 			<td></td>
 		</tr>       
@@ -412,8 +412,8 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');?>
 			<td width="80%" class="LetraNegra">
        	    	<select name="Baj_Des" id="Baj_Des"  onChange="document.getElementById('destino').value= this.value;habilitar_text(this.value)">
             		<option value="" >Seleccone...</option>  
-                    <option value="0" >Donación</option>     
-                    <option value="1" >Destrucción</option> 
+                    <option value="0" >Donaciï¿½n</option>     
+                    <option value="1" >Destrucciï¿½n</option> 
                     <option value="2" >Venta</option> 
                     <option value="3" >Descuento</option>                                  
                 </select> 

@@ -36,7 +36,7 @@ if (isset($codigo))
 	list($ann, $mes, $dia) = explode('-', $row_rs_cabcomp['Com_Fec']);	
 }//FIn del if (isset($codigo))
 
-if(count($row_rs_cabcomp) > 0){	
+if(count((array)$row_rs_cabcomp) > 0){	
     switch($row_rs_cabcomp['Tia_Ini'])	{
         case 'I': $etiqueta=isset($array_asien[0])?$array_asien[0]:'';
                   $etiqueta2="RECIBIDO DE:";
@@ -178,7 +178,7 @@ $row_rs_cuentas = $obBD_con1->getArrayConsulta(336, $codigo.'*'.'D'.'*'.'ORDER B
 $row_rs_resumen=array();      
 foreach ($row_rs_cuentas as $row){
     $shouldaAdd=true;  
-    for($i=0;$i<count($row_rs_resumen);$i++){
+    for($i=0;$i<count((array)$row_rs_resumen);$i++){
         if($row_rs_resumen[$i]['Pld_Cod']==$row['Pld_Cod']){
             $shouldaAdd=false;                        
             $row_rs_resumen[$i]['Asi_Glo']='Valor Agrupado';
@@ -235,7 +235,7 @@ foreach ($row_rs_grupos as $row){
 	$row_rs_resumen=array();      
     foreach ($row_rs_cuentas as $row){
 		$shouldaAdd=true;  
-		for($i=0;$i<count($row_rs_resumen);$i++){
+		for($i=0;$i<count((array)$row_rs_resumen);$i++){
 			if($row_rs_resumen[$i]['Pld_Cod']==$row['Pld_Cod']){
 				$shouldaAdd=false;                        
 				$row_rs_resumen[$i]['Asi_Glo']='Valor Agrupado';
@@ -297,7 +297,7 @@ foreach ($row_rs_grupos as $row){
     <?php
 $row_rs_carcheq = $obBD_con1->getArrayConsulta(334, $row_rs_cabcomp['Com_Cod'], $obBD_conexion);
 $fila+=20;
-if (count($row_rs_carcheq) > 0) { ?>
+if (count((array)$row_rs_carcheq) > 0) { ?>
     <table class="contenido" width="100%" border="0" cellpadding="0" cellspacing="0">
       <tr>
         <td height="27" colspan="4" align="left" valign="middle">CHEQUES DEL COMPROBANTE</td>

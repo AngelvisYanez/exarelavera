@@ -227,7 +227,7 @@ $rs_TipAsiento = $obBD_con1->getArrayConsulta(5, 'E', $obBD_conexion);
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php")?>
         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
-        <script language="javascript" src="../VALIDACIONES/cch_val_mod_reposicion.js?a=2"> </script>
+        <script type="text/javascript" src="../VALIDACIONES/cch_val_mod_reposicion.js?a=2"> </script>
     </HEAD>
 <BODY>
 <div class="panel panel-main">

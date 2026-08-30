@@ -114,7 +114,7 @@ EOF;
             
         </style>
         <script>    
-            public $tabs;
+            var $tabs;
             $(function() {  
                 $tabs=$( "#tabs" );
                 $tabs.createTabs();
@@ -135,7 +135,7 @@ EOF;
                     <div class="col-sm-12">  
                         <fieldset class="exa-fieldset">                           
                            <legend class="Titulos2">Seleccione Periodo</legend> <!-- Form Name -->
-                           <form action="<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>" method="post" name= "form1" class="form-horizontal normal">	 
+                           <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>" method="post" name= "form1" class="form-horizontal normal">	 
                                <div class="form-group">
                                   <label class="col-sm-2 control-label label-sm required" for="Pec_Cod">Periodo:</label>  
                                   <div class="col-sm-2">
@@ -286,14 +286,14 @@ EOF;
                                 if($('#Pro_Cod').val()===''){$.alert('Seleccione un <u>Producto</u>!');return;}
                                 if($('#listTipo').val()==='G'||$('#listTipo').val()==='O')if($('#consumos').val()===''){$.alert('Seleccione un Centro de <u>Consumo</u>!');return;}
                                 var data={Pro_Cod:$('#Pro_Cod').val(),Pld_Cod:a2,Tip_Pld:$('#listTipo').val(),Con_Cod:$('#consumos').val(),addCuenta:true};                         
-                                $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data,function (){ $("#prodCuentas").jqGrid('setGridParam',{datatype:'json'}).trigger("reloadGrid", [{ page: 1 }]); } /*success*/);
+                                $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data,function (){ $("#prodCuentas").jqGrid('setGridParam',{datatype:'json'}).trigger("reloadGrid", [{ page: 1 }]); } /*success*/);
                             }
                             function deleteCuenta(data){                                                                
                                 data['deleteCuenta']=true;
-                                $.createDialogConfirm('¿Está seguro que desea eliminar esta relación?',data,function (){$.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data,function (){ $("#prodCuentas").jqGrid('setGridParam',{datatype:'json'}).trigger("reloadGrid", [{ page: 1 }]); } /*success*/);});
+                                $.createDialogConfirm('¿Está seguro que desea eliminar esta relación?',data,function (){$.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data,function (){ $("#prodCuentas").jqGrid('setGridParam',{datatype:'json'}).trigger("reloadGrid", [{ page: 1 }]); } /*success*/);});
                             }                            
                             $(function() {  
-                                public $listProds=$("#listProds");
+                                var $listProds=$("#listProds");
                                 $listProds.createGrid({                                   
                                     height:295,postData: $("#prodForm").getData("productoAjax"),caption:'Listado de Productos',
                                     colModel: [
@@ -453,13 +453,13 @@ EOF;
                                 var data={Cat_Cod:$('#Cat_Cod_Cta').val(),Pld_Cod:a2,addCuentaCat:true,Pld_Tip:$('#listTipoCat').val(),Con_Cod:$('#consumosCat').val(),productos:$("#listProdCat").jqGrid('getDataIDs')};                                
                                 if(data['productos'].length===0){$.alert('No hay productos en la <u>Categoria</u> seleccionada!');return;}
                                 $.createDialogConfirm('<b>¿Está seguro que desea registrar la parametrización?</b><br/> <b>NOTA:</b>Se sobreescribirá pa información.',data,
-                                    function (){ $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data,function (){ $("#catCuentas").jqGrid('setGridParam',{datatype:'json'}).trigger("reloadGrid", [{ page: 1 }]); } /*success*/); }
+                                    function (){ $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data,function (){ $("#catCuentas").jqGrid('setGridParam',{datatype:'json'}).trigger("reloadGrid", [{ page: 1 }]); } /*success*/); }
                                 );
                             }                            
                             $(function() {
                                 //$tabs.tabs( "option", "active", 1 );
                                 $("#Cat_Cod").createChosen('input-sm').on('change', function(e) { $("#listProdCat").Search('#catForm','categAjax'); $("#Cat_Cod_Cta").val(this.value);$("#Cat_Des").val($(this).find('option:selected').text());$("#listTipoCat").val('');$("#consumosCat").val('');updateCuentasCat(); });                                
-                                public $listProds=$("#listProdCat");
+                                var $listProds=$("#listProdCat");
                                 $listProds.createGrid({
                                     height: 295,caption:'Listado de Productos en la Categoria',
                                     colModel: [

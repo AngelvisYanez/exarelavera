@@ -59,9 +59,9 @@ if(isset($saveCheque)){
     $obBD_con1->operacionobBD(410,$data,$obBD_conexion);
     $obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);
     if($obBD_con1->Error==0) {
-        $responce=array('success'=>true,'message'=>'Transacción realizada con Exito!');
+        $responce=array('success'=>true,'message'=>'Transacciï¿½n realizada con Exito!');
     } else {
-        $responce=array('success'=>false,'message'=>'No se pudo realizar la transacción!','error'=>$obBD_con1->MsgError);
+        $responce=array('success'=>false,'message'=>'No se pudo realizar la transacciï¿½n!','error'=>$obBD_con1->MsgError);
     }
     utf8_encode_deep($responce);
     echo json_encode($responce);
@@ -75,7 +75,7 @@ if(isset($searchCheque)){
     if($obBD_con1->Error==0) {
         $response['success'] = true;
     } else {
-        $response=array('success'=>false,'message'=>'No se pudo realizar la transacción!','error'=>$obBD_con1->MsgError);
+        $response=array('success'=>false,'message'=>'No se pudo realizar la transacciï¿½n!','error'=>$obBD_con1->MsgError);
     }
     utf8_encode_deep($response);
     echo json_encode($response);
@@ -164,12 +164,12 @@ if(isset($searchCheque)){
                         </div> 
                         <div class="form-group es_cheque">
                             <label class="col-xs-3 control-label label-xs required">No. Cheque:</label> 
-                            <div class="col-xs-4"><input  class="form-control input-xs" style="text-align: center" name="Chp_Num" id="Chp_Num" type="text" size="10" placeholder="NÚMERO DE CHEQUE" onkeypress="return  validar_numeric(event);"  required /></div>
+                            <div class="col-xs-4"><input  class="form-control input-xs" style="text-align: center" name="Chp_Num" id="Chp_Num" type="text" size="10" placeholder="Nï¿½MERO DE CHEQUE" onkeypress="return  validar_numeric(event);"  required /></div>
                             <div class="col-xs-4 msgDiv"><img class="imgMsg" /><label class="lblMsg"></label></div>
                         </div> 
                         <div class="form-group es_cheque">
                             <label class="col-xs-3 control-label label-xs required">No. Cuenta:</label> 
-                            <div class="col-xs-4"><input  class="form-control input-xs" style="text-align: center" name="Chp_Cta" id="Chp_Cta" type="text" size="10" placeholder="NÚMERO DE CUENTA" onkeypress="return  validar_numeric(event);"  required /></div>
+                            <div class="col-xs-4"><input  class="form-control input-xs" style="text-align: center" name="Chp_Cta" id="Chp_Cta" type="text" size="10" placeholder="Nï¿½MERO DE CUENTA" onkeypress="return  validar_numeric(event);"  required /></div>
                         </div>
                         <div class="form-group es_cheque">
                             <label class="col-xs-3 control-label label-xs required">Propietario:</label>
@@ -251,7 +251,7 @@ if(isset($searchCheque)){
             $.saveDataJson('',$('#formComp').getData('saveCheque'), 
                 function( resp ){
                 if(resp['success']==true){
-                    $.alert("Cheque guardado con Éxito");
+                    $.alert("Cheque guardado con ï¿½xito");
                     document.getElementById("formComp").reset();
                 }else{
                     
@@ -343,7 +343,7 @@ if(isset($searchCheque)){
 
         function setChequeNum(){
             if(tipo==="Egresos"&&$("#bancos").val()!==''&&$('#es_cheque').is(':checked')){
-                $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'Ban_Cod':getBanco()["Ban_Cod"],'cheNum':true}, function(response){
+                $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'Ban_Cod':getBanco()["Ban_Cod"],'cheNum':true}, function(response){
                     if(response['success']===true){
                         numChe=(response['Che_Num']*1)+1;
                         $("#Chp_Num").val(numChe).alertMsg();                                  
@@ -374,7 +374,7 @@ if(isset($searchCheque)){
             <tr>
                 <td align="center"><a href="<?php echo $ruta; ?>tes_pri_cheque_mac_1.0.php{link}" target="_blank" title="Banco de Machala"><img src="../../mascaras/model1/imagenes/32x32/banco_machala.jpg" width="22" height="35"/></a></td>
                 <td align="center"><a href="<?php echo $ruta; ?>tes_pri_cheque_pac_1.0.php{link}" target="_blank" title="Banco del Pacifico"><img src="../../mascaras/model1/imagenes/32x32/banco_pacifico.jpg" width="24" height="23"/></a></td>
-                <td align="center"><a href="<?php echo $ruta; ?>tes_pri_cheque_rum_1.0.php{link}" target="_blank" title="Banco del Rumiñahui"><img src="../../mascaras/model1/imagenes/32x32/banco_ruminahui.jpg" width="30" height="15"/></a></td>
+                <td align="center"><a href="<?php echo $ruta; ?>tes_pri_cheque_rum_1.0.php{link}" target="_blank" title="Banco del Rumiï¿½ahui"><img src="../../mascaras/model1/imagenes/32x32/banco_ruminahui.jpg" width="30" height="15"/></a></td>
                 <td align="center"><a href="<?php echo $ruta; ?>tes_pri_cheque_gua_1.0.php{link}" target="_blank" title="Banco del Guayaquil"><img src="../../mascaras/model1/imagenes/32x32/banco_guayaquil.JPG" width="36" height="18"/></a></td>
                 <td align="center"><a href="<?php echo $ruta; ?>tes_pri_cheque_pch_1.0.php{link}" target="_blank" title="Banco del Pichincha"><img src="../../mascaras/model1/imagenes/32x32/banco_pichincha.JPG" width="36" height="30"/></a></td>
                 <td align="center"><a href="<?php echo $ruta; ?>tes_pri_cheque_int_1.0.php{link}" target="_blank" title="Banco Internacional"><img src="../../mascaras/model1/imagenes/32x32/ban_int.jpg" width="32" height="32"/></a></td>

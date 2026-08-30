@@ -43,7 +43,7 @@ require_once('../../componentes/LOGICA/logica.php');
 	 * Array de las sucursales 
 	 */
 	$rs_sucursales= $obBD_con11->getArrayConsulta(101, $Ses_Emp_Cod, $obBD_conexion11);
-	if( count($rs_sucursales) > 1)
+	if( count((array)$rs_sucursales) > 1)
 	{ ?>		    
         <select name="Suc_Cod" id="Suc_Cod" onchange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_suc_cod=1&Com_Hoy=<?php echo date("Y-m-d"); ?>&Est_Int=<?php echo $Est_Int;?>&Suc_Cod=' + this.value,'div_sucursales')">
           <option value="">Seleccione...</option>
@@ -77,7 +77,7 @@ require_once('../../componentes/LOGICA/logica.php');
 	 * Consultar las modalidades
 	 */
 	$rs_modalidad = $obBD_con11->getArrayConsulta(302, $Suc_Cod, $obBD_conexion11);
-	if(count($rs_modalidad) > 1)
+	if(count((array)$rs_modalidad) > 1)
 	{ ?>
         <select name="Mod_Cod" id="Mod_Cod" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_periodo=1&Est_Int=<?php echo $Est_Int;?>&Mod_Cod='+this.value+'&Suc_Cod=<?Php echo $Suc_Cod; ?>&Com_Hoy=<?php echo $Com_Hoy; ?>','div_periodo')">
           <option value="">Seleccione...</option>
@@ -113,7 +113,7 @@ require_once('../../componentes/LOGICA/logica.php');
 	 */
 	$rs_periodos = $obBD_con11->getArrayConsulta(303, $Mod_Cod.'*'.$Com_Hoy.'*'.$Suc_Cod, $obBD_conexion11);
 		
-	if(count($rs_periodos) > 1)
+	if(count((array)$rs_periodos) > 1)
 	{
 	?>
          <select name="Per_Int" id="Per_Int" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_carrera=1&Suc_Cod=<?Php echo $Suc_Cod; ?>&Est_Int=<?php echo $Est_Int;?>&Mod_Cod=<?Php echo $Mod_Cod; ?>&Per_Int='+this.value, 'div_carrera')">
@@ -137,7 +137,7 @@ require_once('../../componentes/LOGICA/logica.php');
 		<input name="Per_Int" id="Per_Int" type="text" value="<?Php echo $rs_periodos[0]['Per_Int']; ?>" size="1" style="
 		visibility:hidden" />    
 	   <?Php 
-		if (count($rs_periodos) == 0)
+		if (count((array)$rs_periodos) == 0)
 		{
 			echo "<span class='Texto_Reporte_Rojo'>&iexcl;No existen periodos Activos &oacute; la fecha m&aacute;xima de matr&iacute;cula ha 
 				caducado!</span>";
@@ -150,7 +150,7 @@ require_once('../../componentes/LOGICA/logica.php');
     <td class="Etiqueta1"><span class="Asterisco" >* </span>Carrera:</td>
     <td><div id="div_carrera">
     <?php 
-	if( count($rs_periodos) == 1)
+	if( count((array)$rs_periodos) == 1)
 	{
 		/** 
 		* Consultar la etapa en base al periodos
@@ -162,7 +162,7 @@ require_once('../../componentes/LOGICA/logica.php');
 		*/		 
 	 	$rs_carreras_etapa=$obBD_con11->getArrayConsulta(102, $rs_etapa['Eta_Cod'].'*'.$Per_Int, $obBD_conexion11);
 	}	
-	if(count($rs_carreras_etapa) == 1)
+	if(count((array)$rs_carreras_etapa) == 1)
 	{
 		$Car_Int = $rs_carreras_etapa[0]['Car_Int']; ?>
 		<input name="Car_Nom" id="Car_Nom" type="text" value="<?Php echo $rs_carreras_etapa[0]['Car_Nom']; ?>" readonly="readonly" size="50" style="border:none; background:none" />
@@ -196,7 +196,7 @@ require_once('../../componentes/LOGICA/logica.php');
 	 * Consulta de los semestres
 	 */
 	$rs_semestres=$obBD_con11->getArrayConsulta(301, $_POST['Car_Int'].'*'.$Per_Int.'*'.$Mod_Cod.'*'.$Est_Int,	$obBD_conexion11);
-	if(count($rs_semestres) == 1)
+	if(count((array)$rs_semestres) == 1)
 	{
 			?>
         <input name="Sem_Nom" id="Sem_Nom" type="text" value="<?Php echo $rs_semestres[0]['Sem_Nom']; ?>" readonly="readonly" size="50" style="border:none; background:none" />
@@ -206,7 +206,7 @@ require_once('../../componentes/LOGICA/logica.php');
 	}
 	else 
 	{ 
-		if (count($rs_semestres) == 0 and $Car_Int > 0)
+		if (count((array)$rs_semestres) == 0 and $Car_Int > 0)
 		{
 			echo "<span class='Texto_Reporte_Rojo'>¡No existen Cursos aperturados!</span>";
 		}

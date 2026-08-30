@@ -129,16 +129,16 @@ if(isset($cuentas)){
                  <script type="text/javascript">  
                      function borraCuenta(id)
                         {
-                            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{Pld_Cod:id,delete:true}, function( response ) {
+                            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{Pld_Cod:id,delete:true}, function( response ) {
                                 if(response['success']===true){
                                     $.alert("Transaccion Realizada con &Eacute;xito!");$('#list').Search('#form1','gridAjax');
                                 }else{$.alert(response['message']);}
                             },'json').fail(function(error) { $.alert("El Servidor ha fallado en responder!"); });
                         }
                     $(document).ready(function () {   
-                        public $grid=$("#list");
+                        var $grid=$("#list");
                         $grid.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                             //postData: $("#form1").getData("ajaxGrid"),
                             autowidth : true, shrinkToFit: true, height: 270,
@@ -183,7 +183,7 @@ if(isset($cuentas)){
                             //console.log(cuentas);
                     }
                     function deleteCuentas(cuentas){
-                            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{cuentas:cuentas}, function( response ) {
+                            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{cuentas:cuentas}, function( response ) {
                                 if(response['success']===true){
                                     $.alert("Transaccion Realizada con &Eacute;xito!");$('#list').Search('#form1','gridAjax');
                                 }else{$.alert(response['message']);}

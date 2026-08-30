@@ -59,9 +59,9 @@ if (isset($Vet_Cod))
 ?>				
 <html>
 <head>
-<title><?Php echo $Ses_Sys_Nom; ?></title>
+<title><?php echo $Ses_Sys_Nom; ?></title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<?Php require_once("../../mascaras/model1/estilos/print.php"); ?>
+<?php require_once("../../mascaras/model1/estilos/print.php"); ?>
 <style type="text/css">
 body {
 	margin-left: 0px;
@@ -85,7 +85,7 @@ body {
 </style>
 </head>
 <body>
-<?Php  list($anio, $mes, $dia) = preg_split('![-]!', $row_rs_cliente[0]['Caj_Fec']);?>
+<?php  list($anio, $mes, $dia) = preg_split('![-]!', $row_rs_cliente[0]['Caj_Fec']);?>
 <table width="100%" border="0" align="center">
   <tr>
   	<td  align="left" valign="top"><table width="100%" border="0" cellpadding="0" cellspacing="0" >
@@ -101,7 +101,7 @@ body {
   	            <td align="left" class="tituloFact2">SISTEMAS ELECTRONICOS DE SEGURIDAD Y REDES JE TECHNOLOGY</td>
 	            </tr>
   	          <tr>
-  	            <td align="left" class="tituloFact2"><?echo $row_institucion['Suc_Dir'];?>. Telf: <?php echo $row_institucion['Suc_Te1'].' - '.$row_institucion['Suc_Te2'];?></td>
+  	            <td align="left" class="tituloFact2"><?php echo $row_institucion['Suc_Dir'];?>. Telf: <?php echo $row_institucion['Suc_Te1'].' - '.$row_institucion['Suc_Te2'];?></td>
 	            </tr>
 	          </table></td>
 	        </tr>
@@ -121,7 +121,7 @@ body {
   	    <td width="6%" align="left" class="etiquetaFact"><strong>EMISI&Oacute;N:</strong></td>
   	    <td width="14%" class="etiquetaFact">&nbsp;<?php echo $dia."/".$mes."/".$anio;?></td>
   	    <td align="left" class="etiquetaFact"><strong>CIUDAD:</strong></td>
-  	    <td align="left" class="etiquetaFact">&nbsp;<?Php echo $row_institucion['Ciu_Des']; ?></td>
+  	    <td align="left" class="etiquetaFact">&nbsp;<?php echo $row_institucion['Ciu_Des']; ?></td>
 	    </tr>
   	  <tr>
   	    <td align="left" class="etiquetaFact"><strong>CLIENTE:</strong></td>
@@ -164,7 +164,7 @@ body {
 	      </table></td>
 	    </tr>
   	  <tr>
-  	    <td colspan="6" align="left" valign="top"><?Php 
+  	    <td colspan="6" align="left" valign="top"><?php 
 			 $tarifa_0 = 0;
 			 $tarifa_12 = 0;	
 			?>
@@ -189,12 +189,12 @@ body {
   	              <td><table width="100%">
   	                <?php foreach($row_rs_cliente as $row){?>
   	                <tr class="etiquetaFact">
-  	                  <td width="83" align="left"><?Php echo $row['Vet_Can']?></td>
-  	                  <td width="618">&nbsp;&nbsp;<?Php echo $row['Ite_Lar'].' '.$row['Pro_Obs']?></td>
-  	                  <td width="245" align="right"><?Php echo number_format($row['Vet_Pru'], 2); ?>&nbsp;&nbsp;</td>
-  	                  <td width="181" align="right"><?Php echo number_format($row['Vet_Imp'], 2); ?></td>
+  	                  <td width="83" align="left"><?php echo $row['Vet_Can']?></td>
+  	                  <td width="618">&nbsp;&nbsp;<?php echo $row['Ite_Lar'].' '.$row['Pro_Obs']?></td>
+  	                  <td width="245" align="right"><?php echo number_format($row['Vet_Pru'], 2); ?>&nbsp;&nbsp;</td>
+  	                  <td width="181" align="right"><?php echo number_format($row['Vet_Imp'], 2); ?></td>
 	                  </tr>
-  	                <?Php 
+  	                <?php 
 				  /* 
 				  * % de Descuento total 
 				  */
@@ -209,12 +209,12 @@ body {
 					  foreach($row_rs_interes as $datos){
 				?>
   	                <tr class="etiquetaFact">
-  	                  <td align="left"><?Php echo $datos['Vet_Can']?></td>
-  	                  <td>&nbsp;&nbsp;<?Php echo $datos['Ite_Lar']?></td>
-  	                  <td align="right"><?Php echo number_format($datos['Vet_Pru'], 2); ?>&nbsp;&nbsp;</td>
-  	                  <td align="right"><?Php echo number_format($datos['Vet_Imp'], 2); ?></td>
+  	                  <td align="left"><?php echo $datos['Vet_Can']?></td>
+  	                  <td>&nbsp;&nbsp;<?php echo $datos['Ite_Lar']?></td>
+  	                  <td align="right"><?php echo number_format($datos['Vet_Pru'], 2); ?>&nbsp;&nbsp;</td>
+  	                  <td align="right"><?php echo number_format($datos['Vet_Imp'], 2); ?></td>
 	                  </tr>
-  	                <?Php
+  	                <?php 
 						};//fin foreach($row_rs_interes as $datos)
 					}//Fin del if ($total_rs_interes > 0)				
 				};
@@ -263,24 +263,24 @@ body {
   	              <td height="100" valign="bottom"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="etiquetaFact">
   	                <tr>
   	                  <td colspan="2" align="right">Sub-total Iva:&nbsp;</td>
-  	                  <td width="12%" align="right"><?Php echo formato_numero($resultados[2]+0, 2, 1); ?>&nbsp;</td>
+  	                  <td width="12%" align="right"><?php echo formato_numero($resultados[2]+0, 2, 1); ?>&nbsp;</td>
 	                  </tr>
   	                <tr>
   	                  <td colspan="2" align="right">Sub-Total 0%:&nbsp;</td>
-  	                  <td align="right"><?Php echo formato_numero($resultados[1]+0, 2, 1); ?>&nbsp;</td>
+  	                  <td align="right"><?php echo formato_numero($resultados[1]+0, 2, 1); ?>&nbsp;</td>
 	                  </tr>
   	                <tr>
   	                  <td colspan="2" align="right">Descuento:&nbsp;</td>
-  	                  <td align="right"><?Php echo formato_numero($resultados[4], 2, 1); ?>&nbsp;</td>
+  	                  <td align="right"><?php echo formato_numero($resultados[4], 2, 1); ?>&nbsp;</td>
 	                  </tr>
   	                <tr>
   	                  <td colspan="2" align="right">Subtotal:&nbsp;</td>
-  	                  <td align="right"><?Php echo formato_numero($resultados[0], 2, 1); ?>&nbsp;</td>
+  	                  <td align="right"><?php echo formato_numero($resultados[0], 2, 1); ?>&nbsp;</td>
 	                  </tr>
   	                <tr>
   	                  <td align="left">&nbsp;<strong>Forma de Pago:</strong> <?php echo strtoupper($row_rs_formapago['Tpc_Des']);?></td>
   	                  <td align="right">Iva:&nbsp;</td>
-  	                  <td align="right"><?Php echo formato_numero($resultados[3], 2, 1); ?>&nbsp;</td>
+  	                  <td align="right"><?php echo formato_numero($resultados[3], 2, 1); ?>&nbsp;</td>
 	                  </tr>
   	                <tr>
   	                  <td width="73%" align="left">&nbsp;<strong>Nota:</strong> Descargue su Factura Electr&oacute;nica en:  &nbsp;&nbsp;exa.ofsercont.com/facturacion/FRONT/electronica.php?Emp_Cod=<?php echo $Ses_Emp_Cod;?>&Prs_Cod=<?php echo $row_rs_cliente[0]['Prs_Cod'];?></td>
@@ -318,7 +318,7 @@ body {
         <td align="center">RECIBI CONFORME</td>
       </tr>
       <tr>
-        <td align="center"><?Php   
+        <td align="center"><?php   
 						$rs_Vendedor = $obBD_con1->consulta(sentencias_tes(1217, $obBD_con1->parametros($vendedor)), $obBD_conexion->conexion);
 						$rs_row_Vendedor = $obBD_con1->registros();
 						
@@ -337,7 +337,7 @@ body {
 
 </body>
 </html>
-<?Php
+<?php 
 @$obBD_con1->liberar();
 @$obBD_conexion->cerrar();
 ?>

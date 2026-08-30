@@ -269,7 +269,7 @@ if(isset($_POST['cdc_nivel']))
 		<input type="hidden" id="nivel_actual" name="nivel_actual" value="<?php echo $nivel_actual ?>" />
 		<input type="hidden" id="cdc_nivel" name="cdc_nivel" value="<?php echo $cadena_codigo ?>" />
 		<input type="hidden" id="nivel_superior" name="nivel_superior" value="<?php echo $nivel_superior ?>" />
-		<input type="hidden" id="Cat_Cod" name="Cat_Cod" value="<?php echo $_POST['Cat_Cod'] ?>" />
+		<input type="hidden" id="Cat_Cod" name="Cat_Cod" value="<?php echo htmlspecialchars($_POST['Cat_Cod'], ENT_QUOTES, 'UTF-8') ?>" />
 		<input type="submit" id="guardar" class="Boton_Guardar" value="guardar" onClick="validar_requeridos(this.form,'Cat_Des*Cat_Est',1)"/>
 	</form>
 	<?php 

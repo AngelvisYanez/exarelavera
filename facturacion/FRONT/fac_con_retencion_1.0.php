@@ -217,16 +217,16 @@ switch ($op){
 		<TITLE><?php echo "Retención Consultar [EXA]"; ?></TITLE>
         <meta charset= "UTF-8"> 
 		<?php require_once("../../mascaras/model1/estilos/estilos.php");?>		
-		<script language="javascript" src="../VALIDACIONES/fac_val_compras.js"></script>
-        <script language="javascript" src="../VALIDACIONES/fac_val_retencion.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_compras.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_retencion.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>         
         <!--Librerias para modal -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script> 
 	    <!--Librerias para calendario -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script>         
-        <script language="javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>		
+        <script type="text/javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>		
          <script type="text/javascript"> 
         $(function() {
 			$('#set1 *').tooltip({showURL: false});
@@ -408,7 +408,7 @@ switch ($op){
     </tr>
   </table>
   
-   <script language="javascript" type="text/javascript">
+   <script type="text/javascript" type="text/javascript">
       document.getElementById('capa_rango_fec').className = "oculta";
       document.getElementById('capa_fecha').className = "muestra";
    </script>
@@ -590,7 +590,7 @@ case 3:
             </tr>
           </table>
           
-           <script language="javascript" type="text/javascript">
+           <script type="text/javascript" type="text/javascript">
               document.getElementById('capa_rango_fec').className = "oculta";
               document.getElementById('capa_fecha').className = "muestra";
            </script>

@@ -24,46 +24,105 @@ require_once('../../facturacion/LOGICA/fac_log_codigos_sri.php');
 // Incluir solo el archivo SQL de estado (no el de lógica que redeclara la clase)
 require_once('../../contabilidad/LOGICA/con_sql_estado.php');
 
-/* Creacion de Objetos de conexion para cada módulo */
-// Para IVA Pagado/Cobrado (usa sentencias_con)
-$obBD_conexion_con = new Class_Log_Conexion_Con($Ses_Dat_Dis);
-$obBD_con_planc = new Class_Log_Datos_Con;
+/* Conexiones lazy - solo se crean cuando se necesitan */
+$_conn_con = null; $_data_con = null;
+$_conn_tes = null; $_data_tes = null;
+$_conn_cod = null; $_data_cod = null;
+$_conn_ban = null; $_data_ban = null;
 
-// Para Proveedores/Clientes
-$obBD_conexion_tes = new Class_Log_Conexion_Che($Ses_Dat_Dis);
-$obBD_con_tes = new Class_Log_Datos_Che;
-
-// Para Balances - reutilizamos la misma conexión de contabilidad
-$obBD_conexion_estado = $obBD_conexion_con; // Reutilizar conexión
-$obBD_con_estado = $obBD_con_planc; // Reutilizar objeto de datos
-
-// Para Códigos SRI
-$obBD_conexion_cod = new Class_Log_Conexion_Cod($Ses_Dat_Dis);
-$obBD_con_cod = new Class_Log_Datos_Cod;
-
-// Para Bancos
-$obBD_conexion_ban = new Class_Log_Conexion_Tip($Ses_Dat_Dis);
-$obBD_con_ban = new Class_Log_Datos_Tip;
+function getCon() {
+    global $_conn_con, $_data_con, $Ses_Dat_Dis;
+    if ($_conn_con === null) {
+        $_conn_con = new Class_Log_Conexion_Con($Ses_Dat_Dis);
+        $_data_con = new Class_Log_Datos_Con;
+    }
+    return array($_conn_con, $_data_con);
+}
+function getTes() {
+    global $_conn_tes, $_data_tes, $Ses_Dat_Dis;
+    if ($_conn_tes === null) {
+        $_conn_tes = new Class_Log_Conexion_Che($Ses_Dat_Dis);
+        $_data_tes = new Class_Log_Datos_Che;
+    }
+    return array($_conn_tes, $_data_tes);
+}
+function getCod() {
+    global $_conn_cod, $_data_cod, $Ses_Dat_Dis;
+    if ($_conn_cod === null) {
+        $_conn_cod = new Class_Log_Conexion_Cod($Ses_Dat_Dis);
+        $_data_cod = new Class_Log_Datos_Cod;
+    }
+    return array($_conn_cod, $_data_cod);
+}
+function getBan() {
+    global $_conn_ban, $_data_ban, $Ses_Dat_Dis;
+    if ($_conn_ban === null) {
+        $_conn_ban = new Class_Log_Conexion_Tip($Ses_Dat_Dis);
+        $_data_ban = new Class_Log_Datos_Tip;
+    }
+    return array($_conn_ban, $_data_ban);
+}
 
 $hoy = date("Y-m-d");
+
+$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+$rows = isset($_GET['rows']) ? min(intval($_GET['rows']), 500) : 50;
+
+// Detectar tipo de request y crear SOLO las conexiones necesarias
+$esAjax = false;
+if (isset($ivaAjax) || isset($ivaPagado) || isset($ivaCobrado) || isset($addIvaCuenta) || isset($deleteIvaCuenta) || 
+    isset($balancesAjax) || isset($tiposBalanceAjax) || isset($estadosFinAjax) || isset($cuentasBalanceAjax) || 
+    isset($addCuentaBalance) || isset($deleteCuentaBalance) || isset($cuentasRaizBalance) || isset($guardarCuentasBalance) ||
+    isset($utilidadesAjax) || isset($addUtilidad) || isset($deleteUtilidad) || isset($buscarCuentasUtilidad)) {
+    list($obBD_conexion_con, $obBD_con_planc) = getCon();
+    $esAjax = true;
+}
+if (isset($ccppAjax) || isset($deudor) || isset($acreedor) || isset($addCcppCuenta)) {
+    list($obBD_conexion_tes, $obBD_con_tes) = getTes();
+    $esAjax = true;
+}
+if (isset($sriAjax) || isset($codAjax) || isset($saveCod) || isset($addSriCuenta) || isset($deleteSriCuenta) || isset($listTipo)) {
+    list($obBD_conexion_cod, $obBD_con_cod) = getCod();
+    $esAjax = true;
+}
+if (isset($bancosAjax) || isset($buscarCuentaBanco) || isset($saveBanco) || isset($deleteBanco) || isset($getTiposPago) || isset($getPlanesCuenta) || isset($getBanco)) {
+    list($obBD_conexion_ban, $obBD_con_ban) = getBan();
+    $esAjax = true;
+}
+
+// Page load inicial: crear solo las conexiones necesarias para los dropdowns
+if (!$esAjax) {
+    list($obBD_conexion_con, $obBD_con_planc) = getCon();
+    list($obBD_conexion_tes, $obBD_con_tes) = getTes();
+    list($obBD_conexion_cod, $obBD_con_cod) = getCod();
+    list($obBD_conexion_ban, $obBD_con_ban) = getBan();
+    $obBD_conexion_estado = $obBD_conexion_con;
+    $obBD_con_estado = $obBD_con_planc;
+}
 
 // ============= AJAX HANDLERS PARA IVA PAGADO/COBRADO =============
 if(isset($ivaAjax)){ 
     $contar = $obBD_con_planc->getRowConsulta(330, $search.'*'.$Ses_Emp_Cod.'*'.$Pec_Cod.'*'.$op_opciones.'*', $obBD_conexion_con);       
-    $pagination = pages($contar['total'], $page, $rows);
+    $total = isset($contar['total']) ? $contar['total'] : 0;
+    $pagination = pages($total, $page, $rows);
     $responce = $pagination['data'];
     $responce['rows'] = $obBD_con_planc->getArrayConsulta(330, $search.'*'.$Ses_Emp_Cod.'*'.$Pec_Cod.'*'.$op_opciones.'*'.$pagination['limits'], $obBD_conexion_con);       
     utf8_encode_deep($responce['rows']); echo json_encode($responce); exit();
 }
 if(isset($ivaPagado)){     
+    $responce = array();
     $responce['rows'] = $obBD_con_planc->getArrayConsulta(331, $Pla_Cod, $obBD_conexion_con);       
+    if(!$responce['rows']) $responce['rows'] = array();
     utf8_encode_deep($responce['rows']); echo json_encode($responce); exit();
 }
 if(isset($ivaCobrado)){     
+    $responce = array();
     $responce['rows'] = $obBD_con_planc->getArrayConsulta(332, $Pla_Cod, $obBD_conexion_con);       
+    if(!$responce['rows']) $responce['rows'] = array();
     utf8_encode_deep($responce['rows']); echo json_encode($responce); exit();
 }
 if(isset($addIvaCuenta)){ 
+    $responce = array();
     $responce['tipo'] = $addIvaCuenta;
     $obBD_con_planc->inicio_transaccion($obBD_conexion_con->conexion);   
     if($addIvaCuenta === 'cobrado')
@@ -79,6 +138,7 @@ if(isset($addIvaCuenta)){
     echo json_encode($responce); exit();
 }
 if(isset($deleteIvaCuenta)){ 
+    $responce = array();
     $responce['tipo'] = $deleteIvaCuenta;
     $obBD_con_planc->inicio_transaccion($obBD_conexion_con->conexion);
     if($deleteIvaCuenta == 'cobrado')
@@ -97,20 +157,26 @@ if(isset($deleteIvaCuenta)){
 // ============= AJAX HANDLERS PARA PROVEEDORES/CLIENTES =============
 if(isset($ccppAjax)){ 
     $contar = $obBD_con_tes->getRowConsulta(12, $search.'*'.$Ses_Emp_Cod.'*'.$Pec_Cod.'*'.$op_opciones.'*', $obBD_conexion_tes);          
-    $pagination = pages($contar['total'], $page, $rows);
+    $total = isset($contar['total']) ? $contar['total'] : 0;
+    $pagination = pages($total, $page, $rows);
     $responce = $pagination['data'];
     $responce['rows'] = $obBD_con_tes->getArrayConsulta(12, $search.'*'.$Ses_Emp_Cod.'*'.$Pec_Cod.'*'.$op_opciones.'*'.$pagination['limits'], $obBD_conexion_tes);      
     utf8_encode_deep($responce['rows']); echo json_encode($responce); exit();
 }
 if(isset($deudor)){     
+    $responce = array();
     $responce['rows'] = $obBD_con_tes->getArrayConsulta(45, $Pla_Cod, $obBD_conexion_tes);      
+    if(!$responce['rows']) $responce['rows'] = array();
     utf8_encode_deep($responce['rows']); echo json_encode($responce); exit();
 }
 if(isset($acreedor)){     
+    $responce = array();
     $responce['rows'] = $obBD_con_tes->getArrayConsulta(46, $Pla_Cod, $obBD_conexion_tes);      
+    if(!$responce['rows']) $responce['rows'] = array();
     utf8_encode_deep($responce['rows']); echo json_encode($responce); exit();
 }
 if(isset($addCcppCuenta)){ 
+    $responce = array();
     $responce['tipo'] = $addCcppCuenta;
     $obBD_con_tes->inicio_transaccion($obBD_conexion_tes->conexion);   
     if($addCcppCuenta === 'Deudor')
@@ -222,23 +288,20 @@ if(isset($deleteCuentaBalance)){
 }
 // Obtener cuentas raíz (principales) con estado de selección para un tipo de balance
 if(isset($cuentasRaizBalance)){
-    // Obtener cuentas raíz del plan
-    $sql = "SELECT Pld_Cod, Pld_Des FROM det_plan 
-            INNER JOIN plan_cuenta ON (plan_cuenta.Pla_Cod = det_plan.Pla_Cod) 
-            WHERE Pld_Rec='0' 
-            AND plan_cuenta.Emp_Cod = '$Ses_Emp_Cod' 
-            AND Pld_Est='A' 
-            AND det_plan.Pla_Cod = '$Pla_Cod'
-            ORDER BY Pld_Cod";
+    $sql = "SELECT dp.Pld_Cod, dp.Pld_Des,
+            IF(de.Est_Cod IS NOT NULL, 1, 0) as checked
+            FROM det_plan dp
+            INNER JOIN plan_cuenta pc ON pc.Pla_Cod = dp.Pla_Cod
+            LEFT JOIN det_estado de ON de.Pld_Cod = dp.Pld_Cod AND de.Est_Cod = '$Est_Cod'
+            WHERE dp.Pld_Rec='0'
+            AND pc.Emp_Cod = '$Ses_Emp_Cod'
+            AND dp.Pld_Est='A'
+            AND dp.Pla_Cod = '$Pla_Cod'
+            ORDER BY dp.Pld_Cod";
     $result = $obBD_con_planc->consulta($sql, $obBD_conexion_con->conexion);
     $rows = array();
     if($result) {
         while($row = mysqli_fetch_assoc($result)) {
-            // Verificar si esta cuenta ya está asignada al tipo de balance
-            $sqlCheck = "SELECT COUNT(*) as cnt FROM det_estado WHERE Est_Cod = '$Est_Cod' AND Pld_Cod = '{$row['Pld_Cod']}'";
-            $resultCheck = $obBD_con_planc->consulta($sqlCheck, $obBD_conexion_con->conexion);
-            $check = mysqli_fetch_assoc($resultCheck);
-            $row['checked'] = ($check['cnt'] > 0) ? 1 : 0;
             $rows[] = $row;
         }
     }
@@ -384,12 +447,14 @@ if(isset($buscarCuentasUtilidad)){
 // ============= AJAX HANDLERS PARA CÓDIGOS SRI =============
 if(isset($sriAjax)){ 
     $contar = $obBD_con_cod->getRowConsulta(18, $search.'*'.$Ses_Emp_Cod.'*'.$Pla_Cod.'*'.$op_opciones.'*', $obBD_conexion_cod);          
-    $pagination = pages($contar['total'], $page, $rows);
+    $total = isset($contar['total']) ? $contar['total'] : 0;
+    $pagination = pages($total, $page, $rows);
     $responce = $pagination['data'];
     $responce['rows'] = $obBD_con_cod->getArrayConsulta(18, $search.'*'.$Ses_Emp_Cod.'*'.$Pla_Cod.'*'.$op_opciones.'*'.$pagination['limits'], $obBD_conexion_cod);      
     utf8_encode_deep($responce['rows']); echo json_encode($responce); exit();
 }
 if(isset($codAjax)){ 
+    $responce = array();
     $responce['rows'] = $obBD_con_cod->getArrayConsulta(9, $search, $obBD_conexion_cod);
     echo json_encode($responce); exit();
 }
@@ -406,6 +471,7 @@ if(isset($saveCod)){
     echo json_encode($responce); exit();
 }
 if(isset($addSriCuenta)){ 
+    $responce = array();
     $responce['tipo'] = $addSriCuenta;
     $obBD_con_cod->inicio_transaccion($obBD_conexion_cod->conexion);              
     $obBD_con_cod->operacionobBD(19, $Ren_Cod.'*'.$Pld_Cod.'*'.$addSriCuenta, $obBD_conexion_cod);  
@@ -419,6 +485,7 @@ if(isset($addSriCuenta)){
     echo json_encode($responce); exit();
 }
 if(isset($deleteSriCuenta)){ 
+    $responce = array();
     $responce['tipo'] = $deleteSriCuenta;
     $obBD_con_cod->inicio_transaccion($obBD_conexion_cod->conexion);              
     $obBD_con_cod->operacionobBD(17, $Ren_Cod.'*'.$Pld_Cod.'*'.$deleteSriCuenta, $obBD_conexion_cod);   
@@ -432,14 +499,18 @@ if(isset($deleteSriCuenta)){
     echo json_encode($responce); exit();
 }
 if(isset($listTipo)){ 
+    $responce = array();
     $responce['rows'] = $obBD_con_cod->getArrayConsulta(12, $Ren_Cod.'*'.$Ses_Emp_Cod.'*'.$listTipo.'*'.$Pla_Cod, $obBD_conexion_cod);
+    if(!$responce['rows']) $responce['rows'] = array();
     echo json_encode($responce); exit();
 }
 
 // ============= AJAX HANDLERS PARA BANCOS =============
 if(isset($bancosAjax)){ 
+    $responce = array();
     $row_rs_bancos = $obBD_con_ban->getArrayConsulta(16, $Ses_Emp_Cod, $obBD_conexion_ban);
     $responce['rows'] = $row_rs_bancos;
+    if(!$responce['rows']) $responce['rows'] = array();
     utf8_encode_deep($responce['rows']);
     echo json_encode($responce); exit();
 }
@@ -453,9 +524,20 @@ if(isset($buscarCuentaBanco)){
     } else {
         $row_rs_busq = $obBD_con_ban->getArrayConsulta(4, strtoupper($Pla_Cod.'*'.$search_banco), $obBD_conexion_ban);
     }
-    foreach($row_rs_busq as &$row) {
-        $row_rs_existe = $obBD_con_ban->getArrayConsulta(5, $row['Pld_Cod'], $obBD_conexion_ban);
-        $row['existe'] = (count($row_rs_existe) > 0);
+    if (!empty($row_rs_busq)) {
+        $pldCods = array_column($row_rs_busq, 'Pld_Cod');
+        $inClause = implode(',', array_map('intval', $pldCods));
+        $sqlExiste = "SELECT Pld_Cod FROM banco WHERE Pld_Cod IN ($inClause) AND Ban_Est = 'A'";
+        $resultExiste = $obBD_con_ban->consulta($sqlExiste, $obBD_conexion_ban->conexion);
+        $existentes = array();
+        if ($resultExiste) {
+            while ($rowE = mysqli_fetch_assoc($resultExiste)) {
+                $existentes[$rowE['Pld_Cod']] = true;
+            }
+        }
+        foreach($row_rs_busq as &$row) {
+            $row['existe'] = isset($existentes[$row['Pld_Cod']]);
+        }
     }
     utf8_encode_deep($row_rs_busq);
     $responce['rows'] = $row_rs_busq;
@@ -584,47 +666,56 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
 <HTML>
 <HEAD>      
     <TITLE><?php echo "Parametrizaciones Iniciales [EXA]"; ?></TITLE>
-    <meta charset="iso-8859-1">
+    <meta charset="UTF-8">
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>              
     <style>
-        /* Diseño Moderno y Premium */
-        body { background-color: #f4f7f6; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .panel-main { border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border-radius: 10px; overflow: hidden; margin: 20px; background: #fff; }
-        .exa-header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 18px 25px; border-bottom: none; }
-        .exa-header .panel-title { font-size: 19px; font-weight: 600; letter-spacing: 0.5px; margin:0; display: flex; align-items: center; gap: 10px; }
-        .nav-tabs { border-bottom: 2px solid #e2e8f0; padding-top: 10px; background: #f8fafc; padding-left: 20px; display: flex; gap: 5px; }
-        .nav-tabs > li { margin-bottom: -2px; }
-        .nav-tabs > li > a { border: none; font-weight: 600; color: #64748b; padding: 14px 22px; border-bottom: 3px solid transparent; transition: all 0.3s ease; border-radius: 6px 6px 0 0; display: flex; align-items: center; gap: 8px; }
-        .nav-tabs > li > a:hover { background-color: #e2e8f0; color: #3b82f6; }
-        .nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus { border: none; background-color: #fff; color: #2563eb; border-bottom: 3px solid #2563eb; box-shadow: 0 -3px 10px rgba(0,0,0,0.02); }
-        .tab-content { padding: 30px; border: none; background-color: #fff; min-height: 550px; }
-        
-        .section-title { background: #f1f5f9; color: #1e293b; padding: 12px 20px; border-left: 5px solid #3b82f6; border-radius: 0 8px 8px 0; margin-bottom: 25px; font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
-        .exa-fieldset { border: 1px solid #e2e8f0; padding: 25px; margin-bottom: 25px; background: #ffffff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: box-shadow 0.3s ease; }
-        .exa-fieldset:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
-        .exa-fieldset legend { width: auto; padding: 6px 16px; margin-bottom: 20px; font-size: 15px; font-weight: 700; color: #334155; background: #f8fafc; border-radius: 20px; border: 1px solid #cbd5e1; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        
-        .btn { border-radius: 6px; font-weight: 600; padding: 8px 16px; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-success { background-color: #10b981; border-color: #059669; }
-        .btn-success:hover { background-color: #059669; border-color: #047857; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transform: translateY(-1px); }
-        .btn-primary { background-color: #3b82f6; border-color: #2563eb; }
-        .btn-primary:hover { background-color: #2563eb; border-color: #1d4ed8; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transform: translateY(-1px); }
-        .btn-inverse { background-color: #475569; border-color: #334155; color: white; }
-        .btn-inverse:hover { background-color: #334155; border-color: #1e293b; color: white; box-shadow: 0 4px 12px rgba(71, 85, 105, 0.3); transform: translateY(-1px); }
-        
-        .form-control { border-radius: 6px; border: 1px solid #cbd5e1; padding: 8px 14px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.03); transition: all 0.2s ease; height: auto; }
-        .form-control:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); outline: none; }
-        
-        .control-label { font-weight: 600; color: #475569; padding-top: 8px; }
-        .table-container { padding: 18px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; }
-        .table-title { font-size: 15px; font-weight: 700; color: #1e293b; margin-bottom: 12px; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; }
-        
-        /* Ajustes específicos de jqGrid para que se vea limpio */
-        .ui-jqgrid { box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; }
-        .ui-jqgrid .ui-jqgrid-htable th { background: #f1f5f9; color: #334155; font-weight: 700; padding: 8px; }
-        .ui-jqgrid .ui-jqgrid-bdiv { overflow-x: hidden; }
-        .ui-jqgrid tr.jqgrow td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; color: #475569; }
-        .ui-jqgrid tr.ui-state-highlight { background: #eff6ff; color: #1e3a8a; border-color: #bfdbfe; }
+        .nav-tabs > li > a {
+            font-weight: bold;
+            color: #555;
+        }
+        .nav-tabs > li.active > a,
+        .nav-tabs > li.active > a:hover,
+        .nav-tabs > li.active > a:focus {
+            background-color: #5cb85c;
+            color: #fff;
+            border-color: #5cb85c;
+        }
+        .nav-tabs > li > a:hover {
+            background-color: #eee;
+        }
+        .tab-content {
+            padding: 20px 10px;
+            border: 1px solid #ddd;
+            border-top: none;
+            background-color: #fff;
+        }
+        .tab-pane {
+            min-height: 400px;
+        }
+        .panel-param {
+            margin-bottom: 0;
+        }
+        .exa-fieldset {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #fafafa;
+        }
+        .exa-fieldset legend {
+            width: auto;
+            padding: 0 10px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            border: none;
+        }
+        .section-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
     </style>
 </HEAD>
 <BODY>
@@ -683,21 +774,19 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
                             </div>
                         </div>
                     </div>
-                    <div class="row" style="margin-top: 15px;">
+                    <div class="row">
                         <div class="col-sm-6">  
-                            <div class="table-container" style="min-height: 250px;">
-                               <div class="table-title">IVA Cobrado</div>
+                            <div style="min-height: 250px;">
                                <table id="list_iva_cobrado"></table>
                                <div id="listPager_iva_cobrado"></div>
-                               <button id="BtnIvaCobrado" onclick="tipoIva='cobrado';$('#ivaDialog').dialog('open');" title="Buscar Cuentas" type="button" class="btn btn-success btn-sm" style="margin-top: 15px;"><i class="glyphicon glyphicon-check"></i><span> Agregar Cuenta</span></button>
+                               <button id="BtnIvaCobrado" onclick="tipoIva='cobrado';$('#ivaDialog').dialog('open');" title="Buscar Cuentas" type="button" class="btn btn-success btn-sm" style="margin-top: 10px;"><i class="glyphicon glyphicon-check"></i><span> Agregar Cuenta</span></button>
                             </div>
                         </div>
                         <div class="col-sm-6">                       
-                            <div class="table-container" style="min-height: 250px;">                          
-                               <div class="table-title">IVA Pagado</div>
+                            <div style="min-height: 250px;">                          
                                <table id="list_iva_pagado"></table>
                                <div id="listPager_iva_pagado"></div>
-                               <button onclick="tipoIva='pagado';$('#ivaDialog').dialog('open');" title="Buscar Cuentas" type="button" class="btn btn-success btn-sm" style="margin-top: 15px;"><i class="glyphicon glyphicon-check"></i><span> Agregar Cuenta</span></button>    
+                               <button onclick="tipoIva='pagado';$('#ivaDialog').dialog('open');" title="Buscar Cuentas" type="button" class="btn btn-success btn-sm" style="margin-top: 10px;"><i class="glyphicon glyphicon-check"></i><span> Agregar Cuenta</span></button>    
                            </div>                        
                         </div>
                     </div>
@@ -726,21 +815,19 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
                             </div>
                         </div>
                     </div>
-                    <div class="row" style="margin-top: 15px;">
+                    <div class="row">
                         <div class="col-sm-6">  
-                            <div class="table-container" style="min-height: 250px;">
-                               <div class="table-title">Cuentas de Proveedores</div>
+                            <div style="min-height: 250px;">
                                <table id="list_proveedores"></table>
                                <div id="listPager_proveedores"></div>
-                               <button onclick="tipoCcpp='Deudor';$('#ccppDialog').dialog('open');" title="Buscar Cuentas" type="button" class="btn btn-success btn-sm" style="margin-top: 15px;"><i class="glyphicon glyphicon-check"></i><span> Agregar Cuenta</span></button>
+                               <button onclick="tipoCcpp='Deudor';$('#ccppDialog').dialog('open');" title="Buscar Cuentas" type="button" class="btn btn-success btn-sm" style="margin-top: 10px;"><i class="glyphicon glyphicon-check"></i><span> Agregar Cuenta</span></button>
                             </div>
                         </div>
                         <div class="col-sm-6">                       
-                            <div class="table-container" style="min-height: 250px;">                          
-                               <div class="table-title">Cuentas de Clientes</div>
+                            <div style="min-height: 250px;">                          
                                <table id="list_clientes"></table>
                                <div id="listPager_clientes"></div>
-                               <button onclick="tipoCcpp='Acreedor';$('#ccppDialog').dialog('open');" title="Buscar Cuentas" type="button" class="btn btn-success btn-sm" style="margin-top: 15px;"><i class="glyphicon glyphicon-check"></i><span> Agregar Cuenta</span></button>    
+                               <button onclick="tipoCcpp='Acreedor';$('#ccppDialog').dialog('open');" title="Buscar Cuentas" type="button" class="btn btn-success btn-sm" style="margin-top: 10px;"><i class="glyphicon glyphicon-check"></i><span> Agregar Cuenta</span></button>    
                            </div>                        
                         </div>
                     </div>
@@ -1182,20 +1269,20 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             <fieldset>
                 <legend>Filtros</legend>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label label-xs">Filtrar Por:</label>  
-                    <div class="col-sm-5 radioset">
+                    <label class="col-md-2 control-label label-xs">Filtrar Por:</label>  
+                    <div class="col-md-5 radioset">
                         <input id="radIva1" name="op_opciones" type="radio" value="d" checked="" /><label for="radIva1">&nbsp;&nbsp;Descripción&nbsp;&nbsp;</label>
                         <input id="radIva2" name="op_opciones" type="radio" value="c" /><label for="radIva2">&nbsp;&nbsp;Código&nbsp;&nbsp;</label>                          
                     </div>                   
-                    <div class="col-sm-4">
+                    <div class="col-md-4">
                         <label class="control-label label-xs">Plan de Cuentas:</label>                       
                         <input name="periodo" type="text" size="6" value="<?php echo $periodo_iva['Pla_Fec']?>" readonly style="text-align: center;display: inline-block;width: auto;" class="form-control input-xs" /> 
                         <input name="Pec_Cod" type="hidden" value="<?php echo $periodo_iva['Pec_Cod']?>" /> 
                     </div>    
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">Búsqueda:</label>  
-                    <div class="col-sm-7">
+                    <label class="col-md-2 control-label">Búsqueda:</label>  
+                    <div class="col-md-7">
                         <div class="input-group">                        
                             <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese cuenta a buscar..." autofocus class="form-control input-sm"/>
                             <span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm" title="Buscar cuenta"><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
@@ -1212,20 +1299,20 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             <fieldset>
                 <legend>Filtros</legend>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label label-xs">Filtrar Por:</label>  
-                    <div class="col-sm-5 radioset">
+                    <label class="col-md-2 control-label label-xs">Filtrar Por:</label>  
+                    <div class="col-md-5 radioset">
                         <input id="radCcpp1" name="op_opciones" type="radio" value="d" checked="" /><label for="radCcpp1">&nbsp;&nbsp;Descripción&nbsp;&nbsp;</label>
                         <input id="radCcpp2" name="op_opciones" type="radio" value="c" /><label for="radCcpp2">&nbsp;&nbsp;Código&nbsp;&nbsp;</label>                          
                     </div>                   
-                    <div class="col-sm-4">
+                    <div class="col-md-4">
                         <label class="control-label label-xs">Plan de Cuentas:</label>                       
                         <input name="periodo" type="text" size="6" value="<?php echo $periodo_ccpp['Pla_Fec']?>" readonly style="text-align: center;display: inline-block;width: auto;" class="form-control input-xs" /> 
                         <input name="Pec_Cod" type="hidden" value="<?php echo $periodo_ccpp['Pec_Cod']?>" /> 
                     </div>    
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">Búsqueda:</label>  
-                    <div class="col-sm-7">
+                    <label class="col-md-2 control-label">Búsqueda:</label>  
+                    <div class="col-md-7">
                         <div class="input-group">                        
                             <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese cuenta a buscar..." autofocus class="form-control input-sm"/>
                             <span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm" title="Buscar cuenta"><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
@@ -1242,12 +1329,12 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             <fieldset>
                 <legend>Filtros</legend>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label label-xs">Filtrar Por:</label>  
-                    <div class="col-sm-5 radioset">
+                    <label class="col-md-2 control-label label-xs">Filtrar Por:</label>  
+                    <div class="col-md-5 radioset">
                         <input id="radSri1" name="op_opciones" type="radio" value="d" checked="" /><label for="radSri1">&nbsp;&nbsp;Descripción&nbsp;&nbsp;</label>
                         <input id="radSri2" name="op_opciones" type="radio" value="c" /><label for="radSri2">&nbsp;&nbsp;Código&nbsp;&nbsp;</label>                          
                     </div>                   
-                    <div class="col-sm-4">
+                    <div class="col-md-4">
                         <label class="control-label label-xs">Plan de Cuentas:</label>                       
                         <input name="periodo" type="text" size="6" value="<?php echo $periodo_sri['Pla_Fec']?>" readonly style="text-align: center;display: inline-block;width: auto;" class="form-control input-xs" /> 
                         <input name="Pec_Cod" type="hidden" value="<?php echo $periodo_sri['Pec_Cod']?>" /> 
@@ -1255,8 +1342,8 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
                     </div>    
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">Búsqueda:</label>  
-                    <div class="col-sm-7">
+                    <label class="col-md-2 control-label">Búsqueda:</label>  
+                    <div class="col-md-7">
                         <div class="input-group">                        
                             <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese cuenta a buscar..." autofocus class="form-control input-sm"/>
                             <span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm" title="Buscar cuenta"><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
@@ -1273,8 +1360,8 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             <fieldset>
                 <legend>Buscar Cuenta</legend>
                 <div class="form-group">
-                    <label class="col-sm-2 control-label">Búsqueda:</label>  
-                    <div class="col-sm-8">
+                    <label class="col-md-2 control-label">Búsqueda:</label>  
+                    <div class="col-md-8">
                         <div class="input-group">                        
                             <input name="search" id="searchCuentaBalance" onkeydown="if (event.keyCode === 13) { buscarCuentasBalance(); return false; }" type="text" size="50" maxlength="50" placeholder="Ingrese nombre o código de cuenta..." autofocus class="form-control input-sm"/>
                             <span class="input-group-btn"><button type="button" onclick="buscarCuentasBalance();" class="btn btn-success btn-sm" title="Buscar cuenta"><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
@@ -1321,7 +1408,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
     <script>
         // Variables globales
         var tipoIva = '', tipoCcpp = '', tipoSri = '';
-        var UrlSelf = "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>";
+        var UrlSelf = "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>";
 
         // Crear diálogos de búsqueda
         $.createSearchDialog('ivaDialog', [
@@ -1967,7 +2054,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             $("#list_iva_cobrado").createGrid({                
                 datatype: 'local', // No cargar al inicio
                 postData: $("#formIva").getData("ivaCobrado"), 
-                height: 200, rowNum: 10000000, pgbuttons: false, pgtext: null, 
+                height: 200, rowNum: 250, pgbuttons: false, pgtext: null, 
                 caption: 'IVA Cobrado',
                 colModel: [
                     { label: 'Cód.Int.', name: 'Pld_Cod', key: true, width: 40, align: "center", hidden: false },                                
@@ -1990,7 +2077,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             $("#list_iva_pagado").createGrid({                
                 datatype: 'local', // No cargar al inicio
                 postData: $("#formIva").getData("ivaPagado"), 
-                height: 200, rowNum: 10000000, pgbuttons: false, pgtext: null, 
+                height: 200, rowNum: 250, pgbuttons: false, pgtext: null, 
                 caption: 'IVA Pagado',
                 colModel: [
                     { label: 'Cód.Int.', name: 'Pld_Cod', key: true, width: 40, align: "center", hidden: false },                                
@@ -2008,7 +2095,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             $("#list_proveedores").createGrid({
                 datatype: 'local', // No cargar al inicio
                 postData: $("#formCcpp").getData("deudor"),
-                height: 200, rowNum: 10000000, pgbuttons: false, pgtext: null,
+                height: 200, rowNum: 250, pgbuttons: false, pgtext: null,
                 caption: 'Proveedores',
                 colModel: [
                     { label: 'Cód.Int.', name: 'Pld_Cod', key: true, width: 40, align: "center", hidden: false },
@@ -2025,7 +2112,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             $("#list_clientes").createGrid({
                 datatype: 'local', // No cargar al inicio
                 postData: $("#formCcpp").getData("acreedor"),
-                height: 200, rowNum: 10000000, pgbuttons: false, pgtext: null,
+                height: 200, rowNum: 250, pgbuttons: false, pgtext: null,
                 caption: 'Clientes',
                 colModel: [
                     { label: 'Cód.Int.', name: 'Pld_Cod', key: true, width: 40, align: "center", hidden: false },
@@ -2043,7 +2130,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             $("#list_sri").createGrid({                
                 datatype: 'local', // No cargar al inicio
                 postData: $("#sriForm").getData("codAjax"), 
-                height: 250, rowNum: 1000000, pgbuttons: false, pgtext: null,
+                height: 250, rowNum: 250, pgbuttons: false, pgtext: null,
                 colModel: [
                     { label: 'Cod. Int.', name: 'Ren_Cod', key: true, width: 20, align: "center", hidden: false },  
                     { label: 'Cod. Int.', name: 'Adq_Cod', width: 20, align: "center", hidden: true },  
@@ -2109,7 +2196,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             $("#grid_planes").createGrid({
                 datatype: 'local', // No cargar al inicio
                 postData: {balancesAjax: true},
-                height: 180, rowNum: 1000000, pgbuttons: false, pgtext: null,
+                height: 180, rowNum: 250, pgbuttons: false, pgtext: null,
                 caption: '<i class="fa fa-folder-open"></i> Planes de Cuenta',
                 colModel: [
                     { label: 'Cód.', name: 'Pla_Cod', key: true, width: 40, align: "center" },
@@ -2143,7 +2230,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
             // Grid de tipos de balance configurados
             $("#grid_tipos_balance").createGrid({
                 datatype: 'local', // No cargar datos hasta seleccionar un plan
-                height: 150, rowNum: 1000000, pgbuttons: false, pgtext: null,
+                height: 150, rowNum: 250, pgbuttons: false, pgtext: null,
                 caption: '<i class="fa fa-list-alt"></i> Tipos de Balance',
                 colModel: [
                     { label: 'Cód.', name: 'Est_Cod', key: true, width: 40, align: "center" },
@@ -2153,7 +2240,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
 
             // Grid de estados financieros disponibles (para configuración)
             $("#grid_estados_fin").createGrid({
-                height: 80, rowNum: 1000000, pgbuttons: false, pgtext: null,
+                height: 80, rowNum: 250, pgbuttons: false, pgtext: null,
                 caption: '<i class="fa fa-tags"></i> Estados Financieros',
                 colModel: [
                     { label: 'Cód.', name: 'Est_Cod', key: true, width: 40, align: "center" },
@@ -2232,7 +2319,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
 
             // Grid de cuentas de utilidad configuradas
             $("#grid_utilidades").createGrid({
-                height: 100, rowNum: 1000000, pgbuttons: false, pgtext: null,
+                height: 100, rowNum: 250, pgbuttons: false, pgtext: null,
                 caption: '<i class="fa fa-list"></i> Utilidades Configuradas',
                 colModel: [
                     { label: 'Cód.', name: 'Pld_Cod', key: true, width: 40, align: "center" },
@@ -2263,7 +2350,7 @@ $row_rs_adqui = $obBD_con_cod->getArrayConsulta(16, '', $obBD_conexion_cod);
                 postData: {bancosAjax: true},
                 datatype: 'local',
                 pager: '#pager_bancos',
-                height: 250, rowNum: 1000000, pgbuttons: false, pgtext: null,
+                height: 250, rowNum: 250, pgbuttons: false, pgtext: null,
                 caption: '<i class="fa fa-university"></i> Listado de Bancos',
                 colModel: [
                     { label: 'Cód.', name: 'Ban_Cod', key: true, width: 30, align: "center" },

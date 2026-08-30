@@ -347,7 +347,7 @@ if(isset($buscarCampo)){
 	  data['campos']=campos;
 	  data["editarTipoActivo"]=true;
 	             
-	  $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+	  $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
 		  if(response['success']===true){
 			  $.alert("Transaccion Realizada con &Eacute;xito!");                          
 			  $treeview.jstree(true).refresh();
@@ -363,10 +363,10 @@ if(isset($buscarCampo)){
     }
    
    /*Variable para manejo del arbol jstree*/
-   public $treeview=$('#using_json_2');     
+   var $treeview=$('#using_json_2');     
    
    function updateTipoActivo(){
-   		$treeview.jstree(true).settings.core.data = {'url': '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?tipoactivAjax=true',"dataType": "json" };
+   		$treeview.jstree(true).settings.core.data = {'url': '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?tipoactivAjax=true',"dataType": "json" };
    		$treeview.jstree(true).refresh();
    } 
    var campos=new Array();
@@ -397,7 +397,7 @@ if(isset($buscarCampo)){
   		/*Secci�n para cargar el Jqgrid*/
   		var codigo={id:data.node.id,buscarCampo:true};
   		var i=0;
-  		$.post('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',codigo, function( response ){
+  		$.post('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',codigo, function( response ){
   			campos=response;
   			/*Llama a la funci�n updateGridcampos para cargar los datos al arreglo campos y a su vez al jqgrid*/
   			updateGridcampos();

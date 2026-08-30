@@ -174,7 +174,7 @@ if(isset($ajax_mar_val)&& $ajax_mar_val==1)
 	}
 	else
 	{
-		echo "<span class='Alertas3'>No existes registro de autorización para el tipo de comprobante</span>";
+		echo "<span class='Alertas3'>No existes registro de autorizaciï¿½n para el tipo de comprobante</span>";
 	}
 	exit();
 }
@@ -188,7 +188,7 @@ if(isset($ajax_notif))
 	{		
 	?>
     	<img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-        <script language="javascript">alert("¿Ya existe el numero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
+        <script type="text/javascript">alert("ï¿½Ya existe el numero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
 	<?php		
 	}else{
 		if($SecIni<=$NumFact && $SecFin>=$NumFact)
@@ -197,7 +197,7 @@ if(isset($ajax_notif))
 		}else{
 			?>
               <img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-              <script language="javascript">alert("¿N&uacute;mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); document.getElementById("Vet_Num").value='';
+              <script type="text/javascript">alert("ï¿½N&uacute;mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); document.getElementById("Vet_Num").value='';
 			  document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
             <?php		
 		}	
@@ -241,7 +241,7 @@ if (isset($cmb))
 		} //Fin del $row_rs_facttipo  ?>
     <!--</select>-->
 	<?php //echo $div_banco; ?>
-	<script language="javascript">
+	<script type="text/javascript">
 		ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cmb_tipo=1&Pag_Cod=<?Php echo $Pag; ?>', '<?php echo $div_banco; ?>');
 	</script>	
 	<?Php
@@ -274,7 +274,7 @@ if (isset($cmb_tipo))
 	exit();
 }//Fin del if (isset($cmb))
 /** 
-* Cargado AJAX de los resultados de la búsqueda del semestre 
+* Cargado AJAX de los resultados de la bï¿½squeda del semestre 
 */
 if (isset($sem))
 { 
@@ -375,7 +375,7 @@ if(isset($CajFec))
 		}	
 	}else{
 		$correcto=0;
-		?><script language="javascript">alert("¡No hay Autorizaci&oacute;n para la fecha ingresada!");</script> <?php
+		?><script type="text/javascript">alert("ï¿½No hay Autorizaci&oacute;n para la fecha ingresada!");</script> <?php
 	}
 }
 
@@ -884,26 +884,26 @@ if (isset($_POST['postID'])&&!empty($_POST['postID'])&&$thisPost->postBlock($_PO
 				</html>';
 				if(trim($PrsCorCli)!='')//control si existe el correo
 				{   
-					require '../../Librerias/PHPMail/class.phpmailer.php';
+					require_once '../../Librerias/PHPMailer_compat.php';
 					// Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
 					$mail = new PHPMailer(true); 
-					// Configuramos el protocolo SMTP con autenticación
+					// Configuramos el protocolo SMTP con autenticaciï¿½n
 					$mail->IsSMTP();
 					$mail->SMTPAuth = true;
 					$mail->IsHTML(true);
-					// Configuración del servidor SMTP
+					// Configuraciï¿½n del servidor SMTP
 					$mail->Port = 25;
 					$mail->Host = 'ofsercont.com';
 					$mail->Username = "facturacion.electronica@ofsercont.com";
 					$mail->Password = "p.123456";
-					// Configuración cabeceras del mensaje
+					// Configuraciï¿½n cabeceras del mensaje
 					$mail->From = "facturacion.electronica@ofsercont.com";
 					$mail->FromName = $Ses_Emp_Nom;
 					$mail->AddAddress(trim($PrsCorCli),strtoupper($PrsNomCli));
 					//$mail->AddAddress("destino2@correo.com","Nombre 2");
 					//$mail->AddCC("copia1@correo.com","Nombre copia 1");
 					//$mail->AddBCC("copia1@correo.com","Nombre copia 1");
-					$mail->Subject = "Comprobante Electrónico";
+					$mail->Subject = "Comprobante Electrï¿½nico";
 					// Creamos en una variable el cuerpo, contenido HMTL, del correo
 					
 					//$body  = "Proebando los correos con un tutorial<br>";
@@ -994,12 +994,12 @@ else
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
                 <script>var Cod_Banano='<?php echo $Cod_Banano; ?>';</script>
                  <?php if($rs_infoEmpresa['Cof_Con']=="S") { ?>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_fac_ven_cont_1.0.js?xx=2"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven_cont_1.0.js?xx=2"></script>
                  <?php }else{ ?>
-        <script language="javascript" src="../VALIDACIONES/fac_val_fac_ven_1.0.js?xx=2"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven_1.0.js?xx=2"></script>
                  <?php } ?>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
@@ -1051,7 +1051,7 @@ if (isset($hdd_save) && !isset($hdd_volver))
         $tabla='cliente';
         $campo="Cli_Cod";
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 		<?php if(isset($hdd_comprobante)){?>			
 		windows('<?php echo $hdd_comprobante;?>?Com_Num=<?php echo $Com_Num; ?>&Com_Cod=<?php echo $Com_Cod; ?>&codigo=<?php echo $Com_Cod; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $op; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec;?>','',800,800,'no','yes','yes','yes'); 	
 		<?Php } ?>
@@ -1059,9 +1059,9 @@ if (isset($hdd_save) && !isset($hdd_volver))
 	<?php	
 	/*para imprimir un comprobante nota de credito*/
 	if($tipDocSri=='4' || $tipDocSri=='04'){?>			
-       <script language="javascript">windows('<?Php echo $hdd_notacredito;  ?>?Vet_Cod=<?Php echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');</script>            
+       <script type="text/javascript">windows('<?Php echo $hdd_notacredito;  ?>?Vet_Cod=<?Php echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');</script>            
 <?php  }else{?>
-	   <script language="javascript">windows('<?Php echo $hdd_documento;  ?>?Vet_Cod=<?Php echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');</script> 
+	   <script type="text/javascript">windows('<?Php echo $hdd_documento;  ?>?Vet_Cod=<?Php echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');</script> 
 <?php  }
 }//Fin del if (isset($hdd_save))
 /**
@@ -1188,8 +1188,8 @@ if(isset($txt_busqueda))
 	<table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
     <thead>
 	  <tr>
-	  <th width="8%">Cód. Int. </th>
-          <th width="8%">Cédula/R.U.C.</th>
+	  <th width="8%">Cï¿½d. Int. </th>
+          <th width="8%">Cï¿½dula/R.U.C.</th>
           <th>Clientes</th>
           <th width="4%">&nbsp;</th>
       </tr>
@@ -1252,7 +1252,7 @@ if(isset($txt_busqueda))
 </LEGEND>
 <table width="95%" border="0" cellpadding="0" cellspacing="0">
   <tr>
-    <td width="12%" class="Etiqueta1">Cédula/R.U.C.:</td>
+    <td width="12%" class="Etiqueta1">Cï¿½dula/R.U.C.:</td>
     <td width="88%" class="LetraNegra">&nbsp;<?Php echo $row_rs_cliente['Prs_Ced'] ?>
       <input name="codigo" id="codigo" type="hidden" value="<?Php echo $codigo;?>">
       <input name="PrsCodCli" id="PrsCodCli" type="hidden" value="<?Php echo $row_rs_cliente['Prs_Cod'];?>">
@@ -1266,7 +1266,7 @@ if(isset($txt_busqueda))
     <td class="LetraNegra">&nbsp;<?Php echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'] ?></td>
   </tr>
   <tr>
-    <td width="12%" class="Etiqueta1">Dirección:</td>
+    <td width="12%" class="Etiqueta1">Direcciï¿½n:</td>
     <td colspan="3" class="LetraNegra">&nbsp;<?php echo $row_rs_cliente['Prs_Dir']?></td>
 	</tr>
 	<?Php 
@@ -1395,7 +1395,7 @@ if(isset($txt_busqueda))
                   </span></td>
               </tr>
               </table>
-			  <script language="javascript">
+			  <script type="text/javascript">
                    ShowHide('NotasCredito');		  
               </script>                                            
          </FIELDSET>    
@@ -1416,7 +1416,7 @@ if(isset($txt_busqueda))
 	<tr class="Cabecera1" height="35">
 	    <th width="4%">C&oacute;d.</th>	  
 		<th width="4%">Cant.</th>
-		<th width="30%">Descripción</th>
+		<th width="30%">Descripciï¿½n</th>
 		<th width="16%">P. Unitario </th>
 		<th width="9%">Importe</th>
 		<th width="4%">Desc.</th>
@@ -1844,7 +1844,7 @@ if(isset($txt_busqueda))
 <div id="cont_cua_338_titu"></div>
 <FIELDSET>
 		<LEGEND>
-			<label class="Titulos2">PORCENTAJE DE RETENCÍON (338)</label>
+			<label class="Titulos2">PORCENTAJE DE RETENCï¿½ON (338)</label>
 		</LEGEND>
     <table style="width: 100%">
         <tr><td style="width: 30%"></td><td></td></tr>
@@ -1876,7 +1876,7 @@ if(isset($txt_busqueda))
  <table width="290" border="0" cellpadding="0" cellspacing="0" class="Azul">
  <tr>
    <td width="109">
-   <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver"; ?>', '<?Php echo $volver_busqueda.'*'.$volver_op.'*'; ?>')">
+   <button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver"; ?>', '<?Php echo $volver_busqueda.'*'.$volver_op.'*'; ?>')">
                     <i class=" icon-arrow-left icon-white"></i>
                     <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        </button></td>
@@ -1897,7 +1897,7 @@ if(isset($txt_busqueda))
 	if (!(isset($cheque)))
 	{
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 	 ShowHide('cheque');		  	 
 	</script>
 	<?Php
@@ -1914,7 +1914,7 @@ if(isset($txt_busqueda))
 			}
 			else
 			{   
-				echo error_alerta ("&iexcl;No se puede generar el Documento: [".$Vet_Num."], la Autorización [".$row_rs_autorizaci['Aut_Sri']."] permite facturas entre [".$row_rs_autorizaci['Aut_Ini']."] y [".$row_rs_autorizaci['Aut_Fin']."]!", 2);
+				echo error_alerta ("&iexcl;No se puede generar el Documento: [".$Vet_Num."], la Autorizaciï¿½n [".$row_rs_autorizaci['Aut_Sri']."] permite facturas entre [".$row_rs_autorizaci['Aut_Ini']."] y [".$row_rs_autorizaci['Aut_Fin']."]!", 2);
 			}
 		}
 		else

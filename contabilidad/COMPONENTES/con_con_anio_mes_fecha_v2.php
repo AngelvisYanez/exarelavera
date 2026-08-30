@@ -30,7 +30,7 @@ if (isset($Pec_Fei)) {
 			});	
 		}); 		
     </script>        
-	<script language="javascript">
+	<script type="text/javascript">
 	/* Asigna el dia inicial y final del mes y año seleccionado */ 
 	function set_dia_mes() {
 		/* Año tomado del objeto que debe estar en el FRONT */
@@ -183,7 +183,7 @@ if (isset($Pec_Fei)) {
 			</tr>
 		</table>
 	</FIELDSET>
-	<script language="javascript">
+	<script type="text/javascript">
 	<?php 
 	if (isset($Chk_Fec)) {
 	?>

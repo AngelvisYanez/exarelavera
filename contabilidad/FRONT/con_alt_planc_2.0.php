@@ -1,14 +1,14 @@
 <!DOCTYPE unspecified PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <?php	
 /** 
-* Descripción: Permite registrar las cuentas del plan de cuentas
-* Fecha de actualización:	2011-04-13
+* Descripciï¿½n: Permite registrar las cuentas del plan de cuentas
+* Fecha de actualizaciï¿½n:	2011-04-13
 * Desarrollador:	Lewis Chimarro
-* Fecha de actualización:	2012-04-18
+* Fecha de actualizaciï¿½n:	2012-04-18
 * Desarrollador:	Lewis Chimarro
-* Fecha de actualización:	2012-04-18
+* Fecha de actualizaciï¿½n:	2012-04-18
 * Desarrollador:	Lewis Chimarro
-* Fecha de actualización:	2013-04-10
+* Fecha de actualizaciï¿½n:	2013-04-10
 * Desarrollador:	Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -25,7 +25,7 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Con;
 /**
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;  
 
@@ -53,7 +53,7 @@ if ($thisPost->postBlock($_POST['postID']))
 				 */
 				//$obBD_con1->grabarAuditoria($_SERVER['PHP_SELF'], $Ses_Usu_Cod, $obBD_conexion);
 				/**
-				 * Fin de transacción
+				 * Fin de transacciï¿½n
 				*/
 				$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 			break;
@@ -62,7 +62,7 @@ if ($thisPost->postBlock($_POST['postID']))
 					
 				if (count($row_rs_vercodigo) > 0)
 				{ ?>
-				    <script language="javascript">
+				    <script type="text/javascript">
 						alert('El c&oacute;digo de cuenta <?Php echo $cod_cuenta; ?> ya existe');
 					</script>
 				<?Php
@@ -80,7 +80,7 @@ if ($thisPost->postBlock($_POST['postID']))
 					 */
 					//$obBD_con1->grabarAuditoria($_SERVER['PHP_SELF'], $Ses_Usu_Cod, $obBD_conexion);
 					/**
-					 * Fin de transacción
+					 * Fin de transacciï¿½n
 					*/
 					$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 				}
@@ -110,7 +110,7 @@ if (isset($ajax_codigo))
  <title><?Php echo $Ses_Sys_Nom; ?></title>
  <?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
  <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
- <script language="javascript" src="../VALIDACIONES/con_val_planc.js"></script>
+ <script type="text/javascript" src="../VALIDACIONES/con_val_planc.js"></script>
  <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
  <script type="text/javascript">$(function() { $('#set1 *').tooltip({showURL: false}); });</script>
  <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
@@ -187,7 +187,7 @@ if (isset($ajax_codigo))
 						?>
 							<tr>
 								<td>&nbsp;</td>
-					  	  		<td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+					  	  		<td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
 					  	  		<td>&nbsp;</td>
 					  		</tr>
 						<?php
@@ -385,13 +385,13 @@ if (isset($ajax_codigo))
 			  		<?php 
 			  		if ($np != 0){
 				  		/**
-				  		 * Link para volver atrás
+				  		 * Link para volver atrï¿½s
 				  		 */
 				  		$row_rs_direca = $obBD_con1->getRowConsulta(306, $np, $obBD_conexion);
 			  		?>
 			  		<td width="110">
 				  		<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
-							<button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="this.form.submit()"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
+							<button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="this.form.submit()"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
 	       					<input type="hidden" id="pag" name="pag" value="1" />
 	       					<input type="hidden" id="codpla" name="codpla" value="<?php echo $codpla; ?>" />
 	       					<input type="hidden" id="np" name="np" value="<?php echo $row_rs_direca['Pld_Rec']; ?>" />
@@ -468,7 +468,7 @@ if (isset($ajax_codigo))
 				        <FIELDSET>
 				        <LEGEND>
 				            <label class="Titulos2">
-				              Asociación Presupuestaria</label>
+				              Asociaciï¿½n Presupuestaria</label>
 				        </LEGEND>            
 						<table width="574" border="0" cellpadding="0" cellspacing="0">            
 					      <tr>

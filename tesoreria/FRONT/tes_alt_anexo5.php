@@ -217,7 +217,6 @@ if (isset($bt_save)) {
 
             $row_rs_reemb = isset($row_rs_reemb_group[$row_rs_compras['Cop_Cod']])?$row_rs_reemb_group[$row_rs_compras['Cop_Cod']]:array();
             $row_rs_datos_air = isset($row_rs_datos_air_group[$row_rs_compras['Cop_Cod']])?$row_rs_datos_air_group[$row_rs_compras['Cop_Cod']]:array();
-            if($row_rs_compras['Cop_Cod']==347338) print_r($row_rs_datos_air);
             $total_rs_datos_air = count($row_rs_datos_air);
             if ($total_rs_datos_air == 0) {
                 $CanCajas = 0;

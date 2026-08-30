@@ -7,7 +7,7 @@
  * @version 1.0
  * @author Didimo Zamora
  * @version 1.0
- * @Fecha de actualización:	26-04-2013 
+ * @Fecha de actualizaciï¿½n:	26-04-2013 
  *
  * @package activosfijos.FRONT
  */
@@ -38,7 +38,7 @@ if (isset($_POST['hdd_save']))
 	if ($thisPost->postBlock($_POST['postID']))
 	{
 		/**
-		 * Iniciar transacción
+		 * Iniciar transacciï¿½n
 		 */
 		$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 		
@@ -87,8 +87,8 @@ if (isset($_POST['hdd_save']))
 			<table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
 			   <thead>
 			      <tr>
-					<th width="5%" >Cód. Int. </th>
-					<th width="10%" >Cédula</th>
+					<th width="5%" >Cï¿½d. Int. </th>
+					<th width="10%" >Cï¿½dula</th>
 					<th >Personal </th>
 					<th >Cargo </th>
 					<th width="3%" >&nbsp;</th>
@@ -146,7 +146,7 @@ if (isset($_POST['hdd_save']))
 			    </LEGEND>
 	    		 <table width="100%" cellpadding="0" cellspacing="0">
 				    <tr>
-				    	<td width="10%" class="Etiqueta1"><span class="Asterisco">*</span>&nbsp;Código:</td>
+				    	<td width="10%" class="Etiqueta1"><span class="Asterisco">*</span>&nbsp;Cï¿½digo:</td>
 				    	<td class="LetraNegra">&nbsp;<input type="text" name="CusCodigo" id="CusCodigo" value="" size="6" readonly="readonly" style="border: none;"></td>
 				    </tr>
 				    <tr>
@@ -172,8 +172,8 @@ if (isset($_POST['hdd_save']))
 		   		<td width="110">
 		   			<button type="button" class="btn btn-primary fileinput-button" onclick="validar_requeridos(this.form,'CusCodigo',1);"><i class=" icon-book icon-white"></i><span>&nbsp;&nbsp;Guardar&nbsp;&nbsp;</span></button>
 		   			<input type="hidden" name="hdd_save" value="1">
-		   			<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-					<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
+		   			<input type="hidden" name="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8');?>">
+					<input type="hidden" name="txt_busqueda" value="<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>">
 		   		</td>
 		   	</tr>
 		   </table>

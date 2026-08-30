@@ -676,7 +676,7 @@ if (isset($saveDocument)) {
                                     <script type="text/javascript">
                                     <?php if($Ses_Emp_Cod == 608): ?>
                                     $(document).ready(function() {
-                                        public $bodegaSelect = $('#Bc_Cod').select2({
+                                        var $bodegaSelect = $('#Bc_Cod').select2({
                                             placeholder: "Seleccione...",
                                             allowClear: true,
                                             width: '100%'
@@ -693,7 +693,7 @@ if (isset($saveDocument)) {
                                         $('#btnGuardarModalBodega').on('click', function(e) {
                                             e.preventDefault();
                                             var term = $.trim($('#modal_nueva_bodega').val()).toUpperCase();
-                                            public $btn = $(this);
+                                            var $btn = $(this);
                                             
                                             if (term !== '') {
                                                 $btn.prop('disabled', true);

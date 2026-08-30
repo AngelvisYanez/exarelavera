@@ -63,7 +63,7 @@ if(isset($save)){
 <BODY>
  
     <div class="panel panel-main">
-        <div class="panel-heading exa-header"><h3 class="panel-title">&raquo;  Gestión de Centros de Consumo</h3></div>
+        <div class="panel-heading exa-header"><h3 class="panel-title">&raquo;  Gestiï¿½n de Centros de Consumo</h3></div>
         
         <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
             <div class="">
@@ -71,7 +71,7 @@ if(isset($save)){
                     <div class="col-sm-12">  
                         
                         <fieldset class="exa-fieldset">                           
-                           <legend class="Titulos2">Búsqueda de Centros de Consumo</legend> <!-- Form Name -->
+                           <legend class="Titulos2">Bï¿½squeda de Centros de Consumo</legend> <!-- Form Name -->
                            <form id="searchForm" class="form-inline" role="form" action="javascript:gridComp.Search('#searchForm','consAjax');">
                                <div class="form-group">
                                 <label for="search">Buscar:</label>
@@ -114,7 +114,7 @@ if(isset($save)){
                        </div>
                      </div>                     
                      <div class="form-group">
-                        <label class="col-sm-4 control-label">Acción:</label>
+                        <label class="col-sm-4 control-label">Acciï¿½n:</label>
                         <div class="col-sm-8">
                             <button type="submit"  class="btn btn-primary"><span class="glyphicon glyphicon-floppy-disk"></span> Guardar</button>
                             <button type="button" onclick="$('#DialogCons').dialog('close');"  class="btn btn-danger"><span class="glyphicon glyphicon-remove"></span> Cancelar</button>
@@ -133,7 +133,7 @@ if(isset($save)){
        var gridComp=$("#comp");   
        function saveCons(){
             var data=$('#formCons').getData('save');
-            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                 if(response['success']===true){
                     $.alert("Transaccion Realizada con &Eacute;xito!");
                     gridComp.jqGrid().trigger("reloadGrid", [{ page: 1 }]); 
@@ -150,28 +150,28 @@ if(isset($save)){
         function borraConsumo(id){ updateConsumo(id,'I'); }
         function activaConsumo(id){ updateConsumo(id,'A'); }
         function updateConsumo(id,est){
-            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{Con_Cod:id,Con_Est:est,update:true}, function( response ) {
+            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{Con_Cod:id,Con_Est:est,update:true}, function( response ) {
                 if(response['success']===true){
                     $.alert("Transaccion Realizada con &Eacute;xito!");gridComp.jqGrid().trigger("reloadGrid", [{ page: 1 }]);
                 }else{$.alert(response['message']);}
             },'json').fail(function(error) { $.alert("El Servidor ha fallado en responder!"); });
         }
     gridComp.jqGrid({
-            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
             mtype: "GET", datatype: "json", regional : 'es',hidegrid:false, ajaxRowOptions:{async:true}, 
             postData: $("#searchForm").getData("consAjax"),
             autowidth : true, shrinkToFit: true, height: 250,caption:'&nbsp;',responsive:true,
             cmTemplate: {sortable:false,title: false},
             colModel: [
-                { label: 'Cód.Int.', name: 'Con_Cod', key: true, width: 25,align:"center" },
-                { label: 'Descripción', name: 'Con_Des', width: 250,editable:true},
+                { label: 'Cï¿½d.Int.', name: 'Con_Cod', key: true, width: 25,align:"center" },
+                { label: 'Descripciï¿½n', name: 'Con_Des', width: 250,editable:true},
                 { label: 'Estado', name: 'Con_Est', width: 50 ,align:"center"} ,
                     { label:'&nbsp;', name: 'act1', width: 35, align: 'center',viewable: false,title: false,
                         formatter:function (cellvalue, options, rowObject) { var action='';
                             if(rowObject['Con_Est']==='Activo')
-                                action='<span class="btn btn-danger btn-xs" title="Anular" type="button" onclick="$.createDialogConfirm(\'Está seguro que desea anular este Centro de Consumo?\','+rowObject.Con_Cod+',borraConsumo)"><i class="fa fa-ban"></i></span>';
+                                action='<span class="btn btn-danger btn-xs" title="Anular" type="button" onclick="$.createDialogConfirm(\'Estï¿½ seguro que desea anular este Centro de Consumo?\','+rowObject.Con_Cod+',borraConsumo)"><i class="fa fa-ban"></i></span>';
                             else
-                                action='<span class="btn btn-info btn-xs" title="Activar" type="button" onclick="$.createDialogConfirm(\'Está seguro que desea activar este Centro de Consumo?\','+rowObject.Con_Cod+',activaConsumo)"><i class="fa fa-check"></i></span>';
+                                action='<span class="btn btn-info btn-xs" title="Activar" type="button" onclick="$.createDialogConfirm(\'Estï¿½ seguro que desea activar este Centro de Consumo?\','+rowObject.Con_Cod+',activaConsumo)"><i class="fa fa-check"></i></span>';
                             return  '<span class="btn btn-success btn-xs" title="Editar" type="button" onclick="setCons(gridComp.jqGrid(\'getRowData\',\''+rowObject.Con_Cod+'\'));"><i class="fa fa-pencil"></i></span><span>&nbsp;&nbsp;</span>'+
                                      action; 
                         }

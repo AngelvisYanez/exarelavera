@@ -205,7 +205,7 @@ $fec_fin_mes_actual = date('Y-m-d');
 <head>
     <title><?php echo $Ses_Sys_Nom; ?> - Reporte Tickets por Cliente</title>
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
     <style>
         .panel-rep { margin: 15px 0; }

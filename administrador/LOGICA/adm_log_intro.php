@@ -1,4 +1,4 @@
-﻿<?Php 
+<?php
 /**
  * Logica de las paginas que tienen que ver con el distributivo
  *
@@ -9,132 +9,48 @@
  * @package administrador.LOGICA
  */
 
-require_once ("../../DATA/DAC.php");
+require_once("../../DATA/MysqlConexion.php");
+require_once("../../DATA/MysqlDatos.php");
 require_once("adm_sql_intro.php");
 
-/**
-/* Clase para conexion a la capa de acceso a datos
-*/
-
-class Class_Log_Conexion_Log extends Class_Mysql{
-	function Class_Log_Conexion_Log($bd = "storage", $host = "localhost", $user = "user", $pass = "lj2002"){	
-//	function Class_Log_Conexion_Log($bd = "storage", $host = "localhost", $user = "userMacros", $pass = "lynxsc6"){
-		$this->BaseDatos = $bd;
-		$this->Servidor = $host;
-		$this->Usuario = $user;
-		$this->Clave = $pass;
-		
-		$this->conectar();
+class Class_Log_Conexion_Log extends MysqlConexion {
+	function __construct($bd = "servicios", $host = "localhost", $user = "root", $pass = ""){
+		parent::__construct($host, $user, $pass, $bd);
 	}
-}//Fin de clase Class_Log_Conexion
+}
 
-/**
-/* Clase para los datos a la capa de acceso a datos
-*/
-
-class Class_Log_Datos_Log extends Class_Datos{
-	/**
-	* Realiza una consulta en la base de datos.
-	*
-	* @return result si existen datos de retorno
-	* @param int $sen_sql numero de la sql
-	* @param string $param cadena de valores para el filtrado de la busqueda
-	* @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
-	*/
-	function consultasobBD($sen_sql,$param, $obBD = null)
+class Class_Log_Datos_Log extends MysqlDatos {
+	function consultasobBD($sen_sql, $param, $obBD = null)
 	{
-		$Par_Sql= $this->parametros($param);
-		return $this->consulta(sentencias_log($sen_sql,$Par_Sql), $obBD->conexion);
-	}
-	
-	
-	/**
-	 * Realiza una consulta en la base de datos -  STARDARD
-	 *
-	 * @return result si existen datos de retorno
-	 * @param int $sen_sql numero de la sql
-	 * @param string $param cadena de valores para el filtrado de la busqueda
-	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
-	 */
-	function operacionobBD($sen_sql,$param, $obBD = null)
-	{
-		$Par_Sql= $this->parametros($param);
-		return $this->grabarv_registros(sentencias_log($sen_sql,$Par_Sql), $obBD->conexion);
-	}
-	
-	/**
-	 * Ejecuta cualquier consulta a la base de datos
-	 * @return array $row fila de datos
-	 * @param int $sen_sql numero de la sql
-	 * @param string $param cadena de valores para el filtrado de la busqueda
-	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
-	 */
-	function getRowConsulta($sen_sql,$param,$obBD = null)
-	{
-		$result = $this->consultasobBD($sen_sql,$param,$obBD);
-		
-		$row =  $this->fetch_assoc($result);
-		
-		$this->free_result($result);
-		
-		return $row;//!=null?array_map('htmlentities', $row):$row;
+		$Par_Sql = $this->parametros($param);
+		return $this->consulta(sentencias_log($sen_sql, $Par_Sql), $obBD->conexion);
 	}
 
-	/**
-	 * Ejecuta cualquier consulta a la base de datos
-	 * @return array $array arreglo de datos asociados
-	 * @param int $sen_sql numero de la sql
-	 * @param string $param cadena de valores para el filtrado de la busqueda
-	 * @param Class_Log_Conexion_Con $obBD para realizar la conexcion correspondiente
-	 */ 
-	function getArrayConsulta($sen_sql,$param,$obBD = null)
+	function getRowConsulta($sen_sql, $param, $obBD = null)
 	{
-		$result = $this->consultasobBD($sen_sql,$param,$obBD);
-		
+		$result = $this->consultasobBD($sen_sql, $param, $obBD);
+		if (!($result instanceof \mysqli_result)) return array();
+		$row = $this->fetch_assoc($result);
+		return is_array($row) ? $row : array();
+	}
+
+	function getArrayConsulta($sen_sql, $param, $obBD = null)
+	{
+		$result = $this->consultasobBD($sen_sql, $param, $obBD);
+		if (!($result instanceof \mysqli_result)) return array();
 		$array = array();
-		
-		while($row_rs = $this->fetch_assoc($result))
-		{
+		while ($row_rs = $this->fetch_assoc($result)) {
 			$array[] = $row_rs;
 		}
-		
-		$this->free_result($result);
-		
 		return $array;
 	}
-	
-	
-	/**
-	 * Inserta o actualiza o elimina los datos de una sola transacccion -  STARDARD
-	 * @param int $sen_sql numero de la sql
-	 * @param string $param cadena de datos
-	 * @param Class_Log_Datos_Con $obBD objeto de conexion
-	 */
-	function insertUpdateDelete($sen_sql,$param, $obBD = null)
+
+	function insertUpdateDelete($sen_sql, $param, $obBD = null)
 	{
-		/**
-		 * Inicio de la transaccion
-		 */
 		$this->inicio_transaccion($obBD->conexion);
-	
-		/**
-		 * Ejecutar sentencia
-		 */
-		$this->operacionobBD($sen_sql,$param,$obBD);
-	
-		/**
-		 * Codigo de autoincremento
-		 * @var int
-		 */
+		$this->operacionobBD($sen_sql, $param, $obBD);
 		$cod = $this->insercionid($obBD->conexion);
-		/**
-		 * Finalizar transaccion
-		 */
 		$this->fin_transaccion($obBD->conexion);
-		
 		return $cod;
 	}
-	
-}//Fin de clase Class_Log_Conexion
-
-?>
+}

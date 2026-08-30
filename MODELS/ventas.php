@@ -1,6 +1,5 @@
 <?php
 
-use \Exception;
 
 require_once(dirname(__file__) . "/../DATA/libs/AbstractModel.php");
 
@@ -506,12 +505,9 @@ class ventas extends AbstractModel
                         $search = "AND (UPPER(CONCAT(cliente_ven.Prs_Ape,' ',cliente_ven.Prs_Nom)) LIKE UPPER('%$Par_Sql[search]%'))";
                 }
 
-                if (isset($Par_Sql["mis_ingresos"])) {
-                    if ($Par_Sql["mis_ingresos"] == 'S') {
-                        $filtroUsuario = "AND vendedor.Prs_cod = $_SESSION[Ses_Prs_Cod]";
-                    }
-                } else {
-                    $filtroUsuario = '';
+                $filtroUsuario = '';
+                if (isset($Par_Sql["mis_ingresos"]) && $Par_Sql["mis_ingresos"] == 'S') {
+                    $filtroUsuario = "AND vendedor.Prs_cod = $_SESSION[Ses_Prs_Cod]";
                 }
 
                 $sql = "SELECT $campos FROM ventas

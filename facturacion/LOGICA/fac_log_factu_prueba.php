@@ -1,4 +1,4 @@
-﻿<?Php 
+<?Php 
 /**
  * Logica de las paginas para el control de kardex
  *
@@ -69,7 +69,7 @@ class Class_Log_Datos_Factu extends MysqlDatos{
         $result = $this->consultasobBD($sen_sql,$param,$obBD);
         $row =  $this->fetch_assoc($result);
         $this->free_result($result);
-        return $row;
+        return is_array($row) ? $row : array();
     }
     function getRowConsultaSql($sen_sql,$obBD){
         $result = $this->consulta($sen_sql, $obBD->conexion);
@@ -504,7 +504,7 @@ class Class_Log_Datos_Factu extends MysqlDatos{
     function sendMailRet($data,$body){ 
         $ban=true;        
         try{
-            require '../../Librerias/PHPMail/class.phpmailer.php';            
+            require_once '../../Librerias/PHPMailer_compat.php';
             $mail = new PHPMailer(true); // Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
             // Configuramos el protocolo SMTP con autenticación
             $mail->IsSMTP();

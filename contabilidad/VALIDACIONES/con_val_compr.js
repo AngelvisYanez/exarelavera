@@ -4,7 +4,7 @@ function validar_cuentas(form, campo)
 {
 	if (parametro_x(campo, '.') != false)
 		{
-			form.submit;
+			form.submit();
 		}
 }
 
@@ -21,7 +21,7 @@ function validar_inscomp(form, hoy)
 		if (((dato.type=="text") || (dato.type=="textarea") || (dato.type=="select-one")) && (dato.value=="") && (dato.id!="buscta") && (dato.id!="Com_Obs") && (dato.id.substring(dato.id.length-2,dato.id.length-1)!="6"))
 		{
 			flag=1;					
-			alert("Falta llenar Informacion necesaria.");
+			$.alert("Falta llenar Informacion necesaria.",null,'warning');
 			dato.focus();
 			break;
 		}
@@ -37,25 +37,25 @@ function validar_inscomp(form, hoy)
 	{
 		if (ndatos < 2)
 		{
-			alert("Debe tener por lo menos dos asientos");
+			$.alert("Debe tener por lo menos dos asientos",null,'warning');
 		}
 		else
 		{
 			if (bad_cta > 0)
 			{
-				alert("Ingrese cuentas existentes en el Plan de Cuenta");
+				$.alert("Ingrese cuentas existentes en el Plan de Cuenta",null,'warning');
 			}
 			else
 			{
 				if (parseFloat(document.getElementById('t_debe').value)!=parseFloat(document.getElementById('t_haber').value))
 					{
-						alert("Los totales del DEBE y el HABER deben coincidir");
+						$.alert("Los totales del DEBE y el HABER deben coincidir",null,'warning');
 					}
 					else
 					{	
 						if (parseFloat(document.getElementById('Com_Val').value) > parseFloat(document.getElementById('t_debe').value))
 							{
-								alert("El VALOR del Comprobante debe ser menor o igual al Total del DEBE o HABER");
+								$.alert("El VALOR del Comprobante debe ser menor o igual al Total del DEBE o HABER",null,'warning');
 							}
 							else
 							{

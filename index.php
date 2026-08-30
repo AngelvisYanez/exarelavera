@@ -1,493 +1,667 @@
 <?php
-/**
-Descripci�n: P�gina de inicio del sistema
-Fecha de actualizaci�n:	2012-11-25
-Desarrollador:	Lewis Chimarro
-Fecha de actualizaci�n:	2013-08-12
-Desarrollador:	Lewis Chimarro
-*/
-require_once "Librerias/config.php/register_globals.php";
-require_once "Librerias/procedimientos/almacenados_standar.php";
-require_once "administrador/LOGICA/adm_log_login.php";
 
 /**
- * Variable el tipo de navegador
+ * Descripción: Página de inicio del sistema
+ * Fecha de actualización: 2012-11-25
+ * Desarrollador: Lewis Chimarro
+ * Fecha de actualización: 2013-08-12
+ * Desarrollador: Lewis Chimarro
+ */
+require_once('Librerias/config.php/register_globals.php');
+require_once('Librerias/procedimientos/almacenados_standar.php');
+require_once('administrador/LOGICA/adm_log_login.php');
+
+/**
+ * Variable el tipo de navegador 
  */
 $Browser = detectar_acceso();
 /**
- * URL de acceso al sistema WAP
+ * URL de acceso al sistema WAP 
  */
-$wmlredirect = "../movil/FRONT/mov_pag_inicial.php"; // URL ABSOLUTO para su archivo VML
+$wmlredirect = "../movil/FRONT/mov_pag_inicial.php"; // URL ABSOLUTO para su archivo VML  
 
 if ($Browser == "WML") {
     header("Location: " . $wmlredirect);
-    exit();
-} //Fin del if($Browser == "WML")
-/**
- * Ajax para identificar el numero de empresas
- */
-if (isset($ajax_empresas2)) {
-    /**
-     * Creacion del Objeto de conexion
-     */
-    $obBD_conexion = new Class_Log_Conexion_Log();
-    /**
-     * Creaci�n del objeto mysql para las consultas
-     */
-    $obBD_con1 = new Class_Log_Datos_Log();
+    exit;
+}
 
-    $rs_empresas = $obBD_con1->getArrayConsulta(
-        1,
-        trim($ajax_username),
-        $obBD_conexion
-    );
+/* Ajax para identificar el numero de empresas */
+if (isset($_POST['ajax_empresas2'])) {
+    $obBD_conexion = new Class_Log_Conexion_Log;
+    $obBD_con1 = new Class_Log_Datos_Log;
+    $ajax_username = isset($_POST['ajax_username']) ? trim($_POST['ajax_username']) : '';
+    $rs_empresas = $obBD_con1->getArrayConsulta(1, $ajax_username, $obBD_conexion);
     utf8_encode_deep($rs_empresas);
     $conteo = count($rs_empresas);
-    $html = "";
+    $html = '';
     if ($conteo > 0) {
         if ($conteo > 1) {
-            $html = $html . "<option value=''></option>";
+            $html = "<option value=''></option>";
             foreach ($rs_empresas as $row_rs_empresas) {
-                $html =
-                    $html .
-                    "<option value='" .
-                    $row_rs_empresas["Emp_Cod"] .
-                    "' data-Emp_Nom='" .
-                    $row_rs_empresas["Emp_Nom"] .
-                    "' data--suc_-cod='$row_rs_empresas[Suc_Cod]'>" .
-                    $row_rs_empresas["Emp_Cor"] .
-                    " (" .
-                    $row_rs_empresas["Suc_Des"] .
-                    ")</option>";
+                $sucBr = isset($row_rs_empresas['Suc_Cod']) ? (int) $row_rs_empresas['Suc_Cod'] : 0;
+                $empNom = htmlspecialchars(isset($row_rs_empresas['Emp_Nom']) ? $row_rs_empresas['Emp_Nom'] : '', ENT_QUOTES, 'UTF-8');
+                $empCor = htmlspecialchars(!empty($row_rs_empresas['Emp_Cor']) ? $row_rs_empresas['Emp_Cor'] : (isset($row_rs_empresas['Emp_Nom']) ? $row_rs_empresas['Emp_Nom'] : ''), ENT_QUOTES, 'UTF-8');
+                $sucDes = htmlspecialchars(isset($row_rs_empresas['Suc_Des']) ? $row_rs_empresas['Suc_Des'] : '', ENT_QUOTES, 'UTF-8');
+                $html .= "<option value='" . (int) $row_rs_empresas['Emp_Cod'] . "' data-emp-nom='" . $empNom . "' data-suc-cod='" . $sucBr . "'>" . $empCor . " (" . $sucDes . ")</option>";
             }
         } else {
-            //var_dump($rs_empresas);
-            $html =
-                $html .
-                "<option value='" .
-                $rs_empresas[0]["Emp_Cod"] .
-                "' selected='selected'  data-Emp_Nom='" .
-                $rs_empresas[0]["Emp_Nom"] .
-                "' data--suc_-cod='$row_rs_empresas[Suc_Cod]'>" .
-                $rs_empresas[0]["Emp_Cor"] .
-                "</option>";
-        } //Fin del if ($total_rs_empresas > 1)
+            $sucBr0 = isset($rs_empresas[0]['Suc_Cod']) ? (int) $rs_empresas[0]['Suc_Cod'] : 0;
+            $empNom0 = htmlspecialchars(isset($rs_empresas[0]['Emp_Nom']) ? $rs_empresas[0]['Emp_Nom'] : '', ENT_QUOTES, 'UTF-8');
+            $empCor0 = htmlspecialchars(!empty($rs_empresas[0]['Emp_Cor']) ? $rs_empresas[0]['Emp_Cor'] : (isset($rs_empresas[0]['Emp_Nom']) ? $rs_empresas[0]['Emp_Nom'] : ''), ENT_QUOTES, 'UTF-8');
+            $sucDes0 = htmlspecialchars(isset($rs_empresas[0]['Suc_Des']) ? $rs_empresas[0]['Suc_Des'] : '', ENT_QUOTES, 'UTF-8');
+            $html = "<option value='" . (int) $rs_empresas[0]['Emp_Cod'] . "' selected='selected' data-emp-nom='" . $empNom0 . "' data-suc-cod='" . $sucBr0 . "'>" . $empCor0 . " (" . $sucDes0 . ")</option>";
+        }
     }
     $obBD_conexion->cerrar();
-    $res = ["success" => true, "conteo" => $conteo, "html" => $html];
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(array('success' => true, 'conteo' => $conteo, 'html' => $html));
+    exit();
+}
+
+/* AJAX para cambio de contraseña obligatorio */
+if (isset($_POST['ajax_change_pass'])) {
+    header('Content-Type: application/json; charset=utf-8');
+    $obBD_conexion = new Class_Log_Conexion_Log($_SESSION['Ses_Dat_Dis']);
+    $obBD_con1 = new Class_Log_Datos_Log;
+    $res = array('success' => false);
+    
+    $old_pass = isset($_POST['old_pass']) ? trim($_POST['old_pass']) : '';
+    $new_pass = isset($_POST['new_pass']) ? trim($_POST['new_pass']) : '';
+    
+    if (empty($old_pass) || empty($new_pass)) {
+        $res['message'] = "Complete todos los campos.";
+        echo json_encode($res);
+        exit();
+    }
+    
+    $old_pass_safe = mysqli_real_escape_string($obBD_conexion->conexion, $old_pass);
+    $new_pass_safe = mysqli_real_escape_string($obBD_conexion->conexion, $new_pass);
+    $usu_cod = (int) $_SESSION['Ses_Usu_Cod'];
+    
+    $check = $obBD_con1->getRowConsultaSql(
+        "SELECT Usu_Cod, Usu_Pal FROM usuarios WHERE Usu_Cod = $usu_cod AND Usu_Est = 'A'",
+        $obBD_conexion
+    );
+    
+    $passwordValid = false;
+    if ($check) {
+        $storedHash = $check['Usu_Pal'];
+        if (strpos($storedHash, '$2y$') === 0) {
+            $passwordValid = password_verify($old_pass, $storedHash);
+        } else {
+            $passwordValid = ($storedHash === md5($old_pass));
+        }
+    }
+    
+    if ($passwordValid) {
+        $obBD_con1->inicio_transaccion($obBD_conexion);
+        $new_hash = password_hash($new_pass, PASSWORD_BCRYPT, ['cost' => 12]);
+        $new_hash_safe = mysqli_real_escape_string($obBD_conexion->conexion, $new_hash);
+        $obBD_con1->consulta("UPDATE usuarios SET Usu_Pal = '$new_hash_safe' WHERE Usu_Cod = $usu_cod", $obBD_conexion);
+        if ($obBD_con1->fin_transaccion_nomsn($obBD_conexion)) {
+            $res['success'] = true;
+            $res['message'] = "¡Contraseña actualizada! Por favor, inicie sesión con su nueva clave.";
+            @session_destroy();
+        } else {
+            $res['message'] = "Error interno al guardar los cambios.";
+        }
+    } else {
+        $res['message'] = "La clave actual no es correcta.";
+    }
     echo json_encode($res);
     exit();
-} //Fin del if (isset($ajax_empresas))
-/**
- * Ajax para verificar RUC+contraseña y listar empresas válidas
- */
-if (isset($ajax_verificar)) {
-    header("Content-Type: application/json");
-    try {
-        require_once "administrador/LOGICA/adm_sql_control_1.0.php";
-
-        $obBD_conexion = new Class_Log_Conexion_Log();
-        $obBD_con1 = new Class_Log_Datos_Log();
-
-        $rs_empresas = $obBD_con1->getArrayConsulta(
-            1,
-            trim($ajax_username),
-            $obBD_conexion
-        );
-        utf8_encode_deep($rs_empresas);
-
-        $md5pass = trim($ajax_password);
-        $empresas_validas = [];
-
-        foreach ($rs_empresas as $empresa) {
-            try {
-                $obBD_conexion_master = new MysqlConexion();
-                $sql_data = sentencias_cnt(2, [
-                    $empresa["Emp_Cod"],
-                    trim($ajax_username),
-                ]);
-                $rs_data = $obBD_con1->consulta($sql_data, $obBD_conexion_master->conexion);
-                $row_data = $obBD_con1->fetch_assoc($rs_data);
-                $obBD_con1->free_result($rs_data);
-                $obBD_conexion_master->cerrar();
-
-                if (!empty($row_data) && $row_data["Dat_Dis"] !== null && $row_data["Dat_Dis"] !== '') {
-                    $obBD_conexion_dist = new MysqlConexion($row_data["Dat_Dis"]);
-                    if ($obBD_conexion_dist->conexion) {
-                        $sql_auth = sentencias_cnt(16, [
-                            trim($ajax_username),
-                            $md5pass,
-                            $empresa["Emp_Cod"],
-                            "",
-                        ]);
-                        $rs_auth = $obBD_con1->consulta($sql_auth, $obBD_conexion_dist->conexion);
-                        $row_auth = $obBD_con1->fetch_assoc($rs_auth);
-                        $obBD_con1->free_result($rs_auth);
-
-                        if (!empty($row_auth)) {
-                            $empresas_validas[] = $empresa;
-                        }
-                    }
-                    $obBD_conexion_dist->cerrar();
-                }
-            } catch (Exception $e) {
-                continue;
-            }
-        }
-
-        $obBD_conexion->cerrar();
-
-        $conteo = count($empresas_validas);
-        $html = "";
-        if ($conteo > 0) {
-            if ($conteo > 1) {
-                $html .= "<option value=''></option>";
-                foreach ($empresas_validas as $row_rs_empresas) {
-                    $html .=
-                        "<option value='" .
-                        $row_rs_empresas["Emp_Cod"] .
-                        "' data-Emp_Nom='" .
-                        $row_rs_empresas["Emp_Nom"] .
-                        "' data--suc_-cod='" .
-                        $row_rs_empresas["Suc_Cod"] .
-                        "'>" .
-                        $row_rs_empresas["Emp_Cor"] .
-                        " (" .
-                        $row_rs_empresas["Suc_Des"] .
-                        ")</option>";
-                }
-            } else {
-                $html .=
-                    "<option value='" .
-                    $empresas_validas[0]["Emp_Cod"] .
-                    "' selected='selected' data-Emp_Nom='" .
-                    $empresas_validas[0]["Emp_Nom"] .
-                    "' data--suc_-cod='" .
-                    $empresas_validas[0]["Suc_Cod"] .
-                    "'>" .
-                    $empresas_validas[0]["Emp_Cor"] .
-                    "</option>";
-            }
-        }
-
-        $res = [
-            "success" => true,
-            "conteo" => $conteo,
-            "html" => $html,
-            "msg" => $conteo > 0 ? "" : "Credenciales inválidas",
-        ];
-        echo json_encode($res);
-    } catch (Exception $e) {
-        echo json_encode([
-            "success" => false,
-            "conteo" => 0,
-            "html" => "",
-            "msg" => "Error: " . $e->getMessage(),
-        ]);
-    }
-    exit();
-} //Fin del if (isset($ajax_verificar))
-
-if (
-    isset($_SESSION) &&
-    !(
-        !isset($_SESSION["Ses_Lis_Per"]) ||
-        !isset($_SESSION["Ses_Emp_Cod"]) ||
-        !isset($_SESSION["Ses_Usu_Ced"])
-    )
-) {
-    header("Location: " . "./administrador/FRONT/home.php");
 }
+
+if (isset($_SESSION) && isset($_SESSION['Ses_Lis_Per']) && isset($_SESSION['Ses_Emp_Cod']) && isset($_SESSION['Ses_Usu_Ced'])) {
+    header('Location: ./administrador/FRONT/home.php');
+    exit();
+}
+
+$http_host = isset($_SERVER['HTTP_HOST']) ? strtolower($_SERVER['HTTP_HOST']) : '';
+$host_base = preg_replace('/:\d+$/', '', $http_host);
+$es_localhost = in_array($host_base, array('localhost', '127.0.0.1', '::1'), true);
+$relavera_por_host = (strpos($http_host, 'relavera.erpexa') !== false) || $es_localhost;
+if (isset($_GET['portal']) && $_GET['portal'] === 'exa') {
+    $es_portal_relavera = false;
+} elseif (isset($_GET['portal']) && $_GET['portal'] === 'relavera') {
+    $es_portal_relavera = true;
+} else {
+    $es_portal_relavera = $relavera_por_host;
+}
+
+$path_logo_rcet = __DIR__ . DIRECTORY_SEPARATOR . 'imagenes' . DIRECTORY_SEPARATOR . 'ingresar' . DIRECTORY_SEPARATOR . 'logo-rcet.png';
+$tiene_logo_rcet = is_file($path_logo_rcet);
 ?>
-<!doctype html>
-<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
-<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<!DOCTYPE html>
+<html lang="es">
 
-<!-- Mirrored from wbpreview.com/previews/WB0164888/login.html by HTTrack Website Copier/3.x [XR&CO'2010], Tue, 23 Oct 2012 00:39:01 GMT -->
 <head>
-	<meta http-equiv="Content-Type" content="text/html;">
-	<title>Iniciar Sesi&oacute;n</title>
-    <meta charset= "UTF-8">
-	<meta name="description" content="">
-	<meta name="author" content="">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<!--<link rel="icon" type="image/png" href="mascaras/model1/img/logo/exa_web.gif"/>-->
-    <link rel="shortcut icon" type="image/x-icon" href="mascaras/model1/img/logo/exa-ico-2.png" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,600,800">
-	<link rel="stylesheet" href="mascaras/model1/css/font-awesome.css">
-	<link rel="stylesheet" href="mascaras/model1/css/bootstrap.css">
-	<link rel="stylesheet" href="mascaras/model1/css/bootstrap-responsive.css">
-	<link rel="stylesheet" href="mascaras/model1/css/ui-lightness/jquery-ui-1.8.21.custom.css">
-	<link rel="stylesheet" href="mascaras/model1/css/application.css">
-	<script src="mascaras/model1/js/libs/modernizr-2.5.3.min.js"></script>
-	<!--[if !IE]> -->
-		<link type="text/css" rel="stylesheet" href="./framework/plugins/animate/animate-3.4.0.min.css" />
-	<!-- <![endif]-->
-	<link rel="stylesheet" href="./Librerias/tooltip/jquery.tooltip.css" />
-        <link rel="stylesheet" type="text/css" media="screen" href="framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $es_portal_relavera ? 'RCET · Portal Relavera · Acceso' : 'EXA [Software Contable] - Iniciar Sesión'; ?></title>
+    <link rel="shortcut icon" type="image/x-icon" href="imagenes/ingresar/favicon.png" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Saira:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" 
+          onerror="this.onerror=null;this.href='framework/jquery/bootstrap/bootstrap-5.3.0/css/bootstrap.min.css';">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="./framework/plugins/animate/animate-3.4.0.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-        <style>
-                /* Estilos para el aviso flotante */
-        .aviso-flotante {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #fff;
-            border: 1px solid #ccc;
-            padding: 20px;
-            z-index: 1000;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-            display: none; /* Ocultar inicialmente el aviso */
+    <style>
+        :root {
+            --login-accent: #801326;
+            --login-accent-hover: #580d19;
+            --login-footer-bg: #3d0710;
         }
-        /* Estilos para el botón de cerrar */
-        .cerrar-aviso {
+
+        body {
+            color: #161616;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #581825 !important;
+            background-image: none !important;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .login-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem 4rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .login-section {
+            width: 100%;
+            max-width: 380px;
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 0;
+            color: #161616;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            overflow: visible;
+        }
+
+        .login-section.card .card-body {
+            padding: 2rem 1.8rem;
+            overflow: visible;
+        }
+
+        .login-section .form-control,
+        .login-section .btn {
+            border-radius: 10px !important;
+            height: 44px !important;
+            font-size: 0.92rem;
+        }
+
+        .login-section .form-control {
+            padding-left: 42px !important;
+            display: flex;
+            align-items: center;
+            border: 1px solid #dcdcdc;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .login-section .form-control:focus {
+            border-color: #801326;
+            box-shadow: 0 0 0 3px rgba(128, 19, 38, 0.2);
+        }
+
+        .login-section .form-control-icon {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            cursor: pointer;
-            font-size:30px;
-            color:white;
-            background:red;
-            border-radius:50%;
-            padding:6px;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #801326;
+            font-size: 1.05rem;
+            z-index: 5;
         }
-        /* Estilos para la imagen dentro del aviso */
-        .aviso-flotante img {
-           /* max-width: 100%;*/
-            width: 400px;
+
+        .login-section h4 {
+            font-family: 'Saira', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #222;
+        }
+
+        .logo img {
+            max-width: 180px;
             height: auto;
         }
-        body {
-          background-color: #000000;
-            /*margin: 0;
-            overflow: hidden;
-            background-color: #f7f6f6;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
+
+        .btn-primary {
+            background-color: #801326;
+            border: none;
+            height: 44px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus,
+        .btn-primary:active {
+            background-color: #580d19 !important;
+            box-shadow: 0 4px 14px rgba(88, 13, 25, 0.4);
+        }
+
+        .top-home-bar {
+            position: absolute;
+            top: 18px;
+            left: 20px;
+            z-index: 100;
+        }
+
+        .homepage-btn {
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 50px;
+            padding: 7px 16px;
+            font-size: 13px;
+            color: #ffffff !important;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
             align-items: center;
-            height: 100vh;*/
+            gap: 6px;
+            transition: background 0.3s;
         }
 
-        canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: -1;
+        .homepage-btn:hover {
+            background-color: rgba(255, 255, 255, 0.28);
         }
 
-        .container {
-            width: 30%;
+        footer {
             text-align: center;
-            background-color: #000000;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            position: relative;
-            margin-top: 50px;
+            padding: 10px 15px;
+            background-color: #3d0710;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .select2-container--default .select2-selection--single {
+            padding-left: 42px !important;
+            border-radius: 10px !important;
+            height: 44px !important;
+            border: 1px solid #dcdcdc;
+            display: flex;
+            align-items: center;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--single,
+        .select2-container--default .select2-selection--single:focus {
+            border-color: #801326 !important;
+            box-shadow: 0 0 0 3px rgba(128, 19, 38, 0.2) !important;
+            outline: none !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 42px;
+            padding-left: 0;
+            font-size: 0.9rem;
+            color: #222 !important;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 42px;
+            right: 8px;
+        }
+
+        .select2-dropdown.select2-rcet-empresa {
+            z-index: 2051 !important;
+            color: #161616;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+            border: 1px solid #ddd;
+        }
+
+        .select2-dropdown.select2-rcet-empresa .select2-results__option {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+
+        .select2-dropdown.select2-rcet-empresa .select2-results__option--highlighted {
+            background-color: #801326 !important;
+            color: #fff !important;
+        }
+
+        .select2-dropdown.select2-rcet-empresa .select2-results__option--highlighted .text-muted {
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        .select2-results__option .text-muted {
+            font-size: 0.75rem;
+            color: #666;
+            display: block;
+            margin-top: 2px;
         }
     </style>
-
-    <style type="text/css">
-		#logo{position:relative;top:70px;}
-		#browser {/*position:relative;*/bottom: 0px;width:100%;}
-		.repeat2{-webkit-animation-iteration-count: 2 !important;animation-iteration-count: 2 !important;}
-		.delay1s{-webkit-animation-delay: 0.2s !important;animation-delay: 0.2s !important;}
-		.delay2s{-webkit-animation-delay: 0.6s !important;animation-delay: 0.6s !important;}
-                .over{white-space: nowrap;overflow: hidden;text-overflow: ellipsis;}
-                .over.desc{font-size:9px !important;}
-                .form-control.chosen-single{height: 40px !important; font-size:13px !important; padding-top: 11px !important;padding-bottom: 10px;}
-                .chosen-container .chosen-results li.active-result,.chosen-container-single .chosen-single span{font-family: 'Open Sans';text-align: left;text-shadow: none;}
-                .chosen-container .chosen-results li.active-result{padding-top: 3px;padding-bottom: 3px;}
-                .bs-chosen.chosen-container-single .chosen-drop{margin-top: -4px !important;}
-                .form-control.chosen-single div {top: 9px;}
-                .chosen-container .chosen-results{max-height: 120px;}
-
-	</style>
 </head>
-<body class="login">
 
-<div id="logo" align="center" class="animated rubberBand delay1s" style="height:190px;top: 10px;"><img src="mascaras/model1/img/logo/logo2.png?x=1"  /></div>
+<body>
+    <!-- Top Home Link -->
+    <div class="top-home-bar">
+        <a href="https://exacontable.com" target="_blank" rel="noopener noreferrer" class="homepage-btn">
+            <i class="bi bi-house-door-fill"></i> Homepage
+        </a>
+    </div>
 
-<!-- /account-container -->
-<div class="login-extra animated pulse repeat2" style="width:382px;">
-  <div class="account-container login stacked" style="margin-top: 25px;">
-    <div class="content clearfix">
-      <form action="administrador/FRONT/adm_con_control_1.2.php" method="post" name="acceso" id="acceso">
-        <h1>Iniciar Sesi&oacute;n</h1>
-        <div class="login-fields">
-          <p>Inicie sesi&oacute;n con su cuenta registrada:</p>
-          <div class="field">
-            <label for="user_name">Usuario:</label>
-            <input type="text" id="user_name" name="user_name" value="" placeholder="Usuario" class="login username-field" />
-          </div>
-          <!-- /field -->
-          <div class="field">
-            <label for="password">Contraseña:</label>
-            <input type="password" id="password" name="password" value="" placeholder="Contraseña" class="login password-field" oncontextmenu="return false"
-                  		onKeyPress="if (event.keyCode===13){verificarAcceso();}else{return  validar_injections(event);}" onBlur="verificarAcceso()"/>
-          </div>
-          <!-- /password -->
-          <div id="div_mensaje" style="margin-bottom: 5px;display: none;color: #fff;background: #c0392b;padding: 8px;border-radius: 4px;"></div>
-          <div id="div_empresas" style="margin-bottom: 5px;display: none;"><img src="mascaras/model1/img/signin/empresa.png">&nbsp;<select name="Emp_Cod" id="Emp_Cod" data-placeholder="Seleccione Empresa...">
-                  <option value=""></option></select></div>
-          <div id="div_verificar" style="margin-bottom: 5px;">
-            <button id="btn_verificar" class="button btn btn-loginExa btn-large" type="button" onClick="verificarAcceso()" style="width:100%;">Verificar Acceso</button>
-          </div>
-          <!-- /field -->
+    <!-- Centered Login Box -->
+    <div class="login-wrapper">
+        <div class="login-section card animate__animated animate__fadeIn">
+            <div class="card-body">
+                <div class="text-center logo mb-4">
+                    <img src="imagenes/ingresar/logo.png" alt="EXA Logo" class="img-fluid">
+                </div>
+                <h4 class="text-center mb-1 fw-bold">Iniciar Sesión</h4>
+                <p class="small text-secondary text-center mb-4">Ingrese su RUC / Cédula para acceder</p>
+                
+                <form action="administrador/FRONT/adm_con_control_1.2.php" method="post" name="acceso" id="acceso">
+                    <div class="login-fields">
+                        <div class="form-group position-relative mb-3">
+                            <input class="form-control" type="text" id="user_name" name="user_name" value="" placeholder="Usuario (RUC / Cédula)" autocomplete="username"
+                                onblur="loadEmp(this.value);" />
+                            <i class="bi bi-person-fill form-control-icon"></i>
+                        </div>
+
+                        <div class="form-group position-relative mb-3">
+                            <input class="form-control" type="password" id="password" name="password" value="" placeholder="Contraseña" autocomplete="current-password"
+                                onKeyPress="if (event.keyCode===13){ handleLogin(); } else { return validar_injections(event); }" />
+                            <i class="bi bi-lock-fill form-control-icon"></i>
+                        </div>
+
+                        <div class="form-group position-relative mb-3" id="div_empresas" style="display: none;">
+                            <select class="form-select form-control" name="Emp_Cod" id="Emp_Cod" data-placeholder="Seleccione Empresa...">
+                                <option selected></option>
+                            </select>
+                            <i class="bi bi-building form-control-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group login-actions mt-4">
+                        <input type="hidden" name="encryptor" id="encryptor" />
+                        <input type="hidden" name="Suc_Cod" id="Suc_Cod" />
+                        <button class="btn btn-primary w-100" type="button" id="btnLogin" onclick="handleLogin();">
+                            Entrar <i class="bi bi-box-arrow-in-right ms-1"></i>
+                        </button>
+                    </div>
+
+                    <?php if ((isset($_GET["errorusuario"]) && $_GET["errorusuario"] == "si") || (isset($_GET["errorsistema"]) && $_GET["errorsistema"] == "si") || (isset($_GET["errordispositivo"]) && $_GET["errordispositivo"] == "si")) {
+                        $errorMsg = 'Error del Sistema';
+                        if (isset($_GET["errorusuario"])) $errorMsg = 'Usuario o contraseña incorrectos';
+                        if (isset($_GET["errordispositivo"])) $errorMsg = 'Acceso denegado: dispositivo no autorizado.';
+                        echo '<div class="alert alert-danger mt-3 py-2 small text-center" style="border-radius: 8px;"><span>' . $errorMsg . '</span></div>';
+                    } ?>
+                </form>
+            </div>
         </div>
-        <!-- /login-fields -->
-        <div class="login-actions">
-          <input type="hidden" name="encryptor" id="encryptor" />
-		  <input type="hidden" name="Suc_Cod" id="Suc_Cod" />
-          <button id="btn_entrar" class="button btn btn-loginExa btn-large" type="button" disabled="disabled" onClick="document.getElementById('Suc_Cod').value=$('#Emp_Cod option:selected').data('Suc_Cod'); document.getElementById('encryptor').value = md5(document.getElementById('password').value); this.form.submit();">Entrar</button>
+
+        <!-- Segundo Ambiente: Cambio de Contraseña -->
+        <div class="login-section card animate__animated animate__fadeIn" id="change-pass-section" style="display: none;">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <h4 class="fw-bold" style="color: var(--login-accent);">Nueva Contraseña</h4>
+                </div>
+                <p class="small text-secondary mb-4 text-center">Por favor, actualice sus credenciales para continuar de forma segura.</p>
+                
+                <div id="change-pass-alert"></div>
+
+                <form id="form-change-pass">
+                    <div class="form-group position-relative mb-3">
+                        <input class="form-control" type="password" id="old_pass" placeholder="Clave Actual" required />
+                        <i class="bi bi-key-fill form-control-icon"></i>
+                    </div>
+                    <div class="form-group position-relative mb-3">
+                        <input class="form-control" type="password" id="new_pass" placeholder="Nueva Clave" required />
+                        <i class="bi bi-shield-lock-fill form-control-icon"></i>
+                    </div>
+                    <div class="form-group position-relative mb-3">
+                        <input class="form-control" type="password" id="conf_pass" placeholder="Confirmar Clave" required />
+                        <i class="bi bi-check-circle-fill form-control-icon"></i>
+                    </div>
+                    
+                    <div class="login-actions mt-4">
+                        <button class="btn btn-primary w-100" type="button" id="btnSavePass" onclick="saveNewPass()">
+                            Actualizar Contraseña <i class="bi bi-save-fill ms-1"></i>
+                        </button>
+                        <button class="btn btn-link w-100 mt-2 text-decoration-none small text-secondary" type="button" onclick="location.href='administrador/LOGICA/logout.php'">
+                            Cancelar y Salir
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <?php if (
-            (isset($_GET["errorusuario"]) && $_GET["errorusuario"] == "si") ||
-            (isset($_GET["errorsistema"]) && $_GET["errorsistema"] == "si")
-        ) {
-            echo '<div style="float: left;width:100%;padding-bottom: 0px;"><div class="alert alert-error" style="margin-bottom:0px;"><span>' .
-                (isset($_GET["errorusuario"])
-                    ? "Datos incorrectos"
-                    : "Error del Sistema") .
-                "</span></div></div> ";
-        } ?>
-        <!-- .actions -->
-      </form>
-    </div>
-    <!-- /content -->
-  </div>
-</div>
-<!-- Text Under Box -->
-<!--<div class="login-extra">Recuperar <a href="#">Contraseña</a>
-</div> --><!-- /login-extra -->
-
-<script src="mascaras/model2/js/libs/jquery-1.7.2.min.js"></script>
-<script src="mascaras/model2/js/libs/jquery-ui-1.8.21.custom.min.js"></script>
-<script src="mascaras/model2/js/libs/jquery.ui.touch-punch.min.js"></script>
-<script src="mascaras/model2/js/libs/bootstrap/bootstrap.min.js"></script>
-<script src="mascaras/model2/js/signin.js"></script>
-
-
-	<script language="javascript" src="Librerias/validaciones/validacion.js"></script>
-		<script type="text/javascript">
-                    $(document).ready(function() {
-                        $('#browser *').tooltip({showURL: false});
-                        $('#Emp_Cod').chosenDesc({width:'88%',
-                            template:function (t,d){ return '<div class="over"><b>'+t+'</b></div><div class="over desc">'+d['emp_nom']+'</div>';}
-                        });
-                        $("#Emp_Cod_chosen").addClass('bs-chosen').find('.chosen-single').addClass('form-control empresas');
-                        $("#Emp_Cod_chosen").find(".chosen-search").find('input').addClass('text');
-                        $('#div_empresas').hide();
-                        $('#div_mensaje').hide();
-                    });
-
-                    function verificarAcceso(){
-                        var ced = $.trim($('#user_name').val());
-                        var pass = $('#password').val();
-                        $('#div_mensaje').hide().html('');
-                        if(ced === '' || pass === '') {
-                            $('#div_mensaje').html('Ingrese usuario y contraseña').show();
-                            return;
-                        }
-                        $('#btn_verificar').prop('disabled',true).html('Verificando...');
-                        $.post('',{ajax_verificar:true,ajax_username:ced,ajax_password:md5(pass)},function(r){
-                            $('#Emp_Cod').html(r['html']);
-                            if(r['success']&&r['conteo']>0) {
-                                if(r['conteo']>1) {
-                                    $('#div_empresas').show();
-                                } else {
-                                    $('#div_empresas').show();
-                                }
-                                $('#div_verificar').hide();
-                                $('#btn_entrar').prop('disabled',false);
-                                $('#div_mensaje').hide();
-                            } else {
-                                $('#div_empresas').hide();
-                                $('#div_mensaje').html(r['msg']||'Credenciales inválidas').show();
-                            }
-                            $('#Emp_Cod').trigger('chosen:updated');
-                        },'json').fail(function (){
-                            $('#Emp_Cod').html('<option value=""></option>');
-                            $('#div_empresas').hide();
-                            $('#div_mensaje').html('Error de conexión').show();
-                            $('#Emp_Cod').trigger('chosen:updated');
-                        }).always(function(){
-                            $('#btn_verificar').prop('disabled',false).html('Verificar Acceso');
-                        });
-                    }
-                </script>
-
-<div id="">
-    <div align="center" style="text-align:right" class=""><span class="span6">Copyright &copy; <?php
-    date_default_timezone_set("UTC");
-    echo date("Y");
-    ?>. All rights reserved.<br>&nbsp;Designed by CorproInfo S.A.</span></div>
-    <div id="browser" align="center" style="text-align:center"  class="">
-            <span class="span6">Aplicaci&oacute;n optimizada para &nbsp;<img src="mascaras/model1/imagenes/32x32/chrome-2-32.png" width="32" height="32" title="Google Chrome">  <img src="mascaras/model1/imagenes/32x32/firefox-32.png" width="32" height="32" title="Firefox"> <img src=	"mascaras/model1/imagenes/32x32/ie-32.png" width="32" height="32" title="Internet Explorer"></span>
-    </div>
-</div>
-<script src="framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-<!-- <script src="./framework/php/ventanasSocket/socketExaVentanas.js"></script> -->
-<script>
-var socketVentanas, Ses_Usu_Cod=0, Ses_Emp_Cod=0;
-$.isUnd=function(v){ return v===undefined; };
-$.varValid=$.vv=function(v){return (v!==null && !$.isUnd(v));};
-$.isObject=$.isObj=function(v){return $.vv(v)&&!$.isArray(v)&&typeof v==='object';};
-$.jsonParser=function(v){if($.isArray(v)||$.isObj(v)){return JSON.stringify(v);}else{try{return JSON.parse(v);}catch(e){return v;}}};
-$.setLocalStore=function(name,data){ localStorage.setItem(name, $.jsonParser(data)); if($.isUnd(data)) localStorage.removeItem(name); };
-$.getLocalStore=function(name){ var data=localStorage.getItem(name); if($.varValid(data)) return $.jsonParser(data); };
-$.getCookie=function(cname){ var na=cname+"=",dc=decodeURIComponent(document.cookie),ca=dc.split(';');for(var i=0;i<ca.length;i++){ var c=ca[i]; while(c.charAt(0)===' '){c=c.substring(1);} if(c.indexOf(na)===0){return c.substring(na.length, c.length);} } return ""; };
-(function ($) {
-    $.fn.chosenDesc = function (options) {
-        return this.each(function () { options=(typeof options!=='undefined'?options:{});
-            var $select = $(this),descMap = {},template=(typeof options['template']!=='undefined'?options['template']:function (text, templateData){return text;});
-            $select.find('option').filter(function () { return $(this).text(); }).each(function (i) {$(this).attr('data-numero',i); descMap[i]=$(this).data(); descMap[i]['opttxtsaved']=$(this).text();});
-            $select.chosen(options); $chosen = $select.next().addClass('chosenDesc-container');
-            $select.bind('chosen:searchready', function () { setTimeout(function () {$chosen.find('.chosen-results li').each(function (i) { $li=$(this),index=$li.attr('data-option-array-index')-1; $li.html(template($li.html(),descMap[index]));});}, 0); });
-            $select.bind('chosen:showing_dropdown chosen:activate', function () { setTimeout(function () {$chosen.find('.chosen-results li').each(function (i) { $li=$(this);$li.html(template(descMap[i]['opttxtsaved'],descMap[i])); });}, 0); });
-            $select.bind('chosen:updated', function () { descMap = {};$select.find('option').filter(function () {return $(this).text();}).each(function (i) {$(this).attr('data-numero',i);descMap[i] = $(this).data();descMap[i]['opttxtsaved']=$(this).text();}); });
-        });
-    };
-    /* socketVentanas = new SocketVentanas();
-    socketVentanas.setMain();
-    socketVentanas.reloadWS=false;
-    socketVentanas.reloadPage=false;
-    socketVentanas.extraInit=function (){
-        setTimeout(function(){ socketVentanas.send('logout'); },1000);
-    };
-    socketVentanas.connectDefault(); */
-
-    //socketVentanas.quit();
-})(jQuery);
-
-</script>
-
-<!-- <div class="aviso-flotante" id="avisoFlotante">
-        <span class="cerrar-aviso" onclick="cerrarAviso()">&times;</span>
-        <img src="mascaras\model1\img\logo\AvisoNewYear.jpeg" alt="Aviso" id="imagenAviso">
     </div>
 
+    <!-- Modal de cambio de contraseña obligatorio -->
+    <div class="modal fade" id="modalDefaultPass" tabindex="-1" role="dialog" aria-labelledby="modalLabel" data-bs-backdrop="static" data-bs-keyboard="false" style="z-index: 9999;">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 16px; box-shadow: 0 15px 50px rgba(0,0,0,0.4); border: none; overflow: hidden;">
+                <div class="modal-header" style="background: #801326; color: #fff; border: none; padding: 18px 24px;">
+                    <h5 class="modal-title fw-bold" id="modalLabel">
+                        <i class="bi bi-shield-lock-fill me-2"></i> ALERTA DE SEGURIDAD
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body text-center" style="padding: 35px 30px; background: #fff;">
+                    <div class="mb-3">
+                        <i class="bi bi-key-fill" style="font-size: 54px; color: #801326; opacity: 0.9;"></i>
+                    </div>
+                    <p class="mb-3" style="font-size: 1.05rem; color: #333; line-height: 1.6;">
+                        Su cuenta está usando una contraseña genérica.<br>
+                        <strong style="color: #801326;">Se le recomienda cambiar su contraseña</strong> para continuar.
+                    </p>
+                    <div class="py-2">
+                        <a href="javascript:void(0)" class="fs-5 fw-bold"
+                            style="color: #801326; text-decoration: underline;"
+                            onclick="switchToChangePass()">
+                            Cambiar Contraseña
+                        </a>
+                    </div>
+                    <p class="text-secondary small mt-3">
+                        De lo contrario, no podrá acceder al sistema.
+                    </p>
+                </div>
+                <div class="modal-footer justify-content-center" style="background: #fdfdfd; border-top: 1px solid #f0f0f0; padding: 12px;">
+                    <small class="text-muted"><i class="bi bi-info-circle me-1"></i> Esta es una política de seguridad obligatoria.</small>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <script>
-        window.addEventListener('load', function() {
-            var avisoFlotante = document.getElementById('avisoFlotante');
-            avisoFlotante.style.display = 'block'; // Mostrar el aviso flotante al cargar la página
+    <!-- Footer -->
+    <footer>
+        <div><span>&copy; <?php date_default_timezone_set('UTC'); echo date("Y"); ?>. EXA Sistema Contable - Todos los derechos reservados.</span></div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script>window.jQuery || document.write('<script src="skins/js/jquery.js"><\/script>')</script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>window.bootstrap || document.write('<script src="framework/jquery/bootstrap/bootstrap-5.3.0/js/bootstrap.bundle.min.js"><\/script>')</script>
+
+    <script src="mascaras/model2/js/signin.js"></script>
+    <script type="text/javascript" src="Librerias/validaciones/validacion.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script type="text/javascript">
+        var empTimeout = null;
+
+        $(document).ready(function() {
+            $('#Emp_Cod').select2({
+                width: '100%',
+                placeholder: "Seleccione Empresa...",
+                templateResult: formatOption,
+                templateSelection: formatSelection,
+                escapeMarkup: function(m) { return m; },
+                minimumInputLength: 0,
+                dropdownParent: $('body'),
+                dropdownCssClass: 'select2-dropdown-below select2-rcet-empresa'
+            });
+
+            $('#user_name').on('input', function() {
+                clearTimeout(empTimeout);
+                var val = $(this).val();
+                empTimeout = setTimeout(function() {
+                    loadEmp(val);
+                }, 350);
+            });
+
+            if ($('#user_name').val().trim() !== '') {
+                loadEmp($('#user_name').val());
+            }
         });
 
-        // Función para cerrar el aviso flotante
-        function cerrarAviso() {
-            var avisoFlotante = document.getElementById('avisoFlotante');
-            avisoFlotante.style.display = 'none'; // Ocultar el aviso flotante al hacer clic en el botón de cerrar
+        function formatOption(data) {
+            if (!data.id) return data.text;
+            var $option = $(data.element);
+            var empNom = $option.data('empNom') || $option.data('emp-nom') || '';
+            return $(
+                '<div class="select2-option-wrap">' +
+                '<span class="select2-option-title fw-bold">' + data.text + '</span>' +
+                (empNom ? '<div class="text-muted">' + empNom + '</div>' : '') +
+                '</div>'
+            );
         }
-        </script>
-         </div> -->
+
+        function formatSelection(data) {
+            if (!data.id) return data.text;
+            return data.text;
+        }
+
+        function loadEmp(ced) {
+            ced = (ced || '').trim();
+            if (!ced) {
+                $('#Emp_Cod').html('<option value=""></option>').trigger('change.select2');
+                $('#div_empresas').hide();
+                return;
+            }
+            $.post('', {
+                ajax_empresas2: true,
+                ajax_username: ced
+            }, function(r) {
+                if (r && r.success && r.conteo > 0) {
+                    $('#Emp_Cod').html(r.html);
+                    $('#div_empresas').slideDown(200);
+                    $('#Emp_Cod').trigger('change.select2');
+                } else {
+                    $('#Emp_Cod').html('<option value=""></option>');
+                    $('#div_empresas').slideUp(200);
+                    $('#Emp_Cod').trigger('change.select2');
+                }
+            }, 'json').fail(function() {
+                $('#Emp_Cod').html('<option value=""></option>');
+                $('#div_empresas').slideUp(200);
+                $('#Emp_Cod').trigger('change.select2');
+            });
+        }
+
+        function handleLogin() {
+            var user = $('#user_name').val().trim();
+            var pass = $('#password').val();
+            var o = document.querySelector('#Emp_Cod option:checked');
+            var emp = $('#Emp_Cod').val();
+            var suc = o ? (o.getAttribute('data-suc-cod') || '') : '';
+            
+            if (!user || !pass) {
+                document.getElementById('acceso').submit();
+                return;
+            }
+
+            if (!emp && $('#div_empresas').is(':visible')) {
+                alert('Por favor seleccione una empresa para ingresar.');
+                return;
+            }
+
+            document.getElementById('encryptor').value = md5(pass);
+            document.getElementById('Suc_Cod').value = suc;
+            document.getElementById('acceso').submit();
+        }
+
+        function switchToChangePass() {
+            $('#modalDefaultPass').modal('hide');
+            $('.login-section:not(#change-pass-section)').fadeOut(300, function() {
+                $('#change-pass-section').fadeIn(400);
+            });
+        }
+
+        function showAlert(message, type) {
+            var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                message +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                '</div>';
+            $('#change-pass-alert').html(alertHtml);
+        }
+
+        function saveNewPass() {
+            var oldP = $('#old_pass').val();
+            var newP = $('#new_pass').val();
+            var confP = $('#conf_pass').val();
+
+            if (!oldP || !newP || !confP) {
+                showAlert('Todos los campos son obligatorios.', 'danger');
+                return;
+            }
+
+            if (newP !== confP) {
+                showAlert('La nueva clave y su confirmación no coinciden.', 'danger');
+                return;
+            }
+
+            if (newP === '123456') {
+                showAlert('No puede utilizar la contraseña genérica por defecto.', 'warning');
+                return;
+            }
+
+            if (newP.length < 6) {
+                showAlert('La contraseña debe tener al menos 6 caracteres.', 'warning');
+                return;
+            }
+
+            $('#btnSavePass').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...');
+
+            $.post('', {
+                ajax_change_pass: 1,
+                old_pass: oldP,
+                new_pass: newP
+            }, function(r) {
+                $('#btnSavePass').prop('disabled', false).html('Actualizar Contraseña <i class="bi bi-save-fill ms-1"></i>');
+                if (r.success) {
+                    showAlert(r.message, 'success');
+                    setTimeout(function() {
+                        window.location.href = 'index.php';
+                    }, 2500);
+                } else {
+                    showAlert(r.message, 'danger');
+                }
+            }, 'json').fail(function() {
+                $('#btnSavePass').prop('disabled', false).html('Actualizar Contraseña <i class="bi bi-save-fill ms-1"></i>');
+                showAlert('Ocurrió un error inesperado al actualizar la contraseña.', 'danger');
+            });
+        }
+    </script>
 </body>
 
-<!-- Mirrored from wbpreview.com/previews/WB0164888/login.html by HTTrack Website Copier/3.x [XR&CO'2010], Tue, 23 Oct 2012 00:39:01 GMT -->
 </html>

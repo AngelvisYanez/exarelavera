@@ -45,9 +45,9 @@ $row_rs_vendedor = mysqli_fetch_assoc ($rs_vendedor);
 		<TITLE>Ginus</TITLE>
 		<link href="../../Estilos/Interfaz1.css" rel="stylesheet" type="text/css">
 		<link href="../../Estilos/Estilo1.css" rel="stylesheet" type="text/css">
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    	<script language="javascript" src="../validaciones/validaciones.js"></script>
-		<script language="javascript" src="../../Librerias/fecha.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    	<script type="text/javascript" src="../validaciones/validaciones.js"></script>
+		<script type="text/javascript" src="../../Librerias/fecha.js"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	</HEAD>
 <BODY>
@@ -137,7 +137,7 @@ $row_rs_vendedor = mysqli_fetch_assoc ($rs_vendedor);
 		<td align="center"><?Php echo $row_rs_buscar['Caj_Fec']; ?>&nbsp;</td>
     	<td align="center"><?Php echo $row_rs_buscar['Caj_Exi']; ?>&nbsp;</td>
 		<td align="center"><?Php echo $row_rs_buscar['Caj_Obs']; ?>&nbsp;</td>
-		 <td width="22" align="center"><p><a href="<?Php echo $_POST['form2']?>?codigo=<?Php echo $row_rs_buscar['Caj_Cod'];?>" title="Editar"><img src="../../imagenes/editar.jpg" width="20" height="20" border="0"></a> 
+		 <td width="22" align="center"><p><a href="<?Php echo htmlspecialchars($_POST['form2'], ENT_QUOTES, 'UTF-8')?>?codigo=<?Php echo $row_rs_buscar['Caj_Cod'];?>" title="Editar"><img src="../../imagenes/editar.jpg" width="20" height="20" border="0"></a> 
             </td>
      </tr>
 	  <?Php } while ($row_rs_buscar = mysqli_fetch_assoc($rs_buscar)); ?>
@@ -155,7 +155,7 @@ $row_rs_vendedor = mysqli_fetch_assoc ($rs_vendedor);
   ?>
  </p>
  </form>
- <form action="<?Php echo $_POST['form2'] ?>" method="post" name="form2" id="form2"> 
+ <form action="<?Php echo htmlspecialchars($_POST['form2'], ENT_QUOTES, 'UTF-8') ?>" method="post" name="form2" id="form2"> 
   <FIELDSET>
   <?Php
 //********************Opcion 1 *********************************************************************************		

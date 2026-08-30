@@ -8,7 +8,11 @@
 *.p12
 *.pdf
 .env
+.phpunit.result.cache
+.phpstan-cache/
 
+# Credenciales de base de datos
+conexion-produccion/
 
 cgi-bin/*
 cgi-bin/*.*
@@ -26,10 +30,8 @@ imagenes2/*
 imagenes2/[0-9]*
 /ofsercont-backend
 
-DATA/
-#DATA/MysqlConexion.php
-!DATA/TablesStructure
-!DATA/EstructureExport.php
+control-tributario-ec/
+frontend-next/
 
 administrador/tareas
 administrador/tareasRealizadas
@@ -89,3 +91,9 @@ $RECYCLE.BIN/
 /exa/
 /vercel/
 db/
+scripts/
+
+# Dumps de base de datos (grandes / datos de produccion)
+sql_dumps/
+convertir-a-md/build/
+convertir-a-md/dist/

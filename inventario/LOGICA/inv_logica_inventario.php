@@ -4,7 +4,7 @@
  * Logica de las paginas involucradas en el control de inventarios
  * @author Alejandro Camahco
  * @version 1.0
- * Fecha de actualización:	2021/07/07
+ * Fecha de actualizaciï¿½n:	2021/07/07
 **/
 
 require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
@@ -26,7 +26,7 @@ class Class_Logica_Inventario extends MysqlDatosContab{
             	if($i == 1){
             		$kardex[$i-1]['Stock']= $kardex[$i-1]['Kar_Can']*1 - $kardex[$i-1]['Kar_Sal'];
 	                $kardex[$i-1]['Saldo']= ($kardex[$i-1]['Kar_Ims']*1) - ($kardex[$i-1]['Kar_Ime']*1);
-	                $kardex[$i-1]['Promedio']=$kardex[$i-1]['Saldo']/$kardex[$i-1]['Stock'];
+	                $kardex[$i-1]['Promedio']=($kardex[$i-1]['Stock']!=0?$kardex[$i-1]['Saldo']/$kardex[$i-1]['Stock']:0);
 	                $this->operacionobBD('kardex_ie.2', $kardex[$i-1], $obBD);
             	}
 
@@ -198,8 +198,8 @@ class Class_Logica_Inventario extends MysqlDatosContab{
 	}
 
 	function mensaje(){
-		if($this->Error==0) {$response=array('success'=>true, 'message'=>'La transacción se realizo con éxito!');} 
-		else {$response=array('success'=>false,'message'=>'No se pudo realizar la transacción!','error'=>$this->MsgError);}
+		if($this->Error==0) {$response=array('success'=>true, 'message'=>'La transacciï¿½n se realizo con ï¿½xito!');} 
+		else {$response=array('success'=>false,'message'=>'No se pudo realizar la transacciï¿½n!','error'=>$this->MsgError);}
 		return $response;
 	}
 

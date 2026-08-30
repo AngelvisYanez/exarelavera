@@ -1,7 +1,7 @@
 <?php 
 /*Alias:	Modificar
-Descripción: Permite modificar las ubicaciones
-Fecha de actualización:	2010-06-13
+Descripciï¿½n: Permite modificar las ubicaciones
+Fecha de actualizaciï¿½n:	2010-06-13
 Desarrollador:	Lewis Chimarro
 MULTIEMPRESA : 
 */
@@ -15,7 +15,7 @@ require_once('../../Librerias/postclass.php');
 $obBD_conexion = new Class_Log_Conexion_Tes;
 /* Creacion del Objeto de datos */  
 $obBD_con1 =  new Class_Log_Datos_Tes; 
-/* Creación del objeto para evitar el reenvio */
+/* Creaciï¿½n del objeto para evitar el reenvio */
 $thisPost = new Post_Block;	
 
 /* Busqueda del cliente */
@@ -58,7 +58,7 @@ if ($thisPost->postBlock($_POST['postID']))
 <HEAD>		
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>		
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>		
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	</HEAD>
 <BODY>
@@ -97,7 +97,7 @@ if ($thisPost->postBlock($_POST['postID']))
 	<table width="100%" border="1" cellpadding="0" cellspacing="0">
       <tr class="Cabecera1">
         <td width="2%">C&oacute;d. Int.</td>
-        <td>Descripción</td>
+        <td>Descripciï¿½n</td>
         <td width="2%">&nbsp;</td>
       </tr>
       <?Php 

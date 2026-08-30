@@ -70,7 +70,7 @@ class Class_Log_Datos_Tes extends MysqlDatos{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 		$row =  $this->fetch_assoc($result);
 		$this->free_result($result);
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 	/**
 	 * Ejecuta cualquier consulta a la base de datos -  STARDARD
@@ -979,7 +979,12 @@ class Class_Log_Datos_Tes extends MysqlDatos{
 	/* Entra es porque existe un modulo del cual toma datos */
 	if ($total_rs_modulo > 0)
 	{
-			$retorno['Value'][] = @call_user_func(trim($row_rs_modulo['Mro_Fun']), $param, $obBD_con1, $obBD_conexion);		
+			$fn = trim($row_rs_modulo['Mro_Fun']);
+			if (is_callable($fn)) {
+				$retorno['Value'][] = call_user_func($fn, $param, $obBD_con1, $obBD_conexion);
+			} else {
+				$retorno['Value'][] = null;
+			}		
 	}//Fin del if ($total_rs_modulo > 0)	
 	/* C O N T R O L   P A R A   F U N C I O N E S   D E   T I P O   E V E N T O */
 	/* Consulta de las funciones asociadas al campo E=evento */
@@ -991,7 +996,12 @@ class Class_Log_Datos_Tes extends MysqlDatos{
 	{
 		$i=0;
 		do{
-			$valor = @call_user_func(trim($row_rs_modulo['Mro_Fun']), $param, $obBD_con1, $obBD_conexion);		
+			$fn = trim($row_rs_modulo['Mro_Fun']);
+			if (is_callable($fn)) {
+				$valor = call_user_func($fn, $param, $obBD_con1, $obBD_conexion);
+			} else {
+				$valor = null;
+			}		
 			if ($valor > 0)
 			{
 				$retorno['Event'][]	= $valor;

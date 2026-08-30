@@ -5,9 +5,9 @@
 * pagina de listado de precios (tes_con_producto_1.0.php) :)
 *
 * @author Jose Cumbicos
-* Ultima Actualización: 28-05-2014
+* Ultima Actualizaciï¿½n: 28-05-2014
 * @author Lewis Chimarro
-* Ultima Actualización: 30-01-2015
+* Ultima Actualizaciï¿½n: 30-01-2015
 *
 * Permite buscar y visualizar los datos de un producto con sus respectivos precios
 *
@@ -33,9 +33,9 @@ $obBD_con1 =  new Class_Log_Datos_pre;
 	<HEAD>		
         <title><?Php echo $Ses_Sys_Nom; ?></title>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
-         <script language="javascript">
+         <script type="text/javascript">
 			$(document).ready(function() {
 				/* LLamado a la class del boton exportar */
 				$("#Boton_Excel").click(function(event) {
@@ -80,7 +80,7 @@ $obBD_con1 =  new Class_Log_Datos_pre;
 <BODY>
 <?php
 
-  $Letras = array("A","B","C","D","E","F","G","H","I","J","K","L","M","N","Ñ","O","P","Q","R","S","T","U","V","W","X","Y","Z","TODOS");
+  $Letras = array("A","B","C","D","E","F","G","H","I","J","K","L","M","N","ï¿½","O","P","Q","R","S","T","U","V","W","X","Y","Z","TODOS");
   /**
    * Comprovar si dio clic en alguna pagina
    */
@@ -150,7 +150,7 @@ $obBD_con1 =  new Class_Log_Datos_pre;
         <td valign="top">
         <fieldset>
 		  <LEGEND>
-			<label class="Titulos2">Filtros de búsqueda</label>
+			<label class="Titulos2">Filtros de bï¿½squeda</label>
 		  </LEGEND>	
 		   <ul id="pagination-clean">
           <?php
@@ -227,7 +227,7 @@ $obBD_con1 =  new Class_Log_Datos_pre;
           <tr>
                 <td align="center" width="6%">&nbsp;</td>
                 <td>&nbsp;</td>
-                <td><?Php echo error_alerta(" ¡No hay resultados que mostrar!", 1);?></td>
+                <td><?Php echo error_alerta(" ï¿½No hay resultados que mostrar!", 1);?></td>
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
                 <td align="right">&nbsp;</td>
@@ -245,7 +245,7 @@ $obBD_con1 =  new Class_Log_Datos_pre;
          <tr>
          <td width="106">
          <form method="post" name="form1" action="<?Php echo $_SERVER['PHP_SELF']; ?>">
-         <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, 'hdd_volver', '<?php echo '1';?>')">
+         <button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="campos_hide(this.form, 'hdd_volver', '<?php echo '1';?>')">
                             <i class=" icon-arrow-left icon-white"></i>
                             <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
                </button>

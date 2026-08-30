@@ -70,7 +70,7 @@ class Class_Log_Datos_Log extends MysqlDatos{
 		
 		$this->free_result($result);
 		
-		return $row;//!=null?array_map('htmlentities', $row):$row;
+		return is_array($row) ? $row : array();//!=null?array_map('htmlentities', $row):$row;
 	}
 
 	/**

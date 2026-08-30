@@ -9,9 +9,9 @@
 * Fecha de actualizaciï¿½n  2013-03-11
 * @author Lewis Chimarro
 */
-require_once('../../administrador/LOGICA/seguridad.php');
-require_once('../LOGICA/tes_log_cheque.php');
-require_once('../../Librerias/procedimientos/almacenados_standar.php');		  
+require_once('../../../../administrador/LOGICA/seguridad.php');
+require_once('../../../LOGICA/tes_log_cheque.php');
+require_once('../../../../Librerias/procedimientos/almacenados_standar.php');		  
 /**
 * Creacion del Objeto de conexion
 */
@@ -35,7 +35,7 @@ $row_institucion = $obBD_con1->getRowConsulta(126, $Ses_Suc_Cod, $obBD_conexion)
 <head>
 <title><?Php echo $Ses_Sys_Nom; ?></title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<?Php require_once("../../mascaras/model1/estilos/print.php"); ?>
+<?Php require_once("../../../../mascaras/model1/estilos/print.php"); ?>
 <style type="text/css">
 <!--
 .style2 {color: #000000}

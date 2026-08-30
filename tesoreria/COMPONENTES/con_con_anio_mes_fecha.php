@@ -1,10 +1,10 @@
 <?Php 
 /* 
 Alias:	componente
-Descripción: Componente para mostrar el mes y poder elegir un rango de fechas 
-				El año debe ser el selecionado desde el inicio en el periodo
+Descripciï¿½n: Componente para mostrar el mes y poder elegir un rango de fechas 
+				El aï¿½o debe ser el selecionado desde el inicio en el periodo
 				Se debe definir un campo oculto hdd_ann con la fecha inicial del periodo
-Fecha de actualización:	2009-09-09
+Fecha de actualizaciï¿½n:	2009-09-09
 Desarrollador:	Lewis Chimarro
 */
 ?>
@@ -15,11 +15,11 @@ echo $Pec_Fei;*/
 if (isset($Pec_Fei))
 {
 ?>
-	<script language="javascript">
-	/* Asigna el dia inicial y final del mes y año seleccionado */ 
+	<script type="text/javascript">
+	/* Asigna el dia inicial y final del mes y aï¿½o seleccionado */ 
 	function set_dia_mes()
 	{
-		/* Año tomado del objeto que debe estar en el FRONT */
+		/* Aï¿½o tomado del objeto que debe estar en el FRONT */
 		var ann = document.getElementById('hdd_ann').value.split("-");
 	
 		if (document.getElementById('Chk_Fec').checked)//En caso de seleccionar la eleccion de la fecha inicial y final 
@@ -76,7 +76,7 @@ if (isset($Pec_Fei))
 						{
 							$i = "0".$i;
 						}
-						/* Control para mantener seteada la información seleccionada */
+						/* Control para mantener seteada la informaciï¿½n seleccionada */
 						if (isset($cmb_mes))
 						{
 							$mes = $cmb_mes;
@@ -121,7 +121,7 @@ if (isset($Pec_Fei))
 	  </tr>
 		  </table>
 	</FIELDSET>
-	<script language="javascript">
+	<script type="text/javascript">
 	<?Php 
 	if (isset($Chk_Fec))
 	{
@@ -141,7 +141,7 @@ if (isset($Pec_Fei))
 }//Fin del if (isset($Pec_Fei))
 else
 {
-	echo error_alerta("<< Error de componente: con_con_anio_mes_fecha.php >> <br>Descripción: No se ha definido la Propiedad: Pec_Fei<br>
+	echo error_alerta("<< Error de componente: con_con_anio_mes_fecha.php >> <br>Descripciï¿½n: No se ha definido la Propiedad: Pec_Fei<br>
         Pec_Fei: Variable que contiene la fecha inicial del periodo contable", 2);	
 
 }//Fin del else if (isset($Pec_Fei))

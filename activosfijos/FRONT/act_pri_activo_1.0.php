@@ -92,7 +92,7 @@ $html.='    </table>
         <td>
             <table>
                 <tr>';
-                if(count($imagenes)>0){
+                if(count((array)$imagenes)>0){
                     foreach ($imagenes as $img){
                         $html.='<td><img src="../../imagenes/'.$Ses_Emp_Cod.'/Activos/'.$img.'" height="220" width="280" style="border:1px solid black;"></td>';
                     }
@@ -115,6 +115,7 @@ $html.='
 </table>';
 
 ini_set('memory_limit', '32M');
+set_time_limit(0);
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 $mpdf = new \Mpdf\Mpdf(['mode' => 'c', 'format' => 'A4', 'margin_left' => 15, 'margin_right' => 15, 'margin_top' => 16, 'margin_bottom' => 16, 'margin_header' => 9, 'margin_footer' => 9]); 

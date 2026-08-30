@@ -16,7 +16,7 @@ $obBD_conexion = new Class_Log_Conexion_Comt($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Comt; 	  
 /**
-* Creaci�n del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 /**
@@ -50,12 +50,12 @@ require_once('../../componentes/FRONT/ajaxConBuscarctaCombo.php');
 require_once("../COMPONENTES/ajaxComConNumRet.php"); 
 	  
 /**
-* Definici�n de un valor constante para la variable tipo_compr 
+* Definiciï¿½n de un valor constante para la variable tipo_compr 
 */
-define(tipo_compr, 6); //Tipo de comprobante de la retencion 
-define(nota_venta, 2); //Tipo de comprobante de la nota de venta
-define(tiquetes, 8); //Tipo de comprobante de la TIQUETES O VALES EMITIDOS POR MAQUINAS REGISTRADOR
-//define(Tic_Cod,1);	  
+define('tipo_compr', 6); //Tipo de comprobante de la retencion 
+define('nota_venta', 2); //Tipo de comprobante de la nota de venta
+define('tiquetes', 8); //Tipo de comprobante de la TIQUETES O VALES EMITIDOS POR MAQUINAS REGISTRADOR
+//define('Tic_Cod', 1);	  
 
 /**
 *	Consultamos si lleva contabilidad
@@ -63,12 +63,12 @@ define(tiquetes, 8); //Tipo de comprobante de la TIQUETES O VALES EMITIDOS POR M
 $llevarContabilidad = $obBD_con1->getRowConsulta(1041, $Ses_Emp_Cod,$obBD_conexion);
 	  
 /**
-* Cargado de Informaci�n a trav�s de AJAX 
+* Cargado de Informaciï¿½n a travï¿½s de AJAX 
 */
 if (isset($ajax_cuenta))
 {		
 	/**
-	* En esta consulta debe botar un solo registro ya en un a�o contable normalmente se utiliza un plan de cuentas 
+	* En esta consulta debe botar un solo registro ya en un aï¿½o contable normalmente se utiliza un plan de cuentas 
 	*/
 	$row_rs_cuenta_manual = $obBD_con1->getRowConsulta(248, $Pec_Cod, $obBD_conexion);
 	$Pla_Cod = $row_rs_cuenta_manual['Pla_Cod'];	
@@ -104,7 +104,7 @@ if (isset($hdd_Pec_Cod))
   if(isset($hdd_save) && !isset($hdd_volver)) 
   {
 	  /**
-	  * Actualizaci�n a los datos de la Cabecera de la factura 
+	  * Actualizaciï¿½n a los datos de la Cabecera de la factura 
 	  */
 	  /**
 	  * Creacion del objeto mysql para las inserciones 
@@ -135,10 +135,10 @@ if (isset($hdd_Pec_Cod))
 		/***********************************************************************/
 		/*    CONTROL AUTOMATICO PARA GENERAR COMPROBANTES DE EGRESO/DIARIO    */
 		/***********************************************************************/	
-		/* 1 Contado - SI Retenci�n = NO COMPROBANTE EGRESO
-		1 Contado - NO Retenci�n = SI COMPROBANTE EGRESO *-*
-		2 Contado - SI Retenci�n = NO COMPROBANTE DIARIO
-		2 Contado - No Retenci�n = SI COMPROBANTE DIARIO *-* 
+		/* 1 Contado - SI Retenciï¿½n = NO COMPROBANTE EGRESO
+		1 Contado - NO Retenciï¿½n = SI COMPROBANTE EGRESO *-*
+		2 Contado - SI Retenciï¿½n = NO COMPROBANTE DIARIO
+		2 Contado - No Retenciï¿½n = SI COMPROBANTE DIARIO *-* 
 		*/		
 		
 		/**
@@ -200,8 +200,8 @@ if (isset($hdd_Pec_Cod))
 				}//Fin del if ($t_iva > 0)
 			}//Fin del if ($total_rs_form_compr > 0)
 			else
-			{ ?><script language="javascript">
-				alert("Debe configurar el tipo de comprobante: �Egreso/Diario?");
+			{ ?><script type="text/javascript">
+				alert("Debe configurar el tipo de comprobante: ï¿½Egreso/Diario?");
 				</script>					
 			<?Php
 			}//Fin del else if (count($row_rs_form_compr) > 0)				
@@ -214,7 +214,7 @@ if (isset($hdd_Pec_Cod))
 	$obBD_ins1->operacionobBD(348, $Cop_Cod, $obBD_conexion);
 	
 	/**
-	* Consulta el c�digo del asiento en base al c�digo del comprobante 
+	* Consulta el cï¿½digo del asiento en base al cï¿½digo del comprobante 
 	*/
 	//$rs_asiento_cheque=$obBD_con1->consulta(sentencias_comf(364, $obBD_con1->parametros($Com_Cod)), $obBD_conexion->conexion); ojojo revisar si esto va o no
 	//$row_rs_asiento_cheque=$obBD_con1->registros(); 
@@ -337,10 +337,10 @@ if (isset($hdd_Pec_Cod))
 			/***********************************************************************/
 			/*    CONTROL AUTOMATICO PARA GENERAR COMPROBANTES DE EGRESO/DIARIO    */
 			/***********************************************************************/	
-			/*	1 Contado - SI Retenci�n = NO COMPROBANTE EGRESO
-				1 Contado - NO Retenci�n = SI COMPROBANTE EGRESO *-*
-				2 Contado - SI Retenci�n = NO COMPROBANTE DIARIO
-				2 Contado - No Retenci�n = SI COMPROBANTE DIARIO *-* 
+			/*	1 Contado - SI Retenciï¿½n = NO COMPROBANTE EGRESO
+				1 Contado - NO Retenciï¿½n = SI COMPROBANTE EGRESO *-*
+				2 Contado - SI Retenciï¿½n = NO COMPROBANTE DIARIO
+				2 Contado - No Retenciï¿½n = SI COMPROBANTE DIARIO *-* 
 			*/
 			if ($Hdd_Ret == 'N' || $Hdd_Ret == 'S')		
 			{	
@@ -382,7 +382,7 @@ if (isset($hdd_Pec_Cod))
 			/***********************************************************************/
 			/***********************************************************************/													
 			/***********************************************************************/
-			/*			 	GRABADO  DEL DETALLE DE LA RETENCI�N				    */
+			/*			 	GRABADO  DEL DETALLE DE LA RETENCIï¿½N				    */
 			/***********************************************************************/
 			/**
 			* det_compra incrementa en 1 | det_retenc en 1 
@@ -417,10 +417,10 @@ if (isset($hdd_Pec_Cod))
 						* inicio isset($Hdd_Rete_Modificar)  
 						*/
 						/********************************/
-						/*  INSERCI�N DE LA RETENCI�N   */
+						/*  INSERCIï¿½N DE LA RETENCIï¿½N   */
 						/********************************/
 						/**
-						* Actualiza en la base de datos la cabecera de la retenci�n 
+						* Actualiza en la base de datos la cabecera de la retenciï¿½n 
 						*/
 						$obBD_ins1->operacionobBD(354, $Cop_Cod.'*'.$Ret_Int.'*'.$Cop_Fec.'*'.trim($Cop_Obs).'*'.tipo_compr.'*'.$Vnd_Cod.'*'.$Aut_Cod.'*'.$Ret_Cod, $obBD_conexion); 
 						/**
@@ -428,13 +428,13 @@ if (isset($hdd_Pec_Cod))
 						*/
 						$obBD_ins1->operacionobBD(355, $Ret_Cod, $obBD_conexion);    		
 						/*********************************/
-						/* FIN INSERCI�N DE LA RETENCI�N */
+						/* FIN INSERCIï¿½N DE LA RETENCIï¿½N */
 						/*********************************/
 					}/* fin inicio isset($Hdd_Rete_Modificar) */
 					else
 					{  	
 						/**
-						* Grabo en la base de datos la cabecera de la retenci�n 
+						* Grabo en la base de datos la cabecera de la retenciï¿½n 
 						*/
 						$obBD_ins1->operacionobBD(491, $Cop_Cod.'*'.$Ret_Int.'*'.$Com_Fec.'*'.trim($Cop_Obs).'*'.tipo_compr.'*'.$Vnd_Cod.'*'.$Aut_Cod, $obBD_conexion);	
 						$Ret_Cod=$obBD_ins1->insercionid ($obBD_conexion->conexion);
@@ -459,7 +459,7 @@ if (isset($hdd_Pec_Cod))
 				$des_indivi=($param[3]*$param[4])/100; 
 			 }
 			 /**
-			 * Dismunic�n de descuento individual al importe 
+			 * Dismunicï¿½n de descuento individual al importe 
 			 */	
 			 $renta_grav=$param[3]-$des_indivi;				 
 			/***********************************************************/
@@ -487,7 +487,7 @@ if (isset($hdd_Pec_Cod))
 				
 				$obBD_ins1->operacionobBD(492, $Ret_Cod.'*'.$renta_grav.'*'.$row_renta_sri['Ren_Cod'].'*'.'R'.'*'.$param[13].'*'.$param[8], $obBD_conexion);
 				/**
-				* C�lculo porcentaje RENTA de retenci�n para almacenar como base del comprobante de retenci�n 
+				* Cï¿½lculo porcentaje RENTA de retenciï¿½n para almacenar como base del comprobante de retenciï¿½n 
 				*/
 				$reten_bas_compr=(($renta_grav*$param[19])/100); 									
 				/**
@@ -534,12 +534,12 @@ if (isset($hdd_Pec_Cod))
 				*/
 				$grava_iva=$renta_grav*$param[11]/100; 
 				/**
-				* renta_grav toma el valor del porcentaje de retenci�n 
+				* renta_grav toma el valor del porcentaje de retenciï¿½n 
 				*/
 				$renta_grav=$grava_iva;
 				$obBD_ins1->operacionobBD(492, $Ret_Cod.'*'.$renta_grav.'*'.$row_renta_sri['Ren_Cod'].'*'.'I'.'*'.$param[13].'*'.$param[8], $obBD_conexion);
 				/**
-				* C�lculo porcentaje IVA de retenci�n para almacenar como base del comprobante de retenci�n 
+				* Cï¿½lculo porcentaje IVA de retenciï¿½n para almacenar como base del comprobante de retenciï¿½n 
 				*/
 				$reten_iva_compr=(($renta_grav*$param[20])/100); 
 				/**
@@ -600,10 +600,10 @@ if (isset($hdd_Pec_Cod))
 		/***********************************************************************/
 		/*    CONTROL AUTOMATICO PARA GENERAR COMPROBANTES DE EGRESO/DIARIO    */
 		/***********************************************************************/
-		/* 1 Contado - SI Retenci�n = NO COMPROBANTE EGRESO
-		   1 Contado - NO Retenci�n = SI COMPROBANTE EGRESO *-*
-		   2 Contado - SI Retenci�n = NO COMPROBANTE DIARIO
-		   2 Contado - No Retenci�n = SI COMPROBANTE DIARIO *-* 
+		/* 1 Contado - SI Retenciï¿½n = NO COMPROBANTE EGRESO
+		   1 Contado - NO Retenciï¿½n = SI COMPROBANTE EGRESO *-*
+		   2 Contado - SI Retenciï¿½n = NO COMPROBANTE DIARIO
+		   2 Contado - No Retenciï¿½n = SI COMPROBANTE DIARIO *-* 
 		*/
 		if ($Hdd_Ret == 'N' || $Hdd_Ret == 'S')		
 		{	
@@ -657,10 +657,10 @@ if (isset($hdd_Pec_Cod))
 			else//Pago a C O N T A D O
 			{	
 				/**
-				* 1 Contado - SI Retenci�n = NO COMPROBANTE EGRESO     -> NO Cheque
-				* 1 Contado - NO Retenci�n = SI COMPROBANTE EGRESO *-* -> SI Cheque
-				* 2 Contado - SI Retenci�n = NO COMPROBANTE DIARIO     -> NO Cheque
-				* 2 Contado - No Retenci�n = SI COMPROBANTE DIARIO *-* -> SI Cheque 
+				* 1 Contado - SI Retenciï¿½n = NO COMPROBANTE EGRESO     -> NO Cheque
+				* 1 Contado - NO Retenciï¿½n = SI COMPROBANTE EGRESO *-* -> SI Cheque
+				* 2 Contado - SI Retenciï¿½n = NO COMPROBANTE DIARIO     -> NO Cheque
+				* 2 Contado - No Retenciï¿½n = SI COMPROBANTE DIARIO *-* -> SI Cheque 
 				*/
 				/**
 				* Determinar cuenta de los bancos 
@@ -739,15 +739,15 @@ elseif(isset($codigo))
 	*/
 	$rs_ice=$obBD_con1->getArrayConsulta(707, '', $obBD_conexion);
 	/** 
-	* Recorrido y asignaci�n de los porcentajes del I.C.E. a un arreglo 
+	* Recorrido y asignaciï¿½n de los porcentajes del I.C.E. a un arreglo 
 	*/
 	foreach($rs_ice as $row_rs_ice)
 	{
 		$ice_cod[]=$row_rs_ice['Ice_Int'];
 		$ice_por[]=$row_rs_ice['Ice_Por'];
 	}
-	$ice_cod = 'Array(\'' . @implode('\', \'', $ice_cod) . '\')';
-	$ice_por = 'Array(\'' . @implode('\', \'', $ice_por) . '\')';
+	$ice_cod = 'Array(\'' . implode('\', \'', $ice_cod) . '\')';
+	$ice_por = 'Array(\'' . implode('\', \'', $ice_por) . '\')';
 	
 	/** 
 	* Consulta el sustento 
@@ -781,15 +781,15 @@ $row_rs_vendedor = $obBD_con1->getRowConsulta(24, $Ses_Prs_Cod.'*'.$Ses_Suc_Cod,
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?php require_once("../../mascaras/model1/estilos/estilos.php");?>		
-		<script language="javascript" src="../VALIDACIONES/fac_val_compras.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_compras.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>         
         <!--Librerias para modal -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script> 
 	    <!--Librerias para calendario -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script>  
-        <script language="javascript" src="../VALIDACIONES/XML.js"></script>		
+        <script type="text/javascript" src="../VALIDACIONES/XML.js"></script>		
         <script type="text/javascript"> 
         $(function() {
 			$('#set1 *').tooltip({showURL: false});
@@ -986,7 +986,7 @@ if(isset($txt_busqueda) && !isset($hdd_mod))
 	       <td width="6%" align="center"><FONT COLOR="<?php echo $rojo;?>">
 	         <?Php 
 		/**
-		* Consultar si la factura se registro de forma autom�tica y tiene un comprobante contable
+		* Consultar si la factura se registro de forma automï¿½tica y tiene un comprobante contable
 		*/
 		$rs_compra_manual_automatica=$obBD_con1->getRowConsulta(369, $row_rs_comprobante_compra['Com_Cod'], $obBD_conexion);
 
@@ -1006,7 +1006,7 @@ if(isset($txt_busqueda) && !isset($hdd_mod))
 	       <td align="center">
 	         <FONT COLOR="<?php echo $rojo;?>"><div align="left"><?Php echo marcar_cadena($txt_busqueda,$row_rs_buscar['Prs_Ape']." ".$row_rs_buscar['Prs_Nom'], '#FFFF00', 1); ?></div></FONT>
 	         </td>
-	       <td width="2%" align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&amp;com_codigo=<?php echo $row_rs_buscar['Cop_Cod'];?>&amp;Ses_Emp_Cod=<?php echo $$Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
+	       <td width="2%" align="center"><button type="button" class="btn btn-info btn-mini" title="Detalle del registro" onClick="Muestra_Aparecer(); ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_info=1&amp;com_codigo=<?php echo $row_rs_buscar['Cop_Cod'];?>&amp;Ses_Emp_Cod=<?php echo $Ses_Emp_Cod;?>','mostrar')"><i class="icon-info-sign icon-white"></i></button></td>
   <td width="5%" align="center">
     <?Php 
 	$num_row_rs_existe_pagos=0;
@@ -1048,7 +1048,7 @@ if(isset($txt_busqueda) && !isset($hdd_mod))
     </td>
 	       </tr>
 	     </form>
-	   <script language="javascript">
+	   <script type="text/javascript">
 		ShowHide('detalle[<?Php echo $i; ?>]');
 		ShowHide('menos[<?Php echo $i; ?>]');		 
 		</script>	
@@ -1071,7 +1071,7 @@ if(isset($txt_busqueda) && !isset($hdd_mod))
 <?Php echo barra_estado($total_rs_buscar);  ?>
 <br>
 <?Php 
-/* Si existe en la b�queda factura(s) con pagos realizados muestra la siguiente leyenda */
+/* Si existe en la bï¿½queda factura(s) con pagos realizados muestra la siguiente leyenda */
 if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
 <table width="371" cellpadding="0" cellspacing="0">
      <tr>
@@ -1100,13 +1100,13 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
   <?Php 
  if ($codigo > 0 && !(isset($hdd_save)))
  	{ 	/**
-		*  En esta consulta debe botar un solo registro ya en un a�o contable normalmente se utiliza un plan de cuentas 
+		*  En esta consulta debe botar un solo registro ya en un aï¿½o contable normalmente se utiliza un plan de cuentas 
 		*/
 		$row_rs_cuenta_manual = $obBD_con1->getRowConsulta(189,$Pec_Cod,$obBD_conexion);		
 		$Pla_Cod = $row_rs_cuenta_manual['Pla_Cod'];		
 		
 		/**
-		*  Obtengo el c�digo de la compra a buscar 
+		*  Obtengo el cï¿½digo de la compra a buscar 
 		*/	
 		$Cop_Bus=$rs_proveed[0]['Cop_Cod'];
 		
@@ -1159,12 +1159,8 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
               <td height="24" class="Etiqueta1"><span class="Asterisco">* </span>Tipo de Documento:</td>
               <td colspan="3"><span class="LetraNegra">
 			  <?Php 
-			  /* Envia el par�metro SQL,  */
-			  $sql = "AND Cop_Num<>";
-			  //echo $sql;
-			 
-			   ?>
-                <select name="Tic_Cod" id="Tic_Cod" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + document.getElementById('Cop_Num').value +'&Tic_Cod=' + this.value + '&Ins_Mod=<?Php echo $sql; ?>','div_con_num_com'); "  >
+			  ?>
+                <select name="Tic_Cod" id="Tic_Cod" onChange="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + document.getElementById('Cop_Num').value +'&Tic_Cod=' + this.value + '&Ins_Mod=AND Cop_Num<>','div_con_num_com'); "  >
                   <option ></option>
                   <?Php foreach($rs_tip_compr as $row_rs_tip_compr){ ?>
                   <option <?Php if($rs_proveed[0]['Tic_Cod'] == $row_rs_tip_compr['Tic_Cod']){echo "selected";}?>  value="<?php echo $row_rs_tip_compr['Tic_Cod']?>"><?php echo $row_rs_tip_compr['Tic_Des'];?></option>
@@ -1190,8 +1186,8 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
               <td width="15%" height="24" class="Etiqueta1"><span class="Asterisco">* </span>N&ordm;. Documento :</td>
             <td><span class="LetraNegra">
               <input name="Cop_Num" type="text" id="Cop_Num" size="17" maxlength="17" value="<?Php echo $rs_proveed[0]['Cop_Num'] ?>" 
-			  onblur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Tic_Cod=' + document.getElementById('Tic_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + this.value+ '&Ins_Mod=<?Php echo $sql; ?>','div_con_num_com');">
-              <script language="javascript">
+			  onblur="ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_con_numcom=1&Prv_Cod=' + document.getElementById('Prv_Cod').value +'&Tic_Cod=' + document.getElementById('Tic_Cod').value +'&Cop_Bus=<?Php echo $rs_proveed[0]['Cop_Num'];  ?>&Cop_Num=' + this.value+ '&Ins_Mod=AND Cop_Num<>','div_con_num_com');">
+              <script type="text/javascript">
 			  //document.getElementById("Cop_Num").value = '333-333-333333333';
 			  </script>
               </span><span id="div_con_num_com"></span>
@@ -1218,7 +1214,7 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
               <td width="12%" class="Etiqueta1"><span class="Asterisco">*</span> Fecha de impresi&oacute;n:</td>
               <td width="43%" class="LetraNegra"><span class="LetraNegra">
               <input name="Cop_Imp" type="text" id="Cop_Imp" value="<?Php echo $rs_proveed[0]['Cop_Imf'] ?>" size="10">
-              <img src="../../mascaras/model1/imagenes/32x32/info.gif" title="Fecha de creaci�n del documento en la imprenta" alt="Ver calendario" name="calendario2" border="0" align="absmiddle" id="calendario2">
+              <img src="../../mascaras/model1/imagenes/32x32/info.gif" title="Fecha de creaciï¿½n del documento en la imprenta" alt="Ver calendario" name="calendario2" border="0" align="absmiddle" id="calendario2">
               <script type="text/javascript">
 		    Calendar.setup({
         	inputField     :    "Cop_Imp",     // id of the input field
@@ -1254,7 +1250,7 @@ if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
     	    singleClick    :    true,
 			step           :    1
     		});
-		        </script><img src="../../mascaras/model1/imagenes/32x32/info.gif" title="Fecha de caducidad del documento seg�n el SRI" alt="Ver calendario" name="calendario2" border="0" align="absmiddle" id="calendario6" /></td>
+		        </script><img src="../../mascaras/model1/imagenes/32x32/info.gif" title="Fecha de caducidad del documento segï¿½n el SRI" alt="Ver calendario" name="calendario2" border="0" align="absmiddle" id="calendario6" /></td>
             </tr>
 			    <tr>
   <td width="15%" height="26" class="Etiqueta1">Observaci&oacute;n:</td>
@@ -1415,7 +1411,7 @@ value="<?Php echo $row_rs_cuenta['Pld_Cod']?>" size="3" maxlength="10" >
 		<input name="datos[<?Php echo $fila; ?>,14]" id="datos[<?Php echo $fila; ?>,14]" type="text" size="15" value="<?Php echo trim($row_rs_cuenta['Pld_Des']); ?>" readonly=""  >      </td>
        <td width="120" align="left" class="LetraNegra">
 <?Php 
-	/* Consulta los c�digos de retenci�n  */
+	/* Consulta los cï¿½digos de retenciï¿½n  */
 	
 		$row_rs_retencion_compra_renta=$obBD_con1->getRowConsulta(344,$row_rs_proveed['Cop_Int'].'*'.'R'.'*'.$row_rs_retencion_modificar['Ret_Cod'],$obBD_conexion);
 		$num_row_rs_retencion_compra_renta=$row_rs_retencion_compra_renta['Ren_Cod'] > 0? 1 : 0;
@@ -1688,7 +1684,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
         </td>
        </tr>
      </table>
-	 <script language="javascript" type="text/javascript">
+	 <script type="text/javascript" type="text/javascript">
 	    ShowHide('Tbl_Cuentas'); 
 		ShowHide('Tbl_Rentas'); 
 	 </script> 
@@ -1702,12 +1698,12 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
 	*/ 
 	$rs_pago = $obBD_con1->consulta(sentencias_comf(16, ''), $obBD_conexion->conexion);
 	$row_rs_pago = $obBD_con1->registros();
-	/* consulto la forma de pado del comprobante de compra de acuerdo al c�digo del comprobante */ 
+	/* consulto la forma de pado del comprobante de compra de acuerdo al cï¿½digo del comprobante */ 
 	//echo $Cop_Bus;
 	$rs_comprobante_forma=$obBD_con1->consulta(sentencias_comf(349, $obBD_con1->parametros($Cop_Bus)), $obBD_conexion->conexion);
 	$row_rs_comprobante_forma=$obBD_con1->registros();
 	/**
-	* consulto los datos de ccxpp en base al c�digo del comprobante
+	* consulto los datos de ccxpp en base al cï¿½digo del comprobante
 	*/
 	$rs_cuenta_pagar=$obBD_con1->consulta(sentencias_comf(350, $obBD_con1->parametros($row_rs_comprobante_forma['Com_Cod'])), $obBD_conexion->conexion);   
 	$row_rs_cuenta_pagar=$obBD_con1->registros();	
@@ -1738,7 +1734,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
       </table>
     </div>
     <?php if(round($resultados[5],2)<100){?>	
-		<script language="javascript">document.getElementById('pagoSri').style.display='none'; </script>
+		<script type="text/javascript">document.getElementById('pagoSri').style.display='none'; </script>
     <?php }?>    
     </td>
     </tr>
@@ -1756,7 +1752,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
 	<input type="hidden" id="hdd_TipoSri" name="hdd_TipoSri" value="1" /></td> 
 	<td width="72%" class="LetraNegra">
 	<?Php if($row_rs_comprobante_forma['For_Cod']==2){ /* inicio if($For_Cod==1){  */ ?>
-	 <?Php	/* Consulto el c�digo del detalle de la cuenta perteneciente al comprobante de compra */
+	 <?Php	/* Consulto el cï¿½digo del detalle de la cuenta perteneciente al comprobante de compra */
 				$rs_comprobante_asiento=$obBD_con1->consulta(sentencias_comf(362, $obBD_con1->parametros($Cop_Bus)), $obBD_conexion->conexion); 	
 				$row_rs_comprobante_asiento=$obBD_con1->registros();
 				
@@ -1819,17 +1815,17 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
 	<td width="50%" valign="top">
 <FIELDSET>
 <LEGEND>
-<label class="Titulos2">Datos de la retenci�n</label>
+<label class="Titulos2">Datos de la retenciï¿½n</label>
 </LEGEND>	
 <?Php 	
 		/**
-		*  Consultar la autorizaci�n 
+		*  Consultar la autorizaciï¿½n 
 		*/
 		$rs_autorizacion=$obBD_con1->consulta(sentencias_comf(378, $obBD_con1->parametros($row_rs_vendedor['Pun_Cod'].'*'.'6')), $obBD_conexion->conexion);
 		$row_rs_autorizacion=$obBD_con1->registros(); 
 		
 		/**
-		* | 6 | c�digo interno de la retenci�n  
+		* | 6 | cï¿½digo interno de la retenciï¿½n  
 		*/
   	    $row_autorizacion_sri=$obBD_con1->getRowConsulta(517,$Ses_Prs_Cod.'*'.'6'.'*'.$Ses_Suc_Cod,$obBD_conexion);  				
 		$num_autorizacion_sri=$row_autorizacion_sri['Vnd_Cod'] > 0? 1 : 0;		
@@ -1843,7 +1839,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
 		  	$num_existe_gencod=$obBD_con1->numregistros(); 
   	        
 			/**
-			*  Consulto el n�mero inicial del comprobante de retenci�n desde la autorizaci�n 
+			*  Consulto el nï¿½mero inicial del comprobante de retenciï¿½n desde la autorizaciï¿½n 
 			*/
     		if($num_existe_gencod>0){ /* inicio if($num_existe_gencod>0){  */
 	  			$rs_max_codigo=$obBD_con1->consulta(sentencias_comf(511, $obBD_con1->parametros($row_rs_autorizacion['Aut_Cod'])), $obBD_conexion->conexion);
@@ -1932,7 +1928,7 @@ value="<?Php echo $row_rs_proveed['Cop_Int']?>" size="3" maxlength="10" ></td>
    <input name="hdd_save" type="hidden" id="hdd_save" value="insertar">   
 <input name="confi_fact" type="hidden" id="confi_fact" value="<?php echo $llevarContabilidad['Cof_Con']?>" />
 <button name="btn_guardar" type="button" class="btn btn-primary start" id= "btn_guardar" 
-   title= "Actualizar" onClick="if(document.getElementById('t_rubros').value<1000 ){validar_facturacion_compra(this.form);}else{if(document.getElementById('hdd_TipoSri').value!=''){validar_facturacion_compra(this.form);}else{alert('�Falta escoger Pago SRI!'); document.getElementById('TipoPag').focus();}}"  value="Actualizar" <?Php if($cuenta_renta==0 && $num_row_rs_retencion_modificar>0){ ?> disabled="disabled"  <?Php } ?> ><i class="icon-book icon-white"></i>
+   title= "Actualizar" onClick="if(document.getElementById('t_rubros').value<1000 ){validar_facturacion_compra(this.form);}else{if(document.getElementById('hdd_TipoSri').value!=''){validar_facturacion_compra(this.form);}else{alert('ï¿½Falta escoger Pago SRI!'); document.getElementById('TipoPag').focus();}}"  value="Actualizar" <?Php if($cuenta_renta==0 && $num_row_rs_retencion_modificar>0){ ?> disabled="disabled"  <?Php } ?> ><i class="icon-book icon-white"></i>
 	          <span>Guardar</span>
 	          </button>              													                
    </td>

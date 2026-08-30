@@ -241,19 +241,19 @@ if(isset($save)){
                     <label class="Titulos2">Seleccionar Proveedor</label>
 		</LEGEND>
                     <form id="provFormTemp">
-                       <div class="segmento">Cédula/R.U.C.:</div>                          
+                       <div class="segmento">Cï¿½dula/R.U.C.:</div>                          
                        <div class="datasegmento">
 
-                               <input id="docu" name="search" maxlength="13" onkeydown='if (event.keyCode === 13) $.SearchOrDialog("#provDialog",selectProvee);' type="text" class="search ui-corner-all" placeholder="Ingrese Cedula/R.U.C. ..." title="Buscar Proveedor Por Documento o Descripción" autofocus />                               
+                               <input id="docu" name="search" maxlength="13" onkeydown='if (event.keyCode === 13) $.SearchOrDialog("#provDialog",selectProvee);' type="text" class="search ui-corner-all" placeholder="Ingrese Cedula/R.U.C. ..." title="Buscar Proveedor Por Documento o Descripciï¿½n" autofocus />                               
                                <input type="text" name="op_opciones" value="c" style="display: none;" /> 
                                <input type="hidden" name="Prv_Cod" value="" />
-                               <a onclick="$('#provDialog').dialog('open');/*$('#docu').removeAttr('readOnly');*/" title="Búsqueda de Proveedores"  class="btn btn-success btn-mini"><i class=" icon-check icon-white" ></i></a>
+                               <a onclick="$('#provDialog').dialog('open');/*$('#docu').removeAttr('readOnly');*/" title="Bï¿½squeda de Proveedores"  class="btn btn-success btn-mini"><i class=" icon-check icon-white" ></i></a>
                                <a onclick="selectProvee();" title="Quitar Proveedor" class="btn btn-success btn-mini"><i class=" icon-eject icon-white"></i></a>
 
                        </div>
                     </form>
                     <div class="segmento">Proveedor:</div><div  class="datasegmento"><input id="lblProv" type="text" class="label ui-widget-content ui-corner-all" readonly /></div><br />
-                    <div class="segmento">Dirección:</div><div  class="datasegmento"><input id="lblDirec" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
+                    <div class="segmento">Direcciï¿½n:</div><div  class="datasegmento"><input id="lblDirec" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
              </FIELDSET>    
               
              
@@ -272,13 +272,13 @@ if(isset($save)){
                         <div class="segmento">Por Vencer: <input name="op_opciones" type="radio" value="I" alt="" onchange="setCombo('I');" /></div>
                     </div>
                     <div>
-                        <div class="segmento">Búscar:
+                        <div class="segmento">Bï¿½scar:
                           </div> 
                         <div class="datasegmento" style="text-align: left;" >
                             <select name="Cmb_Ven" id="Cmb_Ven" class="text medium ui-corner-all"  >                                
                                 <option selected="selected" value="1">Todos</option>                               
                             </select>&nbsp;&nbsp;&nbsp;&nbsp;
-                             <button type="button" onclick="this.form.submit()" class="btn btn-success" style="height: 27px;" title="Ejecutar Búsqueda" >
+                             <button type="button" onclick="this.form.submit()" class="btn btn-success" style="height: 27px;" title="Ejecutar Bï¿½squeda" >
                            <i class="icon-search icon-white"></i>
                            <span>Buscar</span>
                            </button>
@@ -335,7 +335,7 @@ if(isset($save)){
                             }
                         }
                         function clearFooter(){ 
-                            public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");   
+                            var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");   
 
                             $footRow.find('>td[aria-describedby="list_subgrid"]').css("border-right-color", "transparent");                            
                             $footRow.find('>td[aria-describedby="list_Com_Codigo"]').css("border-right-color", "transparent");
@@ -370,14 +370,14 @@ if(isset($save)){
                         //$.createDateRange('#txt_fec_ini','#txt_fec_fin'); 
                         var compGrid=$("#list");
                         compGrid.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                             //postData: $("#form1").getData("ajaxGrid"),
                             autowidth : true, shrinkToFit: true, height: 270,
                             cmTemplate: {sortable:false /*,editrules: {edithidden: true}*/},
                             colModel: [                               
-                                { label: 'Cód.Int.', name: 'Cpp_Cod', key: true, hidden:true,viewable:true },  
-                                { label: 'Cód.Int.', name: 'Asi_Cod',  hidden:true },                                  
+                                { label: 'Cï¿½d.Int.', name: 'Cpp_Cod', key: true, hidden:true,viewable:true },  
+                                { label: 'Cï¿½d.Int.', name: 'Asi_Cod',  hidden:true },                                  
                                 {label:'Pld_Cod.',name:"Pld_Cod",hidden:true},
                                 {label:'Pld_Cdc.',name:"Pld_Cdc",hidden:true},
                                 {label:'Pld_Des.',name:"Pld_Des",hidden:true},
@@ -440,7 +440,7 @@ if(isset($save)){
                                 var subgrid_table_id = subgrid_id+"_t";         
                                 $("#"+subgrid_id).html("<table id='"+subgrid_table_id+"' class='scroll'></table>");
                                 $("#"+subgrid_table_id).jqGrid({
-                                        url:"<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?ajaxSubgrid="+row_id,datatype: "json",regional : 'es',
+                                        url:"<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?ajaxSubgrid="+row_id,datatype: "json",regional : 'es',
                                         autowidth : true, shrinkToFit: true,cmTemplate: {sortable:false},//colNames: ['No','Item','Qty','Unit','Line Total'],
                                         colModel: [
                                                 {label:'Cod.Int.',name:"Cpp_Cod",width:80,key:true,align:"center",hidden:true},
@@ -448,7 +448,7 @@ if(isset($save)){
                                                 {label:'No. Compr.',name:"Com_Codigo",width:45,align:"center"},
                                                 {label:'Fecha',name:"Pag_Fec",width:45,align:"center"},
                                                 {label:'Valor',name:"Pag_Val",width:45, align: 'right', formatter:'currency', decimalPlaces: '2', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.'}},
-                                                {label:'Observación',name:"Pag_Obs",width:100},
+                                                {label:'Observaciï¿½n',name:"Pag_Obs",width:100},
                                                 {label:'Tipo',name:"Pag_Des",width:50,align:"center"},                      
                                                     { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center',viewable: false,
                                                         formatter:function (cellvalue, options, rowObject) { 
@@ -532,7 +532,7 @@ if(isset($save)){
                         LoadCheNum();
                     }
                     function loadBancos(){ 
-                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{bancosAjax:true,Pec_Cod:$('#periodos').val()}, function( response ) {
+                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{bancosAjax:true,Pec_Cod:$('#periodos').val()}, function( response ) {
                                 if(response['success']===true){
                                     $('input[name="Pec_Cod"]').val(response['Pec']['Pec_Cod']);                                    
                                     $('input[name="periodo"]').val(response['Pec']['Periodo']);
@@ -555,7 +555,7 @@ if(isset($save)){
                             for(i=0;i<bancos.length;i++)
                                 if(bancos[i]['Pld_Cod']===$('#bancos').val())
                                      Ban_Cod=bancos[i]['Ban_Cod'];
-                            $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'Ban_Cod':Ban_Cod,'cheNum':true}, function(response){
+                            $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'Ban_Cod':Ban_Cod,'cheNum':true}, function(response){
                                 if(response['success']===true){
                                     numChe=(response['Che_Num']*1)+1;
                                     $("#NumChe").val(numChe).alertMsg();                                  
@@ -570,7 +570,7 @@ if(isset($save)){
                             for(i=0;i<bancos.length;i++)
                                 if(bancos[i]['Pld_Cod']===$('#bancos').val())
                                      Ban_Cod=bancos[i]['Ban_Cod'];
-                            $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'Ban_Cod':Ban_Cod,'valChe': numAnt}, function(response){
+                            $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'Ban_Cod':Ban_Cod,'valChe': numAnt}, function(response){
                                 if(response['success']===true){
                                     if(response['valid']===false){
                                         numChe=(response['Che_Num']*1)+1;
@@ -622,7 +622,7 @@ if(isset($save)){
                                     if(batch.length>0){ 
                                         var data=$('#formComp').serializeObject();
                                         data["save"]=batch;
-                                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+                                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                                             if(response['success']===true){
                                                 $('#impCompr').attr('href',response['link']);
                                                 $('#printCheque').show();
@@ -658,7 +658,7 @@ if(isset($save)){
                     <legend>
                         <label class="Titulos2">Comprobante de Egreso</label>
                     </legend>	
-                    <form name="formComp" id="formComp" method="post" action="javascript:$.createDialogConfirm('¿Est&aacute; seguro que desea guardar los datos?',null,saveComp)">
+                    <form name="formComp" id="formComp" method="post" action="javascript:$.createDialogConfirm('ï¿½Est&aacute; seguro que desea guardar los datos?',null,saveComp)">
                         <table  width="100%" border="0" cellpadding="0" cellspacing="0" style="table-layout:fixed;min-width: 450px;">
                         <tr><td valign="top">
                             <div class="row">
@@ -788,14 +788,14 @@ if(isset($save)){
                         $('#Che_Fec').toggleClass('disabled').find('input').toggleAttr('disabled');
                         var gridComp=$("#comp");
                         gridComp.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },                             
                             autowidth : true, shrinkToFit: true, height: 120,
                             cmTemplate: {sortable:false,title: false},
                             colModel: [
-                                { label: 'Cód.Int.', name: 'Pld_Cod', key: true, width: 15,align:"center", hidden:true },  
+                                { label: 'Cï¿½d.Int.', name: 'Pld_Cod', key: true, width: 15,align:"center", hidden:true },  
                                 { label: 'Tipo', name: 'Det_Tip', hidden:true },
-                                { label: 'Código', name: 'Pld_Cdc', width: 45 },                      
+                                { label: 'Cï¿½digo', name: 'Pld_Cdc', width: 45 },                      
                                 { label: 'Cuenta', name: 'Pld_Des', width: 150  },
                                 { label: 'Glosa', name: 'Glosa', width: 150,editable:true },
                                 { label: 'Debe', name: 'Debe', width: 50, align: 'right', formatter:'currency',
@@ -836,16 +836,16 @@ if(isset($save)){
 </div>
     
 <!--INICIO DEL DIALOGO BUSCAR PROVEEDOR--> 
-    <div id="provDialog" title="Búsqueda de Proveedores">  
+    <div id="provDialog" title="Bï¿½squeda de Proveedores">  
        <form> 
         <fieldset>
-		<legend><label class="Titulos2">Búsqueda de Proveedor</label></legend>
+		<legend><label class="Titulos2">Bï¿½squeda de Proveedor</label></legend>
 		<table border="0">
                    <tr>
 			  <td width="205"><input name="op_opciones" type="radio" value="d" checked="" onclick="setfocus(this.form.search)" alt="" />
 			  <span class="LetraNegra"><strong>Apellido</strong></span></td>
 			  <td width="266"><input name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" />
-				<span class="LetraNegra"><strong>Cédula/R.U.C.</strong></span></td>
+				<span class="LetraNegra"><strong>Cï¿½dula/R.U.C.</strong></span></td>
                     </tr>
                 </table>
                 <table height="36" border="0" cellpadding="0" cellspacing="0">                    
@@ -865,10 +865,10 @@ if(isset($save)){
     <script type="text/javascript">
         $(document).ready(function() {               
                 $.createSearchDialog('#provDialog',[
-                        { label: 'Cód.Int.', name: 'Prv_Cod', key: true,hidden:true,viewable: true },                                
-                        { label: 'Cédula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
+                        { label: 'Cï¿½d.Int.', name: 'Prv_Cod', key: true,hidden:true,viewable: true },                                
+                        { label: 'Cï¿½dula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
                         { label: 'Proveedor', name: 'proveedor', width: 190, cellattr: function (rowId, tv, rawObject, cm, rdata) { return 'style="white-space: normal;"'; }},                   
-                        { label: 'Dirección', name: 'Prs_Dir',hidden:true,viewable: true },                      
+                        { label: 'Direcciï¿½n', name: 'Prs_Dir',hidden:true,viewable: true },                      
                             { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center',viewable: false,
                                 formatter:function (cellvalue, options, rowObject) { 
                                     var clic='selectProvee($("#provGrid").jqGrid("getRowData",'+rowObject.Prv_Cod+'))';
@@ -905,19 +905,19 @@ if(isset($save)){
                 <fieldset>
                     <legend><label class="Titulos2">Datos del Proveedor</label></legend>
                         <div class="row">
-                            <div class="segmento">Cédula:</div><div  class="datasegmento"><input id="lblCed2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
+                            <div class="segmento">Cï¿½dula:</div><div  class="datasegmento"><input id="lblCed2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
                         </div>
                         <div class="row">
                             <div class="segmento">Proveedor:</div><div  class="datasegmento"><input id="lblProv2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
                         </div>
                         <div class="row">
-                            <div class="segmento">Dirección:</div><div  class="datasegmento"><input id="lblDirec2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
+                            <div class="segmento">Direcciï¿½n:</div><div  class="datasegmento"><input id="lblDirec2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
                         </div>
                 </fieldset> 
             </div>
             <div class="row" style="padding-top: 5px;padding-bottom: 15px;">
                  <fieldset>
-                    <legend><label class="Titulos2">Observación</label></legend>
+                    <legend><label class="Titulos2">Observaciï¿½n</label></legend>
                     <div  class="datasegmento" style="width:95%;"><input id="lblConce2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
                  </fieldset>            
             </div>
@@ -944,7 +944,7 @@ if(isset($save)){
                             <div class="segmento">Vencimiento:</div><div  class="datasegmento"><input id="lblVen2" type="text" class="label medium ui-widget-content ui-corner-all" readonly /></div>
                         </div>
                         <div class="row">
-                            <div class="segmento">Observación:</div><div  class="datasegmento"><input id="lblObsV2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
+                            <div class="segmento">Observaciï¿½n:</div><div  class="datasegmento"><input id="lblObsV2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
                         </div>
                         <div class="row">
                             <div class="segmento">Tipo Pago:</div><div  class="datasegmento"><input id="lblTipPa2" type="text" class="label medium ui-widget-content ui-corner-all" readonly /></div>
@@ -969,9 +969,9 @@ if(isset($save)){
                     datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },                             
                     width:618,height:75,postData: {CheListAjax:true},caption:'Asiento Contable',
                     cmTemplate: {sortable:false},colModel: [
-                        { label: 'Cód.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },  
+                        { label: 'Cï¿½d.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },  
                                 { label: 'Tipo', name: 'Asi_Deh', hidden:true },
-                                { label: 'Código', name: 'Pld_Cdc', width: 45 },                      
+                                { label: 'Cï¿½digo', name: 'Pld_Cdc', width: 45 },                      
                                 { label: 'Cuenta', name: 'Pld_Des', width: 130  },
                                 { label: 'Glosa', name: 'Glosa', width: 130},
                                 { label: 'Debe', name: 'Debe', width: 65, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"},                                         
@@ -984,7 +984,7 @@ if(isset($save)){
                     datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },                             
                     width:618,height:97,postData: {CheListAjax:true},caption:'Cheques Girados',
                     cmTemplate: {sortable:false},colModel: [
-                        { label: 'Cód.Int.', name: 'Che_Cod', key: true,hidden:true,viewable: true },                                
+                        { label: 'Cï¿½d.Int.', name: 'Che_Cod', key: true,hidden:true,viewable: true },                                
                         { label: 'Fecha', name: 'Che_Fec', key: true, width: 50 },
                         { label: 'Num.', name: 'Che_Num', key: true, width: 30,align:"center" },                        
                         { label: 'Banco', name: 'Pld_Des', width: 100,title:'Cuenta Bancaria' },
@@ -997,7 +997,7 @@ if(isset($save)){
         }); 
         function selectDetalle(Cpp,Com){                             
                            
-                                $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{detAjax:true,Cpp:Cpp,Com:Com}, function( response ) {
+                                $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{detAjax:true,Cpp:Cpp,Com:Com}, function( response ) {
                                    if(response['success']===true){                                       
                                         $("#lblComp2").val(response['com']['Com_Num']);
                                         $("#lblComFe2").val(response['com']['Com_Fec']);
@@ -1195,7 +1195,7 @@ if(isset($save)){
 //                        }
 //                ]);  
 //                function saveBene() {
-//                    $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{saveBene:true,apel:$('#beneApe').val(),nomb:$('#beneNom').val()}, function( response ) {
+//                    $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{saveBene:true,apel:$('#beneApe').val(),nomb:$('#beneNom').val()}, function( response ) {
 //                       if(response['success']===true){
 //                           $('#apellido').val($('#beneApe').val());$('#nombre').val($('#beneNom').val());$('#Bene_Id').val(response['id']);
 //                           $('#addBenef').dialog('close');$('#beneDialog').dialog('close');

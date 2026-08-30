@@ -109,7 +109,7 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
 
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-    <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/cedulaRuc.js"></script>
     <script type="text/javascript" src="../VALIDACIONES/adq_val_proveedor.js"></script>
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
@@ -238,7 +238,7 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
                                         <select name="Ide_Cod" id="Ide_Cod" class="form-control input-xs readOnly" disabled="">
                                             <option value=""></option>
                                             <?php foreach ($rs_identi as $row) {
-                                                echo "<option value='$row[Ide_Cod]'>$row[Ide_Des]</option>";
+                                                echo "<option value='{$row['Ide_Cod']}'>{$row['Ide_Des']}</option>";
                                             } ?>
                                         </select>
                                     </div>
@@ -270,7 +270,7 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
                                 <div class="form-group natural">
                                     <label class="col-xs-3 control-label label-xs ">Genero:</label>
                                     <div class="col-xs-4">
-                                        <select name="Prs_Sex" id=Prs_Sex" class="form-control input-xs ">
+                                        <select name="Prs_Sex" id="Prs_Sex" class="form-control input-xs ">
                                             <option value="M">MASCULINO</option>
                                             <option value="F">FEMENINO</option>
                                         </select>
@@ -329,7 +329,7 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
                                         <option value=""></option>
                                         <?php
                                         foreach ($rs_ciudad as $row) {
-                                            echo "<option value='$row[Ciu_Cod]' data-prov='$row[Pro_Nom]' data-pai='$row[Pas_Nom]'>$row[Ciu_Des]</option>";
+                                            echo "<option value='{$row['Ciu_Cod']}' data-prov='{$row['Pro_Nom']}' data-pai='{$row['Pas_Nom']}'>{$row['Ciu_Des']}</option>";
                                         }
                                         ?>
                                     </select>
@@ -358,7 +358,7 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
                                     <select name="Tri_Cod" class="form-control input-xs" tabindex="3">
                                         <option value="">Seleccione...</option>
                                         <?php foreach ($rs_sustento as $row) {
-                                            echo "<option value='{$row['Tri_Cod']}' " . ($row['Tri_Cod'] == 2 ? 'selected' : '') . ">$row[Tri_Sri] - $row[Tri_Des]</option>";
+                                            echo "<option value='{$row['Tri_Cod']}' " . ($row['Tri_Cod'] == 2 ? 'selected' : '') . ">{$row['Tri_Sri']} - {$row['Tri_Des']}</option>";
                                         } ?>
                                     </select>
                                 </div>
@@ -370,7 +370,7 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
                                         <option value="">Seleccione...</option>
                                         <?php foreach ($rs_tip_compr as $row) {
                                             if ($row['Tic_Sri'] != 4 && $row['Tic_Sri'] != 5 && $row['Tic_Sri'] != 7 && $row['Tic_Sri'] != 23 && $row['Tic_Sri'] != 24)
-                                                echo "<option value='$row[Tic_Cod]' data-ticsri='$row[Tic_Sri]'>$row[Tic_Sri] - $row[Tic_Des]</option>";
+                                                echo "<option value='{$row['Tic_Cod']}' data-ticsri='{$row['Tic_Sri']}'>{$row['Tic_Sri']} - {$row['Tic_Des']}</option>";
                                         } ?>
                                     </select>
                                 </div>
@@ -410,7 +410,7 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
                                     <select name="Ciu_Cod_Aut" id="Ciu_Cod_Aut" class="form-control input-xs" data-placeholder="Seleccione..." tabIndex="7">
                                         <option value=""></option>
                                         <?php foreach ($rs_ciudad as $row) {
-                                            echo "<option value='$row[Ciu_Cod]' data-prov='$row[Pro_Nom]'>$row[Ciu_Des]</option>";
+                                            echo "<option value='{$row['Ciu_Cod']}' data-prov='{$row['Pro_Nom']}'>{$row['Ciu_Des']}</option>";
                                         } ?>
                                     </select>
                                 </div>
@@ -768,7 +768,7 @@ $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('cl
         }
 
         function setTipoDoc() {
-            public $Prs_Ced = $('#Prs_Ced'),
+            var $Prs_Ced = $('#Prs_Ced'),
                 Prs_Ced = $Prs_Ced.val(),
                 isRuc = $('#isRuc').is(':checked');
 

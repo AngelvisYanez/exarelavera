@@ -1,0 +1,24 @@
+/**
+ * Model3 - Core UI (without master-detail layout)
+ * 
+ * For consultation screens, catalogs, or simple forms.
+ * Use this instead of exa-ui.css when you don't need
+ * the master-detail layout functionality.
+ * 
+ * Usage:
+ *   $m3_ui_core_only = true;
+ *   require_once('../../mascaras/model3/estilos/estilos.php');
+ */
+@import url('modules/00-default-theme.css');
+@import url('modules/01-variables.css');
+@import url('modules/02-shell.css');
+@import url('modules/03-tabs.css');
+@import url('modules/04-forms.css');
+@import url('modules/05-grids.css');
+@import url('modules/06-jqgrid-dialogs.css');
+@import url('modules/07-density-overrides.css');
+@import url('modules/09-jqgrid-cells.css');
+@import url('modules/10-layout-viewport.css');
+@import url('modules/11-jqgrid-layout.css');
+@import url('modules/12-jqgrid-subgrid.css');
+@import url('modules/13-form-busqueda.css');

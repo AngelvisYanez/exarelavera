@@ -1,11 +1,12 @@
 <?php require_once('../../administrador/LOGICA/seguridad.php');
-	  require_once('../LOGICA/logica.php');
+	  require_once('../../componentes/LOGICA/logica.php');
   	  require_once('../../tesoreria/LOGICA/tes_log_ccpp.php');
 	  require_once('../../Librerias/procedimientos/almacenados_standar.php');
+	  require_once('../../contabilidad/LOGICA/con_sql_compr.php');
 /* Creacion del Objeto de conexion */
-$obBD_conexion = new Class_Mysql;
+$obBD_conexion = new MysqlConexion($Ses_Dat_Dis);
 /* Cracion del objeto mysql para las consultas */
-$obBD_con1 =  new Class_Datos;
+$obBD_con1 =  new MysqlDatos;
 /***********************************************/
 $hoy = date("Y-m-d");
 	  if (isset($codigo))
@@ -20,6 +21,9 @@ $hoy = date("Y-m-d");
 		$row_rs_cabcomp = $obBD_con1->registros();
 		$total_rs_cabcomp = $obBD_con1->numregistros();
 		list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);
+	  }
+	  else {
+	    exit;
 	  }
 ?>				
 <html>

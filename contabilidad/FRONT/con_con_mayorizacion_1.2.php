@@ -294,8 +294,8 @@ else {
 	<TITLE><?Php echo "Libro Mayor [EXA]"; ?></TITLE>
 	<meta charset="UTF-8">
 	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-	<script language="javascript" src="../VALIDACIONES/con_val_mayorizacion.js"></script>
+	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+	<script type="text/javascript" src="../VALIDACIONES/con_val_mayorizacion.js"></script>
 	<script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 	<script type="text/javascript">
 		$(function() {
@@ -305,7 +305,7 @@ else {
 		});
 	</script>
 	<!--Librerias para exportar a excel -->
-	<script language="javascript">
+	<script type="text/javascript">
 		$(document).ready(function() {
 			/* LLamado a la class del boton exportar */
 			$("#Boton_Excel").click(function(event) {
@@ -901,7 +901,7 @@ else {
 						<?php
 						} //Fin del if (isset($hdd_save))
 
-						if (($total_rs_cuenta > 0 or $total_rs_saldos > 0) || count($rs_rango) > 0) {
+						if (($total_rs_cuenta > 0 or $total_rs_saldos > 0) || count((array)$rs_rango) > 0) {
 						?>
 							<br>
 							<table width="220" border="0" cellpadding="0" cellspacing="0">

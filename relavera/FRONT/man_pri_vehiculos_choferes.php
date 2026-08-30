@@ -135,7 +135,7 @@ if (!empty($cliente_manifiesto['Pla_Cod'])) {
         var getSancionesChoferAjax = 1;
         var getSancionesVehiculoAjax = 1;
         var Pla_Cod = '<?php echo isset($cliente_manifiesto["Pla_Cod"]) ? (int)$cliente_manifiesto["Pla_Cod"] : 0; ?>';
-        var planta_nombre = '<?php echo addslashes($planta_nombre); ?>';
+        var planta_nombre = <?php echo json_encode($planta_nombre); ?>;
     </script>
     <style>
         .nav-tabs-custom {

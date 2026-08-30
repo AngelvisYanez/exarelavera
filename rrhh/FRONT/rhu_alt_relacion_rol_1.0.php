@@ -208,7 +208,7 @@ if(isset($deleteCuenta)){
                         if($('#Cam_Cod').val()===''){$.alert('Seleccione un <u>Campo</u>!');return;}
                         if($('#listTipo').val()===''){$.alert('Seleccione un <u>Parametro</u>!');return;}
                         var data={Cam_Cod:$('#Cam_Cod').val(),Pld_Cod:a2,Are_Cod:$('#Are_Cod').val(),addCuenta:$('#listTipo').val()};                         
-                        $.saveDataJson( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {                                                  
+                        $.saveDataJson( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {                                                  
                                 $("#campoCuentas").jqGrid('setGridParam',{datatype:'json'}).trigger("reloadGrid", [{ page: 1 }]);                             
                          });
                     }
@@ -217,7 +217,7 @@ if(isset($deleteCuenta)){
                         $.createDialogConfirm('�Est� seguro que desea eliminar esta relaci�n?',data,deleteCta);
                     }
                     function deleteCta(data){   
-                        $.saveDataJson( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) { 
+                        $.saveDataJson( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) { 
                             $("#campoCuentas").jqGrid('setGridParam',{datatype:'json'}).trigger("reloadGrid", [{ page: 1 }]);                             
                         });
                     }
@@ -267,7 +267,7 @@ if(isset($deleteCuenta)){
                                 }
                         }
         ]);
-        public $listProds=$("#listCampos"), abr={I:'INGRESO',E:'EGRESO',T:'TOTALES',P:'PROVISIONES'};
+        var $listProds=$("#listCampos"), abr={I:'INGRESO',E:'EGRESO',T:'TOTALES',P:'PROVISIONES'};
         $listProds.createGrid({                                   
             height:315, caption:'Listado de Campos Rol', sortname:'Cam_Ord',
             colModel: [

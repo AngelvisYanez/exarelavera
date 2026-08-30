@@ -5,7 +5,7 @@
  * 
  * @author Jose Cumbicos
  * @version 1.0
- * Fecha de actualización:	2012-04-16
+ * Fecha de actualizaciï¿½n:	2012-04-16
  * 
  * @package tesoreria.FRONT
  */	  
@@ -110,7 +110,7 @@ if(isset($_POST['hdd_comprobar']))
 else
 {
 	/**
-	 * Valor que toma por defecto al iniciar la página
+	 * Valor que toma por defecto al iniciar la pï¿½gina
 	 */
 	$event = -1;
 }	
@@ -119,8 +119,8 @@ else
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/fac_val_transporte.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_transporte.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -170,7 +170,7 @@ else
           <td width="158"  class="LetraNegra">
                  	<input name="Prs_Ced" type="text" id="Prs_Ced" 
                     onBlur="if(document.getElementById('opiden').value == 'N'){ validarDocumento(this.form.Prs_Ced)}" 
-                    value="<?Php if(isset($_POST['Prs_Ced']))echo $_POST['Prs_Ced']; ?>" size="17" maxlength="13">
+                    value="<?Php if(isset($_POST['Prs_Ced']))echo htmlspecialchars($_POST['Prs_Ced'], ENT_QUOTES, 'UTF-8'); ?>" size="17" maxlength="13">
                  </td>
           <td width="605" align="left"> 
           <button type="button" class="btn btn-success fileinput-button" title="Comprobar" onclick="validar_requeridos(this.form, 'Prs_Ced', 0)">
@@ -187,7 +187,7 @@ else
 		   {
 		    	if ($event == 0) 
 		  		{ 
-		  			echo "El Destinatario con c&eacute;dula/R.U.C.: ".$_POST['Prs_Ced'].", ya se encuentra registrado";
+		  			echo "El Destinatario con c&eacute;dula/R.U.C.: ".htmlspecialchars($_POST['Prs_Ced'], ENT_QUOTES, 'UTF-8').", ya se encuentra registrado";
 				}	   
 		   }
 		   ?>
@@ -218,8 +218,8 @@ else
 	  <tr>
         <td width="17%" class="Etiqueta1"><span class="Asterisco">*</span> C&eacute;dula/R.U.C.:</td>
 	    <td width="83%" class="LetraNegra">&nbsp;
-			<?Php echo $_POST['Prs_Ced']; ?>
-			<input name="Prs_Ced" type="hidden" id="Prs_Ced" value="<?php echo $_POST['Prs_Ced']; ?>">
+			<?Php echo htmlspecialchars($_POST['Prs_Ced'], ENT_QUOTES, 'UTF-8'); ?>
+			<input name="Prs_Ced" type="hidden" id="Prs_Ced" value="<?php echo htmlspecialchars($_POST['Prs_Ced'], ENT_QUOTES, 'UTF-8'); ?>">
 		</td>
 	    </tr>
 	  <tr>
@@ -352,7 +352,7 @@ else
     <table width="300" border="0" cellpadding="0" cellspacing="0">       
        <tr> 
       	<td width="110">
-      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, 'hdd_volver', '<?Php echo '1'; ?>')">
+      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="campos_hide(this.form, 'hdd_volver', '<?Php echo '1'; ?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        		 </button>

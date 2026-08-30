@@ -73,6 +73,9 @@ if(isset($saveData)||isset($anulaData)||isset($savePermisos)){
         }else if(isset($anulaData)){
             $obBD_con_set->operacionobBD('perfiles.update', array('Per_Est'=>'I','where'=>array('Per_Cod'=>$id)), $obBD_conexion_set); 
         }else if(isset($savePermisos)){
+            $permisos = isset($_REQUEST['permisos']) ? $_REQUEST['permisos'] : (isset($permisos) ? $permisos : array());
+            $perfiles = isset($_REQUEST['perfiles']) ? $_REQUEST['perfiles'] : (isset($perfiles) ? $perfiles : array());
+            
             if($savePermisos=='Individuales'){
                 $obBD_con_set->operacionobBD('perfiorgan.deleteWhere', array('Per_Cod'=>$Per_Cod), $obBD_conexion_set);
                 if(isset($permisos)) foreach ($permisos as $p) {
@@ -165,7 +168,7 @@ if(isset($saveData)||isset($anulaData)||isset($savePermisos)){
     <script type="text/javascript" src="../../framework/jquery/chosen/chosenIcon/chosenIcon.js"></script> 
     <script type="text/javascript" src="../../framework/jquery/bootstrap/jqboot.checkbox.buttons.js"></script>
     <link rel="stylesheet" href="../../skins/fonts/fontelo/fontello.css?x=0" />
-    <script type="text/javascript">var urlTree='<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?treeAjax=true';</script>
+    <script type="text/javascript">var urlTree='<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?treeAjax=true';</script>
     <script type="text/javascript" src="../VALIDACIONES/adm_val_perfil_2.0.js"></script> 
     <style>.panel-body{padding: 5px 5px 0px 5px;} .jstree-icon:not(.glyphicon):not(.fa){font-family: "fontello";  font-style: normal;  font-weight: normal;} /*.hidden{display: inherit !important}*/</style>
 </HEAD>

@@ -1,4 +1,4 @@
-﻿<?php 
+<?php 
 /**
  * Logica de las paginas que tienen que ver con clientes
  *
@@ -75,7 +75,7 @@ class Class_Log_Datos_Tip extends MysqlDatos{
 		
 		$this->free_result($result);
 		
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

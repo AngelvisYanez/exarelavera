@@ -21,7 +21,7 @@ if (isset($saveTallas)) {
         $obBD_con1->operacionobBD(42, $data_tallas, $obBD_conexion);
         $response = array('success' => true, 'message' => "Transaccion realizada con éxito");
     } catch (Exception $e) {
-        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_conIns->MsgError);
+        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
     }
     echo json_encode($response);
     exit();
@@ -42,7 +42,7 @@ if (isset($anularTallasAjax)) {
         $obBD_con1->getArrayConsulta(44, $Ses_Emp_Cod . '*' . $Cod_Tall, $obBD_conexion);
         $response = array('success' => true, 'message' => "Transaccion realizada con éxito");
     } catch (Exception $e) {
-        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_conIns->MsgError);
+        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
     }
     echo json_encode($response);
     exit();

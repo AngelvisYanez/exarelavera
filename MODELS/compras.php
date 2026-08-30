@@ -1,5 +1,4 @@
 <?php
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class compras extends AbstractModel{
     protected $_name = 'compras';
@@ -210,6 +209,42 @@ class compras extends AbstractModel{
 
                 $sql->join('det_compra', "det_compra.Cop_Cod=$this->_name.Cop_Cod", array())
                     ->join('iva', "iva.Iva_Cod=det_compra.Iva_Cod", array());
+                // [OPT] Elimina N+1 agregando datos de comprobante, pagos y retención como LEFT JOINs
+                if (!$sql->hasTable("compr_auto")) {
+                    $sql->joinLeft('compr_auto', "compr_auto.Cop_Cod = $this->_name.Cop_Cod", array())
+                        ->joinLeft('comprobantes', "comprobantes.Com_Cod = compr_auto.Com_Cod", array())
+                        ->joinLeft('tipo_asien', "comprobantes.Tia_Cod = tipo_asien.Tia_Cod", array());
+                }
+                $subPagos = $this->select(false)
+                    ->from('ccpp_pagar', array('Cop_Cod', 'total_pagos' => new Zend_Db_Expr('COUNT(*)')))
+                    ->group('Cop_Cod');
+                $sql->joinLeft(
+                    array('pagos_resumen' => $subPagos),
+                    "pagos_resumen.Cop_Cod = $this->_name.Cop_Cod",
+                    array('Forma_Pago' => new Zend_Db_Expr("IF(pagos_resumen.total_pagos > 0, 'Credito', 'Contado')"))
+                );
+                $subRet = $this->select(false)
+                    ->from('det_retenc', array(
+                        'Ret_Cod',
+                        'Tot_Renta' => new Zend_Db_Expr("CAST(SUM(IF(Ret_Imp='R', IF(Ren_Por>0, (Ret_Bas*Ren_Por/100), 0), 0)) AS DECIMAL(20,2))"),
+                        'Tot_Iva'   => new Zend_Db_Expr("CAST(SUM(IF(Ret_Imp='I', IF(Ren_Por>0, (Ret_Bas*Ren_Por/100), 0), 0)) AS DECIMAL(20,2))")
+                    ))
+                    ->join('renta_iva', 'renta_iva.Ren_Cod = det_retenc.Ren_Cod', array())
+                    ->group('Ret_Cod');
+                $sql->joinLeft(
+                    array('ret_totales' => $subRet),
+                    "ret_totales.Ret_Cod = retencion.Ret_Cod",
+                    array('Tot_Renta', 'Tot_Iva')
+                );
+                if (!$sql->hasTable("autorizaci")) {
+                    $sql->joinLeft('autorizaci', "autorizaci.Aut_Cod = retencion.Aut_Cod", array());
+                }
+                $sql->addCols(null, array(
+                    'Com_Codigo'   => new Zend_Db_Expr("COALESCE(CONCAT(tipo_asien.Tia_Abr, '-', LPAD(MONTH(comprobantes.Com_Fec), 2, '0'), '-', comprobantes.Com_Num), '0')"),
+                    'Ret_Fec'      => new Zend_Db_Expr("MAX(retencion.Ret_Fec)"),
+                    'Ret_Aut'      => new Zend_Db_Expr("MAX(retencion.Ret_Aut)"),
+                    'Autorizacion' => new Zend_Db_Expr("MAX(IF(retencion.Ret_Xml IS NULL OR TRIM(retencion.Ret_Xml)='', autorizaci.Aut_Sri, IF(retencion.Ret_Sri IS NULL OR TRIM(retencion.Ret_Sri)='','PENDIENTE',retencion.Ret_Sri)))")
+                ));
                 $sql->order((isset($Par_Sql['limits'])&&$Par_Sql['limits']&&isset($Par_Sql['CustomOrderBy'])&&!empty($Par_Sql['CustomOrderBy'])?"$Par_Sql[CustomOrderBy],":'').'Iva_Por ASC');
                 // $sql->group('compras.Cop_Cod'); // forma original
                 if (isset($Par_Sql['CustomGroupBy']) && $Par_Sql['CustomGroupBy'] === 'Agr_Prv') {

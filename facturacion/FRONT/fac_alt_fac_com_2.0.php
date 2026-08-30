@@ -70,9 +70,9 @@ require_once("../COMPONENTES/ajaxComConNumRet.php");
 * Definici?n de un valor constante para la variable tipo_compr 
 */
 
-define(tipo_compr, 6); //Tipo de comprobante de la retencion 
-define(nota_venta, 2); //Tipo de comprobante de la nota de venta
-define(tiquetes, 8); //Tipo de comprobante de la TIQUETES O VALES EMITIDOS POR MAQUINAS REGISTRADOR
+define('tipo_compr', 6); //Tipo de comprobante de la retencion 
+define('nota_venta', 2); //Tipo de comprobante de la nota de venta
+define('tiquetes', 8); //Tipo de comprobante de la TIQUETES O VALES EMITIDOS POR MAQUINAS REGISTRADOR
 
 
 /**
@@ -239,7 +239,7 @@ if (isset($hdd_Pec_Cod))
 					}//Fin del if ($t_iva > 0)
 				}//Fin del if ($total_rs_form_compr > 0)
 				else
-				{ ?><script language="javascript">
+				{ ?><script type="text/javascript">
 					alert("Debe configurar el tipo de comprobante: ?Egreso/Diario?");
 					</script>					
 				<?Php
@@ -862,7 +862,7 @@ if (isset($hdd_Pec_Cod))
 			if ($rs_infoEmpresa['Cof_Gce']=="S" && $PrsCorPrv!='') /* Verifico si tiene autorizacion para generar F.E.*/
 			{				
 				/* Envio Notificacion por Correo Electronico al cliente */				
-				include '../../Librerias/PHPMail/PHPMail.php';
+				require_once '../../Librerias/PHPMailer_compat.php';
 				$obj = new PHPMail();		
 				$dest = array();			
 				$dest[] = array('Correo'=>trim($PrsCorPrv),'Nombre'=>strtoupper($PrsNomPrv));				
@@ -1094,8 +1094,8 @@ else
 			$ice_cod[]=$row_rs_ice['Ice_Int'];
 			$ice_por[]=$row_rs_ice['Ice_Por'];
 		}
-		$ice_cod = 'Array(\'' . @implode('\', \'', $ice_cod) . '\')';
-		$ice_por = 'Array(\'' . @implode('\', \'', $ice_por) . '\')';		
+		$ice_cod = 'Array(\'' . implode('\', \'', $ice_cod) . '\')';
+		$ice_por = 'Array(\'' . implode('\', \'', $ice_por) . '\')';		
 		/**
 		* Consulta datos de los proveedores
 		*/
@@ -1177,8 +1177,8 @@ if(count($num_existe_gencod)>0)
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?php require_once("../../mascaras/model1/estilos/estilos.php");?>
-		<script language="javascript" src="../VALIDACIONES/fac_val_compras.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_compras.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>         
         <!--Librerias para modal -->       
@@ -1186,7 +1186,7 @@ if(count($num_existe_gencod)>0)
 	    <!--Librerias para calendario -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script>          
          <script type="text/javascript" src="../../Librerias/masked/jquery.maskedinput-1.2.2.js"></script>        
-        <script language="javascript" src="../VALIDACIONES/XML.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/XML.js"></script>
        <script>
 		$(function() { 
 			//var imagen = "../../mascaras/model1/imagenes/32x32/calendar.gif";
@@ -1252,7 +1252,7 @@ if (isset($hdd_save)  && !isset($hdd_volver))
 {	
 	$tabla="proveedore"; 	
 	?>    
-	<script language="javascript">
+	<script type="text/javascript">
 	<?php if(isset($hdd_comprobante)){?>			
 		windows('<?php echo $hdd_comprobante;?>?Com_Num=<?php echo $Com_Num; ?>&codigo=<?php echo $Com_Cod; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $op; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec_Cod;?>','',800,800,'no','yes','yes','yes'); 	
 	<?Php 
@@ -1524,7 +1524,7 @@ onChange="if(this.value==4){document.getElementById('NotasCredito').className = 
 		    <td width="24">&nbsp;<img src="../../mascaras/model1/imagenes/32x32/info.gif" title="Fecha de caducidad del documento seg?n el SRI" /></td>
 		    <td width="310">
             <div id="div_caducidad" style="color:#F00">La factura est? CADUCADA, verifique la fecha</div>
-        <script language="javascript">
+        <script type="text/javascript">
 		document.getElementById('div_caducidad').className = 'oculta';
 		</script></td>
 		    </tr>
@@ -1545,7 +1545,7 @@ onChange="if(this.value==4){document.getElementById('NotasCredito').className = 
 //Este control por el momento no se ha mejorado, esta pendiente
 //include("../../componentes/FRONT/com_con_costos.php"); ?>
 <br>
-<!--<script language="javascript">
+<!--<script type="text/javascript">
 ShowHide('Tbl_Costos'); Esta pendiene por mejorar
 </script>-->
   <table width="100%" border="0" cellpadding="0" cellspacing="0" class="">
@@ -1796,7 +1796,7 @@ onClick="ShowHide('Tbl_Costos')" align="left"> esta oendiente por mejorar--></td
           </tr>
         </table>
        </div>
-       <script language="javascript">
+       <script type="text/javascript">
 	   		document.getElementById('pagoSri').style.display='none'; 
 	   </script>
     </td>
@@ -1894,7 +1894,7 @@ onClick="ShowHide('Tbl_Costos')" align="left"> esta oendiente por mejorar--></td
         </span></td>
         </tr>
     </table>
-    <script language="javascript">
+    <script type="text/javascript">
 		ShowHide('NotasCredito');		  
 	</script>                                            
     </FIELDSET>
@@ -1954,11 +1954,11 @@ $Hdd_Fecha = 'Com_Fec';
 <?php }?>
 <br>
 
-	<script language="javascript">
+	<script type="text/javascript">
 		ShowHide('Tbl_Cpp_Ven');		  
 	</script>
     
-	<script language="javascript">
+	<script type="text/javascript">
 		//ShowHide('Fie_Cheques');		  
 	</script>
     

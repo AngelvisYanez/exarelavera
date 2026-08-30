@@ -29,7 +29,7 @@ require_once('../LOGICA/logica.php');
  * objeto para la conexion
  * @var Class_Log_Conexion_Adm
  */
-$obBD_conexion = new Class_Log_Conexion_Adm;
+$obBD_conexion = new Class_Log_Conexion_Adm($_SESSION['Ses_Dat_Dis']);
 
 /**
  * objeto para consultas
@@ -48,7 +48,7 @@ foreach($_SESSION['Ses_Lis_Per'] as $item)
 /**
 * Cargado de Menús Principales. Ej: Gestión Administrativa, Gestión de Periodos los que tiene Org_Niv=0
 */
-$rs_organizado_cero = $obBD_con1->getArrayConsulta(16, trim(substr($mperf,1,count($mperf)-3)), $obBD_conexion);
+$rs_organizado_cero = $obBD_con1->getArrayConsulta(16, trim(substr($mperf,1,strlen($mperf)-3)), $obBD_conexion);
 ?>
 <div class="demo-dd demo-container">
 	<ul id="drilldown-3">
@@ -107,7 +107,7 @@ foreach($rs_organizado_cero as $row_rs_organizado_cero)
 					/**
 					* Consulta los procesos del usuario 
 					*/
-					$rs_procesos = $obBD_con1->getArrayConsulta(18, trim($row_rs_organizado_dos["Org_Cod"]).'*'.trim(substr($mperf,1,count($mperf)-3)).'*P', $obBD_conexion);
+					$rs_procesos = $obBD_con1->getArrayConsulta(18, trim($row_rs_organizado_dos["Org_Cod"]).'*'.trim(substr($mperf,1,strlen($mperf)-3)).'*P', $obBD_conexion);
 					
 					$band=" ".$row_rs_organizado_dos["Org_Des"];///Descripcion del nivel 2
 					/**

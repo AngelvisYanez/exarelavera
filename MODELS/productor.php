@@ -17,7 +17,7 @@ class productor extends AbstractModel{
         $sel=$this->_selectBasic();
         $this->sqlByNombre("setEmpCod", $sel);
         if(isset($cond['op_opciones']))
-            $sel->where($cond['op_opciones']=="c"?"Prs_Ced=?":"CONCAT(Prs_Nom,' ',Prs_Ape)LIKE '%{$cond['search']}%'", $cond['search']);  
+            $sel->where($cond['op_opciones']=="c"?"Prs_Ced=?":"CONCAT(Prs_Nom,' ',Prs_Ape)LIKE ?", $cond['op_opciones']=="c"?$cond['search']:"%{$cond['search']}%");  
         return $sel; 
     }
     public function formatData($data, $type, $allData=null){         
@@ -25,7 +25,7 @@ class productor extends AbstractModel{
             'Prv_Cod'=>$data['Prv_Cod'], 'Prd_Est'=>'A'
         ):$data;
     }
-    public function sqlByNombre($id,$Par_Sql){
+    public function sqlByNombre($id,$Par_Sql,$cond=null){
         $sql="";
         switch($id){
             case "":
@@ -41,7 +41,7 @@ class productor extends AbstractModel{
         //echo $sql."<br/>";
         return $sql;
     }
-    public function sqlByNumero($id,$Par_Sql){
+    public function sqlByNumero($id,$Par_Sql,$cond=null){
         $sql="";
         switch($id){
             case 0:

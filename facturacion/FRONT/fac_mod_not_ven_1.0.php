@@ -546,7 +546,7 @@ if(isset($get_documentos)){
         <link rel="stylesheet" href="../../framework/jquery/bootstrap/popover/jquery.flyout.css">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
-        <script language="javascript" src="../VALIDACIONES/fac_val_factura.js?a=9"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_factura.js?a=9"></script>
         
         <script>
             var Nota_CreDeb=true,Mod_Nota_CreDeb=true;
@@ -760,7 +760,7 @@ if(isset($get_documentos)){
                             
                     } 
                         $('#searchGrid').createGrid({
-                            caption:'Resultado de la B&uacute;squeda',height: 270, datatype: "local",caption:'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option><select>&nbsp;</div>',
+                            caption:'Resultado de la B&uacute;squeda',height: 270, datatype: "local",caption:'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option></select>&nbsp;</div>',
                             colModel: [  
                                 { label: 'C&oacute;d. Int.', name: 'Vet_Cod', width: 30 ,align:"center", key:true},  
                                 { label: 'Compr.', name: 'Com_Exi', width: 20 ,align:"center", formatter:'truefalse', formatoptions:{yesMsg:'Tiene Comprobante',noMsg:' '}, title:false},
@@ -1200,10 +1200,10 @@ if(isset($get_documentos)){
                                                     <option value="">Seleccione...</option>
                                                    <?php foreach($rs_pag_sri as $row){
                                                      $selected='';
-                                                      if ($row[Tpc_Sri]==1) {
-                                                        $selected='Selected';
-                                                      }
-                                                       echo "<option value='$row[Tpc_Cod]' ".$selected."  >$row[Tpc_Sri] - $row[Tpc_Des]</option>";
+                                                       if ($row['Tpc_Sri']==1) {
+                                                         $selected='Selected';
+                                                       }
+                                                        echo "<option value='{$row['Tpc_Cod']}' ".$selected."  >{$row['Tpc_Sri']} - {$row['Tpc_Des']}</option>";
                                                     } ?>
                                                 </select>
                                             </div>
@@ -1488,7 +1488,7 @@ if(isset($get_documentos)){
                     <div class="form-group">
                         <label class="col-xs-3 control-label label-xs required">Ciudad:</label>
                         <div class="col-xs-4" >
-                            <?php $rs_ciudad = $obBD_con1->getArrayConsulta(81, '', $obBD_conexion); var_dfum?>
+                            <?php $rs_ciudad = $obBD_con1->getArrayConsulta(81, '', $obBD_conexion); ?>
                             <select name="Ciu_Cod" class="form-control input-xs" required="" >
                                 <option value=""></option>
                                 <?php  foreach($rs_ciudad as $row){ echo "<option value='$row[Ciu_Cod]' data-prov='$row[Pro_Nom]'>$row[Ciu_Des]</option>"; } ?>

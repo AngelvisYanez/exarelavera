@@ -1048,7 +1048,7 @@ if (isset($detelteExtAjax)) {
             Vet_Selected, index, Cof_Con = '<?php echo $configs['Cof_Con']; ?>';
         var array_vendedor = <?php echo json_encode($rs_Punto); ?>;
     </script>
-    <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
     <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura.js?x=21"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
     <script>
@@ -1429,7 +1429,7 @@ if (isset($detelteExtAjax)) {
                         caption: 'Resultado de la Búsqueda',
                         height: 270,
                         datatype: "local",
-                        caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option><select>&nbsp;</div>',
+                        caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option></select>&nbsp;</div>',
                         colModel: [{
                                 label: 'Cód. Int.',
                                 name: 'Vet_Cod',

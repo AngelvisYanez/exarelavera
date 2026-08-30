@@ -42,9 +42,9 @@ if(isset($saveEmpresa)){
         if($obBD_con1->Error==0){ 
             $responce['success']=true; 
 			$responce['Emp_Cod']=$data['ultimo'];
-            mkdir("../../tesoreria/FRONT/SRI/$data[ultimo]", 0777);
-            mkdir("../../facturacion/FRONT/$data[ultimo]", 0777);
-            mkdir("../../imagenes/$data[ultimo]", 0777);
+            mkdir("../../tesoreria/FRONT/SRI/{$data['ultimo']}", 0777);
+            mkdir("../../facturacion/FRONT/{$data['ultimo']}", 0777);
+            mkdir("../../imagenes/{$data['ultimo']}", 0777);
         }
     }
     echo json_encode($responce);
@@ -199,7 +199,7 @@ if(isset($uploadImg)){
                 var formData = new FormData(document.getElementById("empForm"));
                 formData.append("uploadImg", true);                
                 $.ajax({
-                    url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+                    url: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
                     type: "post", dataType: "json", data: formData, cache: false, contentType: false, processData: false
                 }).done(function(response){
                     if(response['success']===true){
@@ -212,7 +212,7 @@ if(isset($uploadImg)){
         function saveForm(){
             var data=$('#empForm').serializeObject();
             data["saveEmpresa"]=true;
-            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                 if(response['success']===true){
                     $.alert("Transaccion Realizada con &Eacute;xito!");                          
                     $('#empForm')[0].reset();$("#logo").attr("src",'');

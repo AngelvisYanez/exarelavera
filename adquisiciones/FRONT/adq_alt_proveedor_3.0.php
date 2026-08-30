@@ -5,7 +5,7 @@
  * 
  * @author car.87cod :)
  * @version 2.0
- * Fecha de actualización:	2012-04-16
+ * Fecha de actualizaciï¿½n:	2012-04-16
  * 
  * @package tesoreria.FRONT
  */
@@ -75,7 +75,7 @@
 	  			$obBD_con1->operacionobBD(4, $_POST['Prs_Cod'].'*'.$Param_Proveedor, $obBD_conexion);
 				//$obBD_con1->grabarAuditoria($_SERVER['PHP_SELF'], $Ses_Usu_Cod, $obBD_conexion);
 				/**
-				* Finaliza la transacción
+				* Finaliza la transacciï¿½n
 				*/
 				$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 				
@@ -123,7 +123,7 @@
 	else
 	{
 		/**
-		 * Valor que toma por defecto al iniciar la página
+		 * Valor que toma por defecto al iniciar la pï¿½gina
 		 */
 		$event = -1;
 	}
@@ -132,8 +132,8 @@
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/adq_val_proveedor.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/adq_val_proveedor.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -211,7 +211,7 @@
           <td width="15%"  class="LetraNegra">
                  	<input name="Prs_Ced" type="text" id="Prs_Ced" 
                     onBlur="if(document.getElementById('opiden').value == 'N'){ validarDocumento(this.form.Prs_Ced)}" 
-                    value="<?Php if(isset($_POST['Prs_Ced']))echo $_POST['Prs_Ced']; ?>" size="17" maxlength="13">
+                    value="<?Php if(isset($_POST['Prs_Ced']))echo htmlspecialchars($_POST['Prs_Ced'], ENT_QUOTES, 'UTF-8'); ?>" size="17" maxlength="13">
                  </td>
           <td width="74%" align="left">
           <button type="button" class="btn btn-success fileinput-button" title="Comprobar" onclick="validar_requeridos(this.form, 'Prs_Ced', 0)">
@@ -272,7 +272,7 @@
          R.U.C.:
        </td>
        <td width="78%" class="LetraNegra">&nbsp;
-	     <?Php echo $_POST['Prs_Ced']; ?>
+	     <?Php echo htmlspecialchars($_POST['Prs_Ced'], ENT_QUOTES, 'UTF-8'); ?>
 			<input name="Prs_Ced" type="hidden" id="Prs_Ced" value="<?php echo $_POST['Prs_Ced']; ?>">
        </td>       
       </tr>
@@ -533,7 +533,7 @@
       </tr>
       <tr>
 	   <td class="Etiqueta1">
-        Fecha de Actualización Actividades:
+        Fecha de Actualizaciï¿½n Actividades:
        </td>
        <td class="LetraNegra">&nbsp;
        <input name="Prv_Fac" type="text" id="Prv_Fac" value="" size="8" onKeyUp="mascara(this,'-',patron,true)" onBlur="validar_fecha2(this);"/>

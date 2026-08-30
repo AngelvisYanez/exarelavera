@@ -1,4 +1,4 @@
-﻿<?Php 
+<?Php 
 /**
  * Logica de las paginas para el control de productos
  *
@@ -75,7 +75,7 @@ class Class_Log_Datos_Pro extends MysqlDatos{
 		
 		$this->free_result($result);
 		
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

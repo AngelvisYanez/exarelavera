@@ -916,6 +916,7 @@ function num2letras($num, $fem = false, $dec = false) {
 /* Funcion que mueve el apuntador de la consulta al inicio */
 function first_last($rs, $row_rs, $pos)
 {
+	if (!($rs instanceof mysqli_result)) return $row_rs;
 	$rows = mysqli_num_rows($rs);
 	if($rows > 0) {
 		  mysqli_data_seek($rs, $pos);
@@ -1349,6 +1350,7 @@ function ndecimal($valor)
 /* Funcion que formatea los numeros segun el formato */
 function formato_numero($numero, $decimales, $tipo)
 {
+	$numero = (float)$numero;
 	switch ($tipo){
 		case 1: /* Formato Ingles sin separador de miles y separador decimal (.)
 				Ejemplo : 5000.45 */
@@ -1627,7 +1629,7 @@ function upLoadImg($archivo, $nombreup, $sizeup, $directorioup)
 				$directorioFinal=$directorioup.$archivo_name;
 				if(!copy($archivo, $directorioFinal))
 				{
-?>					<script LANGUAGE="JavaScript"> alert ("Error al copiar el archivo")</script>
+?>					<script type="text/javascript"> alert ("Error al copiar el archivo")</script>
 <?Php				return "0";
 				}
 				else
@@ -1638,14 +1640,14 @@ function upLoadImg($archivo, $nombreup, $sizeup, $directorioup)
 			else
 			{
 ?>
-					<script LANGUAGE="JavaScript">alert ("El archivo supera los <?Php echo round($sizeup / 1024); ?> Kb");</script>
+					<script type="text/javascript">alert ("El archivo supera los <?Php echo round($sizeup / 1024); ?> Kb");</script>
 <?Php				return "0";
 			}
 		}
 		else
 		{
 ?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 				alert ("El formato de archivo no es valido, solo archivos (.jpg .jpeg .png)");
 			</script>
 <?Php		return "0";
@@ -1687,7 +1689,7 @@ function upLoadImg_2($input, $archivo, $nombreup, $sizeup, $directorioup)
 				$directorioFinal=$directorioup.$archivo_name;
 				if(!copy($archivo, $directorioFinal))
 				{ ?>
-					<script LANGUAGE="JavaScript"> alert ("Error al copiar el archivo")</script>
+					<script type="text/javascript"> alert ("Error al copiar el archivo")</script>
 <?Php				return "0";
 				}
 				else
@@ -1698,14 +1700,14 @@ function upLoadImg_2($input, $archivo, $nombreup, $sizeup, $directorioup)
 			else
 			{
 ?>
-					<script LANGUAGE="JavaScript">alert ("El archivo supera los <?Php echo round($sizeup / 1024); ?> Kb");</script>
+					<script type="text/javascript">alert ("El archivo supera los <?Php echo round($sizeup / 1024); ?> Kb");</script>
 <?Php				return "0";
 			}
 		}
 		else
 		{
 ?>
-			<script LANGUAGE="JavaScript">
+			<script type="text/javascript">
 				alert ("El formato de archivo no es valido, solo archivos (.jpg .gif . png)");
 			</script>
 <?Php		return "0";
@@ -1769,7 +1771,7 @@ function windowsFlotFrame($width, $height, $left, $top, $pagina, $title, $cerrar
    		<td colspan="4"><iframe name="id_chat" id="id_chat" height="100%" width="100%" src="<?Php echo $pagina; ?>"  frameborder="0"></iframe></td>
    </tr>
 </table>
-<script language="javascript">
+<script type="text/javascript">
 document.getElementById('id_max').disabled=true;
 </script>
 <?php
@@ -1891,7 +1893,7 @@ function upLoadFile($input, $archivo, $nombreup, $sizeup, $directorioup)
 				$directorioFinal=$directorioup.$archivo_name;
 				if(!copy($archivo, $directorioFinal))
 				{ ?>
-					<script LANGUAGE="JavaScript"> alert ("Error al copiar el archivo")</script>
+					<script type="text/javascript"> alert ("Error al copiar el archivo")</script>
 <?Php				return "0";
 				}
 				else
@@ -1902,14 +1904,14 @@ function upLoadFile($input, $archivo, $nombreup, $sizeup, $directorioup)
 			else
 			{
 ?>
-					<script LANGUAGE="JavaScript">alert ("El archivo supera los <?Php echo round($sizeup / 1024); ?> Kb");</script>
+					<script type="text/javascript">alert ("El archivo supera los <?Php echo round($sizeup / 1024); ?> Kb");</script>
 <?Php				return "0";
 			}
 		/*}
 		else
 		{ */
 ?>
-			<!--<script LANGUAGE="JavaScript">
+			<!--<script type="text/javascript">
 				alert ("El formato de archivo no es valido, solo archivos (.jpg .gif . png)");
 			</script>-->
 <?Php		//return "0";

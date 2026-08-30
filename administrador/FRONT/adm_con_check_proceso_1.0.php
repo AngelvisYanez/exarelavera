@@ -1,6 +1,5 @@
 <?php
-
-	
+if (!is_object($obBD_con1) || !function_exists('latin1')) return;
 ///Inicialización del Menú - procesos
 /* Conversion de caracteres php -> javascript */
 $caracter = array("+", "%");

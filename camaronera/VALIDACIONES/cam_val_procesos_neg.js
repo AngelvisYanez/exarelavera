@@ -123,7 +123,7 @@ function armarGridPrincipal() {
         let seleccionados = [];
         $('.chk-select_n:checked').each(function () { seleccionados.push($(this).data('row-id')); });
         if (seleccionados.length === 0) {
-            alert("Debe seleccionar al menos una negociación para imprimir.");
+            $.alert("Debe seleccionar al menos una negociación para imprimir.",null,'warning');
             return;
         }
         let colNames = container.jqGrid("getGridParam", "colNames");

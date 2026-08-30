@@ -104,6 +104,9 @@ function getEmpresaXmlDir($empCod) {
     $dir = __DIR__ . '/../../../facturacion/FRONT/' . (int)$empCod . '/';
     if (!is_dir($dir)) {
         @mkdir($dir, 0775, true);
+        if (!is_dir($dir)) {
+            error_log("No se pudo crear directorio XML empresa: $dir");
+        }
     }
     return $dir;
 }

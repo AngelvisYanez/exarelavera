@@ -1,5 +1,4 @@
 <?php 
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class usuarios extends AbstractModel{
     protected $_name = 'usuarios'; 
@@ -22,7 +21,7 @@ class usuarios extends AbstractModel{
             if($cond['op_opciones']=="c"){
                 $sel->where("Usu_Ced=?",$cond['search']);
             }elseif($cond['op_opciones']=="d"){
-                $sel->where("CONCAT(Prs_Nom,' ',Prs_Ape)LIKE '%{$cond['search']}%'");
+                $sel->where("CONCAT(Prs_Nom,' ',Prs_Ape)LIKE ?", "%{$cond['search']}%");
             } 
         }    
         return $sel; 

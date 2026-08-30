@@ -200,7 +200,7 @@ if (isset($cmb))
 		} //Fin del $row_rs_facttipo  ?>
     </select>
 	<?php //echo $div_banco; ?>
-	<script language="javascript">
+	<script type="text/javascript">
 		ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cmb_tipo=1&Pag_Cod=<?Php echo $Pag; ?>', '<?php echo $div_banco; ?>');
 	</script>	
 	<?Php
@@ -573,7 +573,7 @@ if ($thisPost->postBlock($_POST['postID']))
 			if ($rs_infoEmpresa['Cof_Gce']=="S") /* Verifico si tiene autorizacion para generar F.E.*/
 			{				
 				/* Envio Notificacion por Correo Electronico al cliente */				
-				include '../../Librerias/PHPMail/PHPMail.php';
+				require_once '../../Librerias/PHPMailer_compat.php';
 				$obj = new PHPMail();		
 				$dest = array();
 				$dest[] = array('Correo'=>trim($PrsCorCli),'Nombre'=>strtoupper($PrsNomCli));				
@@ -815,8 +815,8 @@ else
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_fac_ven.js?xx=1"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven.js?xx=1"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
         <!--Librerias para modal -->       
@@ -851,7 +851,7 @@ else
 if (isset($hdd_save) && !isset($hdd_volver))
 { 
 ?>
-<script language="javascript">windows('<?Php echo $reportes[1];  ?>?Vet_Cod=<?Php echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');
+<script type="text/javascript">windows('<?Php echo $reportes[1];  ?>?Vet_Cod=<?Php echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');
 </script> 
 <?Php
 }//Fin del if (isset($hdd_save))
@@ -1007,7 +1007,7 @@ if(isset($txt_busqueda))
 		<td align="center"><?Php echo $row_rs_buscar['Prs_Ced']; ?></td>
 		<td align="left">&nbsp;<?Php echo marcarCadenaColor($txt_busqueda,$row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom'],'#FFFF00', '#000', 1); ?></td>
 		<td align="center"><?Php if ($row_rs_buscar['Cli_Est'] == 'Activo') { ?>
-        <form name="form3" id="form3" method="post" action="<?php echo $_SERVER['../LOGICA/PHP_SELF'] ?>">
+        <form name="form3" id="form3" method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>">
             <input name="Pec_Cod" type="hidden" value="<?php echo $Pec_Cod; ?>" />
 		<input name="codigo" id="codigo" type="hidden" value="<?Php echo $row_rs_buscar['Cli_Cod'];?>">
         <input name="PrsCodCli" id="PrsCodCli" type="hidden" value="<?Php echo $row_rs_buscar['Prs_Cod'];?>">
@@ -1038,7 +1038,7 @@ if(isset($txt_busqueda))
 	echo barra_estado(count($rs_buscar));
 }//Fin del if(isset($txt_busqueda)) ?>
 
- <form action="<?Php $_SERVER['../LOGICA/PHP_SELF']; ?>" method="post" name="form2" id="form2">
+ <form action="<?Php $_SERVER['PHP_SELF']; ?>" method="post" name="form2" id="form2">
  <?Php if ($codigo > 0 && !(isset($hdd_save)))
  { 
 	/**
@@ -1336,7 +1336,7 @@ if(isset($txt_busqueda))
                               </span></td>
                           </tr>
                           </table>
-                                      <script language="javascript">
+                                      <script type="text/javascript">
                                ShowHide('NotasCredito');		  
                           </script>                                            
                      </FIELDSET>
@@ -1561,7 +1561,7 @@ if(isset($txt_busqueda))
 	if (!(isset($cheque)))
 	{
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 	 ShowHide('cheque');		  	 
 	</script>
 	<?Php

@@ -21,12 +21,12 @@
         var titulo = trim(findVal(form, 'Tar_Titulo'));
         var fecIni = trim(findVal(form, 'Tar_Fecha_Inicio'));
         if (titulo.length === 0) {
-            alert('El título de la tarea es obligatorio.');
+            $.alert('El título de la tarea es obligatorio.',null,'warning');
             var el = form.querySelector('[name="Tar_Titulo"]'); if (el) el.focus();
             return false;
         }
         if (fecIni.length === 0) {
-            alert('La fecha de inicio es obligatoria (la registra quien asigna la tarea).');
+            $.alert('La fecha de inicio es obligatoria (la registra quien asigna la tarea).',null,'warning');
             var el = form.querySelector('[name="Tar_Fecha_Inicio"]'); if (el) el.focus();
             return false;
         }
@@ -38,11 +38,11 @@
      */
     window.aud_validaAsignacion = function (tarCod, usuCod) {
         if (!tarCod || tarCod === '' || tarCod === '0') {
-            alert('Debe seleccionar una tarea.');
+            $.alert('Debe seleccionar una tarea.',null,'warning');
             return false;
         }
         if (!usuCod || usuCod === '' || usuCod === '0') {
-            alert('Debe seleccionar un empleado.');
+            $.alert('Debe seleccionar un empleado.',null,'warning');
             return false;
         }
         return true;
@@ -56,17 +56,17 @@
         var desc = trim(findVal(form, 'Ava_Descripcion'));
         var tarCod = findVal(form, 'Tar_Cod');
         if (!tarCod || tarCod === '') {
-            alert('No se ha indicado la tarea.');
+            $.alert('No se ha indicado la tarea.',null,'warning');
             return false;
         }
         if (porc === '') {
-            alert('El porcentaje de avance es obligatorio.');
+            $.alert('El porcentaje de avance es obligatorio.',null,'warning');
             var el = form.querySelector('[name="Ava_Porcentaje"]'); if (el) el.focus();
             return false;
         }
         var n = parseInt(porc, 10);
         if (isNaN(n) || n < 0 || n > 100) {
-            alert('El porcentaje debe ser un número entre 0 y 100.');
+            $.alert('El porcentaje debe ser un número entre 0 y 100.',null,'warning');
             var el = form.querySelector('[name="Ava_Porcentaje"]'); if (el) el.focus();
             return false;
         }
@@ -83,9 +83,9 @@
      */
     window.aud_mensaje = function (texto, esError) {
         if (esError) {
-            alert(texto);
+            $.alert(texto,null,'error');
         } else {
-            if (typeof alert === 'function') alert(texto);
+            $.alert(texto,null,'success');
         }
     };
     };

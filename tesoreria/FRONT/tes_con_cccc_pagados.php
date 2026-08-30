@@ -368,7 +368,7 @@ if (isset($detAjax)) {
     <!-- Variables PHP para JavaScript -->
     <script type="text/javascript">
         var isnego = '<?php echo $configs['Cof_NegCam']; ?>';
-        var phpSelf = '<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>';
+        var phpSelf = '<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>';
         var sesSysNom = '<?php echo $Ses_Sys_Nom; ?>';
     </script>
     <!-- JavaScript externo -->

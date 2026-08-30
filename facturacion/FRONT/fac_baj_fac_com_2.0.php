@@ -1,10 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php	
 /**
-* Descripción: Permite anular facturas de compra, retenciones, el comprobante de egreso/diario y los cheques
-* Fecha de actualización:	2012-09-08  
+* Descripciï¿½n: Permite anular facturas de compra, retenciones, el comprobante de egreso/diario y los cheques
+* Fecha de actualizaciï¿½n:	2012-09-08  
 * Desarrollador: Lewis Chimarro
-* Fecha de actualización:	2014-01-06
+* Fecha de actualizaciï¿½n:	2014-01-06
 * Desarrollador: Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -22,7 +22,7 @@ $obBD_conexion = new Class_Log_Conexion_Comt($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Comt; 	  
 /** 
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 
@@ -42,7 +42,7 @@ if (isset($ajax_info))
 }
 
 /**
-* Grabado de la eliminación
+* Grabado de la eliminaciï¿½n
 */
 if(isset($elim))
 {	
@@ -52,7 +52,7 @@ if(isset($elim))
 	if ($thisPost->postBlock($_POST['postID'])) 
 	{ 
 		/**
-		* Anulación de la compra, comprobante contable, retencion y cheques
+		* Anulaciï¿½n de la compra, comprobante contable, retencion y cheques
 		*/
 	 	$obBD_con1->anularCompras($Cop_Cod, $Ret_Cod, $Com_Cod, $Ses_Suc_Cod, $obBD_conexion)	;
 	}//Fin del if ($thisPost->postBlock($_POST['postID'])) 
@@ -97,8 +97,8 @@ if(isset($hdd_Pec_Cod))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?php require_once("../../mascaras/model1/estilos/estilos.php");?>
-		<script language="javascript" src="../VALIDACIONES/tes_val_compras.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/tes_val_compras.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>  
         <!--Librerias para modal -->       
@@ -255,7 +255,7 @@ if(isset($hdd_Pec_Cod))
 				<td align="center"><FONT COLOR="<?php echo $rojo;?>">
 				<?Php 
 				/**
-				* Consultar el código del comprobante 
+				* Consultar el cï¿½digo del comprobante 
 				*/
 				$row_numero_comprobante=$obBD_con1->getRowConsulta(366, $row_rs_buscar['Cop_Cod'], $obBD_conexion);				
 				echo $row_numero_comprobante['Com_Num']; ?></FONT></td>
@@ -288,7 +288,7 @@ if(isset($hdd_Pec_Cod))
 									<input type="hidden" id="op" name="op" value="1" />    
 									<input type="hidden" id="Ret_Cod" name="Ret_Cod" value="<?php echo $row_rs_retencion_modificar['Ret_Cod']; ?>" /> 
 									<input type="hidden" id="Com_Cod" name="Com_Cod" value="<?php echo $row_numero_comprobante['Com_Cod']; ?>" />             
-									<button type="button" class="btn btn-danger delete" title="Este botón permite Anular la Compra y documentos asociados como: Comprobante contable, Retención y Cheques" onclick="alert('<< Ud. se dispone a anular esta compra y documentos asociados como: Comprobante contable, Retención y Cheques, para lo cual una vez realizada la transacci&oacute;n NO se podran reversar los cambios >>'); confirmacion2(this.form);">
+									<button type="button" class="btn btn-danger delete" title="Este botï¿½n permite Anular la Compra y documentos asociados como: Comprobante contable, Retenciï¿½n y Cheques" onclick="alert('<< Ud. se dispone a anular esta compra y documentos asociados como: Comprobante contable, Retenciï¿½n y Cheques, para lo cual una vez realizada la transacci&oacute;n NO se podran reversar los cambios >>'); confirmacion2(this.form);">
 									<i class="icon-ban-circle icon-white"></i>
 									<span></span>
 									</button>  
@@ -356,7 +356,7 @@ if ($anulada > 0)
 <br>  
 <?Php 
 /**
-* Si existe en la búqueda factura(s) con pagos realizados muestra la siguiente leyenda 
+* Si existe en la bï¿½queda factura(s) con pagos realizados muestra la siguiente leyenda 
 */
 if($existe_pagos>0){ /* inicio if($existe_pagos>0){  */ ?>
 <table cellpadding="0" cellspacing="0">

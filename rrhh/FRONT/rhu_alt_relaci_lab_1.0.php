@@ -119,7 +119,7 @@ if(isset($delete)){
                 buttonicon:"glyphicon glyphicon-plus", 
                 title:'Agregar',
                 onClickButton: function(){ 
-                    public $this=$(this),id=($this.jqGrid('getCol','Ded_Cod',false,'max')+1)||0; 
+                    var $this=$(this),id=($this.jqGrid('getCol','Ded_Cod',false,'max')+1)||0; 
                     $this.jqGrid('addRowData',id,{'Ded_Cod':id});     
                     $this.jqGrid('editRow',id);
                     $('#eli'+id).show();
@@ -129,7 +129,7 @@ if(isset($delete)){
         });
         //Funci�n para guardar los registros del jqgrid 
         function saveData(){
-            $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",{'saveRelacion':true,'campos':$("#list").getGridBatch()},function(response){
+            $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",{'saveRelacion':true,'campos':$("#list").getGridBatch()},function(response){
                 if(response['success']===true){
                     $.alert('Transaccion Realizada con &Eacute;xito!');
                     var ids = $("#list").jqGrid('getDataIDs');
@@ -144,7 +144,7 @@ if(isset($delete)){
         function deleteFila(index){
             $.createDialogConfirm('Desea ELIMINAR el registro seleccionado..!!',null,function(){
                $('#list').jqGrid('delRowData',index);
-                $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF', FILTER_SANITIZE_STRING)?>",{delete:true,Reb_Cod:index},function(response){
+                $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>",{delete:true,Reb_Cod:index},function(response){
                     if(response['success']===true){console.log('Elimino l�gicamente');}
                     else{$.alert(response['message']);}
                 },'json').fail(function (){$.alert();}); 

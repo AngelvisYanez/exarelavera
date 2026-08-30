@@ -89,4 +89,4 @@
                         </div>    
                     </fieldset>
                 </div>
-                <script language="javascript" src="../VALIDACIONES/fac_val_search_reten.js"></script>
+                <script type="text/javascript" src="../VALIDACIONES/fac_val_search_reten.js"></script>

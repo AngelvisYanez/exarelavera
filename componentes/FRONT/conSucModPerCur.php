@@ -8,7 +8,8 @@
 				      <tr>
 					        <td width="18%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Sucursal:&nbsp;</td>
 					      	<td width="82%" colspan="2">
-						      	<?php 
+						      	<?php
+if (!is_object($obBD_con1)) return; 
 							      	/**
 							      	 * Consultar las sucursales de la universidad
 							      	 */

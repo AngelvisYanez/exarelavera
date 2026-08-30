@@ -668,7 +668,7 @@ if (isset($copiarProductosAjax)) {
                 try {
                     var data = typeof response === 'string' ? JSON.parse(response) : response;
                     if (data.success && data.categorias) {
-                        public $select = $('#categoria_destino');
+                        var $select = $('#categoria_destino');
                         $select.empty().append('<option value="">-- Seleccione una categoría --</option>');
                         $.each(data.categorias, function(i, cat) {
                             $select.append('<option value="' + cat.Cat_Cod + '">' + cat.Cat_Des + '</option>');
@@ -684,7 +684,7 @@ if (isset($copiarProductosAjax)) {
                 try {
                     var data = typeof response === 'string' ? JSON.parse(response) : response;
                     if (data.success && data.sucursales) {
-                        public $select = $('#sucursal_destino');
+                        var $select = $('#sucursal_destino');
                         $select.empty().append('<option value="">-- Seleccione una sucursal --</option>');
                         $.each(data.sucursales, function(i, suc) {
                             $select.append('<option value="' + suc.Suc_Cod + '">' + suc.Suc_Des + '</option>');
@@ -723,7 +723,7 @@ if (isset($copiarProductosAjax)) {
                     try {
                         var data = typeof response === 'string' ? JSON.parse(response) : response;
                         if (data.success && data.categorias) {
-                            public $select = $('#categoria_origen');
+                            var $select = $('#categoria_origen');
                             $select.empty().append('<option value="">-- Todas las categorías --</option>');
                             $.each(data.categorias, function(i, cat) {
                                 $select.append('<option value="' + cat.Cat_Cod + '">' + cat.Cat_Des + '</option>');
@@ -747,7 +747,7 @@ if (isset($copiarProductosAjax)) {
                     try {
                         var data = typeof response === 'string' ? JSON.parse(response) : response;
                         if (data.success && data.sucursales) {
-                            public $select = $('#sucursal_origen');
+                            var $select = $('#sucursal_origen');
                             $select.empty().append('<option value="">-- Seleccione una sucursal --</option>');
                             $.each(data.sucursales, function(i, suc) {
                                 $select.append('<option value="' + suc.Suc_Cod + '">' + suc.Suc_Des + '</option>');
@@ -928,7 +928,7 @@ if (isset($copiarProductosAjax)) {
                 try {
                     var data = typeof response === 'string' ? JSON.parse(response) : response;
                     if (data.success && data.bases) {
-                        public $select = $('#selBaseDatos');
+                        var $select = $('#selBaseDatos');
                         $select.empty().append('<option value="">-- Seleccione una base de datos --</option>');
                         $.each(data.bases, function(i, base) {
                             $select.append('<option value="' + base.Dat_Dis + '">' + base.Emp_Nom + '</option>');
@@ -958,7 +958,7 @@ if (isset($copiarProductosAjax)) {
                         try {
                             var data = typeof response === 'string' ? JSON.parse(response) : response;
                             if (data.success && data.empresas) {
-                                public $select = $('#empresa_origen');
+                                var $select = $('#empresa_origen');
                                 $select.empty().append('<option value="">-- Seleccione una empresa --</option>');
                                 $.each(data.empresas, function(i, empresa) {
                                     var empresa_nombre = empresa.Emp_Nom || 'Empresa ' + empresa.Emp_Cod;

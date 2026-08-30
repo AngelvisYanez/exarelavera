@@ -282,7 +282,7 @@ if(isset($getMarcas)){
                                 
                                 $('.btn-frm').attr('disabled','disabled');
                                 //console.log(data);
-                                $.saveDataJson( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {                                    
+                                $.saveDataJson( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {                                    
                                         $('.btn-new').removeAttr('disabled');                                        
                                     },function( response ){
                                         $('.btn-frm').removeAttr('disabled');
@@ -298,7 +298,7 @@ if(isset($getMarcas)){
                             $(document).ready(function () {
                                 var kardexGrid=$("#prods");
                                 kardexGrid.jqGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                                     //postData: $("#form1").getData("ajaxGrid"),
                                     autowidth : true, shrinkToFit: true, height: 270,responsive:true,
@@ -426,7 +426,7 @@ if(isset($getMarcas)){
                 $('#producto').val(desc);
                                
                 $('#proDialog').dialog('close');
-                $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'Pro_Cod':id,'ajaxProd':true}, function(response){
+                $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'Pro_Cod':id,'ajaxProd':true}, function(response){
                     if(response['success']===true){
                         $('#pro_cat').html(response['prod']['Cat_Des']);
                         $('#cat_cod').html(response['prod']['Pro_Cdc']);

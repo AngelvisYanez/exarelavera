@@ -64,7 +64,7 @@ if (isset($Vet_Cod))
 ?>				
 <html>
 <head>
-<title><?Php echo $Ses_Sys_Nom; ?></title>
+<title><?php echo $Ses_Sys_Nom; ?></title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
  
 </head>
@@ -76,7 +76,7 @@ if (isset($Vet_Cod))
 			return ret.length == 1 ? "0" + ret : ret;
 		};
 </script>
-<?Php  list($anio, $mes, $dia) = preg_split('![/.-]!', $row_rs_cliente['Caj_Fec']);
+<?php  list($anio, $mes, $dia) = preg_split('![/.-]!', $row_rs_cliente['Caj_Fec']);
 $top=30;
 $claveacceso=$row_rs_cliente['Vet_Xml'];
 ?>
@@ -93,7 +93,7 @@ $claveacceso=$row_rs_cliente['Vet_Xml'];
 
 <span style="top:<?php echo $top+40;?>px;left:0px; font: 12pt Verdana;"  class="flota"><strong>CI/RUC:</strong>&nbsp;<?php echo $row_rs_cliente['Prs_Ced'];?></span>
 <span style="top:<?php echo $top+65;?>px;left:0px; font: 12pt Verdana;" class="flota"><strong>CLIENTE:</strong>&nbsp;<?php echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'];?></span>
-<span style="top:<?php echo $top+90;?>px;left:0px; font: 12pt Verdana;" class="flota"><strong>DIR.:</strong>&nbsp;<?echo substr($row_rs_cliente['Prs_Dir'],0,31);?></span>
+<span style="top:<?php echo $top+90;?>px;left:0px; font: 12pt Verdana;" class="flota"><strong>DIR.:</strong>&nbsp;<?php echo substr($row_rs_cliente['Prs_Dir'],0,31);?></span>
 <span style="top:<?php echo $top+115;?>px;left:0px; font: 12pt Verdana;" class="flota"><strong>FECHA:</strong>&nbsp;<?php echo $dia.'/'.$mes.'/'.$anio.'&nbsp;&nbsp;'.substr($row_rs_cliente['Vet_Sys'],11,18); ?>
 
  
@@ -115,19 +115,19 @@ $resultados = explode('*',$obBD_con1->calculos($Vet_Cod, $obBD_conexion));
 <span style="top:755px;left:30px;" class="flota"><?php //$v_absoluto=explode(".",$resultados[5]);echo substr(num2letras($v_absoluto[0],false,true).' con '.str_pad($v_absoluto[1],  2, "0").'/100',37,100);	?></span>-->
 <?php $posTot=330;?>
 <span style="top:<?php echo $posTot+10;?>px;left:275px; font: 16pt Verdana;" class="flota borde">Subtotal:</span>
-<span style="top:<?php echo $posTot+10;?>px;left:405px; font: 16pt Verdana;" class="flota rigth borde"><?Php echo formato_numero($resultados[0], 2, 1); ?></span>
+<span style="top:<?php echo $posTot+10;?>px;left:405px; font: 16pt Verdana;" class="flota rigth borde"><?php echo formato_numero($resultados[0], 2, 1); ?></span>
 
 <span style="top:<?php echo $posTot+35;?>px;left:275px; font: 16pt Verdana;" class="flota borde">Descuento:</span>
-<span style="top:<?php echo $posTot+35;?>px;left:405px; font: 16pt Verdana;" class="flota rigth borde"><?Php echo formato_numero($resultados[4], 2, 1); ?></span>
+<span style="top:<?php echo $posTot+35;?>px;left:405px; font: 16pt Verdana;" class="flota rigth borde"><?php echo formato_numero($resultados[4], 2, 1); ?></span>
 
 <span style="top:<?php echo $posTot+60;?>px;left:275px; font: 16pt Verdana;" class="flota borde">Tarifa 0%:</span>
-<span style="top:<?php echo $posTot+60;?>px;left:405px; font: 16pt Verdana;" class="flota rigth borde"><?Php echo formato_numero($resultados[1]+0, 2, 1); ?></span>
+<span style="top:<?php echo $posTot+60;?>px;left:405px; font: 16pt Verdana;" class="flota rigth borde"><?php echo formato_numero($resultados[1]+0, 2, 1); ?></span>
 
 <span style="top:<?php echo $posTot+85;?>px;left:275px; font: 16pt Verdana;" class="flota borde">Tarifa 12%:</span>
-<span style="top:<?php echo $posTot+85;?>px;left:405px; font: 16pt Verdana;" class="flota rigth borde"><?Php echo formato_numero($resultados[2]+0, 2, 1); ?></span>
+<span style="top:<?php echo $posTot+85;?>px;left:405px; font: 16pt Verdana;" class="flota rigth borde"><?php echo formato_numero($resultados[2]+0, 2, 1); ?></span>
 
 <span style="top:<?php echo $posTot+110;?>px;left:275px; font: 16pt Verdana;" class="flota borde">IVA:</span>
-<span style="top:<?php echo $posTot+110;?>px;left:405px; font: 16pt Verdana;" class="flota rigth borde"><?Php echo formato_numero($resultados[3], 2, 1); ?></span>
+<span style="top:<?php echo $posTot+110;?>px;left:405px; font: 16pt Verdana;" class="flota rigth borde"><?php echo formato_numero($resultados[3], 2, 1); ?></span>
 
 <span aling="rigth" style="top:<?php echo $posTot+135;?>px;left:275px; font: 16pt Verdana;" class="flota borde">TOTAL:</strong></span>
 <span aling="rigth" style="top:<?php echo $posTot+135;?>px;left:405px; font: 16pt Verdana;" class="flota rigth borde"><strong><?php echo number_format($resultados[5], 2); ?></strong></span>
@@ -137,7 +137,7 @@ $resultados = explode('*',$obBD_con1->calculos($Vet_Cod, $obBD_conexion));
 </div>
 </body>
 </html>
-<?Php
+<?php 
 @$obBD_con1->liberar();
 @$obBD_conexion->cerrar();
 ?>

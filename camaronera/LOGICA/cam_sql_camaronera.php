@@ -997,12 +997,12 @@ function sentencias_camaronera($id, $Par_Sql)
                 INNER JOIN nego_camaron ON nego_camaron.Cod_Neg = nego_documentos.Cod_Neg
                 WHERE cliente.Emp_Cod IN ($Par_Sql[0]) AND nego_camaron.Cod_Neg = $Par_Sql[1] AND 
                     nego_documentos.Abr_Doc = 'VNT' AND (nego_documentos.Tip_Prod IS NOT NULL AND nego_documentos.Tip_Prod <> '') AND cmp.Com_Est='A' AND
-                    ven.Tic_Cod = '$Par_Sql[2]' $Par_Sql[2] ";
+                    ven.Tic_Cod = '$Par_Sql[2]' ";
                     // Tic_Cod=4 notas de credito y Tic_Cod=5 notas de debito
             return $sql;
             break;
 
-        case 55;
+        case 55:
               $sql = " SELECT det_ccpp_c.*, CONCAT(persona.Prs_Nom,' ',persona.Prs_Ape) as cliente, persona.Prs_Ced , ventas.Vet_Cod,
                     CONCAT( Suc_Sri,'-',Pun_Sri,'-',CAST(LPAD(Vet_Num,9,'0')AS char)) AS Vet_Num, Pag_Des ,
                     /* Notas de débito (Tic_Cod=5) deben mostrarse positivas */

@@ -1,5 +1,4 @@
 <?php
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class reniva_pla extends AbstractModel{
     protected $_name = 'reniva_pla';
@@ -33,6 +32,7 @@ class reniva_pla extends AbstractModel{
                 //echo $this->getSqlString($sql)."<br/>";
                 break;
             case "isRenCod":
+                $Ren_Cod = is_array($Par_Sql) ? (string) ($Par_Sql[0] ?? '') : (string) $Par_Sql;
                 $sql->where("$this->_name.Ren_Cod='$Ren_Cod'");
                 //echo $this->getSqlString($sql)."<br/>";
                 break;

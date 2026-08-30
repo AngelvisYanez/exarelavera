@@ -1,4 +1,5 @@
-<?Php 
+<?Php
+if (!function_exists('error_alerta')) return; 
 /* 
 Alias:	componente
 Descripci�n: Componente para mostrar el mes y poder elegir un rango de fechas 
@@ -32,7 +33,7 @@ if (isset($Pec_Fei))
 		}); 		
         </script>        
 
-	<script language="javascript">
+	<script type="text/javascript">
 	/* Asigna el dia inicial y final del mes y a�o seleccionado */ 
 	function set_dia_mes()
 	{
@@ -116,7 +117,7 @@ if (isset($Pec_Fei))
 	  </tr>
 		  </table>
 	</FIELDSET>
-	<script language="javascript">
+	<script type="text/javascript">
 	<?Php 
 	if (isset($Chk_Fec))
 	{

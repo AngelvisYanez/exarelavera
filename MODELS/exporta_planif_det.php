@@ -1,5 +1,4 @@
 <?php 
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class exporta_planif_det extends AbstractModel{
     protected $_name = 'exporta_planif_det'; 

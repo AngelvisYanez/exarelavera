@@ -64,7 +64,7 @@ if (isset($guardarChofer)) {
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min"></script>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-    <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/cedulaRuc.js"></script>
 </head>
 <body>
     <div class="panel panel-main">
@@ -379,7 +379,7 @@ if (isset($guardarChofer)) {
         }
 
         function setTipoDoc() {
-            public $Ext_Ruc = $('#Ext_Ruc'),
+            var $Ext_Ruc = $('#Ext_Ruc'),
                 Ext_Ruc = $Ext_Ruc.val(),
                 isRuc = $('#isRuc').is(':checked');
             if (Ext_Ruc.length >= 10 && $.isNum(Ext_Ruc)) {

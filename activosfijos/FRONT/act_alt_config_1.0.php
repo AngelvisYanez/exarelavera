@@ -1,18 +1,18 @@
 <?php
 /**
- * @abstract Permite realizar la configuración para el registro de activos
- * Es decir si desea registrar bajo los días tributarios (30 días todos los meses) o
- * bajo los días completos de cada mes y 365 días anuales. Además se indicará si se aplicarán
+ * @abstract Permite realizar la configuraciï¿½n para el registro de activos
+ * Es decir si desea registrar bajo los dï¿½as tributarios (30 dï¿½as todos los meses) o
+ * bajo los dï¿½as completos de cada mes y 365 dï¿½as anuales. Ademï¿½s se indicarï¿½ si se aplicarï¿½n
  * los porcentajes estipulados por el SRI.
- * @author José Ambuludí
+ * @author Josï¿½ Ambuludï¿½
  * @version 1.0
- * Fecha de creación  2016-12-07
+ * Fecha de creaciï¿½n  2016-12-07
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/act_log_config.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 /**
-* Creacion del Objeto de conexión
+* Creacion del Objeto de conexiï¿½n
 */
 $obBD_conexion = new Class_Log_Conexion_Config($Ses_Dat_Dis);
 /**
@@ -20,7 +20,7 @@ $obBD_conexion = new Class_Log_Conexion_Config($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Config;
 
-//Sección para comprobar de que no exista una configuración ya registrada
+//Secciï¿½n para comprobar de que no exista una configuraciï¿½n ya registrada
 if(isset($comprobar)){
     $rs_comprobar=$obBD_con1->getRowConsulta(3, $Ses_Suc_Cod, $obBD_conexion);
     if(isset($rs_comprobar['Suc_Cod'])){
@@ -30,7 +30,7 @@ if(isset($comprobar)){
     exit();
 }
 
-//Sección para insertar un registro 
+//Secciï¿½n para insertar un registro 
 if(isset($saveConfiguracion)){
     $responce['success']=false;$responce['message']="No se ha logrado realizar la Transaccion"; 
     $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
@@ -88,7 +88,7 @@ if(isset($saveConfiguracion)){
                                         <fieldset class="exa-fieldset">
                                             <legend class="Titulos2">Registro de porcentajes de depreciaci&oacute;n</legend>
                                             <table id="tbl_por"></table><!--tbl_por=>tabla_porcentajes-->
-                                            <div id="pag_tpo"></div><!--pag_tpo=>paginación de la tabla porcentaje-->
+                                            <div id="pag_tpo"></div><!--pag_tpo=>paginaciï¿½n de la tabla porcentaje-->
                                         </fieldset>
                                     </div>
                                 </div>
@@ -133,14 +133,14 @@ if(isset($saveConfiguracion)){
                     buttonicon:"glyphicon glyphicon-plus", 
                     title:'Agregar',
                     onClickButton: function(){ 
-                        public $this=$(this),id=($this.jqGrid('getCol','Index',false,'max')+1)||0; 
+                        var $this=$(this),id=($this.jqGrid('getCol','Index',false,'max')+1)||0; 
                         $this.jqGrid('addRowData',id,{'Index':id});     
                         $this.jqGrid('editRow',id);
                     }, 
                     position:"last"
                 });
                 $("#tbl_por").setRowsByIndex(arrayPorcentaje,'Index');
-                //SECCIÓN PARA MANEJO DE RADIO BUTTONS
+                //SECCIï¿½N PARA MANEJO DE RADIO BUTTONS
                 $('#rad_ba1').change(function(){
                     $('#dm').hide();
                     $('#dt').show();
@@ -150,10 +150,10 @@ if(isset($saveConfiguracion)){
                     $('#dt').hide();
                 });
             });
-            //INICIO DE LA SECCIÓN DE FUNCIONES NECESARIAS PARA EL MANEJO DE DATOS
-            //Función para comprobar de que no exista el registro en la tabla config_activo
+            //INICIO DE LA SECCIï¿½N DE FUNCIONES NECESARIAS PARA EL MANEJO DE DATOS
+            //Funciï¿½n para comprobar de que no exista el registro en la tabla config_activo
             function comprobar(){
-                $.post("<?Php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",{comprobar:true},function(response){
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",{comprobar:true},function(response){
                     if(response['existe']===true){
                         $('#tbl_por').jqGrid('clearGridData');
                         $("input[type=radio]").attr('disabled', true);
@@ -163,16 +163,16 @@ if(isset($saveConfiguracion)){
                     }
                 },'json').fail(function(){$.alert();});
             }
-            //Función para eliminar una fila del jqgrid
+            //Funciï¿½n para eliminar una fila del jqgrid
             function eliminarFila(index){
                 $('#tbl_por').jqGrid('delRowData',index);
             }
-            //Función para guardar un registro
+            //Funciï¿½n para guardar un registro
             function saveForm(){
                 var data=$('#frm_Con').serializeObject();
                 data['porcentaje']=$("#tbl_por").getGridBatch();
                 data['saveConfiguracion']=true;
-                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data,function(response){
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data,function(response){
                     if(response['success']===true){
                         $('#tbl_por').jqGrid('clearGridData');
                         $("input[type=radio]").attr('disabled', true);

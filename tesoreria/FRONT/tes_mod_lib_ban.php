@@ -739,7 +739,7 @@ if (isset($save)) {
                                 return batch;
                             }
                             function saveComprobante(data) {
-                                $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", data, function (r) {
+                                $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", data, function (r) {
                                     $('#impCompr').attr('href', r['link']);
                                     if (typeof r['cheque'] === 'undefined' || r['cheque'] === '') {
                                         $('#successDialog').dialog("option", "height", 150);
@@ -851,7 +851,7 @@ if (isset($save)) {
 
             function setChequeNum() {
                 if (tipo === "Egresos" && $("#bancos").val() !== '' && $('#es_cheque').is(':checked')) {
-                    $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>', {'Ban_Cod': getBanco()["Ban_Cod"], 'cheNum': true}, function (response) {
+                    $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>', {'Ban_Cod': getBanco()["Ban_Cod"], 'cheNum': true}, function (response) {
                         if (response['success'] === true) {
                             numChe = (response['Che_Num'] * 1) + 1;
                             $("#NumChe").val(numChe).alertMsg();
@@ -869,7 +869,7 @@ if (isset($save)) {
                 }
             }
             function saveBene() {
-                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {saveBene: true, apel: $('#beneApe').val(), nomb: $('#beneNom').val()}, function (response) {
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", {saveBene: true, apel: $('#beneApe').val(), nomb: $('#beneNom').val()}, function (response) {
                     if (response['success'] === true) {
                         $('#apellido').val($('#beneApe').val());
                         $('#nombre').val($('#beneNom').val());

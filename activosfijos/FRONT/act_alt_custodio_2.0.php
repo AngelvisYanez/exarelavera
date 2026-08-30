@@ -95,7 +95,7 @@ if (isset($saveCustodio)) {
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <style>
             #pager_activo_center{ display: none; }
         </style>
@@ -288,7 +288,7 @@ if (isset($saveCustodio)) {
             //Grid de activos a asignar
             $(function () {
                 $("#grid_activo").jqGrid({
-                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                     mtype: "GET", datatype: "local", regional: 'es',
                     responsive: true,
                     autowidth: true, shrinkToFit: true, height: 150,
@@ -322,7 +322,7 @@ if (isset($saveCustodio)) {
                 data['activos'] = my_array;
                 data['saveCustodio'] = true;
                 if (my_array.length > 0) {
-                    $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING) ?>", data, function (response) {
+                    $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8') ?>", data, function (response) {
                         if (response['success'] === true) {
                             $.alert("Transaccion Realizada con &Eacute;xito!");
                             $('#Aca_Num').val(response['Aca_Num']);

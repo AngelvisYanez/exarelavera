@@ -167,7 +167,7 @@ if(isset($searchCliente)){
     <HEAD>
         <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-        <script language="javascript" src="../VALIDACIONES/tes_val_ordentrabajo.js?x=x11"></script>
+        <script type="text/javascript" src="../VALIDACIONES/tes_val_ordentrabajo.js?x=x11"></script>
          <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
     </HEAD>
     <BODY>

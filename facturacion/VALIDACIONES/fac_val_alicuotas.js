@@ -61,7 +61,7 @@ $(function() {
     });
     /// Grid Listado AliCuotas
     gridMovAli.createGrid({
-        caption: 'REGISTRO DE FACTURAS  <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy" class="select_busqueda"><option value="">Todos</option><option value="Resto ASC ">Pagadas</option><option value="Pagos ASC ">No Pagadas</option><select>&nbsp;</div>',
+        caption: 'REGISTRO DE FACTURAS  <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy" class="select_busqueda"><option value="">Todos</option><option value="Resto ASC ">Pagadas</option><option value="Pagos ASC ">No Pagadas</option></select>&nbsp;</div>',
         height: '450',
         shrinkToFit: true,
         colModel: [
@@ -148,7 +148,7 @@ $(function() {
         [
             { label: 'C&oacute;d.Int.', name: 'Vet_Cod', key: true, width: 15, align: "center", hidden: true },
             { label: 'Tipo Venta', name: 'Tic_Des', width: 50 },
-            { label: 'Número Venta', name: 'Num_Vent', align: 'center', width: 50 },
+            { label: 'Nï¿½mero Venta', name: 'Num_Vent', align: 'center', width: 50 },
             { name: 'Cli_Cod', align: 'center', width: 50, hidden: true },
             { label: 'Fecha', name: 'Caj_Fec', width: 50 },
             { label: 'Total', name: 'Total', align: 'right', width: 40 },
@@ -258,7 +258,7 @@ function agregarFila(aux) {
     }).trigger('change');
 }
 /**
- * Método que se encarga de ir registro a registro sumando su abono y verificando que no sea superior al saldo
+ * Mï¿½todo que se encarga de ir registro a registro sumando su abono y verificando que no sea superior al saldo
  */
 function realizarCalculo() {
     var grid = $('#Cuo_Grid');
@@ -435,7 +435,7 @@ function abrirDialogVenta(row) {
 if ($('#clienteDialog').length > 0) {
     $.createSearchDialog('#clienteDialog', [
         { label: 'C&oacute;d.Int.', name: 'Cli_Cod', key: true, width: 15, align: "center", hidden: true },
-        { label: 'Cédula/RUC', name: 'Prs_Ced', width: 50 },
+        { label: 'Cï¿½dula/RUC', name: 'Prs_Ced', width: 50 },
         { label: 'Cliente', name: 'Cliente', width: 100 },
         //{ label: 'Apellido', name: 'Prs_Ape', width: 100 },
         { label: 'Direcc.', name: 'Prs_Dir', width: 60 },
@@ -500,14 +500,14 @@ function selectVenta(venta) {
 function saveAliCuota(formulario, accion) {
     var index;
     var shortDateFormat = 'yy-mm-dd';
-    $.createDialogConfirm(`¿Est&aacute; seguro que desea guardar los datos de la alicuota?`, null, function() {
+    $.createDialogConfirm(`ï¿½Est&aacute; seguro que desea guardar los datos de la alicuota?`, null, function() {
         var data = $('#' + formulario).getData('saveDocumento');
         data['alicuotas'] = $('#Cuo_Grid').getGridBatch();
         //console.log(data);
         $.each(data['alicuotas'], function(pos, valor) {
             if (valor['Cliente'] === '' || valor['Vet_Num'] === '' || valor['Caj_Fec'] === '' || valor['Ali_Pag'] === '') {
                 index = $("#Cuo_Grid").jqGrid('getInd', valor['index']);
-                $.alert('Debe completar información en la fila: ' + index);
+                $.alert('Debe completar informaciï¿½n en la fila: ' + index);
                 $('#Cuo_Grid').startGridEdit();
                 $.alert('La transacci&oacute;n se realizo con exito.');
                 return false;

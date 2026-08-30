@@ -1,13 +1,13 @@
 <?php 
 /**
- * Descripción: Alta de cajas para facturación
- * Fecha de actualización:	2012-03-19 
+ * Descripciï¿½n: Alta de cajas para facturaciï¿½n
+ * Fecha de actualizaciï¿½n:	2012-03-19 
  * Desarrollador:	Jose Cumbicos
- * Fecha de actualización: 2011-06-09
+ * Fecha de actualizaciï¿½n: 2011-06-09
  * Desarrollador: Nebil Oyola
- * Fecha de actualización: 2012-02-17
+ * Fecha de actualizaciï¿½n: 2012-02-17
  * Desarrollador: lewis.chimarro
- * Fecha de actualización: 2014-06-01
+ * Fecha de actualizaciï¿½n: 2014-06-01
 */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tes_log_aper_caja.php');
@@ -15,11 +15,11 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php');	
 
 /**
-* Creación del objeto de conexion
+* Creaciï¿½n del objeto de conexion
 */
 $obBD_conexion = new Class_Log_Conexion_Tes($Ses_Dat_Dis);
 /**
-* Creacin del objeto mysql para las consultas ´
+* Creacin del objeto mysql para las consultas ï¿½
 */
 $obBD_con1 =  new Class_Log_Datos_Tes;	  
 /**
@@ -55,7 +55,7 @@ if (isset($ajax_new))
 	{
 	 //poner aqui la sentencia
 	?>	
-		<form method="post" name= "form2" action="<?php echo $_POST['form1'];?>">
+		<form method="post" name= "form2" action="<?php echo htmlspecialchars($_POST['form1'], ENT_QUOTES, 'UTF-8');?>">
 			 <FIELDSET>
 			  <LEGEND>
 				<label class="Titulos2">Datos a registrar</label>
@@ -116,15 +116,15 @@ if ($thisPost->postBlock($_POST['postID']))
 				/*Inicio de la transaccion*/
 				$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 				$Caj_Hoi = date("H:i:s");
-				/* Inserción de la apertura de caja */
+				/* Inserciï¿½n de la apertura de caja */
 				$obBD_con1->grabarv_registros(sentencias_tes(6, $obBD_con1->parametros($Caj_Fec.'*'.$Caj_Hoi.'*'.$Pun_Cod)), $obBD_conexion->conexion);	
 				$obBD_con1->fin_transaccion($obBD_conexion->conexion);	
 				unset ($op);
 			}//Fin del if ($total_rs_consultar == 0)
 			else
 			{ ?>
-				<script LANGUAGE="JavaScript">	
-					alert ("¡No se ha podido guardar la Caja porque ya ha sido abierta!");
+				<script type="text/javascript">	
+					alert ("ï¿½No se ha podido guardar la Caja porque ya ha sido abierta!");
 				</script>
 		<?Php				
 			}//Fin del else if ($total_rs_consultar == 0)
@@ -149,8 +149,8 @@ $total_rs_caja = count($rs_caja);
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	        
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    	<script language="javascript" src="../VALIDACIONES/tes_val_aper_caja.js"></script>  
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/tes_val_aper_caja.js"></script>  
 		<link rel="stylesheet" type="text/css" href="../../Librerias/jquery/modal/css/modal.css">
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/jquery.js"></script>
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/modal.js"></script>              
@@ -265,7 +265,7 @@ if ($op==1)	//Edicion de la Apertura de Caja
 <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form1" id="form1">
 <?Php 
 	/**
-	* Creación del campo repost 
+	* Creaciï¿½n del campo repost 
 	*/
 	$thisPost->startPost();  ?>
   <input type="hidden" name="hiddenField" value="<?PHP echo $row_rs_vendedor['Pun_Cod']; ?>">
@@ -321,7 +321,7 @@ if ($op==1)	//Edicion de la Apertura de Caja
 			  }
 			  else
 			  {
-					echo error_alerta (" ¡No se puede cerrar la Caja del día $fecha, porque la fecha actual es $hoy!", 2);  
+					echo error_alerta (" ï¿½No se puede cerrar la Caja del dï¿½a $fecha, porque la fecha actual es $hoy!", 2);  
 			  }
 			  ?>
           

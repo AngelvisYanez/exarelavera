@@ -602,13 +602,6 @@ ORDER BY
 								  AND tipo_asien.Tia_Cod=comprobantes.Tia_Cod AND Emp_Cod=$Par_Sql[3]  AND Com_Est = '$Par_Sql[4]' ORDER BY banco.Ban_Cod, Che_Num, Prs_Ape, Prs_Nom";
 				//echo $cons_cheq_163;
 				return $cons_cheq_163;
-				case 374:
-        /*
-        * Selecionar el numero maximo de comprobante mensual segun el tipo I=ingreso, E=egreso, D=diario
-        */
-        $sql="SELECT MAX(Com_Num)+1 AS Com_Num  FROM comprobantes WHERE Tia_Cod=$Par_Sql[0] AND Pec_Cod=$Par_Sql[1] AND MONTH(Com_Fec)=$Par_Sql[2]";
-        //echo $sql;
-         return $sql;
     case 376:     
         $sql="SELECT COUNT(Che_Cod)AS conteo FROM cheques_otros WHERE Ban_Cod=$Par_Sql[0] AND Che_Num=$Par_Sql[1] UNION ALL SELECT COUNT(Che_Cod)AS conteo FROM cheques WHERE Ban_Cod=$Par_Sql[0] AND Che_Num=$Par_Sql[1];";
         //echo $sql."<br>";

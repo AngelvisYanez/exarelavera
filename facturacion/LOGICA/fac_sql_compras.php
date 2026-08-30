@@ -362,7 +362,7 @@
 			* Consulta de los porcentajes del I.C.E 
 			*/		
 			case 527:
-			$sql="SELECT SELECT ice.Ice_Int, ice.Ice_Por, ice.Ice_Sri FROM ice, det_compra
+			$sql="SELECT ice.Ice_Int, ice.Ice_Por, ice.Ice_Sri FROM ice, det_compra
 			WHERE  ice.Ice_Int=det_compra.Ice_Int AND det_compra.Cop_Int=$Par_Sql[0] AND det_compra.Cop_Cod=$Par_Sql[1]";
 			//echo $sql;
 			return $sql;

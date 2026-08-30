@@ -13,6 +13,7 @@
 /**
 * Consulta los organizados de nivel 2 
 */
+if (!is_object($obBD_con1)) return;
 $rs_organizado_dos = $obBD_con1->getArrayConsulta(31, trim($row_rs_organizado_cero["Org_Cod"]), $obBD_conexion);
 	
 if(count($rs_organizado_dos) > 0)
@@ -25,7 +26,7 @@ if(count($rs_organizado_dos) > 0)
 		/**
 		* Consulta los procesos del usuario 
 		*/
-		$rs_procesos = $obBD_con1->getArrayConsulta(18, trim($row_rs_organizado_dos["Org_Cod"]).'*'.trim(substr($mperf,1,count($mperf)-3)).'*P', $obBD_conexion);
+		$rs_procesos = $obBD_con1->getArrayConsulta(18, trim($row_rs_organizado_dos["Org_Cod"]).'*'.trim(substr($mperf,1,strlen($mperf)-3)).'*P', $obBD_conexion);
 		if(count($rs_procesos) > 0)
 		{
 			/**

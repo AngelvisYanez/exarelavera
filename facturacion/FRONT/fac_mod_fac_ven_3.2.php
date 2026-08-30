@@ -1290,7 +1290,7 @@ if (isset($saldoCCxCC)) {
         var array_vendedor = <?php echo json_encode($rs_Punto); ?>;
     </script>
 
-    <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
     <!-- <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura.js?x=0"></script> -->
     <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura2.js?x=105"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
@@ -1617,7 +1617,7 @@ if (isset($saldoCCxCC)) {
                         caption: 'Resultado de la Búsqueda',
                         height: 270,
                         datatype: "local",
-                        caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option><select>&nbsp;</div>',
+                        caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by Vet_Num DESC ">Num. Documento</option></select>&nbsp;</div>',
                         colModel: [
                             { label: 'Cód. Int.', name: 'Vet_Cod', width: 30, align: "center", key: true },
                             { label: 'Compr.', name: 'Com_Exi', width: 20, align: "center", formatter: 'truefalse',
@@ -2895,7 +2895,7 @@ if (isset($saldoCCxCC)) {
         function ocultarCamposBusquedaImei() {
             // Ocultar todos los fieldsets que NO contengan "Tipo:"
             $('#imeiForm fieldset').each(function() {
-                public $fieldset = $(this);
+                var $fieldset = $(this);
                 var tieneTipo = $fieldset.find('label:contains("Tipo:")').length > 0;
                 var legend = $fieldset.find('legend').text().trim();
                 // Si NO tiene "Tipo:" Y el legend NO es "Filtros", ocultarlo
@@ -2910,7 +2910,7 @@ if (isset($saldoCCxCC)) {
             $('#imeiForm button:contains("Buscar")').closest('.form-group, fieldset').css('display', 'none !important').hide();
             // Ocultar radiosets que contengan "Apellido/Nombre" o "Cédula/R.U.C"
             $('#imeiForm .radioset').each(function() {
-                public $radioset = $(this);
+                var $radioset = $(this);
                 var html = $radioset.html();
                 if (html.indexOf('Apellido/Nombre') !== -1 || html.indexOf('Cédula/R.U.C') !== -1) {
                     $radioset.closest('.form-group, fieldset').css('display', 'none !important').hide();
@@ -2952,7 +2952,7 @@ if (isset($saldoCCxCC)) {
         
         // Agregar evento para recargar grid cuando cambie el filtro
         $('#imeiForm input[name="imei_tipo"]').on('change', function() {
-            public $grid = $('#imeiGrid');
+            var $grid = $('#imeiGrid');
             var Pro_Cod = $('#imeiForm input[name="Pro_Cod"]').val() || '';
             var Ime_Tip = $(this).val() || '';
             // Actualizar postData antes de recargar
@@ -3862,7 +3862,7 @@ if (isset($saldoCCxCC)) {
                                             var valorClave = $('#empresaClaveInput').val();
                                             // Lógica AJAX para validar la clave
                                             $.ajax({
-                                                url: '<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                                url: '<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                                 type: 'POST',
                                                 data: {
                                                     'validarClaveAjax': true,

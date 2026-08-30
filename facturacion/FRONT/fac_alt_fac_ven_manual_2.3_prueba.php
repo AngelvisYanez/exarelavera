@@ -188,7 +188,7 @@ if(isset($ajax_notif))
 	{		
 	?>
     	<img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-        <script language="javascript">alert("¿Ya existe el numero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
+        <script type="text/javascript">alert("ï¿½Ya existe el numero "+ <?php echo $NumFact;?> +"!"); document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
 	<?php		
 	}else{
 		if($SecIni<=$NumFact && $SecFin>=$NumFact)
@@ -197,7 +197,7 @@ if(isset($ajax_notif))
 		}else{
 			?>
               <img src='../../mascaras/model1/imagenes/32x32/cancel.gif' width='16' height='16' type='image'/>
-              <script language="javascript">alert("¿N&uacute;mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); document.getElementById("Vet_Num").value='';
+              <script type="text/javascript">alert("ï¿½N&uacute;mero fuera de rango (Rango valido: "+ <?php echo $SecIni;?> +" al "+ <?php echo $SecFin;?> +")!"); document.getElementById("Vet_Num").value='';
 			  document.getElementById("Vet_Num").selectionStart = 0;document.getElementById("Vet_Num").value='<?php echo $Vet_Num; ?>';</script>
             <?php		
 		}	
@@ -241,7 +241,7 @@ if (isset($cmb))
 		} //Fin del $row_rs_facttipo  ?>
     <!--</select>-->
 	<?php //echo $div_banco; ?>
-	<script language="javascript">
+	<script type="text/javascript">
 		ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?cmb_tipo=1&Pag_Cod=<?Php echo $Pag; ?>', '<?php echo $div_banco; ?>');
 	</script>	
 	<?Php
@@ -375,7 +375,7 @@ if(isset($CajFec))
 		}	
 	}else{
 		$correcto=0;
-		?><script language="javascript">alert("¡No hay Autorizaci&oacute;n para la fecha ingresada!");</script> <?php
+		?><script type="text/javascript">alert("ï¿½No hay Autorizaci&oacute;n para la fecha ingresada!");</script> <?php
 	}
 }
 
@@ -881,26 +881,26 @@ if (isset($_POST['postID'])&&!empty($_POST['postID'])&&$thisPost->postBlock($_PO
 				</html>';
 				if(trim($PrsCorCli)!='')//control si existe el correo
 				{   
-					require '../../Librerias/PHPMail/class.phpmailer.php';
+					require_once '../../Librerias/PHPMailer_compat.php';
 					// Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
 					$mail = new PHPMailer(true); 
-					// Configuramos el protocolo SMTP con autenticación
+					// Configuramos el protocolo SMTP con autenticaciï¿½n
 					$mail->IsSMTP();
 					$mail->SMTPAuth = true;
 					$mail->IsHTML(true);
-					// Configuración del servidor SMTP
+					// Configuraciï¿½n del servidor SMTP
 					$mail->Port = 25;
 					$mail->Host = 'ofsercont.com';
 					$mail->Username = "facturacion.electronica@ofsercont.com";
 					$mail->Password = "p.123456";
-					// Configuración cabeceras del mensaje
+					// Configuraciï¿½n cabeceras del mensaje
 					$mail->From = "facturacion.electronica@ofsercont.com";
 					$mail->FromName = $Ses_Emp_Nom;
 					$mail->AddAddress(trim($PrsCorCli),strtoupper($PrsNomCli));
 					//$mail->AddAddress("destino2@correo.com","Nombre 2");
 					//$mail->AddCC("copia1@correo.com","Nombre copia 1");
 					//$mail->AddBCC("copia1@correo.com","Nombre copia 1");
-					$mail->Subject = "Comprobante Electrónico";
+					$mail->Subject = "Comprobante Electrï¿½nico";
 					// Creamos en una variable el cuerpo, contenido HMTL, del correo
 					
 					//$body  = "Proebando los correos con un tutorial<br>";
@@ -991,12 +991,12 @@ else
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
                 <script>var Cod_Banano='<?php echo $Cod_Banano; ?>';</script>
                  <?php if($rs_infoEmpresa['Cof_Con']=="S") { ?>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_fac_ven_cont_1.0.js?xx=2"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven_cont_1.0.js?xx=2"></script>
                  <?php }else{ ?>
-        <script language="javascript" src="../VALIDACIONES/fac_val_fac_ven_1.0.js?xx=2"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven_1.0.js?xx=2"></script>
                  <?php } ?>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
@@ -1048,12 +1048,12 @@ if (isset($hdd_save) && !isset($hdd_volver))
         $tabla='cliente';
         $campo="Cli_Cod";
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 		<?php if(isset($hdd_comprobante)){?>			
 		windows('<?php echo $hdd_comprobante;?>?Com_Num=<?php echo $Com_Num; ?>&Com_Cod=<?php echo $Com_Cod; ?>&codigo=<?php echo $Com_Cod; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $op; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec;?>','',800,800,'no','yes','yes','yes'); 	
 		<?Php } ?>
 	</script>
-        <script language="javascript">
+        <script type="text/javascript">
             windows('<?Php echo $hdd_documento;  ?>?Vet_Cod=<?Php echo $Vet_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');
         </script>            
 	<?php	
@@ -1200,7 +1200,7 @@ if(isset($txt_busqueda))
 		<td align="center"><?Php echo $row_rs_buscar['Prs_Ced']; ?></td>
 		<td align="left">&nbsp;<?Php echo marcarCadenaColor($txt_busqueda,$row_rs_buscar['Prs_Ape'].' '.$row_rs_buscar['Prs_Nom'],'#FFFF00', '#000', 1); ?></td>
 		<td align="center"><?Php if ($row_rs_buscar['Cli_Est'] == 'Activo') { ?>
-        <form name="form3" id="form3" method="post" action="<?php echo $_SERVER['../LOGICA/PHP_SELF'] ?>">
+        <form name="form3" id="form3" method="post" action="<?php echo $_SERVER['PHP_SELF'] ?>">
 		<input name="codigo" id="codigo" type="hidden" value="<?Php echo $row_rs_buscar['Cli_Cod'];?>">
 		<input name="volver_busqueda" id="volver_busqueda" type="hidden" value="<?Php echo $txt_busqueda;?>">
 		<input name="volver_op" id="volver_op" type="hidden" value="<?Php echo $op_opciones;?>">						
@@ -1232,7 +1232,7 @@ if(isset($txt_busqueda))
 	echo barra_estado(count($rs_buscar));
 }//Fin del if(isset($txt_busqueda)) ?>
 
- <form action="<?Php $_SERVER['../LOGICA/PHP_SELF']; ?>" method="post" name="form2" id="form2">
+ <form action="<?Php $_SERVER['PHP_SELF']; ?>" method="post" name="form2" id="form2">
  <?Php if ($codigo > 0 && !(isset($hdd_save)))
  { 
 	/**
@@ -1391,7 +1391,7 @@ if(isset($txt_busqueda))
                   </span></td>
               </tr>
               </table>
-			  <script language="javascript">
+			  <script type="text/javascript">
                    ShowHide('NotasCredito');		  
               </script>                                            
          </FIELDSET>    
@@ -1840,7 +1840,7 @@ if(isset($txt_busqueda))
 <div id="cont_cua_338_titu"></div>
 <FIELDSET>
 		<LEGEND>
-			<label class="Titulos2">PORCENTAJE DE RETENCÍON (338)</label>
+			<label class="Titulos2">PORCENTAJE DE RETENCï¿½ON (338)</label>
 		</LEGEND>
     <table style="width: 100%">
         <tr><td style="width: 30%"></td><td></td></tr>
@@ -1893,7 +1893,7 @@ if(isset($txt_busqueda))
 	if (!(isset($cheque)))
 	{
 	?>
-	<script language="javascript">
+	<script type="text/javascript">
 	 ShowHide('cheque');		  	 
 	</script>
 	<?Php

@@ -1,4 +1,5 @@
-<?php 
+<?php
+if (!function_exists('error_alerta')) return; 
 /* 	Componente que muestra los meses en un combo  
 	Desarrollador: 	Freddy Jumbo Castillo
 	Fecha:			22/07/2009

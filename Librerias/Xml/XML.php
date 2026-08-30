@@ -68,7 +68,7 @@ class XmlDoc extends SimpleXMLElement {
         $dom->insertBefore($pi, $first_element); 
     } 
     public function addNode($node){ $this->toNode()->appendChild($node); }
-    public function getNode($name){ $nodes=$this->getNodes($name); var_dump($nodes); return $nodes[0]; }
+    public function getNode($name){ $nodes=$this->getNodes($name); return $nodes[0]; }
     public function getNodes($name){ return $this->xpath("//$name"); }
     public function setConfig($version,$charset) { 
         $dom=$this->root();

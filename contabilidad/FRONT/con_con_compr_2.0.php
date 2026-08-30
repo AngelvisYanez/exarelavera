@@ -270,7 +270,10 @@ if (isset($cuenAjaxv1)) {
     <!--TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE-->
     <TITLE><?Php echo "Comprobantes Consultar [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
-    <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+    <?php
+    $mask_model = 'model1';
+    require_once("../../mascaras/unified-loader.php");
+    ?>
     <script type="text/javascript" src="../../framework/jquery/MonthPicker/jquery.mtz.monthpicker.min.js"></script>
     <?php $perio =  $obBD_con1->getRowConsulta(20, $Ses_Emp_Cod, $obBD_conexion); ?>
     <script type="text/javascript">

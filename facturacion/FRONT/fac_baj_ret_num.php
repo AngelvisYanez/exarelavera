@@ -210,7 +210,7 @@ if(isset($save)){
        }
        function saveForm(){
                 $('#Tic_Cod').removeAttr('disabled');
-                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$('#formRet').getData('save'), function(response){	
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$('#formRet').getData('save'), function(response){	
                     if(response['success']===true){
                         $('#formRet')[0].reset();
                         $.alert(response['message']);

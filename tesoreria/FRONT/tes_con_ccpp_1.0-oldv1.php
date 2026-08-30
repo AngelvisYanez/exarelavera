@@ -233,15 +233,15 @@ if(isset($getReportAbono)){
 <!DOCTYPE html>
 <html>
   <head>
-    <!--TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE-->
-    <TITLE><?Php echo "Ccxpp Consultar [EXA] "; ?></TITLE>
+    <!--TITLE><?php echo $Ses_Sys_Nom; ?></TITLE-->
+    <TITLE><?php echo "Ccxpp Consultar [EXA] "; ?></TITLE>
 	  <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
-    <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+    <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script src="../VALIDACIONES/tes_val_con_ccpp.js?a=5"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
     <style>
       .txt-green{ color:#29a827; }
@@ -469,11 +469,11 @@ if(isset($getReportAbono)){
         <table>
           <tr>
             <td align="right"><b>EMPRESA:</b></td>
-            <td><span><?echo $Ses_Emp_Nom;?></span></td>
+            <td><span><?php echo $Ses_Emp_Nom;?></span></td>
           </tr>
           <tr>
             <td align="right"><b>EMISI&Oacute;N:</b></td>
-            <td><span><?$hoy = date("Y-m-d");$fecha=explode('-',$hoy); echo dias( date('w'),1).', '.$fecha[2].' de '.mes($fecha[1],1).' de '.$fecha[0]; ?></span></td>
+            <td><span><?php $hoy = date("Y-m-d");$fecha=explode('-',$hoy); echo dias( date('w'),1).', '.$fecha[2].' de '.mes($fecha[1],1).' de '.$fecha[0]; ?></span></td>
           </tr>
           <tr> </tr>
         </table>

@@ -812,7 +812,7 @@ AND puntos_imp.Pun_Cod = $Par_Sql[0]";
 		
 		
 		case 83:
-		/*Consulta de los cliente por punto de impresión y por apellido */
+		/*Consulta de los cliente por punto de impresiï¿½n y por apellido */
 		$consulta_cli_puntonom ="SELECT ventas.Cli_Cod, persona.Prs_Ape, persona.Prs_Nom, ventas.Vet_Num, caja_aper.Caj_Fec, ventas.Vet_Cod, IF (cliente.Cli_Est='A','Activo','Retirado') as Cli_Est, ventas.Vet_Est 
 FROM persona, cliente, ventas, caja_aper WHERE cliente.Prs_Cod = persona.Prs_Cod AND caja_aper.Caj_Cod = ventas.Caj_Cod AND  persona.Prs_Ape LIKE '%$Par_Sql[0]%' 
 AND ventas.Cli_Cod = cliente.Cli_Cod AND ventas.Tic_Cod = '$Par_Sql[1]' AND caja_aper.Pun_Cod = '$Par_Sql[2]' 
@@ -853,7 +853,7 @@ AND Caj_Fec BETWEEN '$Par_Sql[0]' AND '$Par_Sql[1]' AND ventas.Vet_Est = '$Par_S
 		break;
 		
 		case 88:
-		/* Consulta los totales de las facturas agrupados por rubros por CARRERAS y dependiendo además de Pun_Cod*/
+		/* Consulta los totales de las facturas agrupados por rubros por CARRERAS y dependiendo ademï¿½s de Pun_Cod*/
 		$my_fac_rubros_PunCod_88 = "SELECT caja_aper.Caj_Fec, item.Ite_Lar, SUM(IF(ventas_det.Vet_Dec > 0, ventas_det.Vet_Imp-(ventas_det.Vet_Imp*ventas_det.Vet_Dec) /100, IF(ventas.Vet_Des > 0, ventas_det.Vet_Imp-(ventas_det.Vet_Imp*ventas.Vet_Des)/100, ventas_det.Vet_Imp))) as Vet_Imp, carreras.Car_Nom  FROM caja_aper, ventas, ventas_det, producto, item, cliente, persona, estudiante, matriculas, semestres, promocione, carreras, periodos WHERE ventas.Caj_Cod = caja_aper.Caj_Cod AND ventas_det.Vet_Cod = ventas.Vet_Cod AND ventas_det.Pro_Cod = producto.Pro_Cod AND producto.Ite_Cod = item.Ite_Cod AND cliente.Cli_Cod = ventas.Cli_Cod AND cliente.Prs_Cod = persona.Prs_Cod 
  AND estudiante.Prs_Cod = persona.Prs_Cod AND estudiante.Est_Int = matriculas.Est_Int AND matriculas.Sem_Cod = semestres.Sem_Cod  AND promocione.Pro_Cod = semestres.Pro_Cod AND promocione.Car_Int = carreras.Car_Int AND semestres.Per_Int = periodos.Per_Int 
  AND Caj_Fec  BETWEEN '$Par_Sql[0]' AND '$Par_Sql[1]' AND promocione.Car_Int = '$Par_Sql[2]' AND ventas.Vet_Est = '$Par_Sql[3]' AND periodos.Pem_Tip = '$Par_Sql[4]' AND matriculas.Mat_Est = 'A' AND semestres.Per_Int = '$Par_Sql[5]' AND caja_aper.Pun_Cod = '$Par_Sql[6]' AND ventas.Tic_Cod = $Par_Sql[7]
@@ -924,7 +924,7 @@ FROM caja_aper WHERE caja_aper.Caj_Est ='A' AND caja_aper.Pun_Cod = '$Par_Sql[0]
 		break;
 		
 		case 94: 
-		/*Busca las facturas registradas de acuerdo a los intervalos de fecha y por punto de impresión*/
+		/*Busca las facturas registradas de acuerdo a los intervalos de fecha y por punto de impresiï¿½n*/
 		$cons_fact_punto = "SELECT ventas.Vet_Cod, ventas.Vet_Num, caja_aper.Caj_Fec, tipos_pago.Pag_Des, persona.Prs_Nom, 
 		persona.Prs_Ape, SUM(ventas_det.Vet_Imp) as Vet_Imp, ventas_det.Vet_Dec, iva.Iva_Por, ventas.Vet_Est, 
 		caja_aper.Caj_Est FROM caja_aper, ventas, ventas_det, tipos_pago, cliente, iva, persona WHERE ventas.Cli_Cod = 	
@@ -988,25 +988,25 @@ FROM caja_aper WHERE caja_aper.Caj_Est ='A' AND caja_aper.Pun_Cod = '$Par_Sql[0]
 		break;
 		
 		case 102:
-		/* Consultar bancos en base a la descripción */
+		/* Consultar bancos en base a la descripciï¿½n */
 		$consultarban = "SELECT Bak_Des FROM bancos WHERE Bak_Des =	'$Par_Sql[0]'";
 		return $consultarban;
 		break;
 
 		case 103:
-		/* Modificar la información de bancos*/		
+		/* Modificar la informaciï¿½n de bancos*/		
 		$mod_bancos="UPDATE bancos SET Bak_Des= UPPER('$Par_Sql[0]') WHERE Bak_Cod = $Par_Sql[1]";
 		return $mod_bancos;
 		break;
 		
 		case 104: 
-		/*Consulta la descrición de un banco en base a un parametro*/
+		/*Consulta la descriciï¿½n de un banco en base a un parametro*/
 		$cons_bancos = "SELECT Bak_Cod, Bak_Des FROM bancos WHERE Bak_Des like '$Par_Sql[0]%'";
 		return $cons_bancos;
 		break;
 		
 		case 105:
-		/* Consultar bancos en base al código */
+		/* Consultar bancos en base al cï¿½digo */
 		$consultarban = "SELECT Bak_Des FROM bancos WHERE Bak_Cod =	$Par_Sql[0]";
 		return $consultarban;
 		break;
@@ -1089,13 +1089,13 @@ ORDER BY ventas.Vet_Num, Prs_Ape, Prs_Nom";
 /************************************* ROLES DE PAGO *********************************/		
 
 		case 111:
-		/* Consultar tipo de rol de pagos en base al código */
+		/* Consultar tipo de rol de pagos en base al cï¿½digo */
 		$consultarol = "SELECT Tir_Des FROM tipos_rol WHERE Tir_Cod =	$Par_Sql[0]";
 		return $consultarol;
 		break;		
 		
 		case 112: 
-		/* Consulta la información relacionada con el detalle del plan de cuentas */
+		/* Consulta la informaciï¿½n relacionada con el detalle del plan de cuentas */
  		$cargar_plan="SELECT Pld_Cod, Pld_Des FROM det_plan WHERE Pld_Tip = 'D'";
 		return $cargar_plan;
 		break;
@@ -1107,7 +1107,7 @@ ORDER BY ventas.Vet_Num, Prs_Ape, Prs_Nom";
 		break;
 		
 		case 114: 
-		/* Consulta la información relacionada con el descripcion del campo rol */
+		/* Consulta la informaciï¿½n relacionada con el descripcion del campo rol */
  		$cons_camposrol = "SELECT Cam_Des FROM campos_rol WHERE Pld_Cod = '$Par_Sql[0]' OR Cam_Des =
 		'$Par_Sql[1]'";
 		return $cons_camposrol;
@@ -1126,7 +1126,7 @@ ORDER BY ventas.Vet_Num, Prs_Ape, Prs_Nom";
 		break;		
 		
 		case 117:
-		/* Consulta por el código de campo del rol */
+		/* Consulta por el cï¿½digo de campo del rol */
 		$cons_crol = "SELECT campos_rol.Cam_Cod, campos_rol.Pld_Cod, campos_rol.Cam_Des, campos_rol.Cam_Tip, campos_rol.Cam_Rec, campos_rol.Cam_Por, campos_rol.Cam_Obs FROM campos_rol, det_plan WHERE campos_rol.Cam_Cod = $Par_Sql[0] limit 0,1";
 		return $cons_crol;		
 		break;
@@ -1209,19 +1209,19 @@ ORDER BY ventas.Vet_Num, Prs_Ape, Prs_Nom";
 		break;
 		
 		case 130:
-		/* Consultar tipos de rol de pagos en base a la descripción */
+		/* Consultar tipos de rol de pagos en base a la descripciï¿½n */
 		$consultartirol = "SELECT Tir_Des FROM tipos_rol WHERE Tir_Des ='$Par_Sql[0]'";
 		return $consultartirol;
 		break;
 		
 		case 131:
-		/* Modificar la información de tipos de rol de pagos*/		
+		/* Modificar la informaciï¿½n de tipos de rol de pagos*/		
 		$mod_tirol="UPDATE tipos_rol SET Tir_Des= UPPER('$Par_Sql[0]') WHERE Tir_Cod = $Par_Sql[1]";
 		return $mod_tirol;
 		break;
 		
 		case 132: 
-		/*Consulta la descripción del tipo de rol de pagos en base a un parametro*/
+		/*Consulta la descripciï¿½n del tipo de rol de pagos en base a un parametro*/
 		$cons_tirol = "SELECT Tir_Cod, Tir_Des FROM tipos_rol WHERE Tir_Des like '$Par_Sql[0]%'";
 		return $cons_tirol;
 		break;
@@ -1264,13 +1264,13 @@ ORDER BY ventas.Vet_Num, Prs_Ape, Prs_Nom";
 		break;
 		
 		case 139: 
-		/* Consulta la información relacionada con el descripcion del campo rol */
+		/* Consulta la informaciï¿½n relacionada con el descripcion del campo rol */
  		$cons_camposrec = "SELECT Cam_Cod, Cam_Des FROM campos_rol";
 		return $cons_camposrec;
 		break;
 		
 		case 140: 
-		/* Consulta la información relacionada con el descripcion del campo rol */
+		/* Consulta la informaciï¿½n relacionada con el descripcion del campo rol */
  		$cons_camposrol = "SELECT Cam_Des FROM campos_rol WHERE Cam_Des = '$Par_Sql[0]'";
 		return $cons_camposrol;
 		break;
@@ -1288,7 +1288,7 @@ ORDER BY ventas.Vet_Num, Prs_Ape, Prs_Nom";
 		
 		
 		/***********************  C H E Q U E S *********************************		
-		/* Cargado cheques según el número de comprobante de egreso */
+		/* Cargado cheques segï¿½n el nï¿½mero de comprobante de egreso */
 		case 143:
 		$con_cheques_143="SELECT comprobantes.Com_Cod, comprobantes.Com_Num, Pld_Des, Prs_Ape, Che_Cod, Prs_Nom, cheques.Asi_Cod, cheques.Prv_Cod, Che_Num, Che_Val, Che_Cob, Che_Obs, Com_Est, Che_Fec, cheques.Ban_Cod, cheques.Prv_Cod FROM cheques, comprobantes, asientos, banco, det_plan, proveedore, persona where comprobantes.Com_Cod = asientos.Com_Cod AND asientos.Asi_Cod = cheques.Asi_Cod AND cheques.Ban_Cod = banco.Ban_Cod AND banco.Pld_Cod = det_plan.Pld_Cod
       AND cheques.Prv_Cod = proveedore.Prv_Cod AND proveedore.Prs_Cod = persona.Prs_Cod  
@@ -1304,7 +1304,7 @@ ORDER BY ventas.Vet_Num, Prs_Ape, Prs_Nom";
 		
 		//***********************  R O L E S    D E    P A G O *********************************		
 		case 145:
-		/* Consulta por la descripción del Rol de Pagos */
+		/* Consulta por la descripciï¿½n del Rol de Pagos */
 		$carga_rol = "SELECT rol_pagos.Tir_Cod, Tir_Des, Rol_Des, Rol_Est, Rol_Cod FROM rol_pagos, tipos_rol WHERE tipos_rol.Tir_Cod = rol_pagos.Tir_Cod AND rol_pagos.Rol_Des LIKE '$Par_Sql[0]%'";
 		return $carga_rol;
 		break;
@@ -1350,7 +1350,7 @@ AND rol_pagos.Rol_Des = '$Par_Sql[1]' group by Prs_Ape order by Cof_Or";
 		break;
 		
 		case 152:
-		/* Consulta la la descripción del rol de pagos */
+		/* Consulta la la descripciï¿½n del rol de pagos */
 		$cons_rolp = "SELECT Tir_Cod, Rol_Des FROM rol_pagos WHERE Rol_Des = '$Par_Sql[0]' AND Tir_Cod=$Par_Sql[1]";
 		return $cons_rolp;
 		break;
@@ -1366,7 +1366,7 @@ AND rol_pagos.Rol_Des = '$Par_Sql[1]' group by Prs_Ape order by Cof_Or";
 		
 		
 		case 154:
-		/* Consulta por la descripción del Rol de Pagos */
+		/* Consulta por la descripciï¿½n del Rol de Pagos */
 		$carga_codrol = "SELECT rol_pagos.Tir_Cod, Tir_Des, Rol_Des, Rol_Fec, Rol_Est, Rol_Cod FROM rol_pagos, tipos_rol WHERE tipos_rol.Tir_Cod = rol_pagos.Tir_Cod AND rol_pagos.Rol_Cod =$Par_Sql[0]";
 		return $carga_codrol;
 		break;
@@ -1397,27 +1397,27 @@ AND rol_pagos.Rol_Des = '$Par_Sql[1]' group by Prs_Ape order by Cof_Or";
 		break;
 		
 		case 159:
-		/* Consulta por la descripción del Rol de Pagos */
+		/* Consulta por la descripciï¿½n del Rol de Pagos */
 		$carga_codrol = "SELECT rol_pagos.Tir_Cod, Tir_Des, Rol_Des, Rol_Est, Rol_Fec, Rol_Cod FROM rol_pagos, tipos_rol WHERE tipos_rol.Tir_Cod = rol_pagos.Tir_Cod AND rol_pagos.Rol_Cod=$Par_Sql[0]";
 		//echo $carga_codrol;
 		return $carga_codrol;
 		break;			
 			
 //		case 160:
-//		/* Cargado cheques según el apellido del proveedor de comprobante de egreso */
+//		/* Cargado cheques segï¿½n el apellido del proveedor de comprobante de egreso */
 //		$con_cheq_ape_160 = "SELECT comprobantes.Com_Cod, comprobantes.Com_Num, Pld_Des, Prs_Ape, Prs_Nom, Che_Cod,  Che_Num, Che_Val, cheques.Che_Fec, Com_Est, cheques.Asi_Cod, cheques.Ban_Cod, cheques.Prv_Cod FROM cheques, comprobantes, asientos, banco, det_plan, proveedore, persona where comprobantes.Com_Cod = asientos.Com_Cod AND asientos.Asi_Cod = cheques.Asi_Cod AND cheques.Ban_Cod = banco.Ban_Cod AND banco.Pld_Cod = det_plan.Pld_Cod AND cheques.Prv_Cod = proveedore.Prv_Cod AND proveedore.Prs_Cod = persona.Prs_Cod AND Prs_Ape like '$Par_Sql[0]%'";
 //		return $con_cheq_ape_160;
 //		break;		
 	
 					
 		case 161: 
-		/* Consulta la descripción del tipo de cargo */
+		/* Consulta la descripciï¿½n del tipo de cargo */
  		$cargar_cargos="SELECT tiposcargo.Tic_Des, cargos.Cag_Cod FROM tiposcargo, cargos WHERE tiposcargo.Tic_Cod = cargos.Tic_Cod AND cargos.Per_Cod = $Par_Sql[0]";
 		return $cargar_cargos;
 		break;
 		
 		case 162:	
-		/* Consulta el cargo que tiene el personal seleeccionado en la configuración*/	
+		/* Consulta el cargo que tiene el personal seleeccionado en la configuraciï¿½n*/	
 		$cons_carg = "SELECT confi_perso.Per_Cod, confi_perso.Cag_Cod FROM personal, persona, tipos_rol, confi_perso WHERE personal.Per_Cod = confi_perso.Per_Cod AND personal.Prs_Cod = persona.Prs_Cod AND tipos_rol.Tir_Cod = confi_perso.Tir_Cod AND tipos_rol.Tir_Cod = $Par_Sql[0] AND personal.Per_Cod = $Par_Sql[1]";
 		return $cons_carg;
 		break;
@@ -1448,7 +1448,7 @@ AND rol_pagos.Rol_Des = '$Par_Sql[1]' group by Prs_Ape order by Prs_Ape";
 	    //echo $carga_fact_comp;
   		return $carga_fact_comp;
 			
-/** Cargar retención de una liquidacion de compras ***********/
+/** Cargar retenciï¿½n de una liquidacion de compras ***********/
 		case 166:
 		$carg_retenc="SELECT persona.Prs_Ced, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Dir, proveedore.Prv_Cod, compras.Aut_Cod, ciudad.Ciu_Des, compras.Cop_Cod, compras.Cop_Num, compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Num, autorizaci.Aut_Sri, autorizaci.Pun_Sri, autorizaci.Aut_Fci, autorizaci.Aut_Cad, retencion.Ret_Est, retencion.Ret_Cod, retencion.Ret_Con, retencion.Ret_Fec, tipo_compr.Tic_Des, renta_iva.Ren_Por, renta_iva.Ren_Sri, det_retenc.Ret_Int, det_retenc.Ret_Bas, IF (det_retenc.Ret_Imp='R','RENTA','IVA') as Ret_Imp, det_retenc.Ret_Cod, det_retenc.Ren_Cod FROM tipo_compr,persona, proveedore, compras, retencion, autorizaci,
  det_retenc, renta_iva, ciudad WHERE compras.Cop_Cod=retencion.Cop_cod AND retencion.Ret_Cod=det_retenc.Ret_Cod AND ciudad.Ciu_Cod = persona.Ciu_Cod AND renta_iva.Ren_Cod=det_retenc.Ren_Cod and autorizaci.Aut_Cod = compras.Aut_Cod 
@@ -1480,7 +1480,7 @@ AND renta_iva.Ren_Cod=det_retenc.Ren_Cod AND retencion.Ret_Cod=$Par_Sql[0] LIMIT
 		return $matriculas_168;
 		break;
 		
-		/* Carga todos los costos menores o iguales a partir de una fecha para su generación */
+		/* Carga todos los costos menores o iguales a partir de una fecha para su generaciï¿½n */
 		case 169:
 		$costos_169 = "SELECT costos.Tio_Cod, Pro_Cod, Cos_Pre, Cos_Gen, Cos_Fec, Asi_Int FROM costos, tipo_costo WHERE costos.Tio_Cod 
 						= tipo_costo.Tio_Cod AND Sem_Cod = $Par_Sql[0] AND Cos_Gen <= '$Par_Sql[1]' AND Tio_Car = '$Par_Sql[2]' AND Cos_Est='A'";
@@ -1684,13 +1684,13 @@ WHERE comprobantes.Com_Est = 'A') AND
 		break;
 
 		case 189: 
-		/* Consulta la información relacionada con el código del periodo contable */
+		/* Consulta la informaciï¿½n relacionada con el cï¿½digo del periodo contable */
  		$consul_fecha_189 =	"SELECT Pec_Cod, Pec_Fei, Pec_Fef, YEAR(Pec_Fei) as Ann, Pla_Cod FROM perio_cont WHERE Pec_Cod =$Par_Sql[0]";
 		//echo $consul_fecha_189;
 		return $consul_fecha_189;
 		break;	
 
-	/* Inserción de los cheques de los comprobantes de egreso */
+	/* Inserciï¿½n de los cheques de los comprobantes de egreso */
 		case 190:
 		$ins_cheques_190="INSERT INTO cheques SET Prv_Cod=$Par_Sql[0], Ban_Cod=$Par_Sql[1], Asi_Cod=$Par_Sql[2], Che_Num='$Par_Sql[3]', Che_Cob='$Par_Sql[4]', Che_Val=$Par_Sql[5], Che_Obs=UPPER('$Par_Sql[6]'), Che_Fec='$Par_Sql[7]', Che_Cod = $Par_Sql[8]";
 		//echo $ins_cheques_190;
@@ -2004,7 +2004,7 @@ $act_sal_favor = "UPDATE saldo_favor SET Saf_Val = $Par_Sql[2], Saf_Cop = $Par_S
 /* CONSULTAS PARA GENERAR LOS ARCHIVOS XML */
 		
 		case 226:
-		/* Consulta la identificación del archivo xml */
+		/* Consulta la identificaciï¿½n del archivo xml */
 		$identificacion_226 = "SELECT Emp_Ruc, Emp_Nom, Suc_Dir, Suc_Te1, Suc_Fax, Suc_Cor, Emp_Rce, Emp_Rep, Emp_Rco FROM empresas, sucursal
 								WHERE empresas.Emp_Cod = sucursal.Emp_Cod AND empresas.Emp_Cod = 1";		
 								//echo $identificacion_226;
@@ -2188,7 +2188,7 @@ $Par_Sql[0] GROUP BY Iva_Sri, Iva_Por";
 		break;
 
 		case 243:
-		/* Consulta los años de las facturas de compras recibidas */
+		/* Consulta los aï¿½os de las facturas de compras recibidas */
 		$anios_243 = "SELECT DISTINCT YEAR(compras.Cop_Fec) as Anio FROM compras WHERE  compras.Cop_Est='A' 
 					 ORDER BY YEAR(compras.Cop_Fec) DESC";//Antes GROUP BY YEAR(compras.Cop_Fec) compras.Tic_Cod=$Par_Sql[0] AND
 					//echo $anios_243;
@@ -2207,7 +2207,7 @@ $Par_Sql[0] GROUP BY Iva_Sri, Iva_Por";
 		break;
 		
 		case 245:
-		/* Consulta los años de las facturas de ventas recibidas */
+		/* Consulta los aï¿½os de las facturas de ventas recibidas */
 		$anios_245 = "SELECT YEAR(caja_aper.Caj_Fec) as Anio FROM ventas, caja_aper WHERE ventas.Caj_Cod = caja_aper.Caj_Cod AND ventas.Tic_Cod=$Par_Sql[0]  
 					GROUP BY YEAR(caja_aper.Caj_Fec) ORDER BY YEAR(caja_aper.Caj_Fec) DESC";//antes AND caja_aper.Pun_Cod = $Par_Sql[1]
 					//echo $anios_245;
@@ -2215,14 +2215,14 @@ $Par_Sql[0] GROUP BY Iva_Sri, Iva_Por";
 		break;
 
 		case 246:
-		/* Consulta los años de las retenciones generadas */
+		/* Consulta los aï¿½os de las retenciones generadas */
 		$anios_246 = "SELECT YEAR(retencion.Ret_Fec) as Anio FROM retencion INNER JOIN det_retenc ON (retencion.Ret_Cod = det_retenc.Ret_Cod) GROUP BY Anio ORDER BY  Anio DESC";
 					//echo $anios_246;
 		return $anios_246;
 		break;
 
 		case 247:
-		/* Consulta los años de las facturas de compras recibidas */
+		/* Consulta los aï¿½os de las facturas de compras recibidas */
 		$anios_247 = "SELECT YEAR(compras.Cop_Fec) as Anio FROM compras WHERE compras.Cop_Est='A' 
 					GROUP BY YEAR(compras.Cop_Fec) ORDER BY YEAR(compras.Cop_Fec) DESC";
 					//echo $anios_247;
@@ -2285,7 +2285,7 @@ $Par_Sql[0] GROUP BY Iva_Sri, Iva_Por";
 		return $cc_pp_prove_255;
 		break;
 		
-				/* Inserción de cada asiento del comprobante */
+				/* Inserciï¿½n de cada asiento del comprobante */
 		case 256:
 		$ins_asie_256="INSERT INTO asientos SET Com_Cod=$Par_Sql[0], Asi_Deh='$Par_Sql[1]', Asi_Val=$Par_Sql[2], Asi_Con=UPPER('$Par_Sql[3]'), Asi_Glo=UPPER('$Par_Sql[4]'), Pld_Cod=$Par_Sql[5]";
 		//echo $ins_asie_256.'<br>';
@@ -2471,7 +2471,7 @@ WHERE semestres.Per_Int = $Par_Sql[0]";
 	   return $carrera_periodo_267;
 	   break;
 
-	/* Consulta de etapas académicas de tipo NIVELACION */
+	/* Consulta de etapas acadï¿½micas de tipo NIVELACION */
 	case 268:
 	$consulta_etapas_268="SELECT etapas.Eta_Cod, etapas.Eta_Rec, etapas.Eta_Des FROM etapas WHERE etapas.Eta_Rec<>0 AND etapas.Eta_Est='A' ORDER BY etapas.Eta_Des";
 	return $consulta_etapas_268;
@@ -2581,14 +2581,14 @@ WHERE semestres.Per_Int = $Par_Sql[0]";
 /* ******************************************* ALTA DE CHEQUES ******************************************** */
 
 	/* Setear el codigo del Proveedor VARIOS en la 301 - 302
-	/* Búsqueda de un proveedor por apellido */
+	/* Bï¿½squeda de un proveedor por apellido */
 	case 301:
 	$bus_proa_301="SELECT Prv_Cod, Prs_Ced, Prs_Ape, Prs_Nom, Prv_Fax, IF (Prv_Est='A','Activo','Inactivo') as Prv_Est FROM proveedore, persona WHERE Prs_Ape LIKE '%$Par_Sql[0]%' AND proveedore.Prs_Cod=persona.Prs_Cod";
 	//echo $bus_proa_301;
 	return $bus_proa_301;
 	break;
 
-	/* Búsqueda de un proveedor por Cédula */
+	/* Bï¿½squeda de un proveedor por Cï¿½dula */
 	case 302:
 	$bus_proc_302="SELECT Prv_Cod, Prs_Ced, Prs_Ape, Prs_Nom, Prv_Fax, IF (Prv_Est='A','Activo','Inactivo') as Prv_Est FROM proveedore, persona WHERE Prs_Ced = '$Par_Sql[0]' AND proveedore.Prs_Cod=persona.Prs_Cod";
 	return $bus_proc_302;
@@ -2623,7 +2623,7 @@ AND comprobantes.Com_Cod NOT IN
 	return $cargar_cuentas;
 	break;
 	
-	/* Inserción de los cheques de los comprobantes de egreso */
+	/* Inserciï¿½n de los cheques de los comprobantes de egreso */
 	case 307:
 	$ins_cheques_307="INSERT INTO cheques SET Prv_Cod=$Par_Sql[0], Ban_Cod=$Par_Sql[1], Asi_Cod=$Par_Sql[2], Che_Num='$Par_Sql[3]', Che_Val=$Par_Sql[4], Che_Obs=UPPER('$Par_Sql[5]'), Che_Fec='$Par_Sql[6]', Che_Cod = $Par_Sql[7]";
 	//echo $ins_cheques_307."<br>";
@@ -2719,7 +2719,7 @@ Com_Con, Com_Obs, Com_Fec, Com_Val, Com_Est";
 	break;
 
 	case 319:
-	/* Consulta los años de las facturas de ventas recibidas */
+	/* Consulta los aï¿½os de las facturas de ventas recibidas */
 	$anios_243 = "SELECT YEAR(caja_aper.Caj_Fec) as Anio FROM ventas, caja_aper WHERE ventas.Caj_Cod = caja_aper.Caj_Cod AND ventas.Tic_Cod=$Par_Sql[0] AND Ventas.Vet_Est='A' 
 				GROUP BY YEAR(caja_aper.Caj_Fec) ORDER BY YEAR(caja_aper.Caj_Fec) DESC";
 				//echo $anios_243;
@@ -2785,7 +2785,7 @@ AND det_compra.Adq_Cod=adquisicio.Adq_Cod GROUP BY adquisicio.Adq_Cod ORDER BY a
 		return $consultar_adquisicion_compra_325;
 		break;
   
-	/** Consultar facturas sin retención ********/
+	/** Consultar facturas sin retenciï¿½n ********/
 		case 326:
 		$consulta_facturas_sr_326="SELECT tipo_compr.Tic_Des,persona.Prs_Ape, persona.Prs_Ced, compras.Cop_Est, compras.Cop_Cod, 
 			compras.Cop_Fec, persona.Prs_Nom, compras.Cop_Num, compras.Cop_Aut,
@@ -2808,7 +2808,7 @@ AND det_compra.Adq_Cod=adquisicio.Adq_Cod GROUP BY adquisicio.Adq_Cod ORDER BY a
 		break;
 
 
-		/* sentencias actualizacion de codigos de retención */
+		/* sentencias actualizacion de codigos de retenciï¿½n */
       case 327:
 		$consulta_retencion_ene_feb_327="SELECT retencion.Ret_Cod, retencion.Ret_Fec, det_retenc.Ret_Int, renta_iva.Ren_Cod ,renta_iva.Ren_Sri FROM retencion, det_retenc, renta_iva
 WHERE retencion.Ret_Cod=det_retenc.Ret_Cod AND
@@ -2822,7 +2822,7 @@ det_retenc.Ren_Cod=renta_iva.Ren_Cod AND retencion.Ret_Fec >='2009-01-01' AND re
 		return $actualiza_retencion_ene_feb_327;
 		break;
 
-		/* consulto los años para la consulta de las retenciones */
+		/* consulto los aï¿½os para la consulta de las retenciones */
 		case 329:
 		$consulta_anio_retencion_329="SELECT YEAR(retencion.Ret_Fec) AS Anio, renta_iva.Ren_Cod, renta_iva.Ren_Por  FROM retencion, det_retenc, renta_iva
 WHERE retencion.Ret_Cod=det_retenc.Ret_Cod
@@ -2830,7 +2830,7 @@ AND det_retenc.Ren_Cod=renta_iva.Ren_Cod
 GROUP BY YEAR(retencion.Ret_Fec) ORDER BY YEAR(retencion.Ret_Fec) DESC";
 		return $consulta_anio_retencion_329;
 		break;
-		/* consulto los años de las retenciones por parámetros */
+		/* consulto los aï¿½os de las retenciones por parï¿½metros */
 		case 330:
 		$consulto_anio_reten_parametro_330="SELECT YEAR(retencion.Ret_Fec) AS Anio, renta_iva.Ren_Cod, renta_iva.Ren_Por FROM retencion, det_retenc, renta_iva
 WHERE retencion.Ret_Cod=det_retenc.Ret_Cod
@@ -2839,7 +2839,7 @@ GROUP BY YEAR(retencion.Ret_Fec) ORDER BY YEAR(retencion.Ret_Fec) DESC";
 		//echo $consulto_anio_reten_parametro_330;
 		return $consulto_anio_reten_parametro_330;
 		break;
-		/* consulta de codigos de formularios del SRI y los conceptos en la retención en la fuente de impuesto a la renta (AIR) */
+		/* consulta de codigos de formularios del SRI y los conceptos en la retenciï¿½n en la fuente de impuesto a la renta (AIR) */
 		case 331:
 		$carg_ret_des_imp_331="SELECT renta_iva.Ren_Cod, renta_iva.Ren_Sri, renta_iva.Ren_Por, Ren_Con 
 FROM renta_iva, retencion, det_retenc 
@@ -2853,7 +2853,7 @@ ORDER BY renta_iva.Ren_Sri";
 		return $carg_ret_des_imp_331;
 		break;
 
-		/* consulta de retenciones activas e inactivas buscadas por número de comprobante de retención */
+		/* consulta de retenciones activas e inactivas buscadas por nï¿½mero de comprobante de retenciï¿½n */
 		case 332:
 		$carga_retenci_modif_332="SELECT persona.Prs_Nom,persona.Prs_Ape, proveedore.Prv_Cod, 
 compras.Cop_Cod,compras.Cop_Num,compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Num, retencion.Ret_Cod, retencion.Ret_Cod, retencion.Ret_Est, retencion.Ret_Fec,
@@ -2892,7 +2892,7 @@ GROUP BY retencion.Ret_Cod ORDER BY persona.Prs_Ape";
 
 
 	/**
-	* Carga los conceptos en la retención en la fuente de impuesto a la renta (AIR)  
+	* Carga los conceptos en la retenciï¿½n en la fuente de impuesto a la renta (AIR)  
 	*/
  // case 338:
  // $carg_rentaiva_adq_338="SELECT renta_iva.Ren_Cod, renta_iva.Ren_Sri, renta_iva.Ren_Por, Ren_Con  
@@ -3000,7 +3000,7 @@ AND compr_auto.Cop_Cod='$Par_Sql[0]'";
 //echo $delete_asiento_353;
  return $delete_asiento_353;
  break;
- /* Actualizo los datos de la cabecera de la retención */
+ /* Actualizo los datos de la cabecera de la retenciï¿½n */
  case 354:
 $actualizo_cabecera_retencion_354="UPDATE retencion SET Cop_Cod='$Par_Sql[0]', 
 Ret_Num='$Par_Sql[1]', Ret_Fec='$Par_Sql[2]',Ret_Con=UPPER('$Par_Sql[3]'), Tic_Cod='$Par_Sql[4]',Vnd_Cod='$Par_Sql[5]',Aut_Cod='$Par_Sql[6]' WHERE retencion.Ret_Cod=$Par_Sql[7]";
@@ -3043,7 +3043,7 @@ break;
 	break;
 
 
-	/* Baja lógica del comprobante en la base de datos*/
+	/* Baja lï¿½gica del comprobante en la base de datos*/
 	case 359:
 	$baja_log_comprobante_359="UPDATE comprobantes SET Com_Est='$Par_Sql[1]' WHERE Com_Cod='$Par_Sql[0]' ";
 	return $baja_log_comprobante_359;
@@ -3055,7 +3055,7 @@ break;
 	return $consulta_cuenta_relacion_ret_360;
 	break;
 	
-	/* Carga los conceptos en la retención en la fuente de impuesto a la renta (AIR) Ojoooooooooooooooooooooooooo 
+	/* Carga los conceptos en la retenciï¿½n en la fuente de impuesto a la renta (AIR) Ojoooooooooooooooooooooooooo 
 	renta_iva.Adq_Cod='$Par_Sql[0]' AND*/
 	case 361:
 	$carg_rentaiva_adq_361="SELECT renta_iva.Ren_Cod, renta_iva.Ren_Sri, renta_iva.Ren_Por, Ren_Con  
@@ -3065,7 +3065,7 @@ break;
 //	echo $carg_rentaiva_adq_361;
 	return $carg_rentaiva_adq_361;
 	break;
-		/* Consulto el código del detalle de la cuenta perteneciente al comprobante de compra */
+		/* Consulto el cï¿½digo del detalle de la cuenta perteneciente al comprobante de compra */
 	case 362:
 	$consulta_cuenta_comprobante_362="SELECT comprobantes.Com_Cod, det_plan.Pld_Cod, det_plan.Pld_Des, ccpp_prove.Ccp_Cxp FROM ccpp_prove, det_plan, asientos, comprobantes, compr_auto
 WHERE ccpp_prove.Pld_Cod=det_plan.Pld_Cod AND asientos.Pld_Cod=det_plan.Pld_Cod
@@ -3111,7 +3111,7 @@ AND comprobantes.Com_Cod=compr_auto.Com_Cod AND compr_auto.Cop_Cod='$Par_Sql[0]'
 	//echo $consultar_bancos_compra_368;
 	return $consultar_bancos_compra_368;
 	break;
-	/* Consulta que permite saber si la compra es automática o manual */
+	/* Consulta que permite saber si la compra es automï¿½tica o manual */
 	
 	case 369:
 	$consultar_automatica_manual_369="SELECT compr_auto.Com_Cod FROM compr_auto WHERE compr_auto.Com_Cod = $Par_Sql[0]";						
@@ -3124,7 +3124,7 @@ AND comprobantes.Com_Cod=compr_auto.Com_Cod AND compr_auto.Cop_Cod='$Par_Sql[0]'
 	return $consultar_cuenta_banco_existe_370;
 	break;
 	
-	/* Consultar la cuenta del plan en base al código*/
+	/* Consultar la cuenta del plan en base al cï¿½digo*/
 	case 371:
 	$consultar_cuenta_plan_371="SELECT det_plan.Pld_Cod, det_plan.Pla_Cod, det_plan.Pl ";
 	return $consultar_cuenta_plan_371;
@@ -3156,7 +3156,7 @@ AND comprobantes.Com_Cod=compr_auto.Com_Cod AND compr_auto.Cop_Cod='$Par_Sql[0]'
 	 break;
 
 	 /* Consulta si existe la retencion ya registrada en el mismo punto de venta */
-	 /* Quite la restricción a que la retención sea solo duplicada por la persona que registro la compra retencion.Vnd_Cod=$Par_Sql[0] AND */
+	 /* Quite la restricciï¿½n a que la retenciï¿½n sea solo duplicada por la persona que registro la compra retencion.Vnd_Cod=$Par_Sql[0] AND */
      	 case 376:
 	 $consulta_num_renta_registrada_376="SELECT retencion.Vnd_Cod, retencion.Ret_Cod FROM retencion WHERE  retencion.Ret_Num='$Par_Sql[1]' AND retencion.Aut_Cod=$Par_Sql[2] AND retencion.Ret_Est='A'";
 	 //echo $consulta_num_renta_registrada_376; 	
@@ -3170,7 +3170,7 @@ AND comprobantes.Com_Cod=compr_auto.Com_Cod AND compr_auto.Cop_Cod='$Par_Sql[0]'
 	 $consultar_pvta_377="SELECT autorizaci.Aut_Cod,autorizaci.Pun_Cod  FROM autorizaci WHERE Pun_Cod='$Par_Sql[0]' AND Tic_Cod=6";
 	 return $consultar_pvta_377;
 	 break;
-	 /* Consulto la autorización para la retención */
+	 /* Consulto la autorizaciï¿½n para la retenciï¿½n */
 	  
 	 case 378:
 	 $consulta_autorizacion_renta_378="SELECT autorizaci.Aut_Cod,  autorizaci.Pun_Cod, autorizaci.Tic_Cod, autorizaci.Aut_Ini, autorizaci.Aut_Fin FROM autorizaci 
@@ -3179,7 +3179,7 @@ AND comprobantes.Com_Cod=compr_auto.Com_Cod AND compr_auto.Cop_Cod='$Par_Sql[0]'
 	 return $consulta_autorizacion_renta_378;
 	 break;
 
-	 	 /* Consultar si la retención no se repite en la modificación */
+	 	 /* Consultar si la retenciï¿½n no se repite en la modificaciï¿½n */
 	 /* Quite esta clausula para que no registra la modificacion que requiera hacer otro usuario vendedor  retencion.Vnd_Cod=$Par_Sql[0] AND*/
 	 case 379:
 	 $consultar_retencion_modificar_379="SELECT retencion.Vnd_Cod, retencion.Ret_Cod FROM retencion WHERE  retencion.Ret_Num<>$Par_Sql[1] AND retencion.Aut_Cod=$Par_Sql[2] AND retencion.Ret_Num=$Par_Sql[3]"; //Antes AND retencion.Ret_Est='A'
@@ -3187,13 +3187,13 @@ AND comprobantes.Com_Cod=compr_auto.Com_Cod AND compr_auto.Cop_Cod='$Par_Sql[0]'
 	 return $consultar_retencion_modificar_379;
 	 break;
 	 	
- /* Consultar si la retención es automática */
+ /* Consultar si la retenciï¿½n es automï¿½tica */
 	 case 380:
 	 $consultar_automatica_manual_380="SELECT compr_auto.Com_Cod FROM compr_auto WHERE compr_auto.Cop_Cod = $Par_Sql[0]";						
 	 //echo $consultar_automatica_manual_380;
 	 return $consultar_automatica_manual_380;
 	 break;
-	 /* Consultar el detalle de la retención */
+	 /* Consultar el detalle de la retenciï¿½n */
 	 case 381:
 	 $consultar_automatica_manual_381="SELECT det_retenc.Ret_Int, det_retenc.Ret_Cod, det_retenc.Ret_Bas, renta_iva.Ren_Cod, renta_iva.Ren_Sri, renta_iva.Ren_Por,renta_iva.Ren_Con  
 	 FROM det_retenc, renta_iva  WHERE  det_retenc.Ren_Cod=renta_iva.Ren_Cod AND  det_retenc.Ret_Cod = $Par_Sql[0] ";
@@ -3303,7 +3303,7 @@ AND comprobantes.Com_Cod=compr_auto.Com_Cod AND compr_auto.Cop_Cod='$Par_Sql[0]'
 	return $comprobantes_389;
 	break;
 	
-	/* Consultando las facturas Anuladas en un mes y año determinado Anexos Transaccionales 2010*/
+	/* Consultando las facturas Anuladas en un mes y aï¿½o determinado Anexos Transaccionales 2010*/
 	case 390:
 	$comprobantes_390="	SELECT 
 						  ventas.Vet_Num,	
@@ -3337,7 +3337,7 @@ AND comprobantes.Com_Cod=compr_auto.Com_Cod AND compr_auto.Cop_Cod='$Par_Sql[0]'
 	break;
 
 
-	/* Búsqueda de un personal Receptor caja chica por apellido */
+	/* Bï¿½squeda de un personal Receptor caja chica por apellido */
 	case 395:
 	$Sql_395="SELECT 
 				  receptor.Rec_Cod,
@@ -3356,7 +3356,7 @@ AND comprobantes.Com_Cod=compr_auto.Com_Cod AND compr_auto.Cop_Cod='$Par_Sql[0]'
 	return $Sql_395;
 	break;
 	
-	/* Búsqueda de un personal Receptor caja chica por cedula */
+	/* Bï¿½squeda de un personal Receptor caja chica por cedula */
 	case 396:
 	$Sql_396="SELECT 
 				  receptor.Rec_Cod,
@@ -3499,7 +3499,7 @@ AND comprobantes.Com_Cod=compr_auto.Com_Cod AND compr_auto.Cop_Cod='$Par_Sql[0]'
 		return $busca_proveedores_cod;
 		break;
 		
-		/* çarga el proeedor*/
+		/* ï¿½arga el proeedor*/
 		case 407:
 		$carga_proveedor= "SELECT persona.Prs_Cod, persona.Prs_Ced, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Sex, persona.Prs_Dir, 
 persona.Ciu_Cod, persona.Prs_Tel, persona.Prs_Cel, persona.Prs_Te2, persona.Ide_Cod, identifica.Ide_Des, proveedore.Prv_Est,
@@ -3509,27 +3509,27 @@ FROM proveedore, persona, identifica, ciudad WHERE persona.Ide_Cod= identifica.I
 		return $carga_proveedor;
 		break;
 	
-		/* Açtualisa probeedor*/ 
+		/* Aï¿½tualisa probeedor*/ 
 		case 408:	
 		$actualiza_proveedores="UPDATE proveedore SET  Prv_Fax = '$Par_Sql[0]', Ide_Cod = '$Par_Sql[1]' WHERE Prs_Cod = $Par_Sql[2]";
 		//echo $actualiza_proveedores;
 		return $actualiza_proveedores;
 		break;
 		
-		/* Açtualisa persona*/
+		/* Aï¿½tualisa persona*/
 		case 409:
 		$actualiza_persona="UPDATE persona SET Prs_Ced = Trim('$Par_Sql[0]'), Ide_Cod =$Par_Sql[1], Prs_Nom = Trim(UPPER('$Par_Sql[2]')), Prs_Ape = Trim(UPPER('$Par_Sql[3]')), Prs_Sex=Trim(UPPER('$Par_Sql[4]')), Prs_Dir = Trim(UPPER('$Par_Sql[5]')), Ciu_Cod = $Par_Sql[6], Prs_Tel ='$Par_Sql[7]', Prs_Cel = '$Par_Sql[8]', Prs_Te2 ='$Par_Sql[9]' WHERE Prs_Cod = $Par_Sql[10]";
 		//echo $actualiza_persona;
 		return $actualiza_persona;
 		break;
 		
-		/* Registra çategoria JESSICA */
+		/* Registra ï¿½ategoria JESSICA */
 		case 410:
 		$registra_categoria= "INSERT INTO categorias (Cat_Des) VALUES (Trim(UPPER('$Par_Sql[0]')))";
 		return $registra_categoria;
 		break;
 		
-		/* Busça la çategoria JESSICA */
+		/* Busï¿½a la ï¿½ategoria JESSICA */
 		case 411:
 		$busca_categoria_nom= "SELECT Cat_Cod,Cat_Des FROM categorias WHERE Cat_Des LIKE '%$Par_Sql[0]%' ORDER BY Cat_Des ASC";
 		return $busca_categoria_nom;
@@ -3540,7 +3540,7 @@ FROM proveedore, persona, identifica, ciudad WHERE persona.Ide_Cod= identifica.I
 		return $busca_categoria_cod;
 		break;
 		
-		/* Çarga la Çategoria */
+		/* ï¿½arga la ï¿½ategoria */
 		case 413:
 		$carga_categoria= "SELECT categorias.Cat_Cod, categorias.Cat_Des FROM categorias WHERE categorias.Cat_Cod = '$Par_Sql[0]'";
 		return $carga_categoria;
@@ -3912,8 +3912,8 @@ AND compras.Pec_Cod = '$Par_Sql[1]' $Par_Sql[2]
 ORDER BY compras.Cop_Cod ASC, Prs_Ape, Prs_Nom
 ";return $carg_fac_com_anu_468;
 break;
-		/* Carga las facturas que se pueden anular que no se le ha generado la retencion buscando por número de factura de compra */
-				/* Carga las facturas que se pueden anular que no se le ha generado la retencion buscando por número de factura de compra */
+		/* Carga las facturas que se pueden anular que no se le ha generado la retencion buscando por nï¿½mero de factura de compra */
+				/* Carga las facturas que se pueden anular que no se le ha generado la retencion buscando por nï¿½mero de factura de compra */
 		case 469:
 		$carg_fac_com_anu_469="SELECT persona.Prs_Ape, compras.Cop_Est, compras.Cop_Cod, compras.Cop_Fec, persona.Prs_Nom, compras.Cop_Num
 FROM persona, compras, proveedore
@@ -3942,7 +3942,7 @@ GROUP BY compras.Cop_Cod ORDER BY compras.Cop_Cod ASC ";
 		return $carg_fac_com_anu;
 		break;
 		
-		/* Dar de baja a las facturas de compra a las cuales no se les haya generado la retención */
+		/* Dar de baja a las facturas de compra a las cuales no se les haya generado la retenciï¿½n */
 		case 471:
 		$baj_fac_compra="UPDATE compras SET Cop_Est=UPPER('$Par_Sql[1]') WHERE Cop_Cod=$Par_Sql[0]";
 		return $baj_fac_compra;
@@ -3966,7 +3966,7 @@ AND det_compra.Iva_Cod=iva.Iva_Cod AND ciudad.Ciu_Cod=compras.Ciu_Cod AND susten
 		return $con_fac_proveedo; 
 		break;
 
-	/* Consulta de campos para el cálculo de los totales de la factura */
+	/* Consulta de campos para el cï¿½lculo de los totales de la factura */
 		case 473:
 		$con_fac_tot_com="SELECT compras.Cop_Des ,det_compra.Cop_Int,det_compra.Cop_Pro, det_compra.Cop_Can, det_compra.Cop_Pru, 
 		det_compra.Cop_Imp, det_compra.Cop_Dec, iva.Iva_Por
@@ -3983,7 +3983,7 @@ $con_exi_fac_com="SELECT compras.Cop_Num FROM compras WHERE compras.Cop_Num='$Pa
 		return $con_exi_fac_com;
 		break;
 
-		/* Consulta las liquidaciones que se pueden modificar en base al tipo de comprobante, año, mes */
+		/* Consulta las liquidaciones que se pueden modificar en base al tipo de comprobante, aï¿½o, mes */
 		case 475:
 		$carg_fac_com_mofi_475="SELECT persona.Prs_Ape, compras.Cop_Est, compras.Cop_Cod, compras.Cop_Fec, persona.Prs_Nom, compras.Cop_Num, proveedore.Prv_Cod, compras.Tic_Cod, 
 		tipo_compr.Tic_Des 
@@ -3994,7 +3994,7 @@ $con_exi_fac_com="SELECT compras.Cop_Num FROM compras WHERE compras.Cop_Num='$Pa
 		return $carg_fac_com_mofi_475;
 		break;
 		
-		/* Carga los conceptos en la retención en la fuente de impuesto a la renta (AIR) */
+		/* Carga los conceptos en la retenciï¿½n en la fuente de impuesto a la renta (AIR) */
 		case 476:
 		$carg_ret_des_imp="SELECT renta_iva.Ren_Cod, renta_iva.Ren_Sri, renta_iva.Ren_Por, Ren_Con  
 		FROM renta_iva WHERE renta_iva.Ren_Est='A' ORDER BY renta_iva.Ren_Sri   ";
@@ -4036,7 +4036,7 @@ AND compras.Cop_Est='A'
 AND compras.Cop_Cod NOT IN(SELECT retencion.Cop_Cod FROM retencion WHERE Ret_Est='A' )";
 		return $con_dat_ret;
 		break;
-		/** Consulta las facturas que se pueden modificar con estado Activo por número de factura **********************/
+		/** Consulta las facturas que se pueden modificar con estado Activo por nï¿½mero de factura **********************/
 		
 		/** Consulta las liquidaciones en base al numero en base al tipo de comprobante */		
 		case 479:
@@ -4049,7 +4049,7 @@ AND compras.Cop_Cod NOT IN(SELECT retencion.Cop_Cod FROM retencion WHERE Ret_Est
 		return $con_fac_mod_num_479;
 		break;
 
-		/*** Modificación de los datos de la cabecera de la Factura *********************************************/
+		/*** Modificaciï¿½n de los datos de la cabecera de la Factura *********************************************/
 		case 480:
 		$con_mod_fac_compra="UPDATE compras SET Tic_Cod=$Par_Sql[0], Prv_Cod=$Par_Sql[1], Ciu_Cod=$Par_Sql[2], Cop_Num=UPPER('$Par_Sql[3]'), Cop_Aut=UPPER('$Par_Sql[4]'), Cop_Fec='$Par_Sql[5]', Cop_Reg='$Par_Sql[6]', Cop_Des='$Par_Sql[7]', Cop_Obs=UPPER('$Par_Sql[8]'), Cop_Cad='$Par_Sql[9]', Cop_Imf='$Par_Sql[10]' WHERE compras.Cop_Cod=$Par_Sql[11] ";
 		return $con_mod_fac_compra;
@@ -4086,7 +4086,7 @@ ORDER BY  compras.Cop_Cod, compras.Cop_Fec ASC
 		return $carg_fac_com_anu;
 		break;
 		
-		/** Consulta las facturas de compra por número de la factura de compra con estado activo e inactivo  ********************************************************************************************************************************/
+		/** Consulta las facturas de compra por nï¿½mero de la factura de compra con estado activo e inactivo  ********************************************************************************************************************************/
     	case 484:
 		$carg_fac_com_anu="SELECT persona.Prs_Ape, compras.Cop_Est, compras.Cop_Cod, compras.Cop_Fec, persona.Prs_Nom, compras.Cop_Num
 FROM persona, compras, proveedore
@@ -4117,20 +4117,20 @@ ORDER BY compras.Cop_Fec ASC
 ";
 		return $carg_fac_com_anu;
 		break;
-		/** Consulta el total del importe de una factura de compra de acuerdo al código interno
+		/** Consulta el total del importe de una factura de compra de acuerdo al cï¿½digo interno
 		*******************************************************************************************************************/
 		case 486:
 		$impo_sum_fac_comp="SELECT SUM(Cop_Imp) as Importe FROM det_compra WHERE Cop_Cod=$Par_Sql[0]";
 		return $impo_sum_fac_comp;
 		break;
 		
-		/* Búsqueda de un proveedor por apellido */
+		/* Bï¿½squeda de un proveedor por apellido */
 		case 487:
 		$bus_proa="SELECT Prv_Cod, Prs_Ced, Prs_Ape, Prs_Nom, Prv_Fax, IF (Prv_Est='A','Activo','Inactivo') as Prv_Est FROM proveedore, persona WHERE Prs_Ape LIKE '%$Par_Sql[0]%' AND proveedore.Prs_Cod=persona.Prs_Cod ORDER BY persona.Prs_Ape ASC";
 		return $bus_proa;
 		break;
 
-	/* Búsqueda de un proveedor por Cédula */
+	/* Bï¿½squeda de un proveedor por Cï¿½dula */
 		case 488:
   	$bus_proc="SELECT Prv_Cod, Prs_Ced, Prs_Ape, Prs_Nom, Prv_Fax, IF (Prv_Est='A','Activo','Inactivo') as Prv_Est FROM proveedore, persona WHERE Prs_Ced = '$Par_Sql[0]' AND proveedore.Prs_Cod=persona.Prs_Cod ORDER BY persona.Prs_Ape ASC";
 		return $bus_proc;
@@ -4140,7 +4140,7 @@ ORDER BY compras.Cop_Fec ASC
 		$renta_iva="SELECT renta_iva.Ren_Cod, renta_iva.Ren_Sri, renta_iva.Ren_Por FROM renta_iva WHERE renta_iva.Ren_Cod=$Par_Sql[0]";
 		return $renta_iva;
 		break;
-		/* Cargado de los porcentajes RENTA IVA medidiante tomando el código enviado atraves de AJAX */
+		/* Cargado de los porcentajes RENTA IVA medidiante tomando el cï¿½digo enviado atraves de AJAX */
 		case 490:
 		$renta_sri="SELECT renta_iva.Ren_Cod, renta_iva.Ren_Sri, renta_iva.Ren_Por FROM renta_iva WHERE renta_iva.Ren_Sri='$Par_Sql[0]' AND renta_iva.Ren_Est='A'";
 		return 	$renta_sri;
@@ -4151,7 +4151,7 @@ ORDER BY compras.Cop_Fec ASC
     	return $renta_retencion;
 		break;
 
-		/* Insercion del detalle de la retención **/
+		/* Insercion del detalle de la retenciï¿½n **/
 		case 492:
 		$renta_detalle_492="INSERT INTO det_retenc(Ret_Cod,Ret_Bas, Ren_Cod, Ret_Imp, Ret_Int, Adq_Cod)
 		VALUES($Par_Sql[0],'$Par_Sql[1]',$Par_Sql[2],UPPER('$Par_Sql[3]'),'$Par_Sql[4]', $Par_Sql[5])";
@@ -4159,14 +4159,14 @@ ORDER BY compras.Cop_Fec ASC
 		return $renta_detalle_492;
 		break;		
 
-		/* Carga las facturas las retenciones que se deben modifcar producto de la actualización de una factura */
+		/* Carga las facturas las retenciones que se deben modifcar producto de la actualizaciï¿½n de una factura */
 		case 493:
 		$cons_rete_actuali_mod_fac="SELECT compras.Cop_Cod FROM compras WHERE compras.Cop_Cod=$Par_Sql[0]
 AND compras.Cop_Cod IN(SELECT retencion.Cop_Cod FROM retencion WHERE retencion.Ret_Est='A')";
 
 		return $cons_rete_actuali_mod_fac;
 		break; 
-	    /* Consulta las facturas con estado activo y sin generación de la retención o con la retencion dada de bajs ******/
+	    /* Consulta las facturas con estado activo y sin generaciï¿½n de la retenciï¿½n o con la retencion dada de bajs ******/
 		case 494:
 		$carg_fac_com_anu="SELECT persona.Prs_Ape, compras.Cop_Est, compras.Cop_Cod, compras.Cop_Fec, persona.Prs_Nom, compras.Cop_Num
 FROM persona, compras, proveedore
@@ -4198,7 +4198,7 @@ AND compras.Cop_Cod NOT IN(SELECT retencion.Cop_Cod FROM retencion WHERE Ret_Est
 		$actu_cabe_retencion="UPDATE retencion SET retencion.Ret_Con=UPPER('$Par_Sql[1]') WHERE retencion.Ret_Cod=$Par_Sql[0]";
 		return $actu_cabe_retencion; 
 		break;
-		/** Consultar las retenciones a modificar por número de comprobante de retencion ***/
+		/** Consultar las retenciones a modificar por nï¿½mero de comprobante de retencion ***/
 		case 499:
 		$carga_retenci_modif="SELECT persona.Prs_Nom,persona.Prs_Ape, proveedore.Prv_Cod, 
 compras.Cop_Cod,compras.Cop_Num,compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Num, retencion.Ret_Cod, retencion.Ret_Fec,
@@ -4208,8 +4208,8 @@ AND retencion.Ret_Est='A' AND retencion.Tic_Cod=$Par_Sql[1]
 AND retencion.Ret_Num='$Par_Sql[0]' GROUP BY retencion.Ret_Cod ORDER BY persona.Prs_Ape";
 		return $carga_retenci_modif;
 		break;
-		/** Cálculo del importe de la retención ************/
-		/** Cálculo del importe de la retención ************/
+		/** Cï¿½lculo del importe de la retenciï¿½n ************/
+		/** Cï¿½lculo del importe de la retenciï¿½n ************/
 		case 500:
 		/*$importe_retenido="SELECT SUM(det_retenc.Ret_Bas) AS suma_re FROM det_retenc, renta_iva
 		WHERE det_retenc.Ret_Cod=$Par_Sql[0] AND renta_iva.Ren_Cod=det_retenc.Ren_Cod";ojo borrar*/
@@ -4222,7 +4222,7 @@ AND retencion.Ret_Num='$Par_Sql[0]' GROUP BY retencion.Ret_Cod ORDER BY persona.
 		return $importe_retenido;
 		break;
 		
-/** Cargar retención a actualizar ***********/
+/** Cargar retenciï¿½n a actualizar ***********/
 			case 501:
 		$cargar_reten_actuali="SELECT persona.Prs_Ced,persona.Prs_Nom,persona.Prs_Ape, persona.Prs_Dir, proveedore.Prv_Cod, compras.Aut_Cod, compras.Cop_Aut, compras.Cop_Cod, compras.Cop_Num, compras.Cop_Fec, compras.Cop_Imf, compras.Cop_Cad, retencion.Ret_Num, retencion.Ret_Est, retencion.Ret_Cod, retencion.Ret_Con, retencion.Ret_Fec, tipo_compr.Tic_Des, renta_iva.Ren_Por, renta_iva.Ren_Sri,
 det_retenc.Ret_Int, (det_retenc.Ret_Bas) as Ret_Bas, IF (det_retenc.Ret_Imp='R','RENTA','IVA') as Ret_Imp
@@ -4235,7 +4235,7 @@ ORDER BY det_retenc.Ret_Int ASC";
 
 		
 		
-		/** Actualiza la cabecera de la retención *****************/
+		/** Actualiza la cabecera de la retenciï¿½n *****************/
 		case 502:
 		$actua_cab_retencion="UPDATE retencion SET Ret_Num='$Par_Sql[3]', Ret_Fec='$Par_Sql[1]', Ret_Con=UPPER('$Par_Sql[2]') WHERE retencion.Ret_Cod=$Par_Sql[0]";
 		return $actua_cab_retencion;
@@ -4245,7 +4245,7 @@ ORDER BY det_retenc.Ret_Int ASC";
 		$actua_det_retencion="UPDATE det_retenc SET Ret_Imp=UPPER('$Par_Sql[1]'), Ret_Bas=$Par_Sql[2], Ren_Cod=$Par_Sql[3] WHERE Ret_Int=$Par_Sql[0]";
 		return $actua_det_retencion;
 		break;
-		/** Consultar las retenciones a modificar por número de comprobante de retencion ***/
+		/** Consultar las retenciones a modificar por nï¿½mero de comprobante de retencion ***/
 			case 504:
 		$carga_retenci_modif="SELECT persona.Prs_Nom,persona.Prs_Ape, proveedore.Prv_Cod, 
 compras.Cop_Cod,compras.Cop_Num,compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Num, retencion.Ret_Cod, retencion.Ret_Fec,
@@ -4259,7 +4259,7 @@ AND persona.Prs_Ape LIKE '$Par_Sql[0]%' GROUP BY retencion.Ret_Cod ORDER BY pers
 
 
 
-			/** Consulta de retenciones activas e inactivas buscadas por número de comprobante de retención ********************************/
+			/** Consulta de retenciones activas e inactivas buscadas por nï¿½mero de comprobante de retenciï¿½n ********************************/
 		case 505:
 		$carga_retenci_modif="SELECT persona.Prs_Nom,persona.Prs_Ape, proveedore.Prv_Cod, 
 compras.Cop_Cod, compras.Cop_Est,compras.Cop_Num,compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Num, retencion.Ret_Cod, retencion.Ret_Cod, retencion.Ret_Est, retencion.Ret_Fec,
@@ -4272,7 +4272,7 @@ AND retencion.Ret_Num='$Par_Sql[0]' $Par_Sql[2] GROUP BY retencion.Ret_Cod ORDER
 		break;
 
 
-		/** Consulta de retenciones activas e inactivas buscadas por número de factura *********************/
+		/** Consulta de retenciones activas e inactivas buscadas por nï¿½mero de factura *********************/
 
 		case 506:
 		$carga_reten_modif_fac="SELECT persona.Prs_Nom,persona.Prs_Ape, proveedore.Prv_Cod, 
@@ -4287,7 +4287,7 @@ AND persona.Prs_Ape LIKE '%$Par_Sql[0]%'  $Par_Sql[2] GROUP BY retencion.Ret_Cod
 
 
 
-		/** Consulta de retenciones activas e inactivas por fechas de registro de retención *************/
+		/** Consulta de retenciones activas e inactivas por fechas de registro de retenciï¿½n *************/
 		case 507:
 		$carg_reten_fechas="SELECT persona.Prs_Nom,persona.Prs_Ape, proveedore.Prv_Cod,
  compras.Cop_Cod,compras.Cop_Num,compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Est, 
@@ -4321,7 +4321,7 @@ AND retencion.Ret_Est='$Par_Sql[3]'
 		break;
 
 
-		/** Consultar el codigo máximo en la base de datos *********************************************/
+		/** Consultar el codigo mï¿½ximo en la base de datos *********************************************/
 		case 511:
 		$con_max_cod_ret="SELECT MAX(Ret_Num) AS Ret_Ide FROM retencion  WHERE Aut_Cod=$Par_Sql[0]";
 		//echo $con_max_cod_ret;
@@ -4335,13 +4335,13 @@ AND retencion.Ret_Est='$Par_Sql[3]'
 		return $con_ciuda_ecua;
 		break;
 		
-		/* Carga los conceptos en la retención en la fuente de impuesto a la renta (AIR) agrupados */
+		/* Carga los conceptos en la retenciï¿½n en la fuente de impuesto a la renta (AIR) agrupados */
 		case 513:
 		$carg_ret_des_imp="SELECT renta_iva.Ren_Cod, renta_iva.Ren_Sri, renta_iva.Ren_Por 
 		FROM renta_iva WHERE renta_iva.Ren_Est='A' GROUP BY renta_iva.Ren_Por   ORDER BY renta_iva.Ren_Sri   ";
 		return $carg_ret_des_imp;
 		break;
-		/** Consulta las retenciones de acuerdo al porcentaje de retención *******************************************/
+		/** Consulta las retenciones de acuerdo al porcentaje de retenciï¿½n *******************************************/
 		case 514:
 		$carg_reten_fechas_por="SELECT persona.Prs_Nom,renta_iva.Ren_Por,persona.Prs_Ape, proveedore.Prv_Cod, compras.Cop_Cod,
 compras.Cop_Num,compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Est, retencion.Ret_Num, 
@@ -4355,13 +4355,13 @@ AND renta_iva.Ren_Por=$Par_Sql[4]
  GROUP BY retencion.Ret_Cod ORDER BY retencion.Ret_Cod";
 	    return $carg_reten_fechas_por;
 		break;
-		/** Calculo del valor de la retencion por porcentaje de retención ********************/
+		/** Calculo del valor de la retencion por porcentaje de retenciï¿½n ********************/
 		case 515:
 		$importe_porce_rete="SELECT det_retenc.Ret_Bas, renta_iva.Ren_Por FROM det_retenc, renta_iva
 		WHERE det_retenc.Ret_Cod=$Par_Sql[0] AND renta_iva.Ren_Cod=det_retenc.Ren_Cod  AND renta_iva.Ren_Por=$Par_Sql[1]";
 		return $importe_porce_rete;
 		break;
-		/** Consulta de retenciones activas e inactivas por fechas de registro de retención *************/
+		/** Consulta de retenciones activas e inactivas por fechas de registro de retenciï¿½n *************/
 
 			case 516:
 		$carg_reten_fechas_anu="SELECT persona.Prs_Nom,persona.Prs_Ape, proveedore.Prv_Cod, compras.Cop_Cod,compras.Cop_Num,compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Est, retencion.Ret_Num, retencion.Ret_Cod, retencion.Ret_Fec, det_retenc.Ret_Int, det_retenc.Ret_Bas, det_retenc.Ret_Cod, det_retenc.Ren_Cod FROM persona, proveedore, compras, retencion, det_retenc, renta_iva WHERE compras.Cop_Cod=retencion.Cop_cod AND  retencion.Ret_Cod=det_retenc.Ret_Cod AND  
@@ -4370,7 +4370,7 @@ AND retencion.Tic_Cod=$Par_Sql[2] AND retencion.Ret_Fec BETWEEN '$Par_Sql[0]' AN
 	    return $carg_reten_fechas_anu;
 		break;
 
-/** Consultar el codigo de la retencion desde la autorización grabada en la base de datos *************************************/
+/** Consultar el codigo de la retencion desde la autorizaciï¿½n grabada en la base de datos *************************************/
  		case 517:
 		$ret_num_inic_compro="SELECT vendedor.Vnd_Cod, autorizaci.Aut_Sri, autorizaci.Pun_Sri,  autorizaci.Aut_Cod, autorizaci.Aut_Fci, autorizaci.Aut_Cad, autorizaci.Aut_Ini, autorizaci.Aut_Fin, autorizaci.Aut_Est, puntos_imp.Pun_Des, puntos_imp.Pun_Ubi FROM vendedor, puntos_imp, autorizaci, tipo_compr, persona
 		 WHERE tipo_compr.Tic_Cod=autorizaci.Tic_Cod AND autorizaci.Tic_Cod=$Par_Sql[1] AND puntos_imp.Pun_Cod=vendedor.Pun_Cod 
@@ -4390,19 +4390,19 @@ AND retencion.Tic_Cod=$Par_Sql[2] AND retencion.Ret_Fec BETWEEN '$Par_Sql[0]' AN
 		break;
 		/* OJO NUEVAS SENTENCIAS MARTES **************************/
 		
-		/** Consultar si ya existe un código en las liquidaciones de compra con la autorización activa *************************************/
+		/** Consultar si ya existe un cï¿½digo en las liquidaciones de compra con la autorizaciï¿½n activa *************************************/
 		case 519:
 		$con_cod_liqui_compra="SELECT compras.Cop_Cod FROM compras WHERE compras.Aut_Cod=$Par_Sql[0]";
 		return $con_cod_liqui_compra;
 		break;
 		
-		/** Consultar el código mayor de una liquidación de compra con una autorización activa  ************************************/
+		/** Consultar el cï¿½digo mayor de una liquidaciï¿½n de compra con una autorizaciï¿½n activa  ************************************/
 		case 520:
 		$con_max_cod_liqui="SELECT MAX(Cop_Num) AS Cop_Num FROM compras WHERE compras.Aut_Cod=$Par_Sql[0]";
 		return $con_max_cod_liqui;
 		break;
 		
-		/** Guardar datos de una liquidación de compra ********************/
+		/** Guardar datos de una liquidaciï¿½n de compra ********************/
 		case 521: 
  		$inser_fact_liqui_521 = "INSERT INTO compras( Tic_Cod, Prv_Cod, Ciu_Cod, Cop_Num, Cop_Fec, Cop_Reg, Cop_Des, Cop_Obs, Vnd_Cod, Aut_Cod) VALUES 
 		($Par_Sql[0], $Par_Sql[1], $Par_Sql[2], '$Par_Sql[3]', '$Par_Sql[4]','$Par_Sql[5]', '$Par_Sql[6]' , UPPER('$Par_Sql[7]'), $Par_Sql[8],  $Par_Sql[9] )";
@@ -4410,20 +4410,20 @@ AND retencion.Tic_Cod=$Par_Sql[2] AND retencion.Ret_Fec BETWEEN '$Par_Sql[0]' AN
 		return $inser_fact_liqui_521;
 		break;
 		
-		/** Modificación de comprobante de liquidación de compra  *******************/
+		/** Modificaciï¿½n de comprobante de liquidaciï¿½n de compra  *******************/
 				
 		case 522:
 		$con_mod_fac_compra="UPDATE compras SET Tic_Cod=$Par_Sql[0], Cop_Num=UPPER('$Par_Sql[2]'), Cop_Fec='$Par_Sql[3]', Cop_Reg='$Par_Sql[4]', Cop_Des='$Par_Sql[5]', Cop_Obs=UPPER('$Par_Sql[6]') WHERE compras.Cop_Cod=$Par_Sql[1] ";
 		return $con_mod_fac_compra;
 		break;
-		/** Consultar información de las liquidaciones de compra por codigo interno de la autorización *************/
+		/** Consultar informaciï¿½n de las liquidaciones de compra por codigo interno de la autorizaciï¿½n *************/
 		case 523:
 		$con_inf_aut_liq="SELECT Aut_Cad FROM autorizaci WHERE Aut_Cod=$Par_Sql[0]";
 //echo $con_inf_aut_liq;
 
 		return $con_inf_aut_liq;
 		break;
-		/** Eliminación de detalles de la retención ******************/
+		/** Eliminaciï¿½n de detalles de la retenciï¿½n ******************/
 		case 524:
 		$elim_det_reten="DELETE FROM det_retenc WHERE Ret_Int=$Par_Sql[0]";
 		return $elim_det_reten;
@@ -4452,7 +4452,7 @@ AND retencion.Tic_Cod=$Par_Sql[2] AND retencion.Ret_Fec BETWEEN '$Par_Sql[0]' AN
 		return 	$con_fac_tot_com;
 		break;
 		
-		/** Consulta datos las facturas de compras que se identifiquen como adquisición de bienes o servicios  *************/
+		/** Consulta datos las facturas de compras que se identifiquen como adquisiciï¿½n de bienes o servicios  *************/
 		
 		case 528:
 		$con_fac_tipo_ser_bien="SELECT  compras.Cop_Est, compras.Cop_Cod, compras.Cop_Fec,  compras.Cop_Num, persona.Prs_Ape, persona.Prs_Nom
@@ -4540,7 +4540,7 @@ ORDER BY compras.Cop_Fec, compras.Cop_Cod ASC";
 		return $con_iva_tipo_comp;
 		break;
 
- /** Consulta de facturas de compra que estan obligadas a generar el comprobante de retención *****************/
+ /** Consulta de facturas de compra que estan obligadas a generar el comprobante de retenciï¿½n *****************/
 		case 534:
 		$carg_fac_com_retenidas="SELECT persona.Prs_Ape, compras.Cop_Est, compras.Cop_Cod, compras.Cop_Fec, persona.Prs_Nom, compras.Cop_Num
 FROM persona,  proveedore,compras, det_compra
@@ -4609,14 +4609,14 @@ ORDER BY compras.Cop_Fec, compras.Cop_Cod ASC";
      //  echo $car_con_total_com;
 	return $car_con_total_com;
 	break;
-	/** Inserción del detalle de nota de compra ******************/
+	/** Inserciï¿½n del detalle de nota de compra ******************/
 	case 538:
 	$ins_nota_compra="INSERT INTO det_compra (Cop_Cod,    Cop_Can,     Cop_Pro,      Cop_Pru,    Cop_Imp )
  VALUES($Par_Sql[0],$Par_Sql[1],UPPER('$Par_Sql[2]'),'$Par_Sql[3]' ,'$Par_Sql[4]')";
        
 		return $ins_nota_compra;
 		break;
-   /** Consulta de notas de compra para la retención *******/		
+   /** Consulta de notas de compra para la retenciï¿½n *******/		
    case 539:
    $con_nota_compra="SELECT  proveedore.Prv_Cod,persona.Prs_Ced,  persona.Prs_Dir,
 persona.Prs_Nom, persona.Prs_Ape, compras.Cop_Cod,
@@ -4644,18 +4644,18 @@ ORDER BY det_compra.Cop_Int";
    WHERE compras.Cop_Cod=det_compra.Cop_Cod AND compras.Cop_Cod=$Par_Sql[0]";	
    return $con_nota_sum_tot;
    break;
-   /** Actualización de los items de las notas de compras  ********************/
+   /** Actualizaciï¿½n de los items de las notas de compras  ********************/
    case 541:
    $update_nota_compra="UPDATE det_compra SET det_compra.Cop_Can=$Par_Sql[1], det_compra.Cop_Pro=UPPER('$Par_Sql[2]'), det_compra.Cop_Pru=$Par_Sql[3], det_compra.Cop_Imp=$Par_Sql[4] WHERE det_compra.Cop_Int=$Par_Sql[0]";
    return $update_nota_compra;
    break;
-   /** Consultar el tipo de transacción **************************/
+   /** Consultar el tipo de transacciï¿½n **************************/
    case 542:
    $con_tipo_tran="SELECT transaccio.Tra_Cod, transaccio.Tra_Des  FROM transaccio";
    return $con_tipo_tran;
    break;
 	
-	/** Consulta las retenciones de acuerdo al codifo del formulario de retención por fecha de compra *******************************************/
+	/** Consulta las retenciones de acuerdo al codifo del formulario de retenciï¿½n por fecha de compra *******************************************/
 		case 543:
 		$carg_reten_fechas_for="SELECT persona.Prs_Nom,renta_iva.Ren_Por ,renta_iva.Ren_Sri,persona.Prs_Ape, proveedore.Prv_Cod, compras.Cop_Cod,
 compras.Cop_Num,compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Est, retencion.Ret_Num, 
@@ -4671,14 +4671,14 @@ AND renta_iva.Ren_Cod='$Par_Sql[4]'
 
 	    return $carg_reten_fechas_for;
 		break;
-			/** Calculo del valor de la retencion por codifo de formulario de retención ********************/
+			/** Calculo del valor de la retencion por codifo de formulario de retenciï¿½n ********************/
 		case 544:
 		$importe_porce_rete="SELECT det_retenc.Ret_Bas, renta_iva.Ren_Por FROM det_retenc, renta_iva
 		WHERE renta_iva.Ren_Cod=det_retenc.Ren_Cod  AND renta_iva.Ren_Cod=$Par_Sql[1] AND det_retenc.Ret_Cod=$Par_Sql[0]";
 		return $importe_porce_rete;
 		break;
 		 /*** 21 DE JUNIO               ****************/
- /*** Consulta de comprobantes de compra por fecha de retención *******************************************************************/
+ /*** Consulta de comprobantes de compra por fecha de retenciï¿½n *******************************************************************/
         case 545:
         $carg_reten_fechas_ret="SELECT persona.Prs_Nom,persona.Prs_Ape, proveedore.Prv_Cod,
  compras.Cop_Cod,compras.Cop_Num,compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Est, 
@@ -4694,7 +4694,7 @@ AND retencion.Ret_Est='$Par_Sql[3]'  AND  autorizaci.Aut_Cod= retencion.Aut_Cod
  return $carg_reten_fechas_ret;
 		break;
 		
-     /** Consulta las retenciones de acuerdo al porcentaje de retención por fechas de retencion *******************************************/
+     /** Consulta las retenciones de acuerdo al porcentaje de retenciï¿½n por fechas de retencion *******************************************/
 		case 546:
 		$carg_reten_fechas_por="SELECT persona.Prs_Nom,renta_iva.Ren_Por,persona.Prs_Ape, proveedore.Prv_Cod, compras.Cop_Cod,
 compras.Cop_Num,compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Est, retencion.Ret_Num, 
@@ -4709,7 +4709,7 @@ AND renta_iva.Ren_Por=$Par_Sql[4] AND autorizaci.Aut_Cod= retencion.Aut_Cod  GRO
 	   
  return $carg_reten_fechas_por;
 		break;
-/** Consulta las retenciones de acuerdo al codifo del formulario de retención por fecha de retención *******************************************/
+/** Consulta las retenciones de acuerdo al codifo del formulario de retenciï¿½n por fecha de retenciï¿½n *******************************************/
 case 547:
 		$carg_reten_fechas_for="SELECT persona.Prs_Nom,renta_iva.Ren_Por ,renta_iva.Ren_Sri,persona.Prs_Ape, proveedore.Prv_Cod, compras.Cop_Cod,
 compras.Cop_Num,compras.Cop_Fec, compras.Cop_Cad, retencion.Ret_Est, retencion.Ret_Num, 
@@ -4726,7 +4726,7 @@ AND renta_iva.Ren_Cod='$Par_Sql[4]'
 	    return $carg_reten_fechas_for;
 		break;
 /*** OJO LLEVAR UESMA  **********************************/
-/** Consulta de totales por codigo de formulario de retención y fecha de comprobante de compras ***************/
+/** Consulta de totales por codigo de formulario de retenciï¿½n y fecha de comprobante de compras ***************/
 	   case 548:
        $consul_total_form_ret="SELECT renta_iva.Ren_Cod, renta_iva.Ren_Por, renta_iva.Ren_Sri, COUNT(retencion.Cop_Cod) AS Num_Cop,
  SUM(det_retenc.Ret_Bas) AS Total, (SUM(det_retenc.Ret_Bas) * renta_iva.Ren_Por) / 100 AS Renta
@@ -4740,7 +4740,7 @@ GROUP BY renta_iva.Ren_Cod ";
 
        return $consul_total_form_ret;
        break;
-/** Consulta de totales por codigo de formulario de retención y fecha de comprobante de retención ***************/
+/** Consulta de totales por codigo de formulario de retenciï¿½n y fecha de comprobante de retenciï¿½n ***************/
     case 549:
        $con_tot_form_ret_fec_ret="SELECT renta_iva.Ren_Cod, autorizaci.Aut_Sri, renta_iva.Ren_Por, renta_iva.Ren_Sri, COUNT(retencion.Cop_Cod) AS Num_Cop,
  SUM(det_retenc.Ret_Bas) AS Total
@@ -4777,7 +4777,7 @@ AND tipo_compr.Tic_Cod=retencion.Tic_Cod AND persona.Prs_Cod=proveedore.Prs_Cod 
     //    echo $consultar_reten_dup_551;
 		return $consultar_reten_dup_551;
 		break;
-		/***** Consulto si la factura de compra a duplicar ya tiene registrada una retención con estado A=Activa *************************/
+		/***** Consulto si la factura de compra a duplicar ya tiene registrada una retenciï¿½n con estado A=Activa *************************/
         	case 552:
 		$consultar_retencion_existe_552="SELECT retencion.Ret_Cod FROM retencion WHERE retencion.Cop_Cod='$Par_Sql[0]'";
 		//echo $consultar_retencion_existe_552;
@@ -4869,7 +4869,7 @@ GROUP BY renta_iva.Ren_Sri, renta_iva.Ren_Por ORDER BY det_retenc.Ret_Int ASC";
 		break;
 		
 		
-	/* Búsqueda de un personal por apellido */
+	/* Bï¿½squeda de un personal por apellido */
 		case 606:
 		$bus_proa="SELECT Per_Cod, Prs_Ced, Prs_Ape, Prs_Nom, 
 IF (Per_Est='A','Activo','Inactivo') as Per_Est
@@ -4878,7 +4878,7 @@ WHERE Prs_Ape LIKE '%$Par_Sql[0]%' AND personal.Prs_Cod=persona.Prs_Cod";
 		return $bus_proa;
 		break;
 
-	/* Búsqueda de un personal por Cédula */
+	/* Bï¿½squeda de un personal por Cï¿½dula */
 		case 607:
 		$bus_proc="SELECT Per_Cod, Prs_Ced, Prs_Ape, Prs_Nom, IF (Per_Est='A','Activo','Inactivo') as Per_Est
  FROM personal, persona WHERE Prs_Ced = '$Par_Sql[0]' AND personal.Prs_Cod=persona.Prs_Cod";
@@ -5362,7 +5362,7 @@ AND notasgener.Sem_Cod= '$Par_Sql[0]' AND deudas.Pro_Cod='$Par_Sql[1]' AND Deu_R
 	   break;
 	
 		case 654:
-		/* Consulta de estudiante por cédula, mostrando las carreras en las que esta matriculado  */								
+		/* Consulta de estudiante por cï¿½dula, mostrando las carreras en las que esta matriculado  */								
 		$cargar_carreras_654="SELECT DISTINCT 
   persona.Prs_Ced,
   persona.Prs_Nom,
@@ -5415,7 +5415,7 @@ WHERE
 		break;
 		
 		
-		/*** Consultar días plazo interés  ***************************************************************************/
+		/*** Consultar dï¿½as plazo interï¿½s  ***************************************************************************/
 		case 657:
 		$mora_interes_dias="SELECT Int_Dia, Int_Por FROM interes";
 		//echo $mora_interes_dias;
@@ -5429,7 +5429,7 @@ WHERE
 		 //echo $bancos_plan_658;
 		return $bancos_plan_658;
 		break;		
-		/**** Consulto si existe el cliente por código de persona *************/
+		/**** Consulto si existe el cliente por cï¿½digo de persona *************/
 		case 659:
 		/* Consulta para verificar si el cliente se encuentar registrado */
 		$consultar_personal = "SELECT Cli_Cod FROM cliente, persona WHERE persona.Prs_Cod = cliente.Prs_Cod AND persona.Prs_Cod = '$Par_Sql[0]'";
@@ -5512,7 +5512,7 @@ WHERE
 		return $confi_conta_211;
 		break;
 		
-		/* Caegado del Número de Comprobate que sigue */
+		/* Caegado del Nï¿½mero de Comprobate que sigue */
 		case 667:
 		$cargar_numcom="SELECT Max(Com_Num)+1 as Com_Num FROM comprobantes WHERE Tia_Cod='$Par_Sql[0]' AND Pec_Cod=$Par_Sql[1] AND Com_Num > 0";//Antes Com_Tip
 		//echo $cargar_numcom;
@@ -5520,7 +5520,7 @@ WHERE
 		break;
 
 		case 668:
-		/** Selecionar el numero maximo de comprobante mensual según el tipo**/
+		/** Selecionar el numero maximo de comprobante mensual segï¿½n el tipo**/
 		$num_com_152="SELECT MAX(Com_Num)+1 AS Com_Num  FROM comprobantes WHERE Tia_Cod = $Par_Sql[0] AND Pec_Cod = $Par_Sql[1] AND 
 					MONTH(Com_Fec) = $Par_Sql[2]";
 					//echo $num_com_152;
@@ -5528,7 +5528,7 @@ WHERE
 		break;
 		
 		/***********************  C H E Q U E S *********************************		
-		/* Cargado cheques según el número de comprobante de egreso */
+		/* Cargado cheques segï¿½n el nï¿½mero de comprobante de egreso */
 		case 669:
 		$con_cheques_143="SELECT comprobantes.Com_Cod, comprobantes.Com_Num, Pld_Des, Prs_Ape, Che_Cod, Prs_Nom, cheques.Asi_Cod, cheques.Prv_Cod, Che_Num, Che_Val, Che_Cob, Che_Obs, Com_Est, Che_Fec, cheques.Ban_Cod, cheques.Prv_Cod FROM cheques, comprobantes, asientos, banco, det_plan, proveedore, persona where comprobantes.Com_Cod = asientos.Com_Cod AND asientos.Asi_Cod = cheques.Asi_Cod AND cheques.Ban_Cod = banco.Ban_Cod AND banco.Pld_Cod = det_plan.Pld_Cod
       AND cheques.Prv_Cod = proveedore.Prv_Cod AND proveedore.Prs_Cod = persona.Prs_Cod  
@@ -5538,7 +5538,7 @@ WHERE
 		
 		/*SENTENCIAS COMPRAS */
 		case 701:
-		/* Búsqueda de un proveedor por apellido */
+		/* Bï¿½squeda de un proveedor por apellido */
 		$bus_proa_701="SELECT proveedore.Prv_Cod, persona.Prs_Ced, persona.Prs_Ape, persona.Prs_Nom, proveedore.Prv_Fax,
 		            IF (Prv_Est='A','Activo','Inactivo') as Prv_Est
                    FROM proveedore INNER JOIN persona WHERE proveedore.Prs_Cod = persona.Prs_Cod AND Prs_Ape LIKE '%$Par_Sql[0]%'";
@@ -5546,7 +5546,7 @@ WHERE
 		return $bus_proa_701;
 		break;
 
-	    /* Búsqueda de un proveedor por Cédula */
+	    /* Bï¿½squeda de un proveedor por Cï¿½dula */
 		case 702:
 		$bus_proc_702="SELECT proveedore.Prv_Cod, persona.Prs_Ced, persona.Prs_Ape, persona.Prs_Nom, proveedore.Prv_Fax,
 		            IF (Prv_Est='A','Activo','Inactivo') as Prv_Est
@@ -5641,7 +5641,7 @@ WHERE
 		break;
 		/* 
 		OJO SUBIR SERVIDOR
-		Consulta las facturas que se pueden modificar con estado Activo por número de factura */
+		Consulta las facturas que se pueden modificar con estado Activo por nï¿½mero de factura */
 		case 714:
 		$con_fac_mod_num_714="SELECT persona.Prs_Ape, compras.Cop_Est, compras.Cop_Cod, compras.Cop_Fec, persona.Prs_Nom, compras.Cop_Num, proveedore.Prv_Cod, compras.Tic_Cod, tipo_compr.Tic_Des
 			FROM persona, compras, proveedore, tipo_compr
@@ -5678,7 +5678,7 @@ AND adquisicio.Adq_Cod = det_compra.Adq_Cod AND sustento.Tri_Cod = compras.Tri_C
 		return 	$con_fac_tot_com_716;
 		break;
 		
-		/* Carga las facturas las retenciones que se deben modifcar producto de la actualización de una factura */
+		/* Carga las facturas las retenciones que se deben modifcar producto de la actualizaciï¿½n de una factura */
 		case 717:
 		$cons_rete_actuali_mod_fac_717="SELECT compras.Cop_Cod FROM compras WHERE compras.Cop_Cod=$Par_Sql[0]
 AND compras.Cop_Cod IN(SELECT retencion.Cop_Cod FROM retencion WHERE retencion.Ret_Est='A')";
@@ -5694,7 +5694,7 @@ WHERE retencion.Ret_Est='A' AND retencion.Cop_Cod='$Par_Sql[0]' AND det_retenc.R
 		return $carga_codigo_modif_rente_718;
 		break;
 
-	/*** Modificación de los datos de la cabecera de la Factura *********************************************/
+	/*** Modificaciï¿½n de los datos de la cabecera de la Factura *********************************************/
 	case 719:
 	$con_mod_fac_compra_719="UPDATE compras SET Tic_Cod=$Par_Sql[0], Prv_Cod=$Par_Sql[1], Ciu_Cod=$Par_Sql[2], Cop_Num=UPPER('$Par_Sql[3]'), Cop_Aut=UPPER('$Par_Sql[4]'), Cop_Fec='$Par_Sql[5]', Cop_Reg='$Par_Sql[6]', Cop_Des='$Par_Sql[7]', Cop_Obs=UPPER('$Par_Sql[8]'), Cop_Cad='$Par_Sql[9]', Cop_Imf='$Par_Sql[10]', Tri_Cod='$Par_Sql[11]' WHERE compras.Cop_Cod=$Par_Sql[12] ";
 	//echo $con_mod_fac_compra_719;
@@ -5803,7 +5803,7 @@ AND iva.Iva_Cod=det_compra.Iva_Cod ORDER BY iva.Iva_Por";
 		$consul_persona_731 = "SELECT ciudad.Ciu_Des, persona.Prs_Cod, persona.Prs_Ced , persona.Prs_Nom,
 identifica.Ide_Des, persona.Prs_Ape, IF(persona.Prs_Sex = 'M', 'Masculino', IF(persona.Prs_Sex = 'F', 'Femenino', '')) 
 AS Prs_Sex, persona.Prs_San, persona.Prs_Fec, IF(persona.Prs_Esc = 'S', 'Soltero/a', IF(persona.Prs_Esc = 'C', 'Casado/a', 
-IF(persona.Prs_Esc = 'V', 'Viudo/a', IF(persona.Prs_Esc = 'D', 'Divorciado/a', IF(persona.Prs_Esc = 'U', 'Unión Libre/a', ''))))) 
+IF(persona.Prs_Esc = 'V', 'Viudo/a', IF(persona.Prs_Esc = 'D', 'Divorciado/a', IF(persona.Prs_Esc = 'U', 'Uniï¿½n Libre/a', ''))))) 
 AS Prs_Esc, persona.Prs_Dir, persona.Ciu_Cod, persona.Prs_Tel, persona.Prs_Te2, persona.Prs_Cel, persona.Prs_Cor, persona.Ide_Cod
 FROM identifica, ciudad, persona WHERE ciudad.Ciu_Cod = persona.Ciu_Cod 
 AND identifica.Ide_Cod= persona.Ide_Cod 
@@ -5889,7 +5889,7 @@ WHERE view_cursos_mal.Sem_Cod = $Par_Sql[0] GROUP BY  view_cursos_mal.Sem_Cod, v
 	break;
 		
 		case 740:
-		/* Consulta de estudiante por cédula, mostrando las carreras en las que esta matriculado */								
+		/* Consulta de estudiante por cï¿½dula, mostrando las carreras en las que esta matriculado */								
 		$cargar_carreras_740="SELECT  promocione.Pro_Cod,niveles.Niv_Des ,carreras.Car_Int, Car_Nom, estudiante.Est_Int, persona.Prs_Ced, persona.Prs_Cod, persona.Prs_Nom, 
 						persona.Prs_Ape, periodos.Per_Int, modalidad.Mod_Cod, modalidad.Mod_Des, etapas.Eta_Cod FROM estudiante, matriculas, carreras, promocione, semestres, persona,
 			etapas, periodos,  modalidad, niveles
@@ -5997,7 +5997,7 @@ AND recibo.Rcb_Cod = liquidacio.Rcb_Cod AND liquidacio.Cja_Cod='NULL' GROUP BY r
 	
 		break;
 		
-		case 802:/*consulta de provedores que tiene pagos pendientes por cédula*/
+		case 802:/*consulta de provedores que tiene pagos pendientes por cï¿½dula*/
 		$consul_prove_ced= "SELECT persona.Prs_Cod, persona.Prs_Ced, persona.Prs_Nom, persona.Prs_Ape, persona.Ide_Cod, 
 		proveedore.Prv_Cod, compras.Cop_Cod, ccpp_pagar.Cpp_Cod FROM  persona INNER JOIN proveedore ON (persona.Prs_Cod = 
 		proveedore.Prs_Cod)	INNER JOIN compras ON (proveedore.Prv_Cod = compras.Prv_Cod) INNER JOIN ccpp_pagar ON (compras.Cop_Cod
@@ -6040,7 +6040,7 @@ AND recibo.Rcb_Cod = liquidacio.Rcb_Cod AND liquidacio.Cja_Cod='NULL' GROUP BY r
 		return $ins_comp_egreso;
 		break;
 
-		/* Inserción de cada asiento del comprobante */
+		/* Inserciï¿½n de cada asiento del comprobante */
 		case 806:
 		$ins_asiento="INSERT INTO asientos SET Com_Cod=$Par_Sql[0], Asi_Deh='$Par_Sql[1]', Asi_Val=$Par_Sql[2], 
 		Asi_Con=UPPER('$Par_Sql[3]'), Asi_Glo=UPPER('$Par_Sql[4]'), Pld_Cod=$Par_Sql[5]";
@@ -6048,7 +6048,7 @@ AND recibo.Rcb_Cod = liquidacio.Rcb_Cod AND liquidacio.Cja_Cod='NULL' GROUP BY r
 		return $ins_asiento;
 		break;
 		
-		/* Inserción de detalle del pago de la factura de credito en la tabla det_ccpp_p */
+		/* Inserciï¿½n de detalle del pago de la factura de credito en la tabla det_ccpp_p */
 		case 807:
 		$ins_det_ccpp="INSERT INTO det_ccpp_p SET Cpp_Cod=$Par_Sql[0], Pag_Cod=$Par_Sql[1], Com_Cod=$Par_Sql[2], 
 		Pag_Fec='$Par_Sql[3]', Pag_Val= $Par_Sql[4], Pag_Obs= '$Par_Sql[5]'";
@@ -6290,14 +6290,14 @@ AND recibo.Rcb_Cod = liquidacio.Rcb_Cod AND liquidacio.Cja_Cod='NULL' GROUP BY r
 		//echo $consult_det_plan; 
 		return $consult_det_plan;
 		break;
-		 /* Inserción del anticipo en la tabla anticipos */
+		 /* Inserciï¿½n del anticipo en la tabla anticipos */
 		case 829:
 		$ins_anticipo="INSERT INTO anticipos SET Prv_Cod=$Par_Sql[0], Ant_Fec='$Par_Sql[1]', Ant_Obs='$Par_Sql[2]', 
 		Ant_Est='A'";
 		//echo $ins_anticipo;
 		return $ins_anticipo;
 		break;
-		 /* Inserción de Com_Cod y Ant_Cod en l atabla compr_anti */
+		 /* Inserciï¿½n de Com_Cod y Ant_Cod en l atabla compr_anti */
 		case 830:
 		$ins_compr_anti="INSERT INTO compr_anti SET Com_Cod=$Par_Sql[0], Ant_Cod=$Par_Sql[1]";
 		//echo $ins_compr_anti;
@@ -6482,7 +6482,7 @@ case 840:/*consulta de facturas pendientes segun el proveedor*/
 	 //echo $consul_grupo;
 	 return $consul_grupo;
 	 break;	
- /*inserción de la formula*/
+ /*inserciï¿½n de la formula*/
 	 case 848:
 	 $insert_formul="INSERT INTO formulas SET Cam_Cod=$Par_Sql[0], Ope_Cod=$Par_Sql[1], Grp_Cod=$Par_Sql[2], Cam_Rec=$Par_Sql[3]";
 	// echo $insert_formul;
@@ -6506,7 +6506,7 @@ case 840:/*consulta de facturas pendientes segun el proveedor*/
 	 return $consul_formula;
 	 break;	
 	 
-	 /*inserción de la formula*/
+	 /*inserciï¿½n de la formula*/
 	 case 851:
 	 $insert_grupo="INSERT INTO grupos SET Ope_Cod=$Par_Sql[0], Grp_Des='$Par_Sql[1]'";
 	echo $insert_grupo;
@@ -6599,14 +6599,14 @@ case 840:/*consulta de facturas pendientes segun el proveedor*/
 	 return  $rol_comprobantes;
 	 break;		
 
-	 /*Selcción de cuentas para insertar en el asiento contable*/		
+	 /*Selcciï¿½n de cuentas para insertar en el asiento contable*/		
 	 case 864:
 	 $rol_plan="SElECT Cam_Cod, Pld_Cod FROM rol_plan WHERE Cam_Cod=$Par_Sql[0] AND Are_Cod=$Par_Sql[1]";
 	// echo $rol_plan;
 	 return $rol_plan;
 	 break;				
 		
-   	/* Inserción de cada asiento del comprobante */
+   	/* Inserciï¿½n de cada asiento del comprobante */
 	 case 865:
 	 $ins_rol_asiento="INSERT INTO asientos SET Com_Cod=$Par_Sql[0], Asi_Deh='$Par_Sql[1]', Asi_Val=$Par_Sql[2], Asi_Con=UPPER('$Par_Sql[3]'), 
 	 Asi_Glo=UPPER('$Par_Sql[4]'),Pld_Cod=$Par_Sql[5]";
@@ -6614,7 +6614,7 @@ case 840:/*consulta de facturas pendientes segun el proveedor*/
 	 return $ins_rol_asiento;
 	 break;
 
-	 /* Inserción de cada asiento del comprobante */
+	 /* Inserciï¿½n de cada asiento del comprobante */
 	 case 866:
 	 $con_rol_visible="SELECT Cam_Tip, Cam_Cod, Cam_Ord, Cam_Des,Cam_Dec, Cam_Por, Cam_Cal,Cam_Req, Cam_Vis FROM campo_rol WHERE Cam_Cod=$Par_Sql[0]";
 	 //echo $con_rol_visible;
@@ -6692,14 +6692,14 @@ AND det_rpagos.Cam_Cod= campo_rol.Cam_Cod AND campo_rol.Cam_Tip= 'E' AND campo_r
 	 //echo  $consulta_totegr;
 	 return  $consulta_totegr;
 	 break;
-	  /*inserción de ccpp_rol Almacena los comprobantes que estan como pagos pendientes*/
+	  /*inserciï¿½n de ccpp_rol Almacena los comprobantes que estan como pagos pendientes*/
 	 case 877:
 	 $insert_ccpprol = "INSERT INTO ccpp_rol SET  Com_Cod=$Par_Sql[0], Rol_Cod=$Par_Sql[1], Cpp_Obs= '$Par_Sql[2]' , Cpp_Sys= '$Par_Sql[3]'";
 	 //echo  $insert_ccpprol;
 	 return  $insert_ccpprol;
 	 break;
 	 /****/
-	 /*inserción de ccpp_rol Almacena los comprobantes que estan como pagos pendientes*/
+	 /*inserciï¿½n de ccpp_rol Almacena los comprobantes que estan como pagos pendientes*/
 	 case 878:
 	 $consul_det_pagos = "SELECT  SUM(det_ccpp_r.Pag_Val) AS suma FROM
   	 ccpp_rol  INNER JOIN det_ccpp_r ON (ccpp_rol.Cpp_Cod = det_ccpp_r.Cpp_Cod) INNER JOIN rol_pagos ON (ccpp_rol.Rol_Cod = rol_pagos.Rol_Cod)
@@ -6731,14 +6731,14 @@ AND det_rpagos.Cam_Cod= campo_rol.Cam_Cod AND campo_rol.Cam_Tip= 'E' AND campo_r
 	 return $consul_pla_cod;
 	 break;
 	 /***/
-	 /* Inserción de detalle del pago de la factura de credito en la tabla det_ccpp_p */
+	 /* Inserciï¿½n de detalle del pago de la factura de credito en la tabla det_ccpp_p */
 	case 882:
 	$ins_det_ccpprol="INSERT INTO det_ccpp_r SET Cpp_Cod=$Par_Sql[0], Com_Cod=$Par_Sql[1],Pag_Fec='$Par_Sql[2]', Pag_Val= $Par_Sql[3], Pag_Obs= '$Par_Sql[4]', Dis_Cod=$Par_Sql[5]";
 	//echo $ins_det_ccpprol;
 	return $ins_det_ccpprol;
 	break;
 	/***/
-	 /* Inserción de detalle del pago de la factura de credito en la tabla det_ccpp_p */
+	 /* Inserciï¿½n de detalle del pago de la factura de credito en la tabla det_ccpp_p */
 	case 883:
 	$cons_provee="SELECT proveedore.Prv_Cod FROM persona, distributi, personal, proveedore WHERE persona.Prs_Cod= personal.Prs_Cod AND distributi.Per_Cod= personal.Per_Cod AND 
 	proveedore.Prs_Cod= persona.Prs_Cod AND distributi.Dis_Cod=$Par_Sql[0]";
@@ -6747,7 +6747,7 @@ AND det_rpagos.Cam_Cod= campo_rol.Cam_Cod AND campo_rol.Cam_Tip= 'E' AND campo_r
 	break;
 	
 
- /* Inserción de detalle del pago de la factura de credito en la tabla det_ccpp_p ojojojoj*/
+ /* Inserciï¿½n de detalle del pago de la factura de credito en la tabla det_ccpp_p ojojojoj*/
  case 884:
  $cons_config="SELECT afiliacion.Afi_Fnd FROM  afiliacion WHERE afiliacion.Afi_Est = 'A' AND afiliacion.Dis_Cod = $Par_Sql[0]";
 //echo $cons_config;
@@ -6873,7 +6873,7 @@ ORDER BY Cam_Tip Desc, Cam_Ord ASC";
 	return $bor_ascompr_894;
 	break;	
 
-/* Consulta de la configuración de rol */
+/* Consulta de la configuraciï¿½n de rol */
  case 895:
  $conf_rol = "SELECT Apo_Fnd, Apo_Con FROM aportacion";
  //echo $conf_rol;
@@ -6896,7 +6896,7 @@ ORDER BY Cam_Tip Desc, Cam_Ord ASC";
  return $agre_emp;
  break; 
 
- /* Consulta de la configuración de rol */
+ /* Consulta de la configuraciï¿½n de rol */
  case 897:
  $cons_depart_897 ="SELECT DISTINCT departamen.Are_Cod, departamen.Dep_Des, rol_pagos.Rol_Cod, departamen.Dep_Cod, rol_pagos.Are_Cod FROM  rol_pagos
    INNER JOIN det_rpagos ON (rol_pagos.Rol_Cod = det_rpagos.Rol_Cod)
@@ -6928,7 +6928,7 @@ ORDER BY Cam_Tip Desc, Cam_Ord ASC";
 	//return $bor_ascompr_894;
 	//break;	
 
-/* Consulta de la configuración de rol */
+/* Consulta de la configuraciï¿½n de rol */
  //case 895:
  //$conf_rol = "SELECT Apo_Fnd, Apo_Con FROM aportacion";
  //echo $conf_rol;
@@ -6951,7 +6951,7 @@ ORDER BY Cam_Tip Desc, Cam_Ord ASC";
 // return $agre_emp;
 // break; 
 
-	/* Consulta de la configuración de rol */
+	/* Consulta de la configuraciï¿½n de rol */
 	//case 897:
 	//$cons_depart ="SELECT DISTINCT departamen.Are_Cod, departamen.Dep_Des, rol_pagos.Rol_Cod, departamen.Dep_Cod, rol_pagos.Are_Cod FROM  rol_pagos
   	//INNER JOIN det_rpagos ON (rol_pagos.Rol_Cod = det_rpagos.Rol_Cod)
@@ -7408,21 +7408,17 @@ return $ins_producto;
 
 		case 1033:
 		$sql = "SELECT MAX(Pro_Sec) as Pro_Sec FROM producto,item,categorias WHERE producto.Ite_Cod=item.Ite_Cod AND item.Cat_Cod=categorias.Cat_Cod AND categorias.Cat_Cod=$Par_Sql[0] ";
-		echo $sql;
-
 		return $sql;
 		break;
 
 		case 1034:
 		$sql = "SELECT Cat_Cdc FROM categorias WHERE categorias.Cat_Cod=$Par_Sql[0]";
-		echo $sql;
 		return $sql;
 		break;
 
 
 	case 1035:
 		$sql = "INSERT  INTO kardex_ie (Vet_Cod,Aju_Cod,Vnd_Cod,Cop_Cod,Pro_Cod,Kar_Fec,Kar_Hor,Kar_Can,Kar_Sal,Kar_Pre,Kar_Prs,Kar_Ime,Kar_Ims,Kar_Des,Iva_Cod)VALUES($Par_Sql[0],$Par_Sql[1],$Par_Sql[2],$Par_Sql[3],$Par_Sql[4],'$Par_Sql[5]','$Par_Sql[6]',$Par_Sql[7],$Par_Sql[8],$Par_Sql[9],$Par_Sql[10],$Par_Sql[11],$Par_Sql[12],$Par_Sql[13],$Par_Sql[14])";
-		echo  $sql;
 		return $sql;
 	break;
 			
@@ -7658,7 +7654,7 @@ case 1050:
 		//echo $consult_vehi;
 		return $consult_vehi;
 		break;
-		//Inserción de vehiculo
+		//Inserciï¿½n de vehiculo
 		case 1108:
 		$insert_vehi="INSERT kilometraj (Veh_Cod, Chf_Cod, Kil_Ksa, Kil_Des, Kil_Mot,Kil_Fsa, Kil_Hsa) VALUES($Par_Sql[0], $Par_Sql[1],$Par_Sql[2], '$Par_Sql[3]', '$Par_Sql[4]','$Par_Sql[5]','$Par_Sql[6]')"; 
 		echo $insert_vehi;

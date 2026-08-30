@@ -281,7 +281,7 @@ if(isset($save)){
         </div>
     </div>       
    <script type="text/javascript">
-       public $treeview=$('#using_json_2'),gridComp=$("#comp");
+       var $treeview=$('#using_json_2'),gridComp=$("#comp");
 
        // Función para procesar y validar los datos del árbol antes de que jsTree los use
        function procesarDatosArbol(data) {
@@ -323,7 +323,7 @@ if(isset($save)){
 
        function savePais(form){
             var data=$('#'+form).getData('save');
-            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                 if(response['success']===true){
                     $.alert("Transaccion Realizada con &Eacute;xito!");                          
                     $treeview.jstree(true).refresh();
@@ -334,7 +334,7 @@ if(isset($save)){
         }     
    
     gridComp.jqGrid({
-            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
             mtype: "GET", datatype: "local", regional : 'es',hidegrid:false,//ajaxRowOptions: { async: true },                             
             autowidth : true, shrinkToFit: true, height: 350,caption:'&nbsp;',responsive:true,
             cmTemplate: {sortable:false,title: false},
@@ -345,7 +345,7 @@ if(isset($save)){
             rowNum: 10000000, pager: "", gridview: true, rownumbers: true, viewrecords: true, altRows: true, altclass: "myAltRowClass",pgbuttons: false,pgtext: null
         });
     
-    // $treeview.jstree({'core' : {'data': { 'url': '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?planAjax=true' ,"dataType": "json" }}})
+    // $treeview.jstree({'core' : {'data': { 'url': '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?planAjax=true' ,"dataType": "json" }}})
     $treeview.jstree({
         'core' : {
             'worker': false, 
@@ -353,7 +353,7 @@ if(isset($save)){
                 if(node.id === '#') {
                     // Cargar datos raíz
                     $.ajax({
-                        url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?planAjax=true',
+                        url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?planAjax=true',
                         dataType: 'json'
                     }).done(function(data) {
                         var datosProcesados = procesarDatosArbol(data);

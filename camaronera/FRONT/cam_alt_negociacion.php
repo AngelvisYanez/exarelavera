@@ -38,7 +38,7 @@ if (isset($saveNegociacion)) {
         $obBD_con1->operacionobBD(3, $encabezado_negociacion, $obBD_conexion);
         $response = array('success' => true, 'message' => "Transaccion realizada con exito");
     } catch (Exception $e) {
-        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_conIns->MsgError);
+        $response = array('success' => false, 'message' => "No se ha logrado realizar la Transaccion", 'error' => $obBD_con1->MsgError);
     }
     echo json_encode($response);
     exit();
@@ -266,7 +266,7 @@ if (isset($saveNegociacion)) {
     </script>
 
 
-    <script language="javascript" src="../VALIDACIONES/cam_val_negociacion.js"></script>
+    <script type="text/javascript" src="../VALIDACIONES/cam_val_negociacion.js"></script>
     <script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=2"></script>
     <script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>

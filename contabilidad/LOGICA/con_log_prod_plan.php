@@ -1,4 +1,4 @@
-﻿<?Php 
+<?Php 
 /**
  *
  * @author Erik Niebla
@@ -71,7 +71,7 @@ class Class_Log_Datos_Cons extends MysqlDatos{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);		
 		$row =  $this->fetch_assoc($result);		
 		$this->free_result($result);		
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

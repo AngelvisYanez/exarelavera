@@ -1,7 +1,7 @@
 <?php 
 /**
-* Descripción: Permite registrar alta de vendedor
-* Fecha de actualización:	2014-06-17
+* Descripciï¿½n: Permite registrar alta de vendedor
+* Fecha de actualizaciï¿½n:	2014-06-17
 * Desarrollador:	Jose Cumbicos
 */	
 require_once('../../administrador/LOGICA/seguridad.php'); 
@@ -10,7 +10,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php'); 
 
 /** 
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 /** 
@@ -18,7 +18,7 @@ $thisPost = new Post_Block;
 */  
 $obBD_conexion = new Class_Log_Conexion_Pro($Ses_Dat_Dis);
 /**
-* Creación del Objeto para consultas
+* Creaciï¿½n del Objeto para consultas
 */
 $obBD_con1 =  new Class_Log_Datos_Pro; 
 
@@ -60,8 +60,8 @@ if (isset($hdd_save) && !isset($hdd_volver))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>        
-		<script language="javascript" src="../VALIDACIONES/fac_val_guias.js"></script>        
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>        
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_guias.js"></script>        
 		<link rel="stylesheet" type="text/css" href="../../Librerias/jquery/modal/css/modal.css">
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/jquery.js"></script>
         <script type="text/javascript" src="../../Librerias/jquery/modal/js/modal.js"></script>
@@ -81,7 +81,7 @@ if (isset($hdd_save) && !isset($hdd_volver))
   </tr>
   <tr>	  	
       <td height="389" valign="top">
-        <form action="<?php echo $_SERVER['../LOGICA/PHP_SELF']; ?>" method="post" name= "form1" id="form1">
+        <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" name= "form1" id="form1">
 		<?Php include("../../componentes/FRONT/com_con_persona.php"); ?>
     	</form>  
         <?Php  
@@ -96,8 +96,8 @@ if (isset($hdd_save) && !isset($hdd_volver))
 			<table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
 			<thead>
 			  <tr>
-			      <th width="8%">Cód. Int. </th>
-				  <th width="13%">Cédula/R.U.C.</th>
+			      <th width="8%">Cï¿½d. Int. </th>
+				  <th width="13%">Cï¿½dula/R.U.C.</th>
 				  <th width="58%">Apellidos/Nombre</th>
 				  <th width="12%">Punto Impresi&oacute;n</th>
 				  <th width="4%">&nbsp;</th>
@@ -199,7 +199,7 @@ if (isset($hdd_save) && !isset($hdd_volver))
        <table width="290" border="0" cellpadding="0" cellspacing="0" class="Azul">
        <tr>
            <td width="109">
-           <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver"; ?>', '<?Php echo $volver_busqueda.'*'.$volver_op.'*'; ?>')">
+           <button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver"; ?>', '<?Php echo $volver_busqueda.'*'.$volver_op.'*'; ?>')">
                             <i class=" icon-arrow-left icon-white"></i>
                             <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
               </button>

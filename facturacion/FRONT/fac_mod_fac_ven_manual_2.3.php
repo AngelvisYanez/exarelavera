@@ -463,8 +463,8 @@ if (isset($hdd_save) && !isset($hdd_volver))
         $Pec=$periodoCont['Pec_Cod'];
         $campo="Cli_Cod";
 
-        /*Sección para modificar la fecha de la factura*/
-        //Realizado por José Ambuludí en caso de error echar la culpa
+        /*Secciï¿½n para modificar la fecha de la factura*/
+        //Realizado por Josï¿½ Ambuludï¿½ en caso de error echar la culpa
         
         //Se obtiene el Caj_Cod
         $caj_cod=$obBD_con1->getRowConsulta(1309, $Vet_Cod, $obBD_conexion);
@@ -477,7 +477,7 @@ if (isset($hdd_save) && !isset($hdd_volver))
         //Se obtiene el Pun_Cod y Caj_Fec
         $pun_cod=$obBD_con1->getRowConsulta(1310, $caj_cod['Caj_Cod'], $obBD_conexion);
         
-        //Se obtiene el Caj_Cod según el Pun_Cod y la nueva fecha como parámetros de búsqueda
+        //Se obtiene el Caj_Cod segï¿½n el Pun_Cod y la nueva fecha como parï¿½metros de bï¿½squeda
         $caj_cod_buscar=$obBD_con1->getRowConsulta(1311, $pun_cod['Pun_Cod'].'*'.$caj_fec, $obBD_conexion);
         $caj_cod_reemplazar=$caj_cod_buscar['Caj_Cod'];
         if(empty($caj_cod_buscar['Caj_Cod'])){
@@ -487,14 +487,14 @@ if (isset($hdd_save) && !isset($hdd_volver))
         
         $obBD_con1->operacionobBD(1312, $Vet_Cod.'*'.$caj_cod_reemplazar, $obBD_conexion);	
         
-        //Sección para modificar la fecha en la tabla comprobante
+        //Secciï¿½n para modificar la fecha en la tabla comprobante
         $descomponer_caj_fec=explode('-',$caj_fec);
         $anio_caj=$descomponer_caj_fec[0];
         $mes_caj=$descomponer_caj_fec[1];
         
         
             
-        //Fin de consultas realizadas por José Ambuludí
+        //Fin de consultas realizadas por Josï¿½ Ambuludï¿½
         
         /*Confic_fact de la empresa*/
         $infoFactEmp=$obBD_con1->getRowConsulta(1211,$Ses_Suc_Cod, $obBD_conexion);
@@ -809,12 +809,12 @@ else
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-                <script>var Cod_Banano='<?php echo $Cod_Banano; ?>';</script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+                <script>var Cod_Banano=<?php echo json_encode($Cod_Banano); ?>;</script>
                  <?php if($rs_infoEmpresa['Cof_Con']=="S") { ?>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_fac_ven_cont_1.0.js?xx=6"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven_cont_1.0.js?xx=6"></script>
                  <?php }else{ ?>
-        <script language="javascript" src="../VALIDACIONES/fac_val_fac_ven_1.0.js?xx=2"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_fac_ven_1.0.js?xx=2"></script>
                  <?php } ?>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
@@ -1162,7 +1162,7 @@ require_once('../../componentes/FRONT/com_con_leyenda.php');
             $row_ivas = $obBD_con1->getArrayConsulta(1293, $rs_cliente[0]['Caj_Fec'], $obBD_conexion);             
         ?>
     <script>
-        //Sección para declarar datepicker
+        //Secciï¿½n para declarar datepicker
         $( "#caj_fec" ).datepicker({
             changeMonth: true, changeYear: true,
             /* Permite asignar una imagen */
@@ -1555,7 +1555,7 @@ foreach($rs_interes as $row_rs_interes)
         <div id="cont_cua_338_titu"></div>
         <FIELDSET>
                         <LEGEND>
-                                <label class="Titulos2">PORCENTAJE DE RETENCÍON (338)</label>
+                                <label class="Titulos2">PORCENTAJE DE RETENCï¿½ON (338)</label>
                         </LEGEND>
             <table style="width: 100%">
                 <tr><td style="width: 30%"></td><td></td></tr>
@@ -1932,13 +1932,13 @@ foreach($rs_interes as $row_rs_interes)
 	*/
 	if (count($rs_pago_fac) == 1)
 	{ ?>
-     <script language="javascript">
+     <script type="text/javascript">
 		 ShowHide('cheque'); //Utilizado para el segundo pago
 	 </script>
 	<?php
 	}//Fin del if ($total_rs_pago_fac)
 }//Fin del if ($codigo > 0 && !(isset($hdd_save))) 
-$cant_modal = 2 + count($rs_buscar);
+$cant_modal = 2 + count((array)$rs_buscar);
 ?><input name="cantmodal" id="cantmodal" type="hidden" value="<?php echo $cant_modal; ?>">
 <div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal()">
 </div>

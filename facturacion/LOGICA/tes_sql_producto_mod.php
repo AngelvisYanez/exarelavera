@@ -147,7 +147,6 @@ function sentencias_pro($id, $Par_Sql)
         case 26:
             $sql = "SELECT COUNT(item.Ite_Cod)AS total FROM item INNER JOIN categorias ON categorias.Cat_Cod=item.Cat_Cod 
                 INNER JOIN producto ON producto.Ite_Cod = item.Ite_Cod WHERE Emp_Cod=$Par_Sql[0] AND producto.Pro_Cod <> $Par_Sql[2] AND UPPER(Ite_Lar)=UPPER('$Par_Sql[1]')";
-            echo $sql;
             break;
         case 27:
             $sql = "UPDATE producto

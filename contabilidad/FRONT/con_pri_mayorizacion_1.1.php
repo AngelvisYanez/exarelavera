@@ -695,7 +695,7 @@ switch ($op) {
 																} else {
 																	$rs_proveedore = $obBD_con1->getRowConsulta(218, $row_rs_cuenta['Prv_Cod'], $obBD_conexion);
 																}
-																$total_rs_proveedore = count($rs_proveedore);
+$total_rs_proveedore = count($rs_proveedore ?? []);
 															?>
 																<tr class="Texto_Listados">
 																	<td align="center"><?Php echo $cont; ?></td>

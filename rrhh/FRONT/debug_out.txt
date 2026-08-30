@@ -1033,3 +1033,8 @@
 2026-03-31 09:19:08 - Ses_Emp_Cod: 620
 2026-03-31 09:19:08 - Rows returned: 0
 2026-03-31 09:19:08 - JSON Response Length: 57
+2026-07-15 10:42:47 - Processing searchAnticipos...
+2026-07-15 10:42:47 - Params: {"fini":"2026-06-15","ffin":"2026-07-15","search":"","Ant_Est":"A"}
+2026-07-15 10:42:47 - Ses_Emp_Cod: 503
+2026-07-15 10:42:47 - Rows returned: 0
+2026-07-15 10:42:47 - JSON Response Length: 57

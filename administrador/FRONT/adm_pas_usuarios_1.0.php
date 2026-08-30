@@ -1,11 +1,11 @@
 <?Php 
 /**
-* Descripción: Permite modificar la clave por el usuario
-* Fecha de actualización:	2011-03-14 
+* Descripciï¿½n: Permite modificar la clave por el usuario
+* Fecha de actualizaciï¿½n:	2011-03-14 
 * Desarrollador:	Jose Cumbicos 
-* Fecha de actualización:	2011-03-19 
+* Fecha de actualizaciï¿½n:	2011-03-19 
 * Desarrollador:	Lewis Chimarro
-* Fecha de actualización:	2014-09-04 
+* Fecha de actualizaciï¿½n:	2014-09-04 
 * Desarrollador:	Lewis Chimarro
 */	
 require_once('../LOGICA/seguridad.php');
@@ -14,7 +14,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php');
 
 /**
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;  
 
@@ -42,7 +42,7 @@ if ($thisPost->postBlock($_POST['postID'])) {
 		$obBD_ins1->inicio_transaccion($obBD_conexion->conexion);
 		
 		/**
-		* Inserción de datos de la inscripción 
+		* Inserciï¿½n de datos de la inscripciï¿½n 
 		*/
 		$obBD_ins1->grabarv_registros(sentencias_adm(206, $obBD_ins1->parametros($Usu_Pal.'*'.$Ses_Usu_Cod)),$obBD_conexion->conexion); 	
 		
@@ -52,7 +52,7 @@ if ($thisPost->postBlock($_POST['postID'])) {
 		if (trim($hdd_save)=="outside")
 		{
 			/**
-			* Cierre de la transacción sin mensaje de alerta, para evitar error en el 
+			* Cierre de la transacciï¿½n sin mensaje de alerta, para evitar error en el 
 			*redireccionamiento 
 			*/
 			$obBD_ins1->fin_transaccion_nomsn($obBD_conexion->conexion);
@@ -62,19 +62,19 @@ if ($thisPost->postBlock($_POST['postID'])) {
 		elseif(trim($hdd_save)=="inside")
 		{
 			/**
-			* Cierre de la transacción 
+			* Cierre de la transacciï¿½n 
 			*/
 			$obBD_ins1->fin_transaccion($obBD_conexion->conexion);
 		}//Fin del else elseif($hdd_save=="inside")
-		//echo error_alerta("La Actualización de la Contraseña fue exitosa <br><br> Ingrese nuevamente al sistema con su número de cédula y la nueva clave <br><br>", 1); 	
+		//echo error_alerta("La Actualizaciï¿½n de la Contraseï¿½a fue exitosa <br><br> Ingrese nuevamente al sistema con su nï¿½mero de cï¿½dula y la nueva clave <br><br>", 1); 	
 	}//Fin del if (isset($hdd_save) && $Usu_Pal!="")
 }//Fin del if ($thisPost->postBlock($_POST['postID'])) 
 ?>
 <HTML>
 	<HEAD>		
-		<TITLE>Iniciar sesión</TITLE>
+		<TITLE>Iniciar sesiï¿½n</TITLE>
 		<script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>	
-                <script language="javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
+                <script type="text/javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
 		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <!--Librerias para interfaz -->               
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
@@ -178,6 +178,6 @@ if ($thisPost->postBlock($_POST['postID'])) {
 /**
 * Cerrado de las conexiones 
 */
-$obBD_con1->liberar();
-$obBD_conexion->cerrar();
+if (isset($obBD_con1) && is_object($obBD_con1)) $obBD_con1->liberar();
+if (isset($obBD_conexion) && is_object($obBD_conexion)) $obBD_conexion->cerrar();
 ?>

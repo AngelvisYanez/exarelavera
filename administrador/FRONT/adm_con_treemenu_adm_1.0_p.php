@@ -1,4 +1,5 @@
 <?Php
+require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../LOGICA/logica.php');
 require_once('../LOGICA/TreeMenu.php');
 /* 
@@ -88,6 +89,8 @@ Com_Tipo = A:Alta, M:Modificación, C:Consulta */
 if (isset($Com_Tipo))
 {
 	 ///Creacion del objeto para el menu
+	$obBD_conexion = new Class_Log_Conexion_Adm($Ses_Dat_Dis);
+	$obBD_con1 =  new Class_Log_Datos_Adm;
 	$menu  = new HTML_TreeMenu();
 	arbol($obBD_con1, $obBD_conexion, $menu, 0, "", $Com_Tipo, $codigo);			  
 	$treeMenu = new HTML_TreeMenu_DHTML($menu, array('/images' => '/images', 'defaultClass' => 'treeMenuDefault'));

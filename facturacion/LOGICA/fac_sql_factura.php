@@ -153,7 +153,7 @@ function sentencias_facturaVenta($id, $Par_Sql)
 
             break;
         case 14: //Select para obtener el precio de los productos
-            $sql = "SELECT Pre_Cod,Pre_Pvp,Tpv_Des,Pre_Des,Pre_Est,precios.Tpv_Cod,Pre_Ini,Pre_Fin FROM precios INNER JOIN tipo_preci ON tipo_preci.Tpv_Cod=precios.Tpv_Cod WHERE precios.Suc_Cod='$Par_Sql[0]' AND Pro_Cod='$Par_Sql[1]' AND Pre_Est='$Par_Sql[2]' " . (empty($Par_Sql[3]) ? '' : "AND Tpv_Def='D'") . " " . (empty($Par_Sql[4]) ? '' : "(('$Par_Sql[4]' AND BETWEEN Pre_Ini AND Pre_Fin) OR (Pre_Ini IS NULL AND Pre_Fin IS NULL) OR (Pre_Ini='0000-00-00' AND Pre_Fin='0000-00-00'))") . ";";
+            $sql = "SELECT Pre_Cod,Pre_Pvp,Tpv_Des,Pre_Des,Pre_Est,precios.Tpv_Cod,Pre_Ini,Pre_Fin FROM precios INNER JOIN tipo_preci ON tipo_preci.Tpv_Cod=precios.Tpv_Cod WHERE precios.Suc_Cod='$Par_Sql[0]' AND Pro_Cod='$Par_Sql[1]' AND Pre_Est='$Par_Sql[2]' " . (empty($Par_Sql[3]) ? '' : "AND Tpv_Def='D'") . " " . (empty($Par_Sql[4]) ? '' : "(('$Par_Sql[4]' BETWEEN Pre_Ini AND Pre_Fin) OR (Pre_Ini IS NULL AND Pre_Fin IS NULL) OR (Pre_Ini='0000-00-00' AND Pre_Fin='0000-00-00'))") . ";";
 
             break;
         case 15: //busca cuenta relacion producto
@@ -688,7 +688,7 @@ function sentencias_facturaVenta($id, $Par_Sql)
 
             break;
         case 73: // usado
-            $sql = "SELECT Pre_Cod,Pre_Pvp,Pre_Des,Pre_Est,precios.Tpv_Cod,Pre_Ini,Pre_Fin FROM precios INNER JOIN tipo_preci ON tipo_preci.Tpv_Cod=precios.Tpv_Cod WHERE precios.Suc_Cod='$Par_Sql[0]' AND Pro_Cod='$Par_Sql[1]' AND Pre_Est='$Par_Sql[2]' " . (empty($Par_Sql[3]) ? '' : "AND Tpv_Def='D'") . " " . (empty($Par_Sql[4]) ? '' : "(('$Par_Sql[4]' AND BETWEEN Pre_Ini AND Pre_Fin) OR (Pre_Ini IS NULL AND Pre_Fin IS NULL) OR (Pre_Ini='0000-00-00' AND Pre_Fin='0000-00-00'))") . ";";
+            $sql = "SELECT Pre_Cod,Pre_Pvp,Pre_Des,Pre_Est,precios.Tpv_Cod,Pre_Ini,Pre_Fin FROM precios INNER JOIN tipo_preci ON tipo_preci.Tpv_Cod=precios.Tpv_Cod WHERE precios.Suc_Cod='$Par_Sql[0]' AND Pro_Cod='$Par_Sql[1]' AND Pre_Est='$Par_Sql[2]' " . (empty($Par_Sql[3]) ? '' : "AND Tpv_Def='D'") . " " . (empty($Par_Sql[4]) ? '' : "(('$Par_Sql[4]' BETWEEN Pre_Ini AND Pre_Fin) OR (Pre_Ini IS NULL AND Pre_Fin IS NULL) OR (Pre_Ini='0000-00-00' AND Pre_Fin='0000-00-00'))") . ";";
             //echo $sql.'<br/>';
             break;
         case 74: // usado

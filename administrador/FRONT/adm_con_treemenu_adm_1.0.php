@@ -7,6 +7,7 @@ Desarrollador:	Lewis Chimarro
 */
 
 /* Variable del tipo de requerimiento */
+require_once('../../Librerias/procedimientos/almacenados_standar.php');
 if (isset($Com_Tipo))
 {
 require_once('../LOGICA/logica.php');

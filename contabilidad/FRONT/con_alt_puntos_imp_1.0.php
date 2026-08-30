@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php 
 /** 
-* Descripción: Permite el ingreso de los puntos de impresión
+* Descripciï¿½n: Permite el ingreso de los puntos de impresiï¿½n
 * Desarrollador:	Lewis Chimarro
 * Fecha de creaci+on:	2012-05-11
 */
@@ -14,14 +14,14 @@ require_once('../../Librerias/postclass.php');
 $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 /* Cracion del objeto mysql para las consultas */
 $obBD_con1 =  new Class_Log_Datos_Con;
-/* Creación del objeto para evitar el reenvio */
+/* Creaciï¿½n del objeto para evitar el reenvio */
 $thisPost = new Post_Block;  
 
 /* Ajax que permite verificar si el tipo de embarque */
 if(isset($ajax_emb))
 {
 	/**
-	* Consulta datos de los puntos de impresión 
+	* Consulta datos de los puntos de impresiï¿½n 
 	*/
 	$row_puntos_imp = $obBD_con1->getRowConsulta(2, trim($Pun_Des).'*'.$Ses_Suc_Cod, $obBD_conexion);
 	
@@ -32,7 +32,7 @@ if(isset($ajax_emb))
 	}
 	else
 	{ ?>
-		<input name="Pun_Des" type="text" id="Pun_Des" size="30" maxlength="30" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_emb=1&Pun_Des=' + this.value,'div_emb')" />&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	¡Punto de impresión <?php echo "<font style='text-transform:uppercase'>".$Pun_Des."</font>"; ?> ya existe!        
+		<input name="Pun_Des" type="text" id="Pun_Des" size="30" maxlength="30" onblur="if (trim(this.value) != '')ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_emb=1&Pun_Des=' + this.value,'div_emb')" />&nbsp;<img src="../../mascaras/model1/imagenes/32x32/gtk-no.gif" width="22" height="22" />	ï¿½Punto de impresiï¿½n <?php echo "<font style='text-transform:uppercase'>".$Pun_Des."</font>"; ?> ya existe!        
 <?Php	}
 exit();
 }
@@ -52,7 +52,7 @@ if ($thisPost->postBlock($_POST['postID']))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -97,7 +97,7 @@ $thisPost->startPost();?>
   	    </select></td>
   	  </tr>
     	<tr>
-    	  <td width="16%" class="Etiqueta1"><span class="Asterisco">*</span> Descripción:</td>
+    	  <td width="16%" class="Etiqueta1"><span class="Asterisco">*</span> Descripciï¿½n:</td>
     	  <td colspan="3"><div id="div_existe">
     	    <table width="70%" border="0" cellpadding="0" cellspacing="0">
     	      <tr>

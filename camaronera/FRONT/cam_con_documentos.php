@@ -123,8 +123,7 @@ if (isset($comprasAjax)) {
 }
 
 if (isset($pagoComprasAjax)) {
-    $response3 = $obBD_con1->getArrayConsulta(45, $Ses_Emp_Cod . '*' . $Cod_Neg, $obBD_conexion);
-    $responce['response'] = array_merge($response1, $response2, $response3);
+    $responce['response'] = $obBD_con1->getArrayConsulta(45, $Ses_Emp_Cod . '*' . $Cod_Neg, $obBD_conexion);
     $obBD_con1->echoJson($responce);
     exit();
 }
@@ -170,7 +169,7 @@ if (isset($negociaciones_AntiCli_Ajax)) {
                 break;
         }
     }
-    $param = array($Ses_Emp_Cod, $param, $Fec_IniCli, $Fec_FinCli);
+    $param = array($Ses_Emp_Cod, $Par_Sql1, $Fec_IniCli, $Fec_FinCli);
     $responce = $obBD_con1->getArrayConsulta(53, $param,  $obBD_conexion);
     $obBD_con1->echoJson($responce);
     exit();

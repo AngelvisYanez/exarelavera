@@ -3,7 +3,7 @@
  * @abstract Permite revisar los numeros no ocupados en una autorizacion
  * @author Alejandro Camacho
  * @version 1.0
- * Fecha de creación  2021-06-25
+ * Fecha de creaciï¿½n  2021-06-25
  */
 
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -73,12 +73,12 @@ if(isset($consultarVetNums)){
         <link rel="stylesheet" href="../../framework/jquery/bootstrap/popover/jquery.flyout.css">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
-        <script language="javascript" src="../VALIDACIONES/con_val_valautorizacion.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/con_val_valautorizacion.js"></script>
     </HEAD>
     <BODY>
 
         <div class="panel panel-main">
-            <div class="panel-heading exa-header"><h3 class="panel-title">&raquo; Consultar Números Faltantes por Autorización </h3><p id="cabeceraPuntoImp" class="text-right col-xs-12  " style="margin-top:-15px;"></p></div>
+            <div class="panel-heading exa-header"><h3 class="panel-title">&raquo; Consultar Nï¿½meros Faltantes por Autorizaciï¿½n </h3><p id="cabeceraPuntoImp" class="text-right col-xs-12  " style="margin-top:-15px;"></p></div>
             <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
                 <div id="factura">
                     <div class="row">
@@ -110,7 +110,7 @@ if(isset($consultarVetNums)){
                                 </div>
 
                                 <div class='row form-group col-xs-12'>
-                                    <label class='col-xs-5 control-label label-xs required'>Autorización :</label>
+                                    <label class='col-xs-5 control-label label-xs required'>Autorizaciï¿½n :</label>
                                     <div class="col-xs-5 ">
                                             <select name='Aut_Cod' id='Aut_Cod' class='form-control input-xs'>
                                                 <option>Seleccione...</option>
@@ -119,7 +119,7 @@ if(isset($consultarVetNums)){
                                 </div>
 
                                 <div class='row form-group col-xs-12'>
-                                    <label class='col-xs-5 control-label label-xs required'>Punto de Emisión :</label>
+                                    <label class='col-xs-5 control-label label-xs required'>Punto de Emisiï¿½n :</label>
                                     <div class="col-xs-5 ">
                                             <select name='Pun_Sri' id='Pun_Sri' class='form-control input-xs'>
                                                 <option>Seleccione...</option>
@@ -134,7 +134,7 @@ if(isset($consultarVetNums)){
 									</div>
 								 </div>
 
-                                 <div class="col-sm-12 Titulos2"><hr><b>NOTA:</b>La búsqueda de documentos empezará desde el <b><?php echo $fechaAnterior?></b></div>
+                                 <div class="col-sm-12 Titulos2"><hr><b>NOTA:</b>La bï¿½squeda de documentos empezarï¿½ desde el <b><?php echo $fechaAnterior?></b></div>
                                 
                             </form>
                         </div>

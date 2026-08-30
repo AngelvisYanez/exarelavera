@@ -1,0 +1,19 @@
+{
+  "status": "failed",
+  "progress_msg": "Iniciando sesion en SRI...",
+  "total_found": 0,
+  "xmls_downloaded": 0,
+  "pdfs_downloaded": 0,
+  "events": [
+    {
+      "time": 1783959755.780315,
+      "progress_msg": "Iniciando navegador Playwright..."
+    },
+    {
+      "time": 1783959763.1785035,
+      "progress_msg": "Iniciando sesion en SRI..."
+    }
+  ],
+  "error": "No se pudo iniciar sesion en el SRI",
+  "completed_at": "2026-07-13T12:24:59.592569"
+}

@@ -1,10 +1,10 @@
 <?php	
 /** 
  * Alias:	Consultar
- * Descripción: Permite modificar las cuentas del plan de cuentas
- * Fecha de actualización:	2012-04-20
+ * Descripciï¿½n: Permite modificar las cuentas del plan de cuentas
+ * Fecha de actualizaciï¿½n:	2012-04-20
  * Desarrollador:	Lewis Chimarro
- * Fecha de actualización:	2015-03-07
+ * Fecha de actualizaciï¿½n:	2015-03-07
  * Desarrollador:	Lewis Chimarro
  */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -38,10 +38,10 @@ if(isset($excel)){ ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <HTML>
 	<HEAD>
-		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
-		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/con_val_planc.js"></script>
+		<TITLE><?php echo $Ses_Sys_Nom; ?></TITLE>
+		<?php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/con_val_planc.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -64,7 +64,7 @@ if(isset($excel)){ ?>
 <?php
 if(!isset($op)) $op = 1;
 
-$descripcion = "Cuentas*Impresión";
+$descripcion = "Cuentas*Impresiï¿½n";
 $pag1= $_SERVER['PHP_SELF']."?op=1";
 $pag2= $_SERVER['PHP_SELF']."?op=2";
 tabs(2,$descripcion, $pag1.'*'.$pag2, $op);
@@ -78,7 +78,7 @@ switch($op){
 			<LEGEND>
 				<label class="Titulos2">Buscar por:</label>
 			</LEGEND>
-			<?Php
+			<?php 
 			mensaje_requerido(); 
 			?>
 			<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name="form" id="form">
@@ -86,11 +86,11 @@ switch($op){
 				  <tr>
 					<td width="164"><input name="op_opciones" type="radio" value="d"   
 					onClick="setfocus(this.form.txt_busqueda)" style="cursor:pointer"  checked>
-					<span class="Etiqueta1">Descripción</span></td>
+					<span class="Etiqueta1">Descripciï¿½n</span></td>
 					<td width="341">
 					<input type="radio" name="op_opciones"  
 					onClick="setfocus(this.form.txt_busqueda)" style="cursor:pointer" value="r">
-					<span class="Etiqueta1">Código</span></td>
+					<span class="Etiqueta1">Cï¿½digo</span></td>
 				  </tr>
 				</table>
 				<table width="572" border="0" cellpadding="0" cellspacing="0" class="BarraBusqueda">
@@ -145,7 +145,7 @@ switch($op){
 							<td align="center" <?php echo $color_d; ?>><?php echo $row['Pld_Cod']; ?></td>
 							<td <?php echo $color_d; ?>><?php echo $row['Pla_Obs']; ?></td>
 							<td <?php echo $color_d; ?>><?php echo $row['Pld_Cdc']; ?></td>
-							<td <?php echo $color_d; ?>><?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Pld_Des'], '#FFFF00', 1); ?></td>
+							<td <?php echo $color_d; ?>><?php echo marcar_cadena($_POST['txt_busqueda'], $row['Pld_Des'], '#FFFF00', 1); ?></td>
 							<td <?php echo $color_d; ?> align="center"><?php echo $row['Pld_Tip']; ?></td>
 							<td <?php echo $color_d; ?> align="center"><?php echo $row['Pld_Deb']; ?></td>
 							<td <?php echo $color_d; ?> align="center"><?php echo $row['Pld_Cre']; ?></td>
@@ -157,7 +157,7 @@ switch($op){
 	  					<tr><td>&nbsp;</td>
 					  	  <td>&nbsp;</td>
 					  	  <td>&nbsp;</td>
-					  	  <td><?Php echo error_alerta("No hay ninguna cuenta creada", 1) ?></td>
+					  	  <td><?php echo error_alerta("No hay ninguna cuenta creada", 1) ?></td>
 					  	  <td>&nbsp;</td>
 					  	  <td>&nbsp;</td>
 					  	  <td>&nbsp;</td>
@@ -193,7 +193,7 @@ switch($op){
       					</tr>
 					</thead>
     				<tbody>
-      				<?foreach($row_rs_planes as $row){
+      				<?php foreach($row_rs_planes as $row){
 	 		 			if($row['Pla_Est']=='Inactivo'){ 
 							$rojo='#FF0000';
 							if(!isset($com_leyenda[1]))$com_leyenda[1]=1;
@@ -232,7 +232,7 @@ switch($op){
 						?>
 							<tr>
 								<td>&nbsp;</td>
-					  	  		<td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+					  	  		<td><?php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
 					  	  		<td>&nbsp;</td>
 					  		</tr>
 						<?php
@@ -259,7 +259,7 @@ switch($op){
 <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
 <script type="text/javascript">
 function exportExcel(Pla_Cod,Pla_Obs){
-    $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'excel':true,'codigo':Pla_Cod,'descrip':Pla_Obs}, function(response){
+    $.get('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'excel':true,'codigo':Pla_Cod,'descrip':Pla_Obs}, function(response){
         $.downloadFile($.exportarExcelBlob(response,'Plan de Cuentas'),'PlanCuentas.xls');
     }).fail(function(error) { $.alert("El Servidor ha fallado en responder!");});
     

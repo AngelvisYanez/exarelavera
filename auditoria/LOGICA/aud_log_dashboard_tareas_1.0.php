@@ -47,7 +47,7 @@ class Class_Log_Datos_Aud_Tareas extends MysqlDatosContab
         $result = $this->consultasobBD($sen_sql, $param, $obBD);
         $row = $this->fetch_assoc($result);
         $this->free_result($result);
-        return $row;
+        return is_array($row) ? $row : array();
     }
 
     /**

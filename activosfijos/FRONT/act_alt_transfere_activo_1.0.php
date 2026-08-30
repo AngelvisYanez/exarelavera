@@ -1,10 +1,10 @@
 <?php 
 /* 
  * Alias: Consulta de Custodio
- * Descripción: Permite la consulta de custodio 
+ * Descripciï¿½n: Permite la consulta de custodio 
  * Desarrollador: Didimo Zamora
- * Fecha de actualización:	2013/06/11
- * Fecha de actualización:	2013/08/20
+ * Fecha de actualizaciï¿½n:	2013/06/11
+ * Fecha de actualizaciï¿½n:	2013/08/20
 */
 
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -21,7 +21,7 @@ $obBD_conexion = new Class_Log_Conexion_Cch($Ses_Dat_Dis);
  */
 $obBD_con1 = new Class_Log_Datos_Cch;
 /**
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block;  
 
@@ -77,7 +77,7 @@ $hoy = date("Y-m-d");
 			for ($j=1; $j<= count($cant_act)-1; $j++)
 				{						
 						/**
-						 * Consultar el orden para una nueva asignación.
+						 * Consultar el orden para una nueva asignaciï¿½n.
 						 */
 						$rs_conOrd = $obBD_con1->getRowConsulta(144,$Cus_CodN.'*'.$cant_act[$j], $obBD_conexion);
 						$Ord_Default = $rs_conOrd['Orden'];
@@ -99,7 +99,7 @@ $hoy = date("Y-m-d");
 		 unset($txt_busqueda);
 		 unset($codigo);
 		 /**
-		  * Inserción de los activos seleccionados 
+		  * Inserciï¿½n de los activos seleccionados 
 		  */
 	 }	 
 ?> 
@@ -107,8 +107,8 @@ $hoy = date("Y-m-d");
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom;?></TITLE>
 			<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-            <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-            <script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
+            <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+            <script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>
             <script type="text/javascript" src="../VALIDACIONES/act_val_transfere_activo.js"></script>
             <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>  
             <script type="text/javascript"> 
@@ -138,7 +138,7 @@ $hoy = date("Y-m-d");
                     <td width="205"><input name="op_opciones" type="radio" value="1" onClick="setfocus(this.form.txt_busqueda)" checked>
                         <span class="LetraNegra">Apellidos</span></td>
                     <td width="313"><input type="radio" name="op_opciones" value="2" onClick="setfocus(this.form.txt_busqueda)">
-                        <span class="LetraNegra">Cédula</span>
+                        <span class="LetraNegra">Cï¿½dula</span>
                     </td>
                   </tr>
                 </table>
@@ -167,7 +167,7 @@ $hoy = date("Y-m-d");
     </LEGEND>
     <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
       <thead>
-          <th width="8%">Cód Int</th>
+          <th width="8%">Cï¿½d Int</th>
           <th width="20%">C&eacute;dula</th>
           <th width="64%">Custodio</th>
           <th width="8%">&nbsp;</th>         
@@ -213,7 +213,7 @@ $hoy = date("Y-m-d");
             <tr>
               <td></td>
               <td>&nbsp;</td>
-              <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+              <td align="center"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
               <td> </td>
             </tr>
           <?php } // fin del if ($total_rs_buscar > 0)?>
@@ -250,7 +250,7 @@ $thisPost->startPost();?>
         <td width="89%">&nbsp;<span class="LetraNegra"><?php echo  $rs_custodio['Nombre'];?></span></td>
       </tr> 
       <tr>
-        <td width="11%" height="23" class="Etiqueta1" ><span class="Etiqueta1">Cédula: </span></td>
+        <td width="11%" height="23" class="Etiqueta1" ><span class="Etiqueta1">Cï¿½dula: </span></td>
         <td width="89%">&nbsp;<span class="LetraNegra"><?php echo  $rs_custodio['Prs_Ced'];?></span></td>
        </tr>    
        <tr>
@@ -302,7 +302,7 @@ $thisPost->startPost();?>
         </td>           			      
       </tr>   
       <tr>
-        <td width="24%" class="Etiqueta1"><span class="Asterisco">*</span> Razón de Traslado :</td>
+        <td width="24%" class="Etiqueta1"><span class="Asterisco">*</span> Razï¿½n de Traslado :</td>
         <td width="76%"><textarea name="razon_tranf" cols="37" id="razon_tranf" rows="3"></textarea>  </td>
       </tr> 
        
@@ -366,7 +366,7 @@ $thisPost->startPost();?>
             <tr>
                 <td>  </td>
                  <td>  </td>
-                <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?>  </td>
+                <td align="center"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?>  </td>
                 <td>  </td>
                 <td>  </td>
             </tr>  

@@ -64,7 +64,8 @@ if (isset($save)) {
   exit();
 }
 $row_rs_periodo = $obBD_con1->getRowConsulta(39, $Ses_Emp_Cod, $obBD_conexion);
-$PecIni = explode('-', $row_rs_periodo['Pec_Fei']);
+$Pec_Fei = (isset($row_rs_periodo['Pec_Fei']) && $row_rs_periodo['Pec_Fei']) ? $row_rs_periodo['Pec_Fei'] : date('Y-m-d');
+$PecIni = explode('-', $Pec_Fei);
 $maximo = ($PecIni[0] * 1 - 1) . '-12-' . ultimoDia(12, ($PecIni[0] * 1 - 1));
 
 ?>
@@ -319,7 +320,7 @@ $maximo = ($PecIni[0] * 1 - 1) . '-12-' . ultimoDia(12, ($PecIni[0] * 1 - 1));
   <script type="text/javascript">
     function saveForm() {
       if ($('#Asi_Val').val() * 1 > 0) {
-        $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", $('#formDeudas').getData('save'), function(response) {
+        $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", $('#formDeudas').getData('save'), function(response) {
           if (response['success'] === true) {
             $('#formDeudas')[0].reset();
             $.alert("El Registro se ha Guardado con Exito!");

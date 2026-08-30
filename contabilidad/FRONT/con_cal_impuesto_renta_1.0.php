@@ -764,7 +764,7 @@ rsort($anios_disponibles);
         var tablasImpuesto = <?php echo json_encode($tablas_impuesto); ?>;
         // Tablas de gastos personales por año
         var tablasGastosPersonales = <?php echo json_encode($tablas_gastos_personales); ?>;
-        var anioActual = '<?php echo $anios_disponibles[0]; ?>';
+        var anioActual = <?php echo json_encode($anios_disponibles[0]); ?>;
         
         // Variables para almacenar los resultados del cálculo
         var datosCalculo = {};

@@ -146,7 +146,7 @@ if (isset($nproceso))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>								
-		<script language="javascript" src="../VALIDACIONES/adm_val_orgproc.js"></script>	
+		<script type="text/javascript" src="../VALIDACIONES/adm_val_orgproc.js"></script>	
 		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>	
          <!--Librerias para interfaz -->               
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
@@ -532,7 +532,7 @@ if (isset($np))
        
 
       </form>
-      <script language="javascript">
+      <script type="text/javascript">
 		 ShowHide('Pcs_Nom'); 	 
 	  </script>
     </div>
@@ -545,7 +545,7 @@ if (isset($np))
   if (count($rs_procesos) == 0)
   {
 	?>    
-    <script language="javascript">
+    <script type="text/javascript">
 	 ShowHide('id_proceso'); 	 
 	</script>
   <?Php

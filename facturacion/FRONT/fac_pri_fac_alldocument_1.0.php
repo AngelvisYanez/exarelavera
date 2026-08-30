@@ -32,7 +32,7 @@ if (isset($codigo)) {
   list($ann, $mes, $dia) = explode('-', $row_rs_cabcomp['Com_Fec']);
 } //FIn del if (isset($codigo))
 
-if (count($row_rs_cabcomp) > 0) {
+if (count((array)$row_rs_cabcomp) > 0) {
   switch ($row_rs_cabcomp['Tia_Ini']) {
     case 'I':
       $etiqueta = isset($array_asien[0]) ? $array_asien[0] : '';
@@ -74,7 +74,7 @@ if (count($row_rs_cabcomp) > 0) {
       $rs_tipoCompr = $obBD_con1->getRowConsulta(1076, $rs_info['Tic_Cod'], $obBD_conexion);
       $rs_detalle = $obBD_con1->getArrayConsulta(723, $com_codigo, $obBD_conexion);
       $row = current($rs_detalle);
-      $tot_rs_detalle = count($rs_detalle);
+      $tot_rs_detalle = count((array)$rs_detalle);
       $Obs = $row['Cop_Obs'];
     ?>
   </p>
@@ -241,7 +241,7 @@ if (count($row_rs_cabcomp) > 0) {
       $rs_retCod = $obBD_con1->getRowConsulta(718, $com_codigo, $obBD_conexion);
       $rs_confiEmp = $obBD_con1->getRowConsulta(1049, $Ses_Suc_Cod, $obBD_conexion);
       $rs_detalle = $obBD_con1->getArrayConsulta(381, $rs_retCod['Ret_Cod'], $obBD_conexion);
-      $total_rs_detalle = count($rs_detalle);
+      $total_rs_detalle = count((array)$rs_detalle);
       $impTotal = 0;
       if ($total_rs_detalle != 0 && 1 == 2) {
   ?>
@@ -427,7 +427,7 @@ $row_rs_cuentas = $obBD_con2->getArrayConsulta(336, $codigo.'*'.'D'.'*'.'ORDER B
 $row_rs_resumen=array();      
 foreach ($row_rs_cuentas as $row){
     $shouldaAdd=true;  
-    for($i=0;$i<count($row_rs_resumen);$i++){
+    for($i=0;$i<count((array)$row_rs_resumen);$i++){
         if($row_rs_resumen[$i]['Pld_Cod']==$row['Pld_Cod']){
             $shouldaAdd=false;                        
             $row_rs_resumen[$i]['Asi_Glo']='Valor Agrupado';
@@ -484,7 +484,7 @@ foreach ($row_rs_grupos as $row){
 	$row_rs_resumen=array();      
     foreach ($row_rs_cuentas as $row){
 		$shouldaAdd=true;  
-		for($i=0;$i<count($row_rs_resumen);$i++){
+		for($i=0;$i<count((array)$row_rs_resumen);$i++){
 			if($row_rs_resumen[$i]['Pld_Cod']==$row['Pld_Cod']){
 				$shouldaAdd=false;                        
 				$row_rs_resumen[$i]['Asi_Glo']='Valor Agrupado';
@@ -547,7 +547,7 @@ foreach ($row_rs_grupos as $row){
 /* Cargado de los cheques del comprobante */
 $row_rs_carcheq = $obBD_con2->getArrayConsulta(334, $row_rs_cabcomp['Com_Cod'], $obBD_conexion1);
 $fila+=20;
-if (count($row_rs_carcheq) > 0) 
+if (count((array)$row_rs_carcheq) > 0) 
 {
 ?>
     <table class="contenido" width="100%" border="0" cellpadding="0" cellspacing="0">

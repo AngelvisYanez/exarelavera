@@ -120,7 +120,7 @@ if(isset($ajaxCompr)){
                                 $.createDateRange('#ini','#fin');
                                 var kardexGrid=$("#kardex");
                                 kardexGrid.jqGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                                     //postData: $("#form1").getData("ajaxGrid"),
                                     autowidth : true, shrinkToFit: true, height: 270,responsive:true,

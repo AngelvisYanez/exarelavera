@@ -212,7 +212,7 @@ if (isset($_POST['getMaterials'])) {
   <meta charset="UTF-8">
   <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
   <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-  <script language="javascript" src="../VALIDACIONES/fac_val_producto.js"></script>
+  <script type="text/javascript" src="../VALIDACIONES/fac_val_producto.js"></script>
   <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
   <style>
     .checkbox.checkbox-xs label {
@@ -748,7 +748,7 @@ if (isset($_POST['getMaterials'])) {
               dataType: 'json', // <-- muy importante
               success: function(materials) {
                 // Limpiar y actualizar el select Cod_Const
-                public $codConst = $('#Cod_Const');
+                var $codConst = $('#Cod_Const');
                 $codConst.empty().append('<option value="">-- NO APLICA --</option>');
 
                 $.each(materials, function(i, material) {

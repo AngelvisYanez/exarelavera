@@ -1,4 +1,5 @@
 <?php
+if (!is_object($obBD_con1)) return;
 /**
 * Carga el periodos contable actual 
 */

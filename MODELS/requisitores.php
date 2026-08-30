@@ -1,5 +1,4 @@
 <?php
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class requisitores extends AbstractModel{
     protected $_name = 'requisitores';
@@ -22,16 +21,16 @@ class requisitores extends AbstractModel{
         $this->sqlByNombre("setEmpCod", $sel);
         if(isset($cond['op_opciones'])){
             if($cond['op_opciones']=="h"){
-                $sel->where("CONCAT(persona.Prs_Nom,' ',persona.Prs_Ape)LIKE '%{$cond['search']}%'");
+                $sel->where("CONCAT(persona.Prs_Nom,' ',persona.Prs_Ape)LIKE ?", "%{$cond['search']}%");
             }elseif($cond['op_opciones']=="c"){
                 $sel->where("Req_Num=?",$cond['search']);
             }elseif($cond['op_opciones']=="d"){
-                $sel->where("CONCAT(persona.Prs_Nom,' ',persona.Prs_Ape)LIKE '%{$cond['search']}%'");
+                $sel->where("CONCAT(persona.Prs_Nom,' ',persona.Prs_Ape)LIKE ?", "%{$cond['search']}%");
             }else{
                 if(empty($cond['desde'])&& empty($cond['hasta'])){
-                    $sel->where("Req_Fec >= '{$cond['desdeT']}' AND  Req_Fec <= '{$cond['hastaT']}'");
+                    $sel->where("Req_Fec >= ? AND  Req_Fec <= ?", array($cond['desdeT']??'', $cond['hastaT']??''));
                 }else{
-                    $sel->where("Req_Fec >= '{$cond['desde']}' AND  Req_Fec <= '{$cond['hasta']}'");
+                    $sel->where("Req_Fec >= ? AND  Req_Fec <= ?", array($cond['desde'], $cond['hasta']));
                 }
             }
         }

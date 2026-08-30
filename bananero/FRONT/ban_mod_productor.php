@@ -25,7 +25,7 @@ if(isset($changeEstado)){
     $obBD_ins1->inicio_transaccion($obBD_conexionIns);
     try{
         $obBD_ins1->operacionobBD('productor_bana.update', array('where'=>array('Prd_Cod'=>$Prd_Cod),'Prd_Est'=>$Prd_Est), $obBD_conexionIns);
-    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexionIns); $resp['message']=$e->getMessage(); $obBD_ins1->echoJson($resp); }
+    } catch(Exception $e){ $obBD_ins1->rollBack_nomsn($obBD_conexionIns); $resp['message']=$e->getMessage(); $obBD_ins1->echoJson($resp); }
     $resp['success']=$obBD_ins1->fin_transaccion_nomsn($obBD_conexionIns);// finalizo la transaccion y compruebo errores
     if(!$resp['success']) $resp['error']=$obBD_ins1->MsgError;
     $obBD_ins1->echoJson($resp);
@@ -113,7 +113,7 @@ if(isset($deleteHacienda)){
     $obBD_ins1->inicio_transaccion($obBD_conexionIns);
     try{
         $obBD_ins1->operacionobBD('productor_haci.update', array('where'=>array('Prh_Cod'=>$Prh_Cod),'Prh_Est'=>'I'), $obBD_conexionIns);
-    } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexionIns); $resp['message']=$e->getMessage(); $obBD_ins1->echoJson($resp); }
+    } catch(Exception $e){ $obBD_ins1->rollBack_nomsn($obBD_conexionIns); $resp['message']=$e->getMessage(); $obBD_ins1->echoJson($resp); }
     $resp['success']=$obBD_ins1->fin_transaccion_nomsn($obBD_conexionIns);// finalizo la transaccion y compruebo errores
     if(!$resp['success']) $resp['error']=$obBD_ins1->MsgError;
     $obBD_ins1->echoJson($resp);
@@ -126,7 +126,7 @@ $cur_periodo=current($periodos);
     <HEAD>
         <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-        <script language="javascript" src="../VALIDACIONES/ban_val_productor.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/ban_val_productor.js"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">
@@ -174,7 +174,7 @@ $cur_periodo=current($periodos);
                         <fieldset class="exa-fieldset" id="provFormTemp">
                             <legend class="Titulos2">Datos del Proveedor</legend>
                             <div class="form-group">
-                                <label class="col-xs-2 control-label label-xs">Cédula/RUC:</label>
+                                <label class="col-xs-2 control-label label-xs">Cï¿½dula/RUC:</label>
                                 <div class="col-xs-6" >
                                   <input name="Prs_Cod" data-name="Prs_Cod" type="text" style="display:none;" />
                                   <input name="Prv_Cod" data-name="Prv_Cod" type="text" style="display:none;" />
@@ -189,7 +189,7 @@ $cur_periodo=current($periodos);
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="col-xs-2 control-label label-xs">Dirección:</label>
+                                <label class="col-xs-2 control-label label-xs">Direcciï¿½n:</label>
                                 <div class="col-xs-10" >
 
                                         <input name="Prs_Dir" data-name="Prs_Dir" type="text" class="form-control  input-xs datatitle" readonly="" tabindex="-1">
@@ -201,7 +201,7 @@ $cur_periodo=current($periodos);
                         <fieldset class="exa-fieldset" id="provFormTemp">
                             <legend class="Titulos2">Datos del Productor</legend>
                             <div class="form-group">
-                                <label class="col-xs-4 control-label label-xs">Código Aux.:</label>
+                                <label class="col-xs-4 control-label label-xs">Cï¿½digo Aux.:</label>
                                 <div class="col-xs-6" >
                                     <input type="text" name="Prd_Cau" class="form-control input-xs" value=""  />
                                 </div>
@@ -280,7 +280,7 @@ $cur_periodo=current($periodos);
                             </div>
                         </fieldset>
                             <div>
-                                 <button type="button" class="btn btn-sm btn-inverse" onclick="$('#editarDato').moveComp('#lista').updateGridsSizes();"><i class="glyphicon glyphicon-arrow-left"></i> Atrás</button>
+                                 <button type="button" class="btn btn-sm btn-inverse" onclick="$('#editarDato').moveComp('#lista').updateGridsSizes();"><i class="glyphicon glyphicon-arrow-left"></i> Atrï¿½s</button>
 
                             </div>
                             <div class="help-block"></div>
@@ -321,7 +321,7 @@ $cur_periodo=current($periodos);
                 data['Prd_Cod']=$('#Prd_Cod').val();
                 var saver=$.cloneData(data);
                 delete saver['Index'];
-                $.createDialogConfirm('¿Esta seguro de guardar los datos?', data, function(){
+                $.createDialogConfirm('ï¿½Esta seguro de guardar los datos?', data, function(){
                     $.saveDataJson('',{saveHacienda:isNew?'S':'N',hacienda:saver},
                         function (resp){
                             //console.log(isNew);
@@ -340,7 +340,7 @@ $cur_periodo=current($periodos);
             }
             function deleteHacienda(data){
                 data['deleteHacienda']=true;
-                $.createDialogConfirm('¿Esta seguro que desea <b class="red">DESACTIVAR</b> la <b>Hacienda</b>?', data, function(){
+                $.createDialogConfirm('ï¿½Esta seguro que desea <b class="red">DESACTIVAR</b> la <b>Hacienda</b>?', data, function(){
                     $.saveDataJson('',data,
                         function (resp){
                             haciendas.changeRow(data.Index,{Prh_Est:'I',update:'','delete':''});
@@ -350,13 +350,13 @@ $cur_periodo=current($periodos);
             }
             function validaDocument(){
                 var data=$('#formDocumento').getData('saveDocumento');
-                $.createDialogConfirm('¿Esta seguro de actualizar el Productor?', data, saveDocument);
+                $.createDialogConfirm('ï¿½Esta seguro de actualizar el Productor?', data, saveDocument);
             }
             function validaCuentas(){
                 var data=$('#formDocumentoCtas').getData('saveCuentas');
                 data['Prd_Cod']=$('#Prd_Cod').val();
                 console.log(data);
-                $.createDialogConfirm('¿Esta seguro de actualizar las cuentas del productor?<br/><br/><b class="red">NOTA:</b> <span class="blue">Esto no afectara a los asientos anteriores, solo a los siguientes.</span>', data, function(data){
+                $.createDialogConfirm('ï¿½Esta seguro de actualizar las cuentas del productor?<br/><br/><b class="red">NOTA:</b> <span class="blue">Esto no afectara a los asientos anteriores, solo a los siguientes.</span>', data, function(data){
                    $.saveDataJson('',data,
                         function (resp){
 

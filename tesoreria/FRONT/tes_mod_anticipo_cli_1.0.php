@@ -142,7 +142,7 @@ if (isset($cargar_cuentas_pagos)) {
   exit();
 }
 
-//Sección ajax para guardar un nuevo socio en la base de datos
+//Secciï¿½n ajax para guardar un nuevo socio en la base de datos
 if (isset($saveAnticipo)) {
   $obBD_con_get->validaCierrePeriodo('anticipos_clientes','Ant_Fec','Ant_Cod',$Ant_Fec,$Ant_Cod,$obBD_conexion_get);
   $obBD_con_set->debug(true);
@@ -252,7 +252,7 @@ if(isset($protestarChe)){
 
       $obBD_con_set->fin_transaccion_nomsn($obBD_conexion_set->conexion);
     } else {
-      $response['message'] = "Advertencia: Hace falta un periodo contable para el año actual";
+      $response['message'] = "Advertencia: Hace falta un periodo contable para el aï¿½o actual";
       $response['pec_ban']="no";
     }
 
@@ -279,7 +279,7 @@ if(isset($protestarChe)){
 	<script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
    <script src="../VALIDACIONES/tes_val_anticipo_cli_1.2.js?a=4"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
-	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	<style>
 	.pagination>li>a, .pagination>li>span {padding: 4px 2px;}
 	.pagination {/*display: block;*/margin:0;padding: 0;}
@@ -360,7 +360,7 @@ if(isset($protestarChe)){
       <div id="documentoUpdate" hidden="true">
         <div class="row">
           <div class="col-sm-12">
-            <form class="form-horizontal normal" id="AnticipoCliForm" method="post" action="javascript:$.createDialogConfirm('¿Est&aacute; seguro que desea guardar los datos?', null,guardar_anticipo)">
+            <form class="form-horizontal normal" id="AnticipoCliForm" method="post" action="javascript:$.createDialogConfirm('ï¿½Est&aacute; seguro que desea guardar los datos?', null,guardar_anticipo)">
                 <div class="col-sm-12">
                 <div class="row">
                   <div class="col-sm-6">

@@ -159,13 +159,13 @@ $periodo = $periodos[0];
        function addCuenta(a2){       
             $('#cuenDialog').dialog('close');          
             if((tipo==='cobrado'&&$("#list_1").existsId(a2))||(tipo==='pagado'&&$("#list_2").existsId(a2))) {$.alert('La Cuenta ya esta Registrada!'); return;}
-            $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {Pld_Cod:a2,addCuenta:tipo},
+            $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", {Pld_Cod:a2,addCuenta:tipo},
                 function(r){ $("#list_"+(r['tipo']==='cobrado'?'1':'2')).jqGrid().trigger("reloadGrid", [{ page: 1 }]); }
             );
         }
         function deleteCuenta(data){
             //$.alert('Para realizar cambios comuniquese con el administrador!');
-            $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{Pld_Cod:data['Pld_Cod'],deleteCuenta:data['tipo']}, 
+            $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{Pld_Cod:data['Pld_Cod'],deleteCuenta:data['tipo']}, 
                   function( r ) { $("#list_"+(r['tipo']==='cobrado'?'1':'2')).jqGrid().trigger("reloadGrid", [{ page: 1 }]);  }
              );
         }

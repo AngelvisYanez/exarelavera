@@ -52,5 +52,4 @@ $server->register("getRide",
     "encoded",
     "Nos da un pdf desde un xml.");  
     
-if ( !isset( $HTTP_RAW_POST_DATA ) ) $HTTP_RAW_POST_DATA =file_get_contents( 'php://input' );
-$server->service($HTTP_RAW_POST_DATA);
+$server->service(file_get_contents('php://input'));

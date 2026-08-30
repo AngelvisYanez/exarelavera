@@ -5,10 +5,10 @@
  * 
  * @author car.87cod :)
  * @version 1.0
- * Fecha de actualización:	2012-04-16
+ * Fecha de actualizaciï¿½n:	2012-04-16
  * @author lewis.chimarro
  * @version 1.0
- * Fecha de actualización:	2014-05-21
+ * Fecha de actualizaciï¿½n:	2014-05-21
  * 
  * @package tesoreria.FRONT
  */	  
@@ -28,7 +28,7 @@ $obBD_conexion = new Class_Log_Conexion_Cli($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Cli;
 
-/*Sección para listar los clientes registrados dentro de la empresa*/
+/*Secciï¿½n para listar los clientes registrados dentro de la empresa*/
 if (isset($pacientesAjax)) {
     $data = filter_input_array(INPUT_GET);
     $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -74,8 +74,8 @@ if(isset($guardarCliente)){
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-        <!--<script language="javascript" src="../VALIDACIONES/tes_val_paciente.js?a=12"></script>-->
-		<script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
+        <!--<script type="text/javascript" src="../VALIDACIONES/tes_val_paciente.js?a=12"></script>-->
+		<script type="text/javascript" src="../../framework/plugins/cedulaRuc.js"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">
@@ -136,7 +136,7 @@ if(isset($guardarCliente)){
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-xs-3 control-label label-xs required">Cédula/RUC:</label>  
+                                    <label class="col-xs-3 control-label label-xs required">Cï¿½dula/RUC:</label>  
                                     <div class="col-xs-5" >
                                         <div class="input-group input-group-xs">                                          
                                             <input id="Prs_Ced" name="Prs_Ced" type="text" class="form-control input-xs" onchange="validar(1)" required=""  readonly="" />
@@ -156,7 +156,7 @@ if(isset($guardarCliente)){
                                     </div>
                                 </div>              
                                 <div class="form-group">
-                                    <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razón Social:</span></label>  
+                                    <label class="col-xs-3 control-label label-xs required"><span class='natural'>Apellidos:</span><span class='juridico' style="display: none;">Razï¿½n Social:</span></label>  
                                     <div class="col-xs-9" ><input name="Prs_Ape" type="text" class="form-control input-xs" required="" /></div>
                                 </div>
                                 <div class="form-group">
@@ -196,11 +196,11 @@ if(isset($guardarCliente)){
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-xs-3 control-label label-xs required">Dirección:</label>  
+                                    <label class="col-xs-3 control-label label-xs required">Direcciï¿½n:</label>  
                                     <div class="col-xs-9" ><input name="Prs_Dir" type="text" class="form-control input-xs" required="" /></div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-xs-3 control-label label-xs">Teléfono(s):</label>  
+                                    <label class="col-xs-3 control-label label-xs">Telï¿½fono(s):</label>  
                                     <div class="col-xs-9">                                    
                                         <div class="input-group input-group-xs">
                                             <span class="input-group-addon bold alert-info">#1:</span>
@@ -355,7 +355,7 @@ if(isset($guardarCliente)){
                 $.saveDataJson("",$('#formCliente').getData('guardarCliente'), function( resp ){ $('#Lis_Cli').trigger('reloadGrid');});
             }
 			function setTipoDoc(){
-				public $Prs_Ced=$('#Prs_Ced'), Prs_Ced=$Prs_Ced.val(), isRuc=$('#isRuc').is(':checked');
+				var $Prs_Ced=$('#Prs_Ced'), Prs_Ced=$Prs_Ced.val(), isRuc=$('#isRuc').is(':checked');
 				
 				if(Prs_Ced.length>=10 && $.isNum(Prs_Ced)){
 					Prs_Ced=Prs_Ced.substring(0,10);

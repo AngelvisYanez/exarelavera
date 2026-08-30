@@ -146,7 +146,7 @@ if(isset($uploadXML)){
         $("#loader").show();
         //formData.append(f.attr("name"), $(this)[0].files[0]);
         $.ajax({
-            url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+            url: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
             type: "post", dataType: "json", data: formData, cache: false, contentType: false, processData: false
         }).done(function(response){
             jgrid.jqGrid("clearGridData");
@@ -169,8 +169,8 @@ if(isset($uploadXML)){
 //        });
         jgrid=$("#list").createGrid({            
             colModel: [
-                { label: 'Cód.Int.', name: 'id', key: true, width: 55,align:"center",hidden:true },
-                { label: 'Código', name: 'codigo', width: 90,align:"center",cellattr: function () {return 'style="'+excelFormats.text+'"';},classes:'bgNoRight bgNoColor'},
+                { label: 'Cï¿½d.Int.', name: 'id', key: true, width: 55,align:"center",hidden:true },
+                { label: 'Cï¿½digo', name: 'codigo', width: 90,align:"center",cellattr: function () {return 'style="'+excelFormats.text+'"';},classes:'bgNoRight bgNoColor'},
                 { label: 'C.I/R.U.C', name: 'ruc', width: 50,align:"center",cellattr: function () {return 'style="'+excelFormats.text+'"';},classes:'bgNoRight bgNoColor'},                
                 { label: 'Tipo', name: 'tipo', width: 45,align:"center",cellattr: function () {return 'style="'+excelFormats.text+'"';},classes:'bgNoRight bgNoColor'},
                 { label: 'Sustento', name: 'sustento', width: 35,align:"center",cellattr: function () {return 'style="'+excelFormats.text+'"';},classes:'bgNoRight bgNoColor'},  								

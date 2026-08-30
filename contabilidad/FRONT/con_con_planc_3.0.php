@@ -4,10 +4,10 @@
 *
 * @author car.87cod :)
 * @version 1.0
-* Fecha de actualización:	2012-04-26
+* Fecha de actualizaciï¿½n:	2012-04-26
 * @author lewis.chimarro
 * @version 1.0
-* Fecha de actualización:	2014-05-29
+* Fecha de actualizaciï¿½n:	2014-05-29
 *
 * @package tesoreria.FRONT
 */
@@ -25,12 +25,12 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Con;
 
-/*Sección para listar plan decuentas de la empresa*/
+/*Secciï¿½n para listar plan decuentas de la empresa*/
 if (isset($planAjax)) {
 $obBD_con1->getPageGridJson(352,$_GET, $obBD_conexion,true);
 }
 
-/*Sección para listar plan de cuentas repetido de la empresa*/
+/*Secciï¿½n para listar plan de cuentas repetido de la empresa*/
 if (isset($planRepAjax)) {
 $obBD_con1->getPageGridJson(354,$_GET, $obBD_conexion,true);
 }
@@ -38,8 +38,11 @@ $obBD_con1->getPageGridJson(354,$_GET, $obBD_conexion,true);
 <!DOCTYPE HTML>
 <HTML>
 <HEAD>
-  <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
-  <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+  <TITLE><?php echo $Ses_Sys_Nom; ?></TITLE>
+  <?php
+  $mask_model = 'model1';
+  require_once("../../mascaras/unified-loader.php");
+  ?>
 </HEAD>
 <BODY>
 
@@ -80,16 +83,16 @@ $obBD_con1->getPageGridJson(354,$_GET, $obBD_conexion,true);
 
                                   ?>
 
-                                  <legend class="Titulos2" style="text-align: center;"><?echo $row_plan['Pla_Obs'];?></legend>
+                                  <legend class="Titulos2" style="text-align: center;"><?php echo $row_plan['Pla_Obs'];?></legend>
 
-                                  <label class="col-sm-7 label-xs">C&oacute;digo: <?echo $row_plan['Pla_Cod'];?> <p style="margin-left: 10%;display: inline;">Estado: <?echo $row_plan['Pla_Est'];?></p> </label>
-                                  <label class="col-sm-7 label-xs">Fecha: <?echo $row_plan['Pla_Fec'];?></label>
+                                  <label class="col-sm-7 label-xs">C&oacute;digo: <?php echo $row_plan['Pla_Cod'];?> <p style="margin-left: 10%;display: inline;">Estado: <?php echo $row_plan['Pla_Est'];?></p> </label>
+                                  <label class="col-sm-7 label-xs">Fecha: <?php echo $row_plan['Pla_Fec'];?></label>
                                   <?php
                                   $row_rep_plan = $obBD_con1->getRowConsulta(355, $Ses_Emp_Cod,$obBD_conexion);
                                   if ($row_rep_plan['cuenta']!=0){
                                   ?>
                                   <div class="col-sm-12 label-xs">
-                                      <label class="text-danger">Existen <?echo $row_rep_plan['cuenta'];?> codigos repetidos</label>
+                                      <label class="text-danger">Existen <?php echo $row_rep_plan['cuenta'];?> codigos repetidos</label>
                                       <button onclick="verRepetidos()" type="button" class="btn btn-primary btn-xs" title="ver"><span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></button>
                                       <button onclick="ocultarRepetidos()" id="ocultar" type="button" class="btn btn-danger btn-xs hidden" title="ocultar"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
                                   </div>

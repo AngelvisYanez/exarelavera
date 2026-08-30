@@ -1,4 +1,5 @@
 <?php
+if (!is_object($obBD_con1)) return;
 /* Componente para la busqueda de la modalidad-etapa-carrera
 Utiliza el componentes Ajax ==> ajax_suc_mod_eta_car.php 
 Sucursal= Carga todas las sucursales abiertas por la universidad

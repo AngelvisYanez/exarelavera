@@ -1,10 +1,10 @@
 <?php 
 /** 
- * Descripción: Permite el ingreso del detalle de los tipos de activos.
+ * Descripciï¿½n: Permite el ingreso del detalle de los tipos de activos.
  * Desarrollador:	Fabian Gallardo.
- * Fecha de actualización:	2011-04-21.
+ * Fecha de actualizaciï¿½n:	2011-04-21.
  * Desarrollador:	Didimo Zamora.
- * Fecha de actualización:	12-06-2013.
+ * Fecha de actualizaciï¿½n:	12-06-2013.
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/act_log_campos_det.php');	  
@@ -20,7 +20,7 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
  */
 $obBD_con1 =  new Class_Log_Datos_Con;
 /**
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block;  
 
@@ -68,23 +68,23 @@ $total_rs_seccion = count($rs_seccion);
  	if (isset($hdd_save) && !isset($hdd_atras)) 
 	{ 
 			/**
-			 * Inicio de la transacción
+			 * Inicio de la transacciï¿½n
 			 */
 			$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 		
 			/**
-			 * Consulta el ultimo activo insertado para el código manual
+			 * Consulta el ultimo activo insertado para el cï¿½digo manual
 			 */
 			$rs_ult_act = $obBD_con1->getRowConsulta(426,$Tia_Des, $obBD_conexion);
 			$Act_Cdc = $rs_ult_act["Cod"] + 1;			
 			/**
-			 * Inserción del activo
+			 * Inserciï¿½n del activo
 			 */
 			$Act_Cdc = $Tia_Cdc.'.'.$Act_Cdc;
 			$Act_var ='';
 			$Act_gen ='';	
 			/**
-			* Asignación del tipo para código de barras
+			* Asignaciï¿½n del tipo para cï¿½digo de barras
 			*/
 			if($Act_Gen==1)
 			{
@@ -144,7 +144,7 @@ $total_rs_seccion = count($rs_seccion);
 			$obBD_con1->operacionobBD(641, $Act_Bar.'*'.$Act_Cod, $obBD_conexion);		
 		
 		/** 
-		 * Inserción de la ubicacion
+		 * Inserciï¿½n de la ubicacion
 		 */
 		 $Ord_Default = 1;
 		$obBD_con1->operacionobBD(428, $Cus_Cod.'*'.$Act_Cod.'*'.date("Y-m-d").'*'.date("H:i:s").'*'.$Sec_Cod.'*'.$Ord_Default,$obBD_conexion);
@@ -156,7 +156,7 @@ $total_rs_seccion = count($rs_seccion);
 					if (isset($cam_r[$j]))
 					{		
 						/**
-						 * Inserción de cada campo
+						 * Inserciï¿½n de cada campo
 						 */
 						 $obBD_con1->operacionobBD(420,$Act_Cod.'*'.$cam_rc[$j].'*'.trim($cam_r[$j]),$obBD_conexion);
 					}
@@ -169,7 +169,7 @@ $total_rs_seccion = count($rs_seccion);
 					if (isset($cam[$k]))
 					{		
 						/** 
-						 * Inserción de cada campo
+						 * Inserciï¿½n de cada campo
 						 */
 						 $obBD_con1->operacionobBD(420,$Act_Cod.'*'.$cam_c[$k].'*'.trim($cam[$k]), $obBD_conexion);
 					}
@@ -211,9 +211,9 @@ $total_rs_seccion = count($rs_seccion);
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
-		<script language="javascript" src="../VALIDACIONES/act_val_campos_det.js"></script>        
+		<script type="text/javascript" src="../VALIDACIONES/act_val_campos_det.js"></script>        
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script> 
         <script>
 		$(function() { 
@@ -344,7 +344,7 @@ $total_rs_seccion = count($rs_seccion);
 	  <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
 	     <thead>
 	        <tr>
-			  <th width="5%">Cód. Int. </th>
+			  <th width="5%">Cï¿½d. Int. </th>
               <th width="25%">Grupo</th>
 			  <th width="25%">SubGrupo</th>
 			  <th width="27%">Nombre</th>
@@ -378,8 +378,8 @@ $total_rs_seccion = count($rs_seccion);
 					  <button type='button' class='btn btn-success btn-mini' title="Elegir" onClick="this.form.submit();"><i class='icon-arrow-right icon-white'></i></button>
 					  <input type="hidden" name="pag" value="1">
 					  <input name="Tia_Des" type="hidden" id="Tia_Des" value="<?php echo $row['Tia_Cod']; ?>">
-					  <input type="hidden" name="volver_txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
-                      <input type="hidden" name="volver_opciones" value="<?php echo $_POST['op_opciones'];?>">
+					  <input type="hidden" name="volver_txt_busqueda" value="<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>">
+                      <input type="hidden" name="volver_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8');?>">
                       
                       
 			      </form>
@@ -419,7 +419,7 @@ $total_rs_seccion = count($rs_seccion);
 <?php if(isset($Tia_Des))
 	  { 
 	  	/**
-		* Consulta la descripción del tipo de activo especifico
+		* Consulta la descripciï¿½n del tipo de activo especifico
 		*/
 	 	$row_rs_con_tip_act = $obBD_con1->getRowConsulta(416,$Tia_Des, $obBD_conexion);
 ?>
@@ -445,7 +445,7 @@ $total_rs_seccion = count($rs_seccion);
 	 	</td>
 	  </tr>
 	<!--<tr>
-		<td width="17%" class="Etiqueta1"><span class="Asterisco">*</span> Código Activo:</td>
+		<td width="17%" class="Etiqueta1"><span class="Asterisco">*</span> Cï¿½digo Activo:</td>
 		<td>&nbsp;<input name="Act_Cdc" type="text" id="Act_Cdc" value="<?php //echo $row_rs_ult_act["Cod"] + 1;?>" size="30" readonly></td>
 		</tr>-->
 	<tr>
@@ -515,7 +515,7 @@ $total_rs_seccion = count($rs_seccion);
         </select></td>
         </tr>
         <tr>
-        <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Sección:</td>
+        <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Secciï¿½n:</td>
         <td colspan="2">&nbsp;<select name="Sec_Cod" id="Sec_Cod">
         <?Php
 		if (count($rs_seccion)>1)
@@ -575,7 +575,7 @@ $total_rs_seccion = count($rs_seccion);
     </LEGEND>
 	<table width="100%" border="0" cellpadding="0" cellspacing="0">
     	<tr>
-        <td width="16%" align="right" class="Etiqueta1">Fecha adquisición :</td>
+        <td width="16%" align="right" class="Etiqueta1">Fecha adquisiciï¿½n :</td>
         <td width="84%" colspan="2">&nbsp;<input name="Act_Fec" type="text" id="Act_Fec" value="" size="8" onKeyUp="mascara(this,'-',patron,true)" onBlur="validar_fecha2(this);"/>
         </td>
         
@@ -602,8 +602,8 @@ $total_rs_seccion = count($rs_seccion);
         <td width="84%" colspan="2">&nbsp;<input name="Act_Res" type="text" id="Act_Res" value="0" size="10" onKeyPress = "return validar_decimal(event)" style="text-align:right"></td>
         </tr>
 		 <tr>
-        <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Vida Útil :</td>
-        <td width="84%" colspan="2">&nbsp;<input name="Act_Ann" type="text" id="Act_Ann" value="0" size="10" maxlength="3" onKeyPress="return validar_numeric(event)" style="text-align:right"><span class="Etiqueta1"> Años </span></td>
+        <td width="16%" align="right" class="Etiqueta1"><span class="Asterisco">*</span> Vida ï¿½til :</td>
+        <td width="84%" colspan="2">&nbsp;<input name="Act_Ann" type="text" id="Act_Ann" value="0" size="10" maxlength="3" onKeyPress="return validar_numeric(event)" style="text-align:right"><span class="Etiqueta1"> Aï¿½os </span></td>
         </tr>
 	</table>
 	</fieldset>
@@ -623,7 +623,7 @@ $total_rs_seccion = count($rs_seccion);
     
   <fieldset>
   <LEGEND>
-    <label class="Titulos2">Técnicos</label>
+    <label class="Titulos2">Tï¿½cnicos</label>
 	</LEGEND>
   <table width="100%" cellpadding="0" cellspacing="0" border="0">
     	<tr>
@@ -696,17 +696,17 @@ $total_rs_seccion = count($rs_seccion);
 	<input name="hdd_save" type="hidden" id="hdd_save" value="insertar">
     <input name="i" type="hidden" id="i" value="<?php echo $i; ?>">
 	<input name="r" type="hidden" id="r" value="<?php echo $r; ?>">    
-    <input type="hidden" name="volver_txt_busqueda" value="<?php echo $_POST['volver_txt_busqueda'];?>">
+    <input type="hidden" name="volver_txt_busqueda" value="<?php echo htmlspecialchars($_POST['volver_txt_busqueda'], ENT_QUOTES, 'UTF-8');?>">
  </form>
     <br>
     <table width="247" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <td width="111">
 	<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
-		<button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="this.form.submit();"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
+		<button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="this.form.submit();"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
         <input type="hidden" name="hdd_volver" value="1">
-		<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['volver_txt_busqueda'];?>">
-        <input type="hidden" name="op_opciones" value="<?php echo $_POST['volver_opciones'];?>">
+		<input type="hidden" name="txt_busqueda" value="<?php echo htmlspecialchars($_POST['volver_txt_busqueda'], ENT_QUOTES, 'UTF-8');?>">
+        <input type="hidden" name="op_opciones" value="<?php echo htmlspecialchars($_POST['volver_opciones'], ENT_QUOTES, 'UTF-8');?>">
 	</form>	      
       </td>
       <td width="136">

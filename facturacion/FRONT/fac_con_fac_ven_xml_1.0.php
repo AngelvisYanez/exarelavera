@@ -1,8 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php
 /**
-* Descripción: Consulta de facturas electronicas
-* Fecha de actualización:	16-11-2014 
+* Descripciï¿½n: Consulta de facturas electronicas
+* Fecha de actualizaciï¿½n:	16-11-2014 
 * Desarrollador:	Jose Cumbicos
 */	  
 
@@ -93,9 +93,9 @@ switch($op){
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom;?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>		
-		<script language="javascript" src="../VALIDACIONES/fac_val_aju.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_aju.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
 	    <!--Librerias para calendario -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script>         
@@ -317,7 +317,7 @@ if ( $op==1 || $op==2 )
         
         <FIELDSET>
         <LEGEND>
-        <label class="Titulos2">Resultados de la búsqueda</label>
+        <label class="Titulos2">Resultados de la bï¿½squeda</label>
         </LEGEND>
             <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
               <thead>
@@ -457,7 +457,7 @@ if ( $op==1 || $op==2 )
         <table width="299" border="0" cellpadding="0" cellspacing="0" class="Azul">
          <tr>
            <td width="100">             
-           <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*op*hdd_buscar"; ?>', '<?Php echo $volver_busqueda.'*'.$op_opciones.'*'.$op.'*1'; ?>')">
+           <button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*op*hdd_buscar"; ?>', '<?Php echo $volver_busqueda.'*'.$op_opciones.'*'.$op.'*1'; ?>')">
                             <i class=" icon-arrow-left icon-white"></i>
                             <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
                </button>        

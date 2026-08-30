@@ -3,7 +3,7 @@
  * @abstract Permite realizar el registro de productores de fruta
  * @author Erik Niebla
  * @version 1.0
- * Fecha de creación  2018-05-18
+ * Fecha de creaciï¿½n  2018-05-18
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/ban_log_naviera.php');
@@ -55,7 +55,7 @@ $hoy = date("Y-m-d");
     <HEAD>		
         <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-        <script language="javascript" src="../VALIDACIONES/ban_val_naviera.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/ban_val_naviera.js"></script>
         <style></style>
     </HEAD>
     <BODY>

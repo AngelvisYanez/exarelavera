@@ -154,7 +154,7 @@ $mes = date("m");
           var jsUsuarioTipo = <?php if($usuarioTipo['Ust_Tip']!=""){echo "'" .$usuarioTipo['Ust_Tip'] . "'";}else{echo "''";} ?>;
         </script>
         <script src="../../Librerias/socketio/socket.io.min.js"></script> 
-        <script language="javascript" src="../VALIDACIONES/adm_val_soporte.js?x=x15"></script>
+        <script type="text/javascript" src="../VALIDACIONES/adm_val_soporte.js?x=x15"></script>
         <style>
           .checked {
             color: orange;

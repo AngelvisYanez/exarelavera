@@ -1064,10 +1064,17 @@ if(isset($anulaData)){
     $obBD_con_set->inicio_transaccion($obBD_conexion_set);
     try{   
         $cod= explode("_", $id);
-        if($type=='Pcs')
+        if($type=='Pcs') {
             $obBD_con_set->operacionobBD('procesos.update', array('Pcs_Est'=>'I','where'=>array('Pcs_Cod'=>$cod[1])), $obBD_conexion_set);  
-        else if($type=='Org')
+            $obBD_conexion_set->conexion->query("DELETE FROM exa.perfiorgan WHERE Pcs_Cod = {$cod[1]}");
+            $obBD_conexion_set->conexion->query("DELETE FROM exa.procesos WHERE Pcs_Cod = {$cod[1]}");
+            $obBD_conexion_set->conexion->query("DELETE FROM servicios.perfiorgan WHERE Pcs_Cod = {$cod[1]}");
+            $obBD_conexion_set->conexion->query("DELETE FROM servicios.procesos WHERE Pcs_Cod = {$cod[1]}");
+        } else if($type=='Org') {
             $obBD_con_set->operacionobBD('organizado.update', array('Org_Mod'=>'I','where'=>array('Org_Cod'=>$cod[1])), $obBD_conexion_set);  
+            $obBD_conexion_set->conexion->query("DELETE FROM exa.organizado WHERE Org_Cod = {$cod[1]}");
+            $obBD_conexion_set->conexion->query("DELETE FROM servicios.organizado WHERE Org_Cod = {$cod[1]}");
+        }
     } catch(Exception $e){ $obBD_con_set->rollBack_nomsn($obBD_conexion_set); $resp['message']=$e->getMessage(); $obBD_con1->echoJson($resp); }
     // finalizo la transaccion y compruebo errores
     $resp['success']=$obBD_con_set->fin_transaccion_nomsn($obBD_conexion_set);
@@ -1105,7 +1112,7 @@ if(isset($saveRuta)){
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script> 
     <script type="text/javascript" src="../../framework/jquery/chosen/chosenIcon/chosenIcon.js"></script> 
     <link rel="stylesheet" href="../../skins/fonts/fontelo/fontello.css?x=0" />
-    <script type="text/javascript">var urlTree='<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?treeAjax=true';</script>
+    <script type="text/javascript">var urlTree='<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?treeAjax=true';</script>
     <script type="text/javascript" src="../VALIDACIONES/adm_val_orgproc_2.0.js?e=2"></script> 
     <style>.panel-body{padding: 5px 5px 0px 5px;} .jstree-icon:not(.glyphicon):not(.fa){font-family:"fontello"; font-style: normal; font-weight: normal;} .jstree-anchor.jstree-disabled .glyphicon.glyphicon-info-sign{color: #666 !important;} /*.hidden{display: inherit !important}*/
     </style>
@@ -1137,8 +1144,8 @@ if(isset($saveRuta)){
                         <span id="btnEditFolder" class="none grupo" style="display: none;"><button onclick="setFolder(selected,false)" type="button" class="btn btn-xs btn-primary"><i class="glyphicon glyphicon-pencil"></i> Editar</button> </span>
                         <span id="btnAddProcess" class="none grupo" style="display: none;"><button onclick="setProcess(selected,true)" type="button" class="btn btn-xs btn-success"><i class="glyphicon glyphicon-plus"></i> Proceso</button> </span>
                         <span id="btnEditProcess" class="none proceso" style="display: none;"><button onclick="setProcess(selected,false)" type="button" class="btn btn-xs btn-primary"><i class="glyphicon glyphicon-pencil"></i> Editar</button> </span>
-                        <!--<span id="btnDeleteFolder" class="none grupo" style="display: none;"><button type="button" class="btn btn-xs btn-danger"><i class="glyphicon glyphicon-trash"></i> Anular</button> </span>-->
-                        <span id="btnDeleteProcess" class="none proceso" style="display: none;"><button onclick="anulaProcess(selected)" type="button" class="btn btn-xs btn-danger"><i class="glyphicon glyphicon-trash"></i> Anular</button> </span>
+                        <span id="btnDeleteFolder" class="none grupo" style="display: none;"><button onclick="anulaProcess(selected)" type="button" class="btn btn-xs btn-danger"><i class="glyphicon glyphicon-trash"></i> Eliminar</button> </span>
+                        <span id="btnDeleteProcess" class="none proceso" style="display: none;"><button onclick="anulaProcess(selected)" type="button" class="btn btn-xs btn-danger"><i class="glyphicon glyphicon-trash"></i> Eliminar</button> </span>
                     </div>   
                 </div>
             </div>

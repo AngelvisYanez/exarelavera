@@ -696,7 +696,7 @@ if (isset($detAjax)) {
                             }
 
                             function clearFooter() {
-                                public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
+                                var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
                                 $footRow.find('>td[aria-describedby="list_subgrid"]').css("border-right-color", "transparent");
                                 $footRow.find('>td[aria-describedby="list_Com_Codigo"]').css("border-right-color", "transparent");
                                 $footRow.find('>td[aria-describedby="list_Cop_Fec"]').css("border-right-color", "transparent");
@@ -745,7 +745,7 @@ if (isset($detAjax)) {
                                 $.createDateRange('#txt_fec_ini', '#txt_fec_fin');
                                 var compGrid = $("#list");
                                 compGrid.jqGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET",
                                     datatype: "local",
                                     regional: 'es', //ajaxRowOptions: { async: true },
@@ -933,7 +933,7 @@ if (isset($detAjax)) {
                                         var subgrid_table_id = subgrid_id + "_t";
                                         $("#" + subgrid_id).html("<table id='" + subgrid_table_id + "' class='scroll'></table>");
                                         $("#" + subgrid_table_id).jqGrid({
-                                            url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?ajaxSubgrid=" + row_id + '&Pec_Cod=' + $('#Pec_Cod').val() + '&txt_fec_ini=' + $('#txt_fec_ini').val() + '&txt_fec_fin=' + $('#txt_fec_fin').val(),
+                                            url: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?ajaxSubgrid=" + row_id + '&Pec_Cod=' + $('#Pec_Cod').val() + '&txt_fec_ini=' + $('#txt_fec_ini').val() + '&txt_fec_fin=' + $('#txt_fec_fin').val(),
                                             datatype: "json",
                                             regional: 'es',
                                             autowidth: true,
@@ -1250,7 +1250,7 @@ if (isset($detAjax)) {
         }); 
         function selectDetalle(Cpp,Com){                             
                            
-                                $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{detAjax:true,Cpp:Cpp,Com:Com}, function( response ) {
+                                $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{detAjax:true,Cpp:Cpp,Com:Com}, function( response ) {
                                    if(response['success']===true){                                       
                                         $("#lblComp2").val(response['com']['Com_Num']);
                                         $("#lblComFe2").val(response['com']['Com_Fec']);
@@ -1305,7 +1305,7 @@ if (isset($detAjax)) {
                         }
                //  console.log(batch);       
                if(batch.length>0){ 
-                    $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{dataReport:batch,tipo:banTipo,caption:grid.parent().parent().parent().find('.ui-jqgrid-title').text(), Pec_Cod:$('#Pec_Cod').val(), txt_fec_ini:$('#txt_fec_ini').val(), txt_fec_fin:$('#txt_fec_fin').val()}, function( response ) {
+                    $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{dataReport:batch,tipo:banTipo,caption:grid.parent().parent().parent().find('.ui-jqgrid-title').text(), Pec_Cod:$('#Pec_Cod').val(), txt_fec_ini:$('#txt_fec_ini').val(), txt_fec_fin:$('#txt_fec_fin').val()}, function( response ) {
                         if(response['success']===true){
                             if(banTipo){
                                  $('#Exportar').html(response['html']);
@@ -1476,7 +1476,7 @@ if (isset($detAjax)) {
             $.createDialog('#successDialog', 150, 550);
         });
         function selectDetalle(Cpp, Com) {
-            $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {
+            $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", {
                 detAjax: true,
                 Cpp: Cpp,
                 Com: Com
@@ -1554,7 +1554,7 @@ if (isset($detAjax)) {
             //  console.log(batch);     
             var seleccionado = (document.querySelector('input[name="resumido"]:checked')).value;
             if (batch.length > 0) {
-                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", {
                     resumido: $('#resumido').prop('checked'),
                     resumido1: seleccionado,
                     dataReport: batch,

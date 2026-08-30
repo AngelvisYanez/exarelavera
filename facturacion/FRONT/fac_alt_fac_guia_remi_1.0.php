@@ -1,9 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php	
 /**
-* Descripción: Permite crear guias de remision
+* Descripciï¿½n: Permite crear guias de remision
 * Desarrollador:	Jose Cumbicos 
-* Fecha de actualización:	2015-07-01 
+* Fecha de actualizaciï¿½n:	2015-07-01 
 */
 
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -12,15 +12,15 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php');
 
 /** 
-* Creacion del Objeto de conexión 
+* Creacion del Objeto de conexiï¿½n 
 */
 $obBD_conexion = new Class_Log_Conexion_Tes($Ses_Dat_Dis);
 /* 
-* Creación del objeto mysql para las consultas 
+* Creaciï¿½n del objeto mysql para las consultas 
 */
 $obBD_con1 =  new Class_Log_Datos_Tes;
 /** 
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 
@@ -46,7 +46,7 @@ $row_rs_apercaja = $obBD_con1->getRowConsulta(25, $Pun_Cod, $obBD_conexion);
 
 
 /** 
-* Cargado AJAX de los resultados de la búsqueda del rubro 
+* Cargado AJAX de los resultados de la bï¿½squeda del rubro 
 */	
 if (isset($buscod))
 {
@@ -466,7 +466,7 @@ if ($thisPost->postBlock($_POST['postID']))
 						  <strong>Paso 1:</strong> Click en el bot&oacute;n <strong>Siguiente</strong><br>';
 						  if($total_usuario!=0){ $msgHtml=$msgHtml.'<strong>Paso 2:</strong> Ingresar el usuario(Cedula/R.u.c.) y contrase&ntilde;a<br>';}else{$msgHtml=$msgHtml.'<strong>Paso 2:</strong> Ingresar el usuario(Cedula/R.u.c.) y contrase&ntilde;a(Cedula/R.u.c.)<br>';}							  
 						  $msgHtml=$msgHtml.'<strong>Paso 3:</strong> Click en el bot&oacute;n <strong>Entrar</strong><br>';
-						  if($total_usuario==0){ $msgHtml=$msgHtml.'<strong>Paso 4:</strong> Cambiar la contraseña';}
+						  if($total_usuario==0){ $msgHtml=$msgHtml.'<strong>Paso 4:</strong> Cambiar la contraseï¿½a';}
 						  $msgHtml=$msgHtml.'</td>
 						<td width="2%">&nbsp;</td>
 					  </tr>
@@ -514,26 +514,26 @@ if ($thisPost->postBlock($_POST['postID']))
 				</form>
 				</body>
 				</html>';						
-					require '../../Librerias/PHPMail/class.phpmailer.php';
+					require_once '../../Librerias/PHPMailer_compat.php';
 					// Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
 					$mail = new PHPMailer(true); 
-					// Configuramos el protocolo SMTP con autenticación
+					// Configuramos el protocolo SMTP con autenticaciï¿½n
 					$mail->IsSMTP();
 					$mail->SMTPAuth = true;
 					$mail->IsHTML(true);
-					// Configuración del servidor SMTP
+					// Configuraciï¿½n del servidor SMTP
 					$mail->Port = 25;
 					$mail->Host = 'ofsercont.com';
 					$mail->Username = "facturacion.electronica@ofsercont.com";
 					$mail->Password = "p.123456";
-					// Configuración cabeceras del mensaje
+					// Configuraciï¿½n cabeceras del mensaje
 					$mail->From = "facturacion.electronica@ofsercont.com";
 					$mail->FromName = $Ses_Emp_Nom;
 					$mail->AddAddress(trim($Prs_Cor),strtoupper($PrsNom));
 					//$mail->AddAddress("destino2@correo.com","Nombre 2");
 					//$mail->AddCC("copia1@correo.com","Nombre copia 1");
 					//$mail->AddBCC("copia1@correo.com","Nombre copia 1");
-					$mail->Subject = "Comprobante Electrónico";
+					$mail->Subject = "Comprobante Electrï¿½nico";
 					// Creamos en una variable el cuerpo, contenido HMTL, del correo
 					
 					//$body  = "Proebando los correos con un tutorial<br>";
@@ -642,7 +642,7 @@ if(isset($ajax_factura))
         <tr class="Cabecera1" height="35">
             <th width="7%">C&oacute;digo</th>	  
             <th width="11%">Cantidad</th>
-            <th width="58%">Descripción</th>
+            <th width="58%">Descripciï¿½n</th>
             <th width="19%">Marca</th>
             <th width="5%">&nbsp;</th>
             </tr>
@@ -719,8 +719,8 @@ if($total_rs_maxGuiaRemi!=0)
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    	<script language="javascript" src="../VALIDACIONES/fac_val_guia_remi.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    	<script type="text/javascript" src="../VALIDACIONES/fac_val_guia_remi.js"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
         <!--Librerias para modal -->       
@@ -782,7 +782,7 @@ if($total_rs_maxGuiaRemi!=0)
 		$pagina = $_SERVER['PHP_SELF'];
 		$reportes = $obBD_con1->reportes($pagina, $Ses_Emp_Cod, $obBD_conexion);
 ?>
-<script language="javascript">windows('<?php echo $reportes[1];?>?Gui_Cod=<?Php echo $Gui_Cod;?>','', 800,600,'yes', 'yes', 'yes', 'no');</script>
+<script type="text/javascript">windows('<?php echo $reportes[1];?>?Gui_Cod=<?Php echo $Gui_Cod;?>','', 800,600,'yes', 'yes', 'yes', 'no');</script>
 <?php }//Fin del if (isset($hdd_save) && !isset($hdd_volver))?>
 
 <?php 
@@ -802,7 +802,7 @@ if($total_rs_autorizacion!=0)
     <td height="400" colspan="3" valign="top">
        
 
-<form action="<?Php echo $_SERVER['../LOGICA/PHP_SELF']; ?>" method="post" name="form2" id="form2">
+<form action="<?Php echo $_SERVER['PHP_SELF']; ?>" method="post" name="form2" id="form2">
 
 	<table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
@@ -974,7 +974,7 @@ $thisPost->startPost();
         <tr class="Cabecera1" height="35">
             <th width="7%">C&oacute;digo</th>	  
             <th width="11%">Cantidad</th>
-            <th width="58%">Descripción</th>
+            <th width="58%">Descripciï¿½n</th>
             <th width="19%">Marca</th>
             <th width="5%">&nbsp;</th>
             </tr>
@@ -992,7 +992,7 @@ $thisPost->startPost();
         </tr> 
        </table>
     
-       <script language="javascript">ShowHide('tr_total');</script>  	
+       <script type="text/javascript">ShowHide('tr_total');</script>  	
         
       <input id="nfilas" name="nfilas" type="hidden" value="<?php echo $fila; ?>">
       <input id="nfilas_elim" name="nfilas_elim" type="hidden" value="">
@@ -1013,7 +1013,7 @@ $thisPost->startPost();
 <table width="303" border="0" cellpadding="0" cellspacing="0">
   <tr>
     <td width="106">&nbsp;
-    <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver*cmb_anio*cmb_mes*Tic_Cod"; ?>', '<?Php echo $volver_busqueda.'*'.$volver_op.'*1*'.$volver_anio.'*'.$volver_mes.'*'.$Tic_Cod; ?>')">
+    <button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="campos_hide(this.form, '<?Php echo "txt_busqueda*op_opciones*hdd_volver*cmb_anio*cmb_mes*Tic_Cod"; ?>', '<?Php echo $volver_busqueda.'*'.$volver_op.'*1*'.$volver_anio.'*'.$volver_mes.'*'.$Tic_Cod; ?>')">
                     <i class=" icon-arrow-left icon-white"></i>
                     <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        </button>
@@ -1044,7 +1044,7 @@ $thisPost->startPost();
 </table>
 <?php 
   }else{  
-	 echo error_alerta("&iexcl;No se puede generar el Documento: [".$numGuiaRemi."], la Autorización [".$rs_autorizacion['Aut_Sri']."] permite comprobantes de retenci&oacute;n entre [".$rs_autorizacion['Aut_Ini']."] y [".$rs_autorizacion['Aut_Fin']."]!", 2); 
+	 echo error_alerta("&iexcl;No se puede generar el Documento: [".$numGuiaRemi."], la Autorizaciï¿½n [".$rs_autorizacion['Aut_Sri']."] permite comprobantes de retenci&oacute;n entre [".$rs_autorizacion['Aut_Ini']."] y [".$rs_autorizacion['Aut_Fin']."]!", 2); 
   } //if($numGuiaRemi<=$rs_autorizacion['Aut_Fin'])
 }else{
 	 echo error_alerta(" No existen autorizaciones para GU&Iacute;AS DE REMISI&Oacute;N otorgadas por SRI, activas", 2);

@@ -20,7 +20,7 @@ function validar(form)
 	
 	if(cont == 0)
 	{
-		alert('Alerta:\n Debe Chequear por lo menos una opción');
+		$.alert('Alerta:<br> Debe Chequear por lo menos una opción',null,'warning');
 	}
 	
 	return cont > 0;

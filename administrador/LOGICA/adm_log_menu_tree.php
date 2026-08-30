@@ -1,11 +1,34 @@
 <?Php
 /**
-* Descripci�n: Cargar el menu del sistema inform�tico
-* Fecha de actualizaci�n:	2016-12-25
+* Descripción: Cargar el menu del sistema informático
+* Fecha de actualización:	2016-12-25
 * Desarrollador:	 Erik Niebla
 */
-require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
-require_once ('../../skins/php/TreeMenu.php');
+require_once (__DIR__ . '/../../auditoria/LOGICA/aud_log_auditoria.php');
+require_once (__DIR__ . '/../../skins/php/TreeMenu.php');
+require_once (__DIR__ . '/adm_sql_menu.php');
+require_once (__DIR__ . '/../../Librerias/procedimientos/almacenados_standar.php');
+
+if (!function_exists('groupBy')) {
+    function groupBy($array, $key) {
+        $result = array();
+        if (is_array($array)) {
+            foreach ($array as $element) {
+                if (is_object($element)) {
+                    $groupKey = isset($element->$key) ? $element->$key : null;
+                } elseif (is_array($element)) {
+                    $groupKey = isset($element[$key]) ? $element[$key] : null;
+                } else {
+                    continue;
+                }
+                if ($groupKey !== null) {
+                    $result[$groupKey][] = $element;
+                }
+            }
+        }
+        return $result;
+    }
+}
 
 class Class_Sys_Menu extends MysqlDatos{  
     function __construct() {
@@ -48,16 +71,18 @@ class Class_Sys_Menu extends MysqlDatos{
         return $menu;
     }
     function setMenuPages(&$menu,$Org_Cod,$Organiza,$Procesos){
-        if (isset($Organiza[$Org_Cod]))
-        foreach ($Organiza[$Org_Cod] AS $Org){
-            $item=new TreeMenuItem(array('id'=>$Org['Org_Cod'],'label'=>$Org['Org_Des'],'icon'=>$Org['Org_Ico'],'order'=>$Org['Org_Ord'],'itemType'=>'G'));
-            $this->setMenuPages($item,$Org['Org_Cod'],$Organiza,$Procesos);
-            $menu->addPage($item);
+        if (isset($Organiza[$Org_Cod])) {
+            foreach ($Organiza[$Org_Cod] AS $Org){
+                $item=new TreeMenuItem(array('id'=>$Org['Org_Cod'],'label'=>$Org['Org_Des'],'icon'=>$Org['Org_Ico'],'order'=>$Org['Org_Ord'],'itemType'=>'G'));
+                $this->setMenuPages($item,$Org['Org_Cod'],$Organiza,$Procesos);
+                $menu->addPage($item);
+            }
         }
-        if (isset($Procesos[$Org_Cod]))
-        foreach ($Procesos[$Org_Cod] AS $Pcs){
-            $item=new TreeMenuItem(array('id'=>$Pcs['Pcs_Cod'],'label'=>$Pcs['Pcs_Lin'],'title'=>$Pcs['Pcs_Det'],'icon'=>$Pcs['Pcs_Ico'],'order'=>$Pcs['Pcs_Ord'],'itemType'=>'D','href'=>$Pcs["Rut_Des"].$Pcs["Pcs_Nom"]));
-            $menu->addPage($item);
+        if (isset($Procesos[$Org_Cod])) {
+            foreach ($Procesos[$Org_Cod] AS $Pcs){
+                $item=new TreeMenuItem(array('id'=>$Pcs['Pcs_Cod'],'label'=>$Pcs['Pcs_Lin'],'title'=>$Pcs['Pcs_Det'],'icon'=>$Pcs['Pcs_Ico'],'order'=>$Pcs['Pcs_Ord'],'itemType'=>'D','href'=>$Pcs["Rut_Des"].$Pcs["Pcs_Nom"]));
+                $menu->addPage($item);
+            }
         }
     }
     function menuToHtml($case,$menu,$class,$itemClass){
@@ -68,104 +93,34 @@ class Class_Sys_Menu extends MysqlDatos{
                 return $this->menuToHtml1($menu,$menu->itemClass);
             default: return '';
         }
-    } 
-    function menuToHtml1($menu,$itemClass=''){
-        $html = array();
-        $html[] ='<ul class="'.$menu->getClass().'">';
-        foreach ($menu->getPages() as $page) {
-            //if($this->navigation()->accept($page)) {  
-                $dropdown = $page->hasPages();
-                if(!$page->isVisible() || (!$page->getHref()&&!$dropdown) || !$page->hasProccess()) { continue; } // visibility of the page
-                $icon = $page->getIcon();
-                $active=$page->isActive()||($dropdown?$page->isChildActive():false);
-                
-                $html[] = '<li class="'.$itemClass.' '. ($active ? 'active' : ''). ($dropdown&&$active ? ' open' :'').'" >';
-                $html[] = '<a ' . ($dropdown ? 'href="#" class="dropdown-toggle"' : 'href="'.$page->getHref().'"').' >';
-                $html[] = (!empty($icon) ? '<i class="menu-icon '.$icon.'"></i>' : '<i class="menu-icon fa fa-angle-double-right"></i>');
-                $html[] = '<span class="menu-text">'.$page->getLabel().'</span>';
-
-                if ($dropdown) { $html[] = '<b class="arrow fa fa-angle-down"></b>'; }
-                $html[] = '</a>';
-                if ($dropdown) {$html[] = '<b class="arrow"></b>';}	 
-                if (!$dropdown) { $html[] = '</li>'; continue; }
-                $html[] = $this->createSubmenu1($page->getPages(),$itemClass /*,$this->navigation()*/);		
-                $html[] = "</li>";
-            //}
-        }
-        $html[] = '</ul><!-- /.nav-list -->'; 
-        return join('', $html);
-    } 
-    function createSubmenu1($pages,$itemClass=''/*,$navigation*/){	
-        $html[] = '<ul class="submenu">';
-        $SubDropdown = false;
-        foreach ($pages as $subpage) {                
-                $SubDropdown = $subpage->hasPages();
-                $SubIcon = $subpage->getIcon();
-                $SubActive=$subpage->isActive()||($SubDropdown?$subpage->isChildActive():false);
-                //if($navigation->accept($subpage)) {                        
-                        if (!$subpage->isVisible() || (!$subpage->getHref()&&!$SubDropdown) || ($SubDropdown&&!$subpage->hasItemType('D')) ) { continue; }// visibility of the sub-page
-                        if ($subpage->getLabel() == 'divider') { $html[] = '<li class="divider"></li>'; continue; }
-                        $html[] = '<li class="'.$itemClass.' '. ($SubActive ? 'active' : ''). ($SubDropdown&&$SubActive ? ' open' :'').'" >';
-                        $html[] = '<a ' . ($SubDropdown ? 'href="#" class="dropdown-toggle"' : ' class="menu-link" target="contenido" href="'.$subpage->getHref().'"').' >';
-                        $html[] = (!empty($SubIcon) ? '<i class="menu-icon '.$SubIcon.'"></i>' : '<i class="menu-icon fa fa-angle-double-right"></i>');
-                        $html[] = '<span class="menu-text">'.$subpage->getLabel().'</span>';
-                        if ($SubDropdown) {$html[] = '<b class="arrow fa fa-angle-down"></b>';}
-                        $html[] = "</a>";
-                        if ($SubDropdown) { $html[] = '<b class="arrow"></b>'; }	 
-                        if (!$SubDropdown) { $html[] = '</li>'; continue; }
-                        $html[] = $this->createSubmenu1($subpage->getPages(),$itemClass /*,$navigation*/);
-                        $html[] = "</li>";
-               // }
-        }	 
-        $html[] = "</ul>";
-        return join(PHP_EOL, $html);
     }
-    
-    
-    function sentencias_men($id,$Par_Sql){
-        switch($id){
-            case 1:
-                $sql = "(SELECT organizado.Org_Det, organizado.Org_Ord, organizado.Org_Des, organizado.Org_Niv, organizado.Org_Cod, organizado.Org_Img, Org_Ico,
-                    organizado.Org_Ime FROM organizado WHERE organizado.Org_Cod IN (SELECT organizado.Org_Niv FROM organizado WHERE organizado.Org_Cod IN 
-                    (SELECT organizado.Org_Niv FROM procesos INNER JOIN perfiorgan ON (procesos.Pcs_Cod = perfiorgan.Pcs_Cod) INNER JOIN organizado ON
-                     (procesos.Org_Cod = organizado.Org_Cod) WHERE (".$Par_Sql[1]."))) ORDER BY organizado.Org_Ord) 
-                     UNION DISTINCT
-                     (SELECT organizado.Org_Det, organizado.Org_Ord, organizado.Org_Des, organizado.Org_Niv, organizado.Org_Cod, organizado.Org_Img, Org_Ico,
-                    organizado.Org_Ime FROM organizado WHERE organizado.Org_Cod IN  
-                    (SELECT organizado.Org_Niv FROM procesos INNER JOIN perfiorgan ON (procesos.Pcs_Cod = perfiorgan.Pcs_Cod) INNER JOIN organizado ON
-                     (procesos.Org_Cod = organizado.Org_Cod) WHERE (".$Par_Sql[1].")) ".(empty($Par_Sql[0])?'':"AND organizado.Org_Niv = $Par_Sql[0]")." ORDER BY organizado.Org_Ord)";
-                //echo $sql;                
-                return $sql;
-            case 2:    
-                $sql="SELECT DISTINCT
-                      organizado.Org_Det,
-                      organizado.Org_Ord,
-                      organizado.Org_Des,
-                      organizado.Org_Niv,
-                      organizado.Org_Cod,
-                      organizado.Org_Img,
-                      organizado.Org_Ime,
-                      organizado.Org_Ico
-                    FROM
-                      organizado
-                    WHERE
-                      ".(empty($Par_Sql[0])?'':"organizado.Org_Niv=$Par_Sql[0] AND")." Org_Mod='A' ORDER BY organizado.Org_Niv,IF(organizado.Org_Niv=0,organizado.Org_Ord,organizado.Org_Cod)";
-                //echo $sql;   
-                return $sql;
-            case 3:    
-                $sql = "SELECT DISTINCT procesos.Pcs_Cod, procesos.Org_Cod, procesos.Pcs_Ord, procesos.Pcs_Lin, rutas.Rut_Des,
-                        procesos.Pcs_Nom, procesos.Pcs_Img, procesos.Pcs_Det,Pcs_Ico
-                        FROM
-                          rutas
-                          INNER JOIN procesos ON (rutas.Rut_Cod = procesos.Rut_Cod)
-                          INNER JOIN perfiorgan ON (procesos.Pcs_Cod = perfiorgan.Pcs_Cod)
-                        WHERE
-                        procesos.Pcs_Est='A' AND procesos.Pcs_Tip = '$Par_Sql[2]'
-                        ".(empty($Par_Sql[0])?'':"AND procesos.Org_Cod=$Par_Sql[0]")." AND (".$Par_Sql[1].")
-                        ORDER BY procesos.Pcs_Ord";			
-                //echo $sql;   
-                return $sql;    
-                
+    function menuToHtml1($menu,$itemClass){
+        $res="";
+        $pages = $menu->getPages();
+        if (is_array($pages)) {
+            foreach($pages AS $items){
+                $icon = $items->getIcon();
+                if (empty($icon)) {
+                    $icon = "menu-icon fa fa-caret-right";
+                }
+                $label = $items->getLabel();
+                $itemType = $items->getItemType();
+                $href = $items->getHref();
+                $res .= "<li class='".$itemClass."'>";
+                if ($itemType == "G") {
+                    $res .= "<a href='#' class='dropdown-toggle'><i class='".$icon."'></i><span class='menu-text'>".$label."</span><b class='arrow fa fa-angle-down'></b></a>";
+                    $res .= "<b class='arrow'></b>";
+                    $res .= "<ul class='submenu'>";
+                    $res .= $this->menuToHtml1($items, $itemClass);
+                    $res .= "</ul>";
+                } else {
+                    $res .= "<a href='#' data-url='".$href."'><i class='".$icon."'></i><span class='menu-text'>".$label."</span></a>";
+                    $res .= "<b class='arrow'></b>";
+                }
+                $res .= "</li>";
+            }
         }
+        return $res;
     }
 }
+?>

@@ -104,7 +104,7 @@ if(isset($save)){
       <td height="389" align="left" valign="top">
           
 <!-- INICIO FORMULARIO BUSQUEDA -->
-        <form enctype="multipart/form-data" action="<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>" method="post" name= "form1" id= "form1">
+        <form enctype="multipart/form-data" action="<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>" method="post" name= "form1" id= "form1">
             <table width="50%" border="0" cellpadding="0" cellspacing="0">
                 <tr>  
                      <td width="350">
@@ -242,7 +242,7 @@ foreach ($row_rs_tipo_asien as $row)
                                     if(batch.length>0){ 
                                         var data=$('#formComp').serializeObject();
                                         data["save"]=batch;
-                                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+                                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                                             if(response['success']===true){
                                                 $.alert("Transaccion Realizada con &Eacute;xito!");
                                                 resetForm();
@@ -270,7 +270,7 @@ foreach ($row_rs_tipo_asien as $row)
                     $(document).ready(function () {  
                         var gridComp=$("#comp");
                         gridComp.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },                             
                             autowidth : true, shrinkToFit: true, height: 120,
                             cmTemplate: {sortable:false},

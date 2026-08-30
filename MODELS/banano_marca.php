@@ -1,5 +1,4 @@
 <?php 
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class banano_marca extends AbstractModel{
     protected $_name = 'banano_marca'; 
@@ -16,7 +15,7 @@ class banano_marca extends AbstractModel{
     public function formatData($data, $type, $allData=null){ 
         return ($type=='I')?$data:$data;
     }
-    public function sqlByNombre($id,$Par_Sql){
+    public function sqlByNombre($id,$Par_Sql,$cond=null){
         $sql=(is_object($Par_Sql)?$Par_Sql:'');
         switch($id){
             case "":
@@ -36,7 +35,7 @@ class banano_marca extends AbstractModel{
         //echo $sql."<br/>";
         return $sql;
     }
-    public function sqlByNumero($id,$Par_Sql){
+    public function sqlByNumero($id,$Par_Sql,$cond=null){
         $sql=(is_object($Par_Sql)?$Par_Sql:'');
         switch($id){
             case 0:

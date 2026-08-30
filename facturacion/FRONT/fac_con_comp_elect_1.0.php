@@ -1,8 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php
 /**
-* Descripción:Consuta RIDE comprobantes elctronicos.
-* Fecha de actualización:	09-06-2015 
+* Descripciï¿½n:Consuta RIDE comprobantes elctronicos.
+* Fecha de actualizaciï¿½n:	09-06-2015 
 * Desarrollador:	Jose Cumbicos
 
 */	  
@@ -96,14 +96,14 @@ if($Tic_Cod=='06')//Guia Remision
 	$url_pdf='../COMPONENTES/tesPdfGuiaRemisionElectronica_1.0.php';
 }
 
-$total_datos=count($row_rs_datos);
+$total_datos=count((array)$row_rs_datos);
 
 ?>
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom;?></TITLE>
 		 <?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>	
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>  
-        <script language="javascript" src="../VALIDACIONES/fac_val_comp_elect.js"></script>  	   		          
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>  
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_comp_elect.js"></script>  	   		          
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script> 
 		<script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>         	                                   
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script>
@@ -184,7 +184,7 @@ $total_datos=count($row_rs_datos);
       <span class="Etiqueta1">Consumidor Final </span></td>
     </tr>
 </table>
-<script language="javascript"> ShowHide('td_consumidor'); </script>
+<script type="text/javascript"> ShowHide('td_consumidor'); </script>
 <table width="566" border="0" cellpadding="0" cellspacing="0">
 <tr id="tr_numero">
   <td>
@@ -214,7 +214,7 @@ $total_datos=count($row_rs_datos);
   </td>
 </tr>
 </table>
-<script language="javascript"> ShowHide('tr_fechas'); </script>
+<script type="text/javascript"> ShowHide('tr_fechas'); </script>
 </FIELDSET>
 </form>
 <br />

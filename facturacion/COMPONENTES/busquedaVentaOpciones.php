@@ -12,7 +12,7 @@
 
             <div class="col-xs-6">
                 <fieldset class="exa-fieldset">
-                    <legend class="Titulos2">Búsqueda</legend>
+                    <legend class="Titulos2">Bï¿½squeda</legend>
                     <div class="form-group">
 
                     <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>  
@@ -26,7 +26,7 @@
                     <label class="col-xs-2 control-label">B&uacute;squeda:</label>  
                     <div class="col-xs-7" >
                         <div class="input-group">                        
-                        <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese búsqueda..." autofocus  class="form-control input-sm clearable submit"/>
+                        <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese bï¿½squeda..." autofocus  class="form-control input-sm clearable submit"/>
                         <span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm" title="Buscar Documento"  tabindex="-1"><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
                       </div><!-- /input-group --> 
                     </div><input type="text" tabindex="-1" style="display:none;" />                    
@@ -75,7 +75,7 @@
     <div style="min-height: 300px;">
         <table id="searchGrid"></table>
         <table id="searchGridPager"></table>
-        <div class="Titulos2"><span id="plan-footer"><strong>Leyenda:</strong> <span class="glyphicon glyphicon-stop green"></span> Contiene Pagos | <span class="glyphicon glyphicon-remove red"></span> Anulados/Inactivos | <span class="fa fa-globe green"></span> Retención Electronica Validada | <span class="glyphicon glyphicon-lock orange"></span> Formato Anterior</div>
+        <div class="Titulos2"><span id="plan-footer"><strong>Leyenda:</strong> <span class="glyphicon glyphicon-stop green"></span> Contiene Pagos | <span class="glyphicon glyphicon-remove red"></span> Anulados/Inactivos | <span class="fa fa-globe green"></span> Retenciï¿½n Electronica Validada | <span class="glyphicon glyphicon-lock orange"></span> Formato Anterior</div>
     </div>
 
 </div>
@@ -88,7 +88,7 @@
         <legend class="Titulos2">Documento:</legend>
         <div class="form-horizontal normal" style="padding: 0 4px;">
         <div class="form-group">
-            <label class="col-xs-2 control-label label-xs">Cédula/RUC:</label>  
+            <label class="col-xs-2 control-label label-xs">Cï¿½dula/RUC:</label>  
             <div class="col-xs-4" ><span name="Prs_Ced"  class="form-control input-xs"></span></div>
             <label class="col-xs-2 control-label label-xs">Doc.Num.:</label>  
             <div class="col-xs-4" ><span name="Secuencia"  class="form-control input-xs"></span></div>
@@ -100,7 +100,7 @@
             <div class="col-xs-3" ><span name="Caj_Fec"  class="form-control input-xs"></span></div>
         </div>    
         <div class="form-group">
-            <label class="col-xs-2 control-label label-xs">Autorización:</label>  
+            <label class="col-xs-2 control-label label-xs">Autorizaciï¿½n:</label>  
             <div class="col-xs-10" ><span name="Autorizacion"  class="form-control input-xs datatitle"></span></div>
         </div>
         <div class="form-group condensed">
@@ -121,12 +121,12 @@
         </div>  
         </div>    
     </fieldset>  
-    <div class="col-xs-12" style="text-align: right;font-size: 8px;padding-top: 2px;"><b>CREACIÓN:</b> <span name="Vet_Sys" class="databind"></span> &nbsp;&nbsp;-&nbsp;&nbsp; <b>USUARIO:</b> <span name="Vendedor" class="databind"></span></div>
+    <div class="col-xs-12" style="text-align: right;font-size: 8px;padding-top: 2px;"><b>CREACIï¿½N:</b> <span name="Vet_Sys" class="databind"></span> &nbsp;&nbsp;-&nbsp;&nbsp; <b>USUARIO:</b> <span name="Vendedor" class="databind"></span></div>
 </div>
 <script>
     $(function() { 
         var model = [  
-            { label: 'Cód. Int.', name: 'Vet_Cod', width: 30 ,align:"center", key:true},                  
+            { label: 'Cï¿½d. Int.', name: 'Vet_Cod', width: 30 ,align:"center", key:true},                  
             { label: 'Tipo Documento', name: 'Tic_Des', width: 100 },
             { label: 'No. Documento', name: 'Secuencia', width: 60, align:"center" }, 
 			{ label: 'Referendo', name: 'Ref_Cod', width: 30, align:"center", formatter:'estado', formatoptions:{full:true,types:{'01':'SI','02':'NO'}} }, 
@@ -138,7 +138,7 @@
             { label: '&nbsp;', name: 'act0', width: 20, align: 'center',viewable: false, formatter:'gridButton', formatoptions:{ action:viewInfo, data:'Vet_Cod', title:'Ver Documento', icon:'info-sign', type:'info' }, title:false }
         ];
         $('#searchGrid').createGrid({
-            height: 270, datatype: "local", caption:'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="ventas.Vet_Num DESC ">Num. Documento</option><option value="exporta_vent.Ref_Cod ">Referendo</option><select>&nbsp;</div>',
+            height: 270, datatype: "local", caption:'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="ventas.Vet_Num DESC ">Num. Documento</option><option value="exporta_vent.Ref_Cod ">Referendo</option></select>&nbsp;</div>',
             colModel: model.concat($.isset('busquedaButton')?busquedaButton:[]) 
         },false,'#searchGridPager',{refresh: true});
         $('#OrderBy').on('change',function(){ $('input[name=order]').val($(this).val()); $('#serachDocDorm').formSubmit(); });
@@ -146,7 +146,7 @@
         var opts={                                                        
             height:75, postData: {CheListAjax:true},caption:'Detalle Venta',                
             colModel: [
-                { label: 'Cód.Int.', name: 'Vet_Int', key: true, width: 15,align:"center", hidden:true },                                     
+                { label: 'Cï¿½d.Int.', name: 'Vet_Int', key: true, width: 15,align:"center", hidden:true },                                     
                 { label: 'Cantidad ', name: 'Vet_Can', width: 45, align: 'right' },                      
                 { label: 'Item', name: 'Ite_Lar', width: 130  },
                 { label: 'P. Unit.', name: 'Vet_Pru', width: 65, align: 'right'},

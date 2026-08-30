@@ -1,29 +1,29 @@
 <?Php 
 /* Componente para mostrar el mes y poder elegir un rango de fechas 
-El año debe ser el selecionado desde el inicio en el periodo
+El aï¿½o debe ser el selecionado desde el inicio en el periodo
 Se debe definir un campo oculto hdd_ann con la fecha inicial del periodo
 */
 switch (com_com_ven)
 {
 	case 1://Compras
-		/* carga los años */
+		/* carga los aï¿½os */
 		$rs_anios = $obBD_con1->consulta(sentencias_tes(247,$obBD_con1->parametros($Com_Tic_Cod)), $obBD_conexion->conexion); 	
 		$row_rs_anios = $obBD_con1->registros();
 		$total_rs_anios = $obBD_con1->numregistros();
     break;
 	case 2://Ventas 
-		/***************Carga los años *******************/
+		/***************Carga los aï¿½os *******************/
 		$rs_anios = $obBD_con1->consulta(sentencias_tes(245,$obBD_con1->parametros($Com_Tic_Cod)), $obBD_conexion->conexion);//Antes .'*'.$Pun_Cod	
 		$row_rs_anios = $obBD_con1->registros();
 		$total_rs_anios = $obBD_con1->numregistros();
 	break;
 }//FIn del switch ($com_com_ven)
 ?>
-<script language="javascript">
-/* Asigna el dia inicial y final del mes y año seleccionado */ 
+<script type="text/javascript">
+/* Asigna el dia inicial y final del mes y aï¿½o seleccionado */ 
 function set_dia_mes()
 {
-	/* Año tomado del objeto que debe estar en el FRONT */
+	/* Aï¿½o tomado del objeto que debe estar en el FRONT */
 	var ann = document.getElementById('cmb_anio').value;
 	if (document.getElementById('Chk_Fec').checked)//En caso de seleccionar la eleccion de la fecha inicial y final 
 	 {
@@ -90,7 +90,7 @@ $ann_act = explode('-', date("Y-m-d"));
 					{
 						$i = "0".$i;
 					}
-					/* Control para mantener seteada la información seleccionada */
+					/* Control para mantener seteada la informaciï¿½n seleccionada */
 					if (isset($cmb_mes))
 					{
 						$mes = $cmb_mes;
@@ -135,6 +135,6 @@ $ann_act = explode('-', date("Y-m-d"));
   </tr>
 	  </table>
 </FIELDSET>
-<script language="javascript">
+<script type="text/javascript">
  ShowHide('capa_rango_fec');
 </script>

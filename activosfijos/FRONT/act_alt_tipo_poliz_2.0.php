@@ -1,9 +1,9 @@
 <?php	
 /**
 * @abstract Permite realizar el registro de un tipo de poliza
-* @author José Ambuludí
+* @author Josï¿½ Ambuludï¿½
 * @version 1.0
-* Fecha de creación  2016-06-03
+* Fecha de creaciï¿½n  2016-06-03
 */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/act_log_tipo_poliz.php');
@@ -62,7 +62,7 @@ if(isset($save)){
                                 
 								<!-- Textarea -->
                                 <div class="form-group">
-                                  <label class="col-sm-3 control-label" for="des_cuenta">Observación:</label>
+                                  <label class="col-sm-3 control-label" for="des_cuenta">Observaciï¿½n:</label>
                                   <div class="col-sm-9">                     
                                     <textarea class="form-control" id="Tip_Obs" name="Tip_Obs"></textarea>
                                   </div>
@@ -89,7 +89,7 @@ if(isset($save)){
    <script type="text/javascript">
 		function saveForm(){
 			   $('.btn-form').attr('disabled','disabled');
-                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$('#formTipo_Poliza').getData('save'), 	    		function(response){	
+                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$('#formTipo_Poliza').getData('save'), 	    		function(response){	
                     if(response['success']==true){
                         $('#formTipo_Poliza')[0].reset();						
                         alert("El Registro se ha Guardado con Exito!");

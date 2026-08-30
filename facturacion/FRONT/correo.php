@@ -3,7 +3,7 @@
 
 if (isset($_POST['save']))
 {   
-    	include '../../Librerias/PHPMail/PHPMail.php';
+    	require_once '../../Librerias/PHPMailer_compat.php';
 		
 			
 		$obj = new PHPMail();
@@ -180,7 +180,7 @@ if (isset($_POST['save']))
 		</body>
 		</html>';
 		
-		if($obj->enviar($dest, 'Facturación Electrónica',$msgHtml , array(), '', $dest)){
+		if($obj->enviar($dest, 'Facturaciï¿½n Electrï¿½nica',$msgHtml , array(), '', $dest)){
 			echo "<script type='text/javascript'>alert('Correo enviado correctamente');</script>";
 		}
 }
@@ -190,7 +190,7 @@ if (isset($_POST['save']))
 	<HEAD>
 		<TITLE>Correo</TITLE>		
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?> 
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">       
 	</HEAD>

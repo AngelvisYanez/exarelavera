@@ -51,12 +51,12 @@ if(isset($ajaxKardex)){
                        <form id="formVnd" class="form-horizontal normal"  action="javascript:$('#listVnd').Search('#formVnd','ajaxKardex');"   >
   
                         <fieldset class="exa-fieldset">                           
-                           <legend class="Titulos2">Descripción Cliente:</legend> <!-- Form Name -->
+                           <legend class="Titulos2">Descripciï¿½n Cliente:</legend> <!-- Form Name -->
                               <div class="row">                                  
                                   <div class="col-xs-4">
                                       <!-- static input-->
                                         <div class="form-group">
-                                          <label class="col-xs-3 control-label label-xs ">Descripción:</label>  
+                                          <label class="col-xs-3 control-label label-xs ">Descripciï¿½n:</label>  
                                           <div class="col-xs-9">  
                                             <div class="input-group input-group-xs">                                                
                                                 <input type="text" name="Vnd_Cod" id="Vnd_Cod" value="" style="display: none" />  
@@ -83,7 +83,7 @@ if(isset($ajaxKardex)){
                                   <div class="col-xs-4">
                                       <!-- static input-->
                                         <div class="form-group">
-                                          <label class="col-xs-3 control-label label-xs ">Dirección:</label>  
+                                          <label class="col-xs-3 control-label label-xs ">Direcciï¿½n:</label>  
                                           <div class="col-xs-8">                                    
                                               <span  class="form-control input-xs" id="vnd_dir"></span>                              
                                           </div>                                  
@@ -136,7 +136,7 @@ if(isset($ajaxKardex)){
                                 $.createDateRange('#iniVnd','#finVnd');
                                 var kardexGrid=$("#listVnd");
                                 kardexGrid.jqGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                                     //postData: $("#form1").getData("ajaxGrid"),
                                     autowidth : true, shrinkToFit: true, height: 270,responsive:true,
@@ -201,7 +201,7 @@ if(isset($ajaxKardex)){
                 </div> 
 
 <!--INICIO DEL DIALOGO BUSCAR Vendedor--> 
-    <div id="vndDialog" title="Búsqueda de Vendedores">  
+    <div id="vndDialog" title="Bï¿½squeda de Vendedores">  
       <form class="form-horizontal normal"> 
         <fieldset class="exa-fieldset">
 		<legend class="Titulos2">Filtros</legend>
@@ -209,7 +209,7 @@ if(isset($ajaxKardex)){
                     <label class="col-md-2 control-label label-xs">Filtrar Por:</label>  
                     <div class="col-md-8 radiosetclie" >
                           <input id="rad1" name="op_opciones" type="radio" value="d" checked="" onclick="setfocus(this.form.search)" alt="" /><label for="rad1">&nbsp;&nbsp;Apellido&nbsp;&nbsp;</label>
-                          <input id="rad2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" /><label for="rad2">&nbsp;&nbsp;Cédula/R.U.C.&nbsp;&nbsp;</label>
+                          <input id="rad2" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" /><label for="rad2">&nbsp;&nbsp;Cï¿½dula/R.U.C.&nbsp;&nbsp;</label>
                     </div>
                 </div>
                 <div class="form-group">
@@ -227,17 +227,17 @@ if(isset($ajaxKardex)){
     <script type="text/javascript">
         $(document).ready(function() {               
                 $.createSearchDialog('#vndDialog',[
-                        { label: 'Cód.Int.', name: 'Vnd_Cod', key: true,hidden:true,viewable: true },                                
-                        { label: 'Cédula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
+                        { label: 'Cï¿½d.Int.', name: 'Vnd_Cod', key: true,hidden:true,viewable: true },                                
+                        { label: 'Cï¿½dula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
                         { label: 'Vendedor', name: 'Vendedor', width: 190, cellattr: function (rowId, tv, rawObject, cm, rdata) { return 'style="white-space: normal;"'; }},                   
-                        { label: 'Dirección', name: 'Prs_Dir',hidden:true,viewable: true },                      
+                        { label: 'Direcciï¿½n', name: 'Prs_Dir',hidden:true,viewable: true },                      
                             { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center',viewable: false,
                                 formatter:function (cellvalue, options, rowObject) { 
                                     var clic='selectVnd($("#vndGrid").jqGrid("getRowData",'+rowObject.Vnd_Cod+'))';
                                     return  '<span class="btn btn-success btn-xs" title="Seleccionar" onclick=\''+clic+'\'><i class="glyphicon glyphicon-arrow-right"></span>'; 
                                 }
                             }
-                    ],null,null,true,'<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>');  
+                    ],null,null,true,'<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>');  
                                      
         }); 
         function selectVnd(data){

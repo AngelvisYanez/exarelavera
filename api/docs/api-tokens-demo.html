@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>EXA Contable - Token con permisos por módulo/proceso</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css">
+<style>
+  body{background:#f5f6f7;font-family:'Open Sans',Arial,sans-serif;padding:20px}
+  .card{background:#fff;border:1px solid #e3e6ea;border-radius:6px;padding:18px;margin-bottom:18px}
+  .codebox{background:#272822;color:#f8f8f2;padding:10px;border-radius:4px;font-family:monospace;word-break:break-all}
+  .token-muted{color:#999;font-size:12px}
+  .modulo{border:1px solid #eef1f5;border-radius:4px;padding:8px}
+  .modulo label{font-weight:bold}
+  .modulo .proc label{font-weight:normal}
+  #arbol{max-height:430px;overflow:auto}
+</style>
+</head>
+<body>
+<div class="container-fluid">
+
+  <div class="card" id="authCard">
+    <h3><i class="fa fa-lock"></i> Conectar a la API</h3>
+    <div class="row">
+      <div class="col-sm-3"><input id="inUser" class="form-control" placeholder="Usuario"></div>
+      <div class="col-sm-3"><input id="inPass" type="password" class="form-control" placeholder="Contraseña"></div>
+      <div class="col-sm-3">
+        <select id="inEmpresa" class="form-control"><option value="">Empresa...</option></select>
+      </div>
+      <div class="col-sm-3">
+        <button class="btn btn-primary" onclick="apiLogin()">Conectar</button>
+        <button class="btn btn-default" onclick="apiEmpresas()">Empresas</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="mainCard" style="display:none">
+    <h3><i class="fa fa-key"></i> Generar token con permisos por módulo/proceso</h3>
+
+    <div class="row">
+      <div class="col-sm-4">
+        <label>Nombre del token</label>
+        <input id="nNombre" class="form-control" placeholder="Ej: Integración contable">
+      </div>
+      <div class="col-sm-4">
+        <label>Empresa</label>
+        <select id="nEmpresa" class="form-control"></select>
+      </div>
+      <div class="col-sm-2">
+        <label>Límite de consultas <span class="token-muted">(0 = ilimitado)</span></label>
+        <input id="nCuota" type="number" min="0" class="form-control" value="0">
+      </div>
+      <div class="col-sm-2">
+        <label>Periodo</label>
+        <select id="nPeriodo" class="form-control"><option value="D">Por día</option><option value="M">Por mes</option></select>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:8px">
+      <div class="col-sm-4"><label>Expiración (vacío = no expira)</label>
+        <input id="nExpira" type="date" class="form-control"></div>
+      <div class="col-sm-8 text-right" style="padding-top:25px">
+        <button class="btn btn-success" onclick="guardarToken()"><i class="fa fa-check"></i> Generar token</button>
+      </div>
+    </div>
+
+    <hr>
+    <h4><i class="fa fa-shield"></i> Módulos y procesos a los que tendrá acceso</h4>
+    <p class="text-muted">Marca los procesos permitidos. Si <b>ninguna</b> está marcada, el token podrá consumir <b>todos</b> los módulos (sin restricción).</p>
+    <div style="margin-bottom:8px">
+      <label class="checkbox-inline"><input type="checkbox" id="nPermTodo" checked> <b>Todos los módulos</b></label>
+      <button class="btn btn-xs btn-link" onclick="marcarTodos()">Marcar todos</button>
+      <button class="btn btn-xs btn-link" onclick="desmarcarTodos()">Desmarcar todos</button>
+    </div>
+    <input id="nPermBuscar" class="form-control" placeholder="Filtrar módulo o proceso..." oninput="renderPermisos()" style="max-width:420px;margin-bottom:8px">
+    <div id="arbol" class="row"></div>
+  </div>
+
+  <div class="card" id="resCard" style="display:none">
+    <h3><i class="fa fa-key"></i> Token generado <span class="token-muted">(solo se muestra una vez)</span></h3>
+    <div class="codebox" id="tokValor"></div>
+    <div style="margin-top:6px"><button class="btn btn-sm btn-info" onclick="copiarToken()"><i class="fa fa-copy"></i> Copiar</button></div>
+    <p class="token-muted" style="margin-top:8px">Úsalo en el header: <code>Authorization: Bearer &lt;token&gt;</code></p>
+
+    <h4 style="margin-top:16px"><i class="fa fa-flask"></i> Probar el token</h4>
+    <div class="row">
+      <div class="col-sm-6">
+        <label>Proceso a consumir (ruta)</label>
+        <input id="tRuta" class="form-control" value="/v1/contabilidad/periodos">
+      </div>
+      <div class="col-sm-3">
+        <label>Método</label>
+        <select id="tMetodo" class="form-control"><option>POST</option><option>GET</option></select>
+      </div>
+      <div class="col-sm-3" style="padding-top:25px">
+        <button class="btn btn-warning" onclick="probar()"><i class="fa fa-play"></i> Probar</button>
+      </div>
+    </div>
+    <pre id="tResult" style="margin-top:8px;background:#272822;color:#f8f8f2;padding:10px;border-radius:4px;max-height:220px;overflow:auto"></pre>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js"></script>
+<script src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
+<script>
+var bearer='';
+var catalog=[];
+var sel={};
+var todoSel=true;
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg,ok){var d=$('#toast'); if(!d.length){$('body').append('<div id="toast" class="toast-msg"></div>');d=$('#toast');} }
+
+function API(method,path,body){
+  return new Promise(function(resolve,reject){
+    var headers={'Content-Type':'application/json'};
+    if(bearer) headers['Authorization']='Bearer '+bearer;
+    $.ajax({
+      url:path, method:method, headers:headers,
+      data: body?JSON.stringify(body):undefined,
+      xhrFields:{withCredentials:true},
+      success:resolve,
+      error:function(xhr){ var msg='Error '+xhr.status; try{var j=JSON.parse(xhr.responseText); if(j.error)msg=j.error;}catch(e){} reject({status:xhr.status,error:msg}); }
+    });
+  });
+}
+
+function apiEmpresas(){
+  API('GET','/v1/admin/api-tokens/empresas').then(function(r){
+    var o='<option value="">Empresa...</option>';
+    (r.data||[]).forEach(function(e){ o+='<option value="'+esc(e.Emp_Nom)+'">'+esc(e.Emp_Nom)+'</option>'; });
+    $('#inEmpresa').html(o);
+  }).catch(function(e){ alert('Error: '+e.error); });
+}
+function apiLogin(){
+  API('POST','/v1/auth/login',{username:$('#inUser').val(),password:$('#inPass').val(),empresa:$('#inEmpresa').val()})
+  .then(function(r){ if(r.success){ bearer=r.token; $('#authCard').hide(); $('#mainCard').show(); cargarTodo(); } else alert(r.error||'Login fallido'); })
+  .catch(function(e){ alert('Error: '+e.error); });
+}
+
+function cargarTodo(){
+  apiTokenEmpresasSelect();
+  API('GET','/v1/admin/api-tokens/permisos').then(function(r){ catalog=r.modulos||[]; renderPermisos(); })
+    .catch(function(e){ $('#arbol').html('<span class="text-danger">Error cargando catálogo: '+esc(e.error)+'</span>'); });
+}
+function apiTokenEmpresasSelect(){
+  API('GET','/v1/admin/api-tokens/empresas').then(function(r){
+    var o='<option value="">Seleccione...</option>';
+    (r.data||[]).forEach(function(e){ o+='<option value="'+e.Emp_Cod+'">['+e.Emp_Cod+'] '+esc(e.Emp_Nom)+'</option>'; });
+    $('#nEmpresa').html(o);
+  }).catch(function(e){ alert('Error: '+e.error); });
+}
+
+function rutasFiltradas(m,q){
+  var sal=[];
+  (m.rutas||[]).forEach(function(r){
+    if(!q || (m.name+' '+r.ruta+' '+(r.descripcion||'')).toLowerCase().indexOf(q)>=0) sal.push(r);
+  });
+  return sal;
+}
+function renderPermisos(){
+  if(!catalog) return;
+  var q=($('#nPermBuscar').val()||'').toLowerCase();
+  var html='';
+  catalog.forEach(function(m){
+    var rutas=rutasFiltradas(m,q);
+    if(q && !rutas.length && m.name.toLowerCase().indexOf(q)===-1) return;
+    var modSel=todoSel || (rutas.length && rutas.every(function(r){return sel[r.ruta];}));
+    html+='<div class="col-sm-6"><div class="modulo" style="margin-bottom:8px">';
+    html+='<label class="checkbox-inline"><input type="checkbox" '+(modSel?'checked':'')+(todoSel?' disabled':'')+' onchange="toggleModulo(this,\''+m.name+'\')"> '+esc(m.name)+' <span class="token-muted">('+rutas.length+')</span></label>';
+    if(m.description) html+=' <span class="token-muted">— '+esc(m.description)+'</span>';
+    if(rutas.length){
+      html+='<div class="proc" style="margin-left:24px">';
+      rutas.forEach(function(r){
+        var checked=todoSel || !!sel[r.ruta];
+        html+='<div><label class="checkbox-inline"><input type="checkbox" '+(checked?'checked':'')+(todoSel?' disabled':'')+' onchange="toggleRuta(this,\''+r.ruta.replace(/'/g,"\\'")+'\')"> ';
+        html+='<code>'+r.metodo+'</code> <span>'+esc(r.ruta)+'</span>';
+        if(r.descripcion) html+=' <span class="token-muted">— '+esc(r.descripcion)+'</span>';
+        html+='</label></div>';
+      });
+      html+='</div>';
+    }
+    html+='</div></div>';
+  });
+  $('#arbol').html(html||'<div class="col-sm-12 text-muted">Sin resultados</div>');
+}
+function toggleModulo(cb,mod){
+  catalog.forEach(function(m){ if(m.name===mod) m.rutas.forEach(function(r){ if(cb.checked) sel[r.ruta]=true; else delete sel[r.ruta]; }); });
+  renderPermisos();
+}
+function toggleRuta(cb,ruta){ if(cb.checked) sel[ruta]=true; else delete sel[ruta]; }
+function marcarTodos(){ todoSel=false; catalog.forEach(function(m){ m.rutas.forEach(function(r){ sel[r.ruta]=true; }); }); $('#nPermTodo').prop('checked',false); renderPermisos(); }
+function desmarcarTodos(){ todoSel=false; sel={}; $('#nPermTodo').prop('checked',false); renderPermisos(); }
+$('#nPermTodo').change(function(){ todoSel=this.checked; if(todoSel) sel={}; renderPermisos(); });
+
+function guardarToken(){
+  var body={
+    nombre:$('#nNombre').val(),
+    Emp_Cod:$('#nEmpresa').val(),
+    cuota:parseInt($('#nCuota').val()||0),
+    periodo:$('#nPeriodo').val(),
+    expira:$('#nExpira').val()||'',
+    permisos: todoSel ? [] : Object.keys(sel)
+  };
+  if(!body.nombre){alert('El nombre es requerido');return;}
+  if(!body.Emp_Cod){alert('Seleccione una empresa');return;}
+  API('POST','/v1/admin/api-tokens/generar',body).then(function(r){
+    if(r.success){
+      $('#tokValor').text(r.data.token);
+      $('#resCard').show(); $('#resCard')[0].scrollIntoView({behavior:'smooth'});
+      $('#tResult').text('// token listo. Elige una ruta (de las permitidas) y pulsa Probar.');
+    } else alert(r.error||'No se pudo crear');
+  }).catch(function(e){ alert('Error: '+e.error); });
+}
+function copiarToken(){ var t=$('#tokValor').text(); if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){alert('Copiado');});} }
+function probar(){
+  var ruta=($('#tRuta').val()||'').trim();
+  var met=$('#tMetodo').val();
+  var tok=$('#tokValor').text();
+  if(!ruta){$('#tResult').text('// ingresa una ruta');return;}
+  $.ajax({
+    url:ruta, method:met,
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},
+    data: met==='POST'? JSON.stringify({Emp_Cod: parseInt($('#nEmpresa').val())}) : undefined,
+    complete:function(xhr){
+      var body;
+      try{ body=JSON.stringify(JSON.parse(xhr.responseText),null,2); }catch(e){ body=xhr.responseText||''; }
+      $('#tResult').text('HTTP '+xhr.status+' '+xhr.statusText+'\n'+body);
+    }
+  });
+}
+</script>
+</body>
+</html>

@@ -20,6 +20,7 @@ $(document).ready(function(){
         $('input.onEnter').each(function(i,v){ $(v).attr('onkeydown','ejecutaOnEnter.call(this,event,this.value);'); });
     });	//$(".isSelectMenu").selectmenu();//$(".isMoney").MoneyFormat("33334");
 });
+$.fn.selId=function(){ var s=this.selector||''; s=s.replace("#",""); return s||(this[0]?this[0].id:''); };
 // FUNCIONES JQGRID 5.1 JQUERY
 $.onEv=function(t,r,c){var f=false,a=['onNumeric','onIsNaN','onPasteInput']; if($.isText(t)){a.push(t);t=a.length-1;} return !$.isUnd(a[t])?(r!==f?'return ':'')+a[t]+(c!==f?'.call(this,':'(')+'event);':'';};
 $.fn.setValidateNum=function(){this.each(function(i,e){ var t=$(e),p='placeholder'; t.attr({onkeypress:$.onEv(0),onkeyup:$.onEv(1,!0),onpaste:$.onEv(2,!0)}); if(!$.isUnd(t.data('decimals'))&&$.isUnd(t.attr('decimals'))) t.attr('decimals',t.data('decimals')); if(!$.vv(t.attr(p))) t.attr(p,$.vv(t.attr('decimals'))?'0.00':0); }); };
@@ -175,7 +176,7 @@ $.fn.createDateRange=function(sep){ var t1=this; t1.each(function(){ var t2=$(th
 $.createIcon=function(str,justClass,attr,css,tag){ if(!$.vv(str)||str==='') return ''; tag=tag||'i'; var c=(!str.indexOf("ui-icon-")?'':(!str.indexOf("glyphicon")?'glyphicon ':(!str.indexOf("fa-")||!str.indexOf("fa fa-")?'fa ':'glyphicon glyphicon-')))+str; if(justClass===true) return c; var $t=$('<'+tag+($.isText(attr)?' '+attr:'')+($.isText(css)?' style="'+css+'"':'')+' class="'+c+'"/>'); if($.isObj(css)) $t.css(attr); return $t.prop('outerHTML'); };
 $.widget("ui.dialog",$.ui.dialog,{ option:function(opt,val){ if($.isObj(opt)&& $.isText(opt['icon'])) this.element.prev('.ui-dialog-titlebar').find('i').attr('class','').addClass($.createIcon(opt['icon'],true)); if(opt==='icon'&& $.isText(val)) this.element.prev('.ui-dialog-titlebar').find('i').attr('class','').addClass($.createIcon(val,true)); return this._super(opt,val); }  });
 $.createDialog=function(comp,height,width,noTitleStuff,action,icon){ return $(comp).createDialog({height:(height||300),width:(width||400),noTitleStuff:noTitleStuff,icon:icon},action); };
-$.fn.createDialog=function(options,action){ var $t=(!this.length)?$('<div id="'+this.selector.replace("#","")+'" style="display:none"><div>').appendTo('body'):this;  options=($.isObj(options)?options:{});
+$.fn.createDialog=function(options,action){ var $t=(!this.length)?$('<div id="'+this.selId()+'" style="display:none"><div>').appendTo('body'):this;  options=($.isObj(options)?options:{});
     var icon=options['icon'],noTitleStuff=($.vv(options['noTitleStuff'])?options['noTitleStuff']:true ),dClass=(noTitleStuff?"TitleStuff":"noTitleStuff"); ($.vv(options['dialogClass'])?options['dialogClass']+=' '+dClass:options['dialogClass']=dClass);
     var opts={
         height: 300, width: 400, closeText:"Cerrar Ventana", position:{my: "center",at: "center",of: $('body')},
@@ -227,13 +228,13 @@ $.fn.createGrid=function(options,local,pager,pgoptions){
     if($.isObj(totD)) t.jqGrid('footerData','set', totD,true); if(!$.isUnd(leA)){ var ley=$('<div class="Titulos2 footer-leyenda"></div>'),htL=''; $.each(leA,function(i,v){ htL+=((htL!==''?'&nbsp&nbsp|&nbsp&nbsp':'')+$.createIcon(v['icon'])+" "+v['label']); }); ley.html('<strong>Leyenda:&nbsp;&nbsp;&nbsp;</strong>'+htL).insertAfter("#gbox_"+t.attr('id')); } t.parent().css('min-height',''); if(local===false&&opts.datatype==='local') t[0].p.datatype='json';  return t;
 };
 $.closeDialogGrid=function(dialog){ return '<button type="button" role="button" tabindex="-1" class="ui-button ui-widget ui-state-default ui-corner-all pull-right" title="Cerrar Ventana" onclick="$(\'#'+dialog+'\').dialog(\'close\')"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span></button>'; };
-$.fn.createDialogDetail=function(grid,dialog){ dialog=dialog||{}; grid=$.extend({caption:'',colModel:[]},$.isArray(grid)?{colModel:grid}:grid||{}); var p=$.vv(grid['pager']),$t,di=this.selector.replace("#",""),id=di.replace("Dialog","");
+$.fn.createDialogDetail=function(grid,dialog){ dialog=dialog||{}; grid=$.extend({caption:'',colModel:[]},$.isArray(grid)?{colModel:grid}:grid||{}); var p=$.vv(grid['pager']),$t,di=this.selId(),id=di.replace("Dialog","");
     var g=$.extend(grid,{responsive:false,height:!isNaN(grid['height'])?grid['height']:219, width:!isNaN(grid['width'])?grid['width']:593,caption:($.createIcon(dialog['icon'])+"&nbsp;")+(dialog['title']||grid['caption']||this.attr('title')||'')+'&nbsp;'+$.closeDialogGrid(di)});
     $t=this.createDialog($.extend(dialog,{height:(grid['height']*1)+54+(grid['footerrow']===true?20:0)+(p?23:0),width:(grid['width']+1)+7,noTitleStuff:false,noBorder:true,noOverflow:true,extraClass:'noMargin'}));
     if(!$t.find('#'+id+'Grid').length) $t.append('<div class="condensed-header"><table id="'+id+'Grid"></table>'+(p?'<div id="'+g['pager'].replace("#","")+'"></div>':'')+'</div>'); $t.find('#'+id+'Grid').createGrid(g,true,$.vv(p)?g['pager']:undefined); return $t;
 };
 $.fn.createSearchDialog=function(gridOp,form,dialOp){ if($.isArray(gridOp)) gridOp={colModel:gridOp};
-    var name=this.selector.replace("#",""), opD=$.extend({height:400,width:700,noTitleStuff:true,icon:'search',noOverflow:true},$.isObj(dialOp)?dialOp:{}), $t=this.createDialog(opD), fl=$t.find("form").length, id=name.replace("Dialog",""), container=$('<div class="condensed"><table id="'+id+'Grid"></table><div id="'+id+'GridPager"></div></div>'); if(fl===0) $t.append('<form></form>');
+    var name=this.selId(), opD=$.extend({height:400,width:700,noTitleStuff:true,icon:'search',noOverflow:true},$.isObj(dialOp)?dialOp:{}), $t=this.createDialog(opD), fl=$t.find("form").length, id=name.replace("Dialog",""), container=$('<div class="condensed"><table id="'+id+'Grid"></table><div id="'+id+'GridPager"></div></div>'); if(fl===0) $t.append('<form></form>');
     var jform=$t.append(container).find("form").attr('id',id+"Form"); jform.find('fieldset').addClass('exa-fieldset').find('legend').addClass('Titulos2'); if($.vv(form)) jform.createFormSearch(form); var inp=jform.attr("action",jform.data('action')||"javascript:$.Search('"+id+"')").append('<input type="text" style="display:none" tabindex="-1" />').find("input[name='"+($.vv(form)&&$.vv(form['text'])?form['text']:'search')+"']").addClass("clearable").addClass("submit");
 	var jgrid=$("#"+id+"Grid"),formHeight=jform.actual('outerHeight',{includeMargin:true}),gridHeight=opD['height']-formHeight-(opD['noTitleStuff']?95:65),op=$.extend({url:'',width:(opD['width']-32),height:gridHeight,postData:jform.getData(id+"Ajax"),colModel:[],rowNum:50,rowList:[10,20,50,100],autowidth:false,responsive:false,datatype:'local'},$.isObj(gridOp)?gridOp:{}); jgrid.createGrid(op,false,id+'GridPager',{view:false});
 	var isHL=false; $.each(gridOp['colModel'],function(i,v){ if($.vv(v['classes']) && v['classes'].includes("highlightSearch")){ isHL=true; return false; } }); if(isHL) jgrid.on('jqGridAfterLoadComplete',function (ev,glc){ jgrid.highlightSearch(inp.val().trim()); });
@@ -241,7 +242,7 @@ $.fn.createSearchDialog=function(gridOp,form,dialOp){ if($.isArray(gridOp)) grid
 };
 
 $.fn.createSearchDialogPrecio=function(gridOp,form,dialOp){ if($.isArray(gridOp)) gridOp={colModel:gridOp};
-    var name=this.selector.replace("#",""), opD=$.extend({height:400,width:700,noTitleStuff:true,icon:'search',noOverflow:true},$.isObj(dialOp)?dialOp:{}), $t=this.createDialog(opD), fl=$t.find("form").length, id=name.replace("Dialog",""), container=$('<div class="condensed"><table id="'+id+'Grid"></table><div id="'+id+'GridPager"></div></div>'); if(fl===0) $t.append('<form></form>');
+    var name=this.selId(), opD=$.extend({height:400,width:700,noTitleStuff:true,icon:'search',noOverflow:true},$.isObj(dialOp)?dialOp:{}), $t=this.createDialog(opD), fl=$t.find("form").length, id=name.replace("Dialog",""), container=$('<div class="condensed"><table id="'+id+'Grid"></table><div id="'+id+'GridPager"></div></div>'); if(fl===0) $t.append('<form></form>');
     var jform=$t.append(container).find("form").attr('id',id+"Form"); jform.find('fieldset').addClass('exa-fieldset').find('legend').addClass('Titulos2'); if($.vv(form)) jform.createFormSearchPrecio(form); var inp=jform.attr("action",jform.data('action')||"javascript:$.Search('"+id+"')").append('<input type="text" style="display:none" tabindex="-1" />').find("input[name='"+($.vv(form)&&$.vv(form['text'])?form['text']:'search')+"']").addClass("clearable").addClass("submit");
     var jgrid=$("#"+id+"Grid"),formHeight=jform.actual('outerHeight',{includeMargin:true}),gridHeight=opD['height']-formHeight-(opD['noTitleStuff']?95:65),op=$.extend({url:'',width:(opD['width']-32),height:gridHeight,postData:jform.getData(id+"Ajax"),colModel:[],rowNum:50,rowList:[10,20,50,100],autowidth:false,responsive:false,datatype:'local'},$.isObj(gridOp)?gridOp:{}); jgrid.createGrid(op,false,id+'GridPager',{view:false});
     var isHL=false; $.each(gridOp['colModel'],function(i,v){ if($.vv(v['classes']) && v['classes'].includes("highlightSearch")){ isHL=true; return false; } }); if(isHL) jgrid.on('jqGridAfterLoadComplete',function (ev,glc){ jgrid.highlightSearch(inp.val().trim()); });
@@ -257,12 +258,19 @@ $.SearchOrDialogArray=function(name,callback,array,field){ field=field||'search'
 $.getDialogGrid=function(name){var id=name.replace("Dialog","");return $(id+"Grid");};
 $.fn.getDialogGrid=function(){if(this.length===1){ if($.vv(this.attr('role'))) return this; var id=this.attr('id').replace("Dialog","");return $('#'+id+"Grid");} return null;};
 $.alert=function(message,action,icon){
-	icon=icon||($.vv(message)?'info-sign':'alert');message=message||'El Servidor ha fallado en responder!'; var dialog=$('<div title="MENSAJE DEL SISTEMA">'+'<div style="font-size:14px;"><center><b>'+message+'</b></center></div></div>');	//$("body").append(dialog);
-	dialog.dialog({
-	  dialogClass: 'dialog-alert-test', closeText:"Cerrar Mensaje", modal: true,autoOpen: true,resizable: false,position:{my: "center",at: "center",of: $('body')}, buttons: [{text: "Aceptar",click:function(){$(this).dialog( "close" );}, icons:{ primary: "ui-icon-check" }}],
-	  close: function(){$($(this).parent()[0].nextSibling).unbind('click');$(this).remove();if($.vv(action))action();},show: {effect: "fade",duration: 500},
-	  open: function(){ var dg=$(this); $(dg.parent()[0].nextSibling).bind('click', function (){ dg.dialog('close'); });}
-    }).parent().children(".ui-dialog-titlebar").prepend($.createIcon(icon)); return false;
+	if(typeof Swal!=='undefined'){
+		var iconMap={'ok':'success','remove':'error','alert':'warning','info-sign':'info','info':'info'};
+		var swalIcon=iconMap[icon]||icon||'info';
+		message=message||'El Servidor ha fallado en responder!';
+		Swal.fire({title:'MENSAJE DEL SISTEMA',html:'<b>'+message+'</b>',icon:swalIcon,confirmButtonText:'Aceptar',customClass:{confirmButton:'btn btn-primary'},buttonsStyling:false}).then(function(){if($.vv(action))action();});
+	}else{
+		icon=icon||($.vv(message)?'info-sign':'alert');message=message||'El Servidor ha fallado en responder!'; var dialog=$('<div title="MENSAJE DEL SISTEMA">'+'<div style="font-size:14px;"><center><b>'+message+'</b></center></div></div>');
+		dialog.dialog({
+		  dialogClass: 'dialog-alert-test', closeText:"Cerrar Mensaje", modal: true,autoOpen: true,resizable: false,position:{my: "center",at: "center",of: $('body')}, buttons: [{text: "Aceptar",click:function(){$(this).dialog( "close" );}, icons:{ primary: "ui-icon-check" }}],
+		  close: function(){$($(this).parent()[0].nextSibling).unbind('click');$(this).remove();if($.vv(action))action();},show: {effect: "fade",duration: 500},
+		  open: function(){ var dg=$(this); $(dg.parent()[0].nextSibling).bind('click', function (){ dg.dialog('close'); });}
+		}).parent().children(".ui-dialog-titlebar").prepend($.createIcon(icon)); return false;
+	}
 };
 $.fn.alertDiv= function(msg,animate,time){
 	msg=msg||{header:'SISTEMA:',message:'No se pudo completar la acci&oacute;n.',type:2,max:1,unique:true}; msg.type=msg.type||2;var type='danger';msg.max=msg.max||1;msg.unique=($.vv(msg.unique)?msg.unique:true);time=time||5000;var id='alert_id_'+(Math.round(Math.random() * 99999)).toString(),timeExtra=550;animate=animate||false;
@@ -383,3 +391,47 @@ $.getCookie=function(cname){ var na=cname+"=",dc=decodeURIComponent(document.coo
 $.removeCookie=function(key,value){ var t = new Date();	t.setMilliseconds(t.getMilliseconds() + -1 * 864e+5); document.cookie=[encodeURIComponent(key),'=',String(value),'; expires=' + t.toUTCString()].join(''); };
 /* require jquer.validate */
 //$.clearValidate=function(){$.validator.prototype.showErrors=function(){}; $.validator.setDefaults({debug:false,onsubmit:false});};
+// VALIDACION CUSTOM - Reemplaza popups nativos del navegador con SweetAlert2
+$(document).on('invalid','input[required],select[required],textarea[required],input[pattern],select[pattern],textarea[pattern]',function(e){
+	e.preventDefault();e.stopImmediatePropagation();
+	var $t=$(this),msg=$t.data('msg'),tag=$t[0].tagName.toUpperCase();
+	if(!msg){
+		var nombre=$t.attr('placeholder')||$t.attr('name')||'Este campo';
+		if($t.attr('required')) msg='El campo "'+nombre+'" es obligatorio.';
+		else if($t.attr('pattern')) msg='El campo "'+nombre+'" tiene un formato invalido.';
+		else msg='El campo "'+nombre+'" es invalido.';
+	}
+	if(typeof Swal!=='undefined'){
+		Swal.fire({title:'Validacion',html:'<b>'+msg+'</b>',icon:'warning',confirmButtonText:'Aceptar',customClass:{confirmButton:'btn btn-primary'},buttonsStyling:false}).then(function(){$t.focus();});
+	}else if(typeof $.alert==='function'){
+		$.alert(msg,function(){$t.focus();},'warning');
+	}else{
+		alert(msg);$t.focus();
+	}
+	return false;
+});
+$(document).on('submit','form',function(e){
+	var $form=$(this),invalidos=[];
+	$form.find('input[required],select[required],textarea[required],input[pattern],select[pattern],textarea[pattern]').each(function(){
+		var $t=$(this),val=$t.val();
+		if($t.attr('required')&&(val===undefined||val===null||$.trim(val)==='')) invalidos.push($t);
+		else if($t.attr('pattern')&&val&&!new RegExp($t.attr('pattern')).test(val)) invalidos.push($t);
+	});
+	if(invalidos.length>0){
+		e.preventDefault();e.stopImmediatePropagation();
+		var $primero=invalidos[0],msg=$primero.data('msg');
+		if(!msg){
+			var nombre=$primero.attr('placeholder')||$primero.attr('name')||'Este campo';
+			if($primero.attr('required')) msg='El campo "'+nombre+'" es obligatorio.';
+			else msg='El campo "'+nombre+'" tiene un formato invalido.';
+		}
+		if(typeof Swal!=='undefined'){
+			Swal.fire({title:'Validacion',html:'<b>'+msg+'</b>',icon:'warning',confirmButtonText:'Aceptar',customClass:{confirmButton:'btn btn-primary'},buttonsStyling:false}).then(function(){$primero.focus();});
+		}else if(typeof $.alert==='function'){
+			$.alert(msg,function(){$primero.focus();},'warning');
+		}else{
+			alert(msg);$primero.focus();
+		}
+		return false;
+	}
+});

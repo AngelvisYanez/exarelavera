@@ -1,8 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php 
 /**
-* Descripción: Alta de Periodos Contables
-* Fecha de actualización: 2015-Feb-25
+* Descripciï¿½n: Alta de Periodos Contables
+* Fecha de actualizaciï¿½n: 2015-Feb-25
 * Desarrollador: Jose Cumbicos
 */
 
@@ -20,7 +20,7 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Con;
 /**
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 
@@ -42,15 +42,15 @@ if(isset($hdd_save))
 		   
 		   $obBD_ins1->operacionobBD(111, $Pec_Fei.'*'.$Pec_Fef, $obBD_conexion);
 		   /**
-		   * fin de la transacción 
+		   * fin de la transacciï¿½n 
 		   */
 		   $obBD_ins1->fin_transaccion($obBD_conexion->conexion);
 	  }
 	  else
 	  {
 ?>
-		<script LANGUAGE="JavaScript">	
-				alert ("¡No se ha podido guardar los datos porque la fecha es menor a la del periodo anterior o ya existe en la base de datos!");
+		<script type="text/javascript">	
+				alert ("ï¿½No se ha podido guardar los datos porque la fecha es menor a la del periodo anterior o ya existe en la base de datos!");
 		</script>
 <?Php
 	   }
@@ -60,8 +60,8 @@ if(isset($hdd_save))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-        <script language="javascript" src="../VALIDACIONES/con_val_perio_cont.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script> 				         
+        <script type="text/javascript" src="../VALIDACIONES/con_val_perio_cont.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script> 				         
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>          
         <script type="text/javascript"> 

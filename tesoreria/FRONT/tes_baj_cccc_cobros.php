@@ -311,7 +311,7 @@ if (isset($detAjax)) {
                                             }
 
                                             function clearFooter() {
-                                                public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
+                                                var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
 
                                                 $footRow.find('>td[aria-describedby="list_subgrid"]').css("border-right-color", "transparent");
                                                 $footRow.find('>td[aria-describedby="list_Com_Codigo"]').css("border-right-color", "transparent");
@@ -363,7 +363,7 @@ if (isset($detAjax)) {
                                                 $.createDateRange('#txt_fec_ini', '#txt_fec_fin');
                                                 var compGrid = $("#list");
                                                 compGrid.jqGrid({
-                                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                                     mtype: "GET",
                                                     datatype: "local",
                                                     regional: 'es', //ajaxRowOptions: { async: true },
@@ -546,7 +546,7 @@ if (isset($detAjax)) {
                                                         var subgrid_table_id = subgrid_id + "_t";
                                                         $("#" + subgrid_id).html("<table id='" + subgrid_table_id + "' class='scroll'></table>");
                                                         $("#" + subgrid_table_id).jqGrid({
-                                                            url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?ajaxSubgrid=" + row_id,
+                                                            url: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?ajaxSubgrid=" + row_id,
                                                             datatype: "json",
                                                             regional: 'es',
                                                             autowidth: true,
@@ -656,7 +656,7 @@ if (isset($detAjax)) {
                                             });
 
                                             function anulaCobro(data) {
-                                                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", data, function(response) {
+                                                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", data, function(response) {
                                                     if (response['success'] === true) {
                                                         $.alert("El Cobro se ha Anulado con Exito!");
                                                         $('#list').trigger('reloadGrid');
@@ -936,7 +936,7 @@ if (isset($detAjax)) {
 
         function selectDetalle(Cpc, Com) {
 
-            $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", {
+            $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", {
                 detAjax: true,
                 Cpc: Cpc,
                 Com: Com

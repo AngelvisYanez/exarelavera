@@ -1,7 +1,7 @@
 <?php 
 /**
-Descripción: Página de inicio del sistema informático EXA
-Fecha de creación:	2016-12-28
+Descripciï¿½n: Pï¿½gina de inicio del sistema informï¿½tico EXA
+Fecha de creaciï¿½n:	2016-12-28
 Desarrollador:	Erik Niebla
 */
 require_once('../../Librerias/procedimientos/almacenados_standar.php'); 
@@ -77,7 +77,7 @@ $apellido = explode(' ', $_SESSION['Ses_Prs_Ape']);
 $nombre = explode(' ', $_SESSION['Ses_Prs_Nom']); 
 
 $obBD_conexion1 = new Class_Log_Conexion_Adm; //Creacion del Objeto de conexion 
-$obBD_con1 =  new Class_Log_Datos_Adm; //Creación del objeto mysql para las consultas 
+$obBD_con1 =  new Class_Log_Datos_Adm; //Creaciï¿½n del objeto mysql para las consultas 
 $rs_empresas = $obBD_con1->getArrayConsulta(213, trim($Ses_Usu_Ced), $obBD_conexion1); //consulta empresas
 $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced, $obBD_conexion1);
 ?>
@@ -151,17 +151,17 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
                                                 <li class="red-social r4" data-tooltip="tooltip" data-placement="bottom" title="Instagram"><a href="https://www.instagram.com/ofsercontsa/" target="blank"><i class="ace-icon fa fa-instagram"></i></a></li>
                                                 <li class="red-social r3" data-tooltip="tooltip" data-placement="bottom" title="Youtube"><a href="https://www.youtube.com/channel/UCM85YafBv-1PZZ5FkzTxZbw?disable_polymer=true" target="blank"><i class="ace-icon fa fa-youtube"></i></a></li>
                                                 <li class="red-social r2" data-tooltip="tooltip" data-placement="bottom" title="Twitter"><a href="https://twitter.com/OFSERCONTSA1?lang=es" target="blank"><i class="ace-icon fa fa-twitter"></i></a></li>
-                                                <li class="red-social r1 grey" data-tooltip="tooltip" data-placement="bottom" title="¿Quienes somos?"><a href="../../skins/html/ACERCA-DE-EXA1.html" target="contenido"><i class="ace-icon fa fa-suitcase"></i></a></li>
+                                                <li class="red-social r1 grey" data-tooltip="tooltip" data-placement="bottom" title="ï¿½Quienes somos?"><a href="../../skins/html/ACERCA-DE-EXA1.html" target="contenido"><i class="ace-icon fa fa-suitcase"></i></a></li>
 						<li class="light-blue user-links">
 							<a data-toggle="dropdown" href="#" class="dropdown-toggle"><!--<img class="nav-user-photo" src="../../skins/avatars/user.jpg" alt="Jason's Photo" />-->
 								<span class="user-info"><small>Bienvenido,</small> <?Php echo $nombre[0].' '.$apellido[0]; ?></span><i class="ace-icon fa fa-caret-down"></i>
 							</a>
 							<ul class="user-menu dropdown-menu-right dropdown-menu dropdown-yellow dropdown-caret dropdown-close">
-								<li><a class="ace-settings-btn" ><i class="ace-icon fa fa-cog"></i>Configuración</a></li>
+								<li><a class="ace-settings-btn" ><i class="ace-icon fa fa-cog"></i>Configuraciï¿½n</a></li>
                                                                 <li><a href="./adm_pas_usuarios_1.0.php" target="contenido" class="menu-link"><i class="ace-icon fa fa-key"></i>Cambiar Clave</a></li>
-                                                                <?php if(count($rs_empresas)>1){ ?><li><a data-toggle="modal" data-target="#myModal"><i class="ace-icon fa fa-user"></i>Cambiar Empresa</a></li><?php } ?>
+                                                                <?php if($Ses_Usu_Tip=='A' && count($rs_empresas)>1){ ?><li><a data-toggle="modal" data-target="#myModal"><i class="ace-icon fa fa-user"></i>Cambiar Empresa</a></li><?php } ?>
 								<li class="divider"></li>
-								<li><a href="../LOGICA/logout.php"><i class="ace-icon fa fa fa-sign-out"></i>Cerrar Sesión</a></li>
+								<li><a href="../LOGICA/logout.php"><i class="ace-icon fa fa fa-sign-out"></i>Cerrar Sesiï¿½n</a></li>
 							</ul>
 						</li><!-- /section:basics/navbar.user_menu -->
 					</ul>
@@ -177,7 +177,7 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
 				<div class="sidebar-shortcuts" id="sidebar-shortcuts">
 					<div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large">
                                             <button class="btn btn-success" style="display:none;"><i class="ace-icon fa fa-signal"></i></button>
-                                            <button class="btn btn-info" <?php if(count($rs_empresas)==1){ ?>style="display:none;"<?php } ?> data-toggle="modal" data-target="#myModal" data-tooltip="tooltip" data-placement="right" title="Cambiar Empresa"><i class="ace-icon fa fa-sign-in"></i></button>
+                                            <button class="btn btn-info" <?php if($Ses_Usu_Tip!='A' || count($rs_empresas)==1){ ?>style="display:none;"<?php } ?> data-toggle="modal" data-target="#myModal" data-tooltip="tooltip" data-placement="right" title="Cambiar Empresa"><i class="ace-icon fa fa-sign-in"></i></button>
                                             <a href="./adm_pas_usuarios_1.0.php" style="display:none;" target="contenido" class="btn btn-warning" data-tooltip="tooltip" data-placement="right" title="Cambiar Clave"><i class="ace-icon fa fa-key"></i></a>
                                             <a href="../LOGICA/logout.php" class="btn btn-danger" data-tooltip="tooltip" data-placement="right" title="Cerrar Sesion"><i class="ace-icon fa fa-sign-out"></i></a>
 					</div>
@@ -235,7 +235,7 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
 
 									<div class="ace-settings-item ace-settings-con">
 										<input type="checkbox" class="ace ace-checkbox-2" id="ace-settings-compact" checked=""  style="margin-right: 6px;margin-left: 4px;"/>
-										<label class="lbl" for="ace-settings-compact"> Menú Compacto</label>
+										<label class="lbl" for="ace-settings-compact"> Menï¿½ Compacto</label>
 									</div>
 
                                                                         <div class="ace-settings-item ace-settings-con" style="display:none;">
@@ -288,7 +288,7 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
                 <link rel="stylesheet" href="../../framework/jquery/ChatJs/css/jquery.chatjs.css?x=0"/>
                 <style>.chat-window-title.decored {    background: -webkit-linear-gradient(top, #87add4 0%,#1d354d 100%); background: linear-gradient(to bottom, #87add4 0%,#1d354d 100%);} .chat-window-title { color: #eab2b2;text-shadow: #6d2020 1px 1px 1px;}</style>
                 <script type="text/javascript">
-                   var adapter=new DemoAdapter('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>');
+                   var adapter=new DemoAdapter('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>');
                    DemoAdapterConstants.DEFAULT_ROOM_ID='<?php echo '1'; //$Ses_Emp_Cod; ?>';
                    DemoAdapterConstants.DEFAULT_ROOM_NAME='<?php echo $Ses_Emp_Nom; ?>';
                    DemoAdapterConstants.CURRENT_USER.Id='<?php echo $Ses_Prs_Cod; ?>';
@@ -344,7 +344,7 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
                         </div>
                         <!-- Prepended text-->
                         <div class="form-group">
-                          <label class="col-sm-2 control-label" for="Usu_Pas">Contraseña:</label>
+                          <label class="col-sm-2 control-label" for="Usu_Pas">Contraseï¿½a:</label>
                           <div class="col-sm-5">
                               <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-key"></i></span>
@@ -373,14 +373,14 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
                 <?Php } ?>
                 function resizeMain(){ $('#contenido').css('min-height',( window.innerHeight-50)+'px'); }   $(window).on('resize' ,resizeMain);
                 function loginAjax(){   
-                    public $msg;
-                    $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{loginAjax:true,Emp_Cod:$('#Emp_Cod').val(),Suc_Cod:$('#Suc_Cod').val(),user_name:$('#Usu_Ced').val(),encryptor:md5($('#Usu_Pas').val())}, function( response ) {
+                    var msg;
+                    $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{loginAjax:true,Emp_Cod:$('#Emp_Cod').val(),Suc_Cod:$('#Suc_Cod').val(),user_name:$('#Usu_Ced').val(),encryptor:md5($('#Usu_Pas').val())}, function( response ) {
                         if(response['success']===true){
-                             $msg='<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';
-                             setTimeout(function (){window.location.href ="<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>";},2500);
-                        }else{ $msg='<div class="alert alert-warning fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;Contrase&ntilde;a Incorrecta.</div>';}                                   
-                     },'json').fail(function(error) { $msg='<div class="alert alert-danger fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;El Servidor ha fallado en responder!.</div>'; })
-                         .always(function() {$('#msgAlert').html($msg);$('#msgAlert .alert').hide();$('#msgAlert .alert').show();setTimeout(function (){$('#msgAlert .alert').removeClass('in').addClass('out');},4000);});
+                             msg='<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';
+                             setTimeout(function (){window.location.href ="<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>";},2500);
+                        }else{ msg='<div class="alert alert-warning fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;Contrase&ntilde;a Incorrecta.</div>';}                                   
+                     },'json').fail(function(error) { msg='<div class="alert alert-danger fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;El Servidor ha fallado en responder!.</div>'; })
+                         .always(function() {$('#msgAlert').html(msg);$('#msgAlert .alert').hide();$('#msgAlert .alert').show();setTimeout(function (){$('#msgAlert .alert').removeClass('in').addClass('out');},4000);});
                 }
                 $(document).ready(function(){
                     $('[data-tooltip="tooltip"]').tooltip({container: 'body'});
@@ -394,7 +394,7 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
              </script>   
              <script src="../../skins/js/ace/ace.settings.js"></script>
              <script src="../../skins/js/ace/ace.settings-skin.js"></script>
-             <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+             <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
             <?php //var_dump($rs_sucursales); ?>
 	</body>
 </html>

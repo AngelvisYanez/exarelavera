@@ -275,8 +275,8 @@ if(isset($cuenAjax)){
                             }
                         }
                         function clearFooter(){ 
-                            public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
-                            public $name = $footRow.find('>td[aria-describedby="list_Cop_Num"]'),
+                            var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
+                            var $name = $footRow.find('>td[aria-describedby="list_Cop_Num"]'),
                             $invdate = $footRow.find('>td[aria-describedby="list_act"]'),
                             width2 = $name.width()  + $invdate.outerWidth();
                             $invdate.css("display", "none");
@@ -318,7 +318,7 @@ if(isset($cuenAjax)){
                         //$.createDateRange('#txt_fec_ini','#txt_fec_fin'); 
                         var compGrid=$("#list");
                         compGrid.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                             //postData: $("#form1").getData("ajaxGrid"),
                             autowidth : true, shrinkToFit: true, height: 270,
@@ -375,7 +375,7 @@ if(isset($cuenAjax)){
                                 var subgrid_table_id = subgrid_id+"_t";         
                                 $("#"+subgrid_id).html("<table id='"+subgrid_table_id+"' class='scroll'></table>");
                                 $("#"+subgrid_table_id).jqGrid({
-                                        url:"<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?ajaxSubgrid="+row_id,datatype: "json",regional : 'es',
+                                        url:"<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?ajaxSubgrid="+row_id,datatype: "json",regional : 'es',
                                         autowidth : true, shrinkToFit: true,cmTemplate: {sortable:false},//colNames: ['No','Item','Qty','Unit','Line Total'],
                                         colModel: [
                                                 {label:'Cod.Int.',name:"Cpp_Cod",width:80,key:true,align:"center",hidden:true},
@@ -515,7 +515,7 @@ if(isset($cuenAjax)){
                         $('#Che_Fec').toggleClass('disabled').find('input').toggleAttr('disabled');
                         var gridComp=$("#comp");
                         gridComp.jqGrid({
-                                url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                 mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },                             
                                 autowidth : true, shrinkToFit: true, height: 120,
                                 cmTemplate: {sortable:false},
@@ -554,7 +554,7 @@ if(isset($cuenAjax)){
                             $.clearFooterDiario("#comp");
 
                                 $( "#apellido" ).autocomplete({
-                                    minLength: 4,source: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+                                    minLength: 4,source: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
                                     select: function( event, ui ) {
                                       $('#Benediv').addClass('disabled').find('input').attr('readOnly','readOnly');$('#Com_Val_Egre').focus();
                                       $( "#apellido" ).val( ui.item.Prs_Ape );

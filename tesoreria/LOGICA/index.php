@@ -1,7 +1,7 @@
 <html>
 <head>
 	<title>Ginus</title>
-	<script language="javascript">
+	<script type="text/javascript">
 		function noroot() {
 			window.location.href="../../administrador/FRONT/adm_con_acceso.php";
 //			window.history.back (-1);
@@ -9,7 +9,7 @@
 	</script>
 </head>
 <body>
-<script language="javascript">
+<script type="text/javascript">
 	window.setTimeout('noroot()',100);
 </script>
 </body>

@@ -1,4 +1,7 @@
 <?php
+if (empty($APP_REAL_PATH)) {
+    $APP_REAL_PATH = realpath(__DIR__.'/../..');
+}
 require_once($APP_REAL_PATH.'/auditoria/LOGICA/aud_log_auditoria.php');
 require_once($APP_REAL_PATH."/administrador/LOGICA/sql.php");
 // require_once('../../auditoria/LOGICA/aud_log_auditoria.php'); 
@@ -73,7 +76,7 @@ class Class_Log_Datos_Adm extends MysqlDatos{
 
 		$this->free_result($result);
 
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

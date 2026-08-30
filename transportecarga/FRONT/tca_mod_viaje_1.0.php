@@ -1,9 +1,9 @@
 <?php
 /**
  * @abstract Permite realizar el registro de un viaje
- * @author José Ambuludí
+ * @author Josï¿½ Ambuludï¿½
  * @version 2.0
- * Fecha de creación  2017-01-26
+ * Fecha de creaciï¿½n  2017-01-26
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tca_log_viaje.php');
@@ -17,7 +17,7 @@ $obBD_conexion = new Class_Log_Conexion_Viaje($Ses_Dat_Dis);
  */
 $obBD_con1 = new Class_Log_Datos_Viaje;
 
-//Sección para cargar datos en el Jqgrid referente a los productos registrado
+//Secciï¿½n para cargar datos en el Jqgrid referente a los productos registrado
 if (isset($productoAjax)) {
     $data = filter_input_array(INPUT_GET);
     $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -32,7 +32,7 @@ if (isset($productoAjax)) {
     exit();
 }
 
-//Sección para cargar datos en el Jqgrid referente al personal registrado
+//Secciï¿½n para cargar datos en el Jqgrid referente al personal registrado
 if (isset($personaAjax)) {
     $data = filter_input_array(INPUT_GET);
     $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -48,7 +48,7 @@ if (isset($personaAjax)) {
     exit();
 }
 
-//Sección para cargar datos en el Jqgrid referente a los clientes registrados
+//Secciï¿½n para cargar datos en el Jqgrid referente a los clientes registrados
 if (isset($viajeAjax)) {
     $data = filter_input_array(INPUT_GET);
     $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -64,7 +64,7 @@ if (isset($viajeAjax)) {
     exit();
 }
 
-/*Sección para verificar si una persona ya se encuentra registrada como chofer*/
+/*Secciï¿½n para verificar si una persona ya se encuentra registrada como chofer*/
 if(isset($verificarCho)){
     $rs_chofer=$obBD_con1->getRowConsulta(18,$Prs_Cod.'*'.$Ses_Emp_Cod,$obBD_conexion);
     if(!empty($rs_chofer['Prs_Cod'])){$response['existe']=true;}
@@ -73,7 +73,7 @@ if(isset($verificarCho)){
     exit();
 }
 
-/*Sección para buscar una persona según el número de cédula*/
+/*Secciï¿½n para buscar una persona segï¿½n el nï¿½mero de cï¿½dula*/
 if(isset($buscarCliente)){
     $longitud=  strlen($Prs_Ced);
     if($longitud*1===13){$Prs_Ced = substr($Prs_Ced, 0, -3);}
@@ -84,7 +84,7 @@ if(isset($buscarCliente)){
     exit();
 }
 
-/*Sección para listar los viajes de un cliente*/
+/*Secciï¿½n para listar los viajes de un cliente*/
 if(isset($cargarViajes)){
     $response=$obBD_con1->getArrayConsulta(22,$Cli_Cod.'*'.$Fecha.'*'.$Fec_Ini.'*'.$Fec_Fin,$obBD_conexion);
     foreach ($response as &$row){
@@ -96,16 +96,16 @@ if(isset($cargarViajes)){
     exit();
 }
 
-/*Sección para guardar datos de los agregar*/
+/*Secciï¿½n para guardar datos de los agregar*/
 if(isset($save)){
     $response['success'] = false;
     $response['message'] = "No se ha logrado realizar la Transaccion";
     
     $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
     
-    if(isset($saveCargamento)){$case=4;$consultar=2;$datos=$Car_Des.'*'.$Pro_Cod;}              //Sección para registrar un cargamento
-    if(isset($saveModo)){$case=5;$consultar=3;$datos=$Mot_Des.'*'.$Ses_Emp_Cod;}                                 //Sección para registrar un modo_trabajo
-    if(isset($saveAutomotor)){$case=7;$consultar=8;$datos=$Ses_Emp_Cod.'*'.$Veh_Mar.'*'.$Veh_Pla.'*'.$Veh_Col;}  //Sección para registrar un vehiculo
+    if(isset($saveCargamento)){$case=4;$consultar=2;$datos=$Car_Des.'*'.$Pro_Cod;}              //Secciï¿½n para registrar un cargamento
+    if(isset($saveModo)){$case=5;$consultar=3;$datos=$Mot_Des.'*'.$Ses_Emp_Cod;}                                 //Secciï¿½n para registrar un modo_trabajo
+    if(isset($saveAutomotor)){$case=7;$consultar=8;$datos=$Ses_Emp_Cod.'*'.$Veh_Mar.'*'.$Veh_Pla.'*'.$Veh_Col;}  //Secciï¿½n para registrar un vehiculo
     if(isset($saveChofer)){
         $longitud=strlen($Prs_Ced);
         $rs_Ide_Cod = $obBD_con1->getRowConsulta(13,$longitud, $obBD_conexion);
@@ -116,7 +116,7 @@ if(isset($save)){
             $Prs_Cod = $obBD_con1->insercionid($obBD_conexion->conexion);
         }
         $case=10;$consultar=15;$datos=$Prs_Cod.'*'.$Ses_Emp_Cod.'*'.$Cho_Tli;
-    }                                                                                           //Sección para registrar un chofer
+    }                                                                                           //Secciï¿½n para registrar un chofer
     
     $obBD_con1->operacionobBD($case,$datos, $obBD_conexion);
     $codigo=$obBD_con1->insercionid($obBD_conexion->conexion);
@@ -127,7 +127,7 @@ if(isset($save)){
     exit();
 }
 
-/*Sección para registrar un viaje*/
+/*Secciï¿½n para registrar un viaje*/
 if(isset($saveViaje)){
     $response['success'] = false;
     $response['message'] = "No se ha logrado realizar la Transaccion";
@@ -153,8 +153,8 @@ if(isset($saveViaje)){
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-        <script language="javascript" src="../VALIDACIONES/tca_viaje.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/tca_viaje.js"></script>
         <style>
         .chosen-drop .chosen-results {
             max-height: 70px;
@@ -244,7 +244,7 @@ if(isset($saveViaje)){
                 </form>
             </div>
         </div>
-        <!-- Inicio del diálogo para agregar un cargamento --> 
+        <!-- Inicio del diï¿½logo para agregar un cargamento --> 
         <div id="cargamentoDialog" title="Registrar Cargamento">  
             <div class="row">
                 <div class="col-md-12">
@@ -277,7 +277,7 @@ if(isset($saveViaje)){
                 </div>             
             </div>
         </div>
-        <!-- Inicio del diálogo para agregar un modo trabajo --> 
+        <!-- Inicio del diï¿½logo para agregar un modo trabajo --> 
         <div id="modoDialog" title="Registrar Modo de Trabajo">  
             <div class="row">
                 <div class="col-md-12">
@@ -298,7 +298,7 @@ if(isset($saveViaje)){
                 </div>             
             </div>
         </div>
-        <!-- Inicio del diálogo para agregar un automotor --> 
+        <!-- Inicio del diï¿½logo para agregar un automotor --> 
         <div id="automotorDialog" title="Registrar Automotor">  
             <div class="row">
                 <div class="col-md-12">
@@ -331,7 +331,7 @@ if(isset($saveViaje)){
                 </div>             
             </div>
         </div>
-        <!-- Inicio del diálogo para agregar un chofer --> 
+        <!-- Inicio del diï¿½logo para agregar un chofer --> 
         <div id="choferDialog" title="Registrar Conductor">  
             <div class="row">
                 <div class="col-md-12">
@@ -394,19 +394,19 @@ if(isset($saveViaje)){
             </div>
         </div>
         
-        <!-- Inicio del diálogo para buscar un producto -->
+        <!-- Inicio del diï¿½logo para buscar un producto -->
         <div id="productoDialog" title="B&uacute;squeda de Productos">
             <form class="form-horizontal normal"></form>
         </div>
-        <!-- Inicio del diálogo para buscar una persona -->
+        <!-- Inicio del diï¿½logo para buscar una persona -->
         <div id="personaDialog" title="B&uacute;squeda de Persona">
             <form class="form-horizontal normal"></form>
         </div>
-        <!-- Inicio del diálogo para buscar un cliente -->
+        <!-- Inicio del diï¿½logo para buscar un cliente -->
         <div id="clienteDialog" title="B&uacute;squeda de Clientes">
             <form class="form-horizontal normal"></form>
         </div>
-        <!-- Inicio del diálogo para buscar un cliente -->
+        <!-- Inicio del diï¿½logo para buscar un cliente -->
         <div id="viajeDialog" title="B&uacute;squeda de Clientes">
             <form class="form-horizontal normal"></form>
         </div>
@@ -418,7 +418,7 @@ if(isset($saveViaje)){
         function setRango(){
                 $('.por_fecha').find('input[type=text]')[$('#por_fecha').is(':checked')?'removeAttr':'attr']('disabled','disabled');
             }
-        //Función para guardar un viaje
+        //Funciï¿½n para guardar un viaje
         function saveViaje(){
             var index;
             var data=$('#frm_via').getData('saveViaje');
@@ -427,7 +427,7 @@ if(isset($saveViaje)){
             $.each(data['campos'],function(i,v){
                 if(v['Con_Duc']==='' || v['Aut_Mot']==='' || v['Via_Fec']==='' || v['Via_Ded']==='' || v['Via_Has']==='' || v['Via_Can']==='' || v['Via_Pru']===''){
                     index = $("#Via_Grid").jqGrid('getInd',v['Via_Cod']);
-                    $.alert('Debe completar información en la fila: '+index);
+                    $.alert('Debe completar informaciï¿½n en la fila: '+index);
                     $('#Via_Grid').startGridEdit();
                     return false;
                 }

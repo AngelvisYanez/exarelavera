@@ -246,18 +246,18 @@ $periodo = $periodos[0];
    <script type="text/javascript">
         var tipo='';
         function deleteCuenta(cuenta){  
-            $.saveDataJson("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$.extend({Ren_Cod:$('#Ren_Cod').val()},cuenta), 
+            $.saveDataJson("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$.extend({Ren_Cod:$('#Ren_Cod').val()},cuenta), 
                 function( r ) { $("#"+(r['tipo']==='C'?'compras':'ventas')).jqGrid().trigger("reloadGrid", [{ page: 1 }]); }
             );
         }
         function addCuenta(a2){  
             $('#cuenDialog').dialog('close');
-            $.saveDataJson( "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{Ren_Cod:$('#Ren_Cod').val(),Pld_Cod:a2,addCuenta:tipo},
+            $.saveDataJson( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{Ren_Cod:$('#Ren_Cod').val(),Pld_Cod:a2,addCuenta:tipo},
                 function(r) { $("#"+(r['tipo']==='C'?'compras':'ventas')).jqGrid().trigger("reloadGrid", [{ page: 1 }]); }
             );
         }
         function saveCod(){  
-            $.saveDataJson( "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",$('#codForm').getData('saveCod'), 
+            $.saveDataJson( "<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",$('#codForm').getData('saveCod'), 
                 function(r){ $("#list").jqGrid().trigger("reloadGrid", [{ page: 1 }]); }
             );
         }

@@ -8,7 +8,7 @@
  *
  */
 require_once('../../administrador/LOGICA/seguridad.php');
-require_once('../LOGICA/cam_log_camaron.php');
+require_once('../LOGICA/cam_log_negociacion.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 /* Creacion del Objeto de conexion */
 $obBD_conexion = new Class_Log_Conexion_Global($Ses_Dat_Dis);

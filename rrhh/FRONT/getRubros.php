@@ -1,6 +1,6 @@
 <?php
 require_once('../../administrador/LOGICA/seguridad.php');
-require_once('rhu_log_ing_egr.php');
+require_once('../LOGICA/rhu_log_ing_egr.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/postclass.php');
 

@@ -1004,7 +1004,7 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
                     });
                     }
                         $('#searchGrid').createGrid({
-                            caption:'Resultado de la Búsqueda',height: 270, datatype: "local",caption:'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by ventas.Vet_Num DESC ">Num. Documento</option><select>&nbsp;</div>',
+                            caption:'Resultado de la Búsqueda',height: 270, datatype: "local",caption:'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar</option><option value="order by caja_aper.Caj_Fec DESC ">Fecha Venta</option><option value="order by ventas.Vet_Num DESC ">Num. Documento</option></select>&nbsp;</div>',
                             colModel: [
                                 { label: 'Cód. Int.', name: 'Vet_Cod', width: 30 ,align:"center", key:true},
                                 { label: 'Compr.', name: 'Com_Exi', width: 20 ,align:"center", formatter:'truefalse', formatoptions:{yesMsg:'Tiene Comprobante',noMsg:' '}, title:false},

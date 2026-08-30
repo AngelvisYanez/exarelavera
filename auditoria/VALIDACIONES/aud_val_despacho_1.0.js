@@ -9,7 +9,7 @@
     window.aud_desp_validaServicio = function (form) {
         var nom = trim($(form).find('[name="Ser_Nombre"]').val());
         if (nom.length === 0) {
-            alert('El nombre del servicio es obligatorio.');
+            $.alert('El nombre del servicio es obligatorio.',null,'warning');
             return false;
         }
         return true;
@@ -19,11 +19,11 @@
         var ser = $(form).find('[name="Ser_Cod"]').val();
         var nom = trim($(form).find('[name="Act_Nombre"]').val());
         if (!ser || ser === '') {
-            alert('Debe seleccionar un servicio.');
+            $.alert('Debe seleccionar un servicio.',null,'warning');
             return false;
         }
         if (nom.length === 0) {
-            alert('El nombre de la actividad es obligatorio.');
+            $.alert('El nombre de la actividad es obligatorio.',null,'warning');
             return false;
         }
         return true;
@@ -34,15 +34,15 @@
         var fecIni = trim($(form).find('[name="Con_Fecha_Inicio"]').val());
         var fecFin = trim($(form).find('[name="Con_Fecha_Fin"]').val());
         if (!dcl || dcl === '') {
-            alert('Debe seleccionar un cliente del despacho.');
+            $.alert('Debe seleccionar un cliente del despacho.',null,'warning');
             return false;
         }
         if (fecIni.length === 0) {
-            alert('La fecha de inicio es obligatoria.');
+            $.alert('La fecha de inicio es obligatoria.',null,'warning');
             return false;
         }
         if (fecFin.length > 0 && fecFin < fecIni) {
-            alert('La fecha de fin debe ser posterior a la de inicio.');
+            $.alert('La fecha de fin debe ser posterior a la de inicio.',null,'warning');
             return false;
         }
         return true;

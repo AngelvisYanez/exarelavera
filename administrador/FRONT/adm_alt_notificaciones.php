@@ -128,7 +128,7 @@ $mes = date("m");
         <TITLE><?Php echo "Empresas Notificaciones [EXA]"; ?></TITLE>
         <meta charset= "UTF-8">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>       
-        <script language="javascript" src="../VALIDACIONES/adm_val_notificaciones.js?a=a17"></script>
+        <script type="text/javascript" src="../VALIDACIONES/adm_val_notificaciones.js?a=a17"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">

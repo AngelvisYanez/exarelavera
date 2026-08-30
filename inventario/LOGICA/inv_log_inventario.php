@@ -27,7 +27,7 @@ class Class_Log_Datos_Inv extends MysqlDatosContab
 				if ($i == 1) {
 					$kardex[$i - 1]['Stock'] = $kardex[$i - 1]['Kar_Can'] * 1 - $kardex[$i - 1]['Kar_Sal'];
 					$kardex[$i - 1]['Saldo'] = ($kardex[$i - 1]['Kar_Ims'] * 1) - ($kardex[$i - 1]['Kar_Ime'] * 1);
-					$kardex[$i - 1]['Promedio'] = $kardex[$i - 1]['Saldo'] / $kardex[$i - 1]['Stock'];
+					$kardex[$i - 1]['Promedio'] = ($kardex[$i - 1]['Stock'] != 0 ? $kardex[$i - 1]['Saldo'] / $kardex[$i - 1]['Stock'] : 0);
 				}
 				if ($kardex[$i]['Kar_Sal'] * 1 != 0) //Realiza venta
 				{
@@ -101,7 +101,7 @@ class Class_Log_Datos_Inv extends MysqlDatosContab
 			$row['Ent_Valor'] = round($row['Ent_Prp'] * $row['Ent_Stock'], 4);
 			$row['Sal_Prp'] = ($row['Sal_Stk'] != 0 ? round($row['Sal_Sal'] / $row['Sal_Stk'], 2) : null);
 			$row['Ren_Valor'] = $row['Sal_Sal'] - $row['Ent_Valor'];
-			$row['Ren_Porce'] = round(($row['Ren_Valor'] / $row['Sal_Sal']) * 100, 2);
+			$row['Ren_Porce'] = ($row['Sal_Sal'] != 0 ? round(($row['Ren_Valor'] / $row['Sal_Sal']) * 100, 2) : 0);
 			if ($row['Sal_Stk'] <= 0) {
 				unset($array[$key]);
 			}

@@ -55,6 +55,10 @@ if (isset($loginAjax)) {
     $obBD_conexionMaster = new Class_Log_Conexion_Cnt; // Creacion del Objeto de Conexion
     $obBD_con =  new Class_Log_Datos_Cnt; // Creacion del Objeto de Datos
     $row_data = $obBD_con->getRowConsulta(2, $Emp_Cod . '*' . trim($user_name), $obBD_conexionMaster); //Consulta que realiza la autenticacion del usuario
+    if (empty($row_data) || empty($row_data['Dat_Dis'])) {
+        echo json_encode(array('success' => false, 'ver' => null));
+        exit();
+    }
     $obBD_conexion = new Class_Log_Conexion_Cnt($row_data['Dat_Dis']); // Conexion a la base de datos distribuida, dinamica
     $row_rs_control = $obBD_con->getArrayConsulta(16, trim($user_name) . '*' . trim($encryptor) . '*' . $Emp_Cod . '*' . "$Suc_Cod", $obBD_conexion); //Consulta que realiza la autenticacion del usuario
     //var_dump($row_rs_control);
@@ -121,7 +125,16 @@ if (isset($setSucu)) {
     $_SESSION['Ses_Usu_Cad'] = $row_rs_control['Usu_Cad'];
     $_SESSION['Ses_Usu_Men'] = $row_rs_control['Usu_Men'];
     $_SESSION['Ses_Per_Cod'] = isset($row_rs_control['Per_Cod']) ? $row_rs_control['Per_Cod'] : '';
-    //var_dump($row_rs_control);
+    $_SESSION['Ses_Prs_Cod'] = isset($row_rs_control['Prs_Cod']) ? $row_rs_control['Prs_Cod'] : '';
+    $rs_perfiles = $obBD_con->getArrayConsulta(21, $row_rs_control['Usu_Cod'], $obBD_conexion);
+    $lperf = array();
+    $Per_Des = array();
+    foreach ($rs_perfiles as $v0) {
+        $lperf[] = $v0['Per_Cod'];
+        $Per_Des[] = $v0['Per_Des'];
+    }
+    $_SESSION['Ses_Lis_Per'] = $lperf;
+    $_SESSION['Ses_Per_Des'] = $Per_Des;
     echo json_encode(array('success' => true, 'ver' => $row_rs_control));
     exit();
 }
@@ -262,7 +275,12 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                     <!--Ace Admin-->
                     <small id="Empr" style="font-size: 16px; color: #000; text-align: center;">
                         <i id="icoEmp" class="fa fa-building" style="color: #000;"></i>
-                        <?php echo '<span style="margin-top: 10px;">' . ucwords(strtolower($Ses_Emp_Nom)) . '</span>' . (count($rs_sucursales) == 1 ? ' <b>[' . strtoupper($Ses_Suc_Nom) . ']</b>' : ''); ?>
+                        <?php if (count($rs_empresas) > 1) { ?>
+                            <a href="javascript:changeEmpresa();" title="Cambiar empresa" style="color: #000; text-decoration: none;"><?php echo ucwords(strtolower($Ses_Emp_Nom)); ?><span class="caret"></span></a>
+                        <?php } else { ?>
+                            <span style="margin-top: 10px;"><?php echo ucwords(strtolower($Ses_Emp_Nom)); ?></span>
+                        <?php } ?>
+                        <?php echo (count($rs_sucursales) == 1 ? ' <b>[' . strtoupper($Ses_Suc_Nom) . ']</b>' : ''); ?>
                     </small>
                     <?php if (count($rs_sucursales) > 1) { ?>
                         <div class="dropdown" style="display: inline">
@@ -454,7 +472,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
             } catch (e) {}
         </script>
         <!-- #section:basics/sidebar -->
-        <div id="sidebar" class="sidebar responsive sidebar-fixed sidebar-scroll <?php echo (!isset($_COOKIE['ace_compact']) || $_COOKIE['ace_compact'] == 'true' || $_SESSION['Ses_Usu_Men'] != 'T' ? 'compact' : ''); ?>">
+        <div id="sidebar" class="sidebar responsive sidebar-fixed sidebar-scroll <?php echo (isset($_COOKIE['ace_compact']) && $_COOKIE['ace_compact'] == 'true' ? 'compact' : ''); ?>">
             <script type="text/javascript">
                 try {
                     ace.settings.check('sidebar', 'fixed');
@@ -531,11 +549,11 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                 </script>
             <?php
             } else {
-                \DebugBar::startMeasure('MenuSidebar', 'Menu Sidebar');
+                if (class_exists('\\DebugBar')) \DebugBar::startMeasure('MenuSidebar', 'Menu Sidebar');
                 require_once("../LOGICA/adm_log_menu_tree.php");
                 $obBD_con1 =  new Class_Sys_Menu;
                 echo ($obBD_con1->menuToHtml(1, $obBD_con1->getMenuContainer2($_SESSION['Ses_Lis_Per'], $obBD_conexion), 'nav nav-list', (!isset($_COOKIE['ace_hover']) || $_COOKIE['ace_hover'] == 'true' || $_COOKIE['ace_compact'] == 'true' ? 'hover' : '')));
-                \DebugBar::stopMeasure('MenuSidebar');
+                if (class_exists('\\DebugBar')) \DebugBar::stopMeasure('MenuSidebar');
             ?><script type="text/javascript">
                     if (ace.cookie.get('ace_tree') === 'true') {
                         ace.cookie.set('ace_compact', true);
@@ -829,7 +847,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
                                     <select id="Emp_Cod" name="Emp_Cod" class="form-control" data-placeholder="Seleccione Empresa...">
                                         <option value=""></option>
                                         <?php foreach ($rs_empresas as $row_rs_empresas) {
-                                            if ($row_rs_empresas['Emp_Cod'] !== $Ses_Emp_Cod) echo '<option value="' . $row_rs_empresas['Emp_Cod'] . '" data-Emp_Nom="' . $row_rs_empresas['Emp_Nom'] . '"  data--suc_-cod="' . $row_rs_empresas['Suc_Cod'] . '">' . $row_rs_empresas['Emp_Cor'] . ' (' . mb_convert_encoding($row_rs_empresas['Suc_Des'], 'UTF-8', 'ISO-8859-1') . ")" . '</option>';
+                                            if ($row_rs_empresas['Emp_Cod'] !== $Ses_Emp_Cod) echo '<option value="' . $row_rs_empresas['Emp_Cod'] . '" data-Emp_Nom="' . $row_rs_empresas['Emp_Nom'] . '"  data-suc-cod="' . $row_rs_empresas['Suc_Cod'] . '">' . $row_rs_empresas['Emp_Cor'] . ' (' . mb_convert_encoding($row_rs_empresas['Suc_Des'], 'UTF-8', 'ISO-8859-1') . ")" . '</option>';
                                         } ?>
                                     </select>
                                     <!--<input id="Emp_Des" name="Emp_Des" class="form-control" placeholder="" type="text" readonly="readonly">                                -->
@@ -1051,32 +1069,39 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
         //         socketVentanas.send('login');
         //     }, 1000); */
         // });
+        function changeEmpresa() {
+            $('#Usu_Pas').val('');
+            $('#msgAlert').empty();
+            $('#Emp_Cod').val('').trigger('change');
+            $('#myModal').modal('show');
+        }
+
         function loginAjax() {
-            public $msg;
+            var msg;
             $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>", {
             loginAjax: true,
             Emp_Cod: $('#Emp_Cod').val(),
-            Suc_Cod: $('#Emp_Cod option:selected').data('Suc_Cod'),
+            Suc_Cod: $('#Emp_Cod option:selected').data('suc-cod'),
             user_name: $('#Usu_Ced').val(),
             encryptor: md5($('#Usu_Pas').val())
             }, function(response) {
             if (response['success'] === true) {
-                $msg =
+                msg =
                 '<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';
                 setTimeout(function() {
                 window.location.href =
                     "<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_FULL_SPECIAL_CHARS); ?>";
                 }, 2500);
             } else {
-                $msg =
+                msg =
                 '<div class="alert alert-warning fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;Contrase&ntilde;a Incorrecta.</div>';
             }
             }, 'json').fail(function(error) {
-            $msg =
+            msg =
                 '<div class="alert alert-danger fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;El Servidor ha fallado en responder!.</div>';
             })
             .always(function() {
-                $('#msgAlert').html($msg);
+                $('#msgAlert').html(msg);
                 $('#msgAlert .alert').hide();
                 $('#msgAlert .alert').show();
                 setTimeout(function() {
@@ -1179,7 +1204,7 @@ $data_documentos =   array();//     $obBD_con1->getArrayConsulta(226, $Ses_Emp_C
     </script>
     <script src="../../skins/js/ace/ace.settings.js"></script>
     <script src="../../skins/js/ace/ace.settings-skin.js"></script>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <!-- <script src="../../framework/php/ventanasSocket/socketExaVentanas.js"></script> -->
     <?php //var_dump($rs_sucursales); 
     ?>

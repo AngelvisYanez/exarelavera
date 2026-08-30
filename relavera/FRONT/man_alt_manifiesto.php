@@ -1562,7 +1562,7 @@ if (isset($anularAnticipo)) {
 	<script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
 	<script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
 	<script>
-		var Cli_Cod_Man = '<?php echo $cliente_manifiesto['Cli_Cod']; ?>';
+		var Cli_Cod_Man = <?php echo json_encode($cliente_manifiesto['Cli_Cod']); ?>;
 		var peridodo = <?php echo json_encode($periodos) ?>,
 			prf = <?php echo json_encode($perfil) ?>;
 		var hoy= <?php echo json_encode($hoy); ?>;	

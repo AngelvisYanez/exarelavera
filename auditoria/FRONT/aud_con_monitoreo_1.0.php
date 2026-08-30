@@ -5,7 +5,7 @@
  *
  * @author
  * @version 1.0
- * @Fecha de actualización:	05-03-2013
+ * @Fecha de actualizaciï¿½n:	05-03-2013
  *
  * @package auditoria.FRONT
  */
@@ -25,11 +25,12 @@ $obBD_conexion = new Class_Log_Conexion($Ses_Dat_Dis);
 $obBD_con1 =  new Class_Log_Datos;
 
 if(isset($_GET['ajax_cmb'])){
-	
-	if($_GET['ajax_cmb'] == 0){
-		$Arr_Resultado = $obBD_con1->getArrayConsulta(6, $_GET['params'], $obBD_conexion);
+	$params = $obBD_conexion->conexion->real_escape_string($_GET['params']);
+	$ajax_cmb = intval($_GET['ajax_cmb']);
+	if($ajax_cmb == 0){
+		$Arr_Resultado = $obBD_con1->getArrayConsulta(6, $params, $obBD_conexion);
 	}else{
-		$Arr_Resultado = $obBD_con1->getArrayConsulta(10, $_GET['params'].'*'.$_GET['ajax_cmb'], $obBD_conexion);
+		$Arr_Resultado = $obBD_con1->getArrayConsulta(10, $params.'*'.$ajax_cmb, $obBD_conexion);
 	}
 	
 	$str = '<table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
@@ -53,7 +54,7 @@ if(isset($_GET['ajax_cmb'])){
 									</form></td></tr>';
 	}
 	if(count($Arr_Resultado) == 0){
-		$str .= '<tr><td>&nbsp;</td><td>&nbsp;</td><td>'.error_alerta(mb_convert_encoding("¡No hay resultados que mostrar!", 'UTF-8', 'ISO-8859-1'), 1).'</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
+		$str .= '<tr><td>&nbsp;</td><td>&nbsp;</td><td>'.error_alerta(mb_convert_encoding("ï¿½No hay resultados que mostrar!", 'UTF-8', 'ISO-8859-1'), 1).'</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
 	}
 	$str .= '</tbody></table>';
 	
@@ -190,7 +191,7 @@ function visualizarCampos(form, id){
 				    <thead>
 					      <tr>
 					        <th width="5%" >Cod. Int. </th>
-					        <th width="10%" >Cédula</th>
+					        <th width="10%" >Cï¿½dula</th>
 					        <th >Apellidos y Nombres </th>
 							<th width="3%" >&nbsp;</th>
 					      </tr>
@@ -207,9 +208,9 @@ function visualizarCampos(form, id){
 									<button type='button' class='btn btn-success btn-mini' title="Elegir" onclick="this.form.submit();"><i class='icon-arrow-right icon-white'></i></button>
 									<input type="hidden" name="pag" value="2">
 									<input type="hidden" name="usuCodigo" value="<?php echo $row['Usu_Cod'];?>" >
-									<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-									<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
-								</form>
+								<input type="hidden" name="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8');?>">
+									<input type="hidden" name="txt_busqueda" value="<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>">
+							</form>
 							</td>
 						</tr>
 				     	<?php
@@ -219,7 +220,7 @@ function visualizarCampos(form, id){
 							<tr>
 						        <td>&nbsp;</td>
 						        <td>&nbsp;</td>
-						        <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1);?></td>
+						        <td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1);?></td>
 								<td>&nbsp;</td>
 						    </tr>
 							<?php
@@ -253,14 +254,14 @@ function visualizarCampos(form, id){
 				    		<table cellpadding="0" cellspacing="0">
 				    			<tr>
 				    				<td class="Etiqueta1">&nbsp;<span class="Asterisco">*</span>Desde:</td>
-				    				<td class="LetraNegra">&nbsp;<input name="from" type="text" id="from" value="<?php echo strlen($_POST['from'])>0?$_POST['from']:date('Y-m-d');?>" size="10" onKeyUp="mascara(this,'-',patron, true)" ></td>
+				    				<td class="LetraNegra">&nbsp;<input name="from" type="text" id="from" value="<?php echo !empty($_POST['from']) ? htmlspecialchars($_POST['from'], ENT_QUOTES, 'UTF-8') : date('Y-m-d');?>" size="10" onKeyUp="mascara(this,'-',patron, true)" ></td>
 				    				<td class="Etiqueta1">&nbsp;&nbsp;<span class="Asterisco">*</span>Hasta:</td>
-				    				<td class="LetraNegra">&nbsp;<input name="to" type="text" id="to" value="<?php echo strlen($_POST['to'])>0?$_POST['to']:date('Y-m-d');?>" size="10" onKeyUp="mascara(this,'-',patron, true)" ></td>
+				    				<td class="LetraNegra">&nbsp;<input name="to" type="text" id="to" value="<?php echo !empty($_POST['to']) ? htmlspecialchars($_POST['to'], ENT_QUOTES, 'UTF-8') : date('Y-m-d');?>" size="10" onKeyUp="mascara(this,'-',patron, true)" ></td>
 				    				<td class="LetraNegra"><button type="button" class="btn btn-success btn-mini" title="Buscar" onclick="validar_requeridos(this.form,'from*to',2)" ><i class="icon-search icon-white"></i><span>&nbsp;&nbsp;Buscar&nbsp;&nbsp;</span></button>
 				    					<input type="hidden" name="pag" value="2">
-				    					<input type="hidden" name="usuCodigo" value="<?php echo $_POST['usuCodigo'];?>" >
-				    					<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-										<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
+				    			<input type="hidden" name="usuCodigo" value="<?php echo htmlspecialchars($_POST['usuCodigo'], ENT_QUOTES, 'UTF-8');?>" >
+				    			<input type="hidden" name="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8');?>">
+									<input type="hidden" name="txt_busqueda" value="<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>">
 				    				</td>
 				    			</tr>
 				    		</table>
@@ -284,8 +285,8 @@ function visualizarCampos(form, id){
 					    <thead>
 						      <tr>
 						        <th width="5%" >Cod. Int. </th>
-						        <th >Inicio Sesión</th>
-						        <th >Cierre de Sesión </th>
+						        <th >Inicio Sesiï¿½n</th>
+						        <th >Cierre de Sesiï¿½n </th>
 								<th width="3%" >&nbsp;</th>
 						      </tr>
 					     </thead> 
@@ -315,13 +316,13 @@ function visualizarCampos(form, id){
 										<input type="hidden" name="from" value="<?php echo strlen($_POST['from'])>0?$_POST['from']:date('Y-m-d');?>" >
 										<input type="hidden" name="to" value="<?php echo strlen($_POST['to'])>0?$_POST['to']:date('Y-m-d');?>" >
 										<input type="hidden" name="sesCod" value="<?php echo $row['Ses_Cod'];?>" >
-										<input type="hidden" name="usuCodigo" value="<?php echo $_POST['usuCodigo'];?>" >
-										<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-										<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
+										<input type="hidden" name="usuCodigo" value="<?php echo htmlspecialchars($_POST['usuCodigo'], ENT_QUOTES, 'UTF-8');?>" >
+										<input type="hidden" name="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8');?>">
+										<input type="hidden" name="txt_busqueda" value="<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>">
 									</form>
 								<?php }else{
 									?>
-									<img src="../../mascaras/model1/imagenes/32x32/ayuda.png" width="25" height="25" title="No hay actividades registradas en esta sesión">
+									<img src="../../mascaras/model1/imagenes/32x32/ayuda.png" width="25" height="25" title="No hay actividades registradas en esta sesiï¿½n">
 									<?php
 								}?>
 								</td>
@@ -332,7 +333,7 @@ function visualizarCampos(form, id){
 							?>
 							<tr>
 						        <td>&nbsp;</td>
-						        <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1);?></td>
+						        <td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1);?></td>
 						        <td>&nbsp;</td>
 								<td>&nbsp;</td>
 						    </tr>
@@ -349,10 +350,10 @@ function visualizarCampos(form, id){
 					<tr>
 						<td width="110">
 							<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
-								<button type="button" class="btn btn-inverse fileinput-button" title="Atr&aacute;s" onclick="this.form.submit();"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
-								<input type="hidden" name="pag" value="1">
-								<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-								<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
+							<button type="button" class="btn btn-inverse fileinput-button" title="Atr&aacute;s" onclick="this.form.submit();"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
+							<input type="hidden" name="pag" value="1">
+							<input type="hidden" name="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8');?>">
+							<input type="hidden" name="txt_busqueda" value="<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>">
 							</form>
 						</td>
 					</tr>
@@ -381,11 +382,11 @@ function visualizarCampos(form, id){
 				    		<td class="LetraNegra">&nbsp;<?php echo $row_usuario['Prs_Ape'].' '.$row_usuario['Prs_Ape'];?></td>
 				    	</tr>
 				    	<tr>
-				    		<td width="10%" class="Etiqueta1">Inicio Sesión:</td>
+				    		<td width="10%" class="Etiqueta1">Inicio Sesiï¿½n:</td>
 				    		<td class="LetraNegra">&nbsp;<?php echo $row_usuario['Ses_Int'];?></td>
 				    	</tr>
 				    	<tr>
-				    		<td width="10%" class="Etiqueta1">Cierre Sesión:</td>
+				    		<td width="10%" class="Etiqueta1">Cierre Sesiï¿½n:</td>
 				    		<td class="LetraNegra">&nbsp;<?php echo $row_usuario['Ses_Out'];?></td>
 				    	</tr>
 				    </table>
@@ -433,8 +434,8 @@ function visualizarCampos(form, id){
 						        <th width="8%" >Fecha</th>
 						        <th width="8%" >Hora</th>
 						        <th>Actividad</th>
-						        <th width="15%" >Opción</th>
-						        <th>Detalle de Opción</th>
+						        <th width="15%" >Opciï¿½n</th>
+						        <th>Detalle de Opciï¿½n</th>
 								<th width="3%" >&nbsp;</th>
 						      </tr>
 					     </thead> 
@@ -471,7 +472,7 @@ function visualizarCampos(form, id){
 					     	<tr>
 						        <td>&nbsp;</td>
 						        <td>&nbsp;</td>
-						        <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+						        <td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
 						        <td>&nbsp;</td>
 						        <td>&nbsp;</td>
 								<td>&nbsp;</td>
@@ -492,11 +493,11 @@ function visualizarCampos(form, id){
 							<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
 								<button type="button" class="btn btn-inverse fileinput-button" title="Atr&aacute;s" onclick="this.form.submit();"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
 								<input type="hidden" name="pag" value="2">
-								<input type="hidden" name="from" value="<?php echo $_POST['from'];?>" >
-								<input type="hidden" name="to" value="<?php echo $_POST['to'];?>" >
-								<input type="hidden" name="usuCodigo" value="<?php echo $_POST['usuCodigo'];?>">
-								<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-								<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
+							<input type="hidden" name="from" value="<?php echo htmlspecialchars($_POST['from'], ENT_QUOTES, 'UTF-8');?>" >
+							<input type="hidden" name="to" value="<?php echo htmlspecialchars($_POST['to'], ENT_QUOTES, 'UTF-8');?>" >
+							<input type="hidden" name="usuCodigo" value="<?php echo htmlspecialchars($_POST['usuCodigo'], ENT_QUOTES, 'UTF-8');?>">
+							<input type="hidden" name="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8');?>">
+							<input type="hidden" name="txt_busqueda" value="<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>">
 							</form>
 						</td>
 					</tr>

@@ -1,5 +1,4 @@
 <?php
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class persona extends AbstractModel{
     protected $_name = 'persona';
@@ -17,7 +16,7 @@ class persona extends AbstractModel{
     public function _selectBasicGrid($cond=null,$limits=false){
         $sel=$this->_selectBasic();
         if(isset($cond['op_opciones']))
-            $sel->where($cond['op_opciones']=="c"?"Prs_Ced=?":"CONCAT(Prs_Nom,' ',Prs_Ape)LIKE '%{$cond['search']}%'", $cond['search']);
+            $sel->where($cond['op_opciones']=="c"?"Prs_Ced=?":"CONCAT(Prs_Nom,' ',Prs_Ape)LIKE ?", $cond['op_opciones']=="c"?$cond['search']:"%{$cond['search']}%");
         return $sel;
     }
     /* formatea el array para insert o update */

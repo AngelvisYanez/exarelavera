@@ -1272,7 +1272,7 @@ $rendimiento_promedio = $total_tareas > 0 ? round(100 * $completadas / $total_ta
 
 <script type="text/javascript">
 (function () {
-    var urlBase = '<?php echo str_replace("'", "\\'", $_SERVER['PHP_SELF']); ?>';
+    var urlBase = <?php echo json_encode($_SERVER['PHP_SELF']); ?>;
     var sesEmpCod = '<?php echo $Ses_Emp_Cod; ?>';
 
     function estadoCellHtml(estadoRaw) {
@@ -1579,7 +1579,7 @@ $rendimiento_promedio = $total_tareas > 0 ? round(100 * $completadas / $total_ta
             if (closeBtn) {
                 var modal = document.getElementById('modalAdjuntosTarea');
                 if (modal) {
-                    public $ = window.jQuery || window.$;
+                    var $ = window.jQuery || window.$;
                     if ($ && typeof $.fn !== 'undefined' && typeof $.fn.modal === 'function') {
                         $(modal).modal('hide');
                     } else {
@@ -1608,7 +1608,7 @@ $rendimiento_promedio = $total_tareas > 0 ? round(100 * $completadas / $total_ta
                 if (vacioEl) vacioEl.style.display = 'none';
                 var modal = document.getElementById('modalAdjuntosTarea');
                 if (modal) {
-                    public $ = window.jQuery || window.$;
+                    var $ = window.jQuery || window.$;
                     var cerrarModalAdjuntos = function () {
                         modal.style.display = 'none';
                         modal.classList.remove('in');
@@ -1995,7 +1995,7 @@ $rendimiento_promedio = $total_tareas > 0 ? round(100 * $completadas / $total_ta
             if (vacioEl) vacioEl.style.display = 'none';
             var modal = document.getElementById('modalAvancesTarea');
             if (modal) {
-                public $ = window.jQuery || window.$;
+                var $ = window.jQuery || window.$;
                 var cerrarModalAvances = function () {
                     modal.style.display = 'none';
                     modal.classList.remove('in');
@@ -2268,7 +2268,7 @@ $rendimiento_promedio = $total_tareas > 0 ? round(100 * $completadas / $total_ta
                 body.innerHTML = html;
                 var modal = document.getElementById('modalDetalleKpi');
                 if (modal) {
-                    public $ = window.jQuery || window.$;
+                    var $ = window.jQuery || window.$;
                     var cerrarModal = function () {
                         modal.style.display = 'none';
                         modal.classList.remove('in');

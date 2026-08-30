@@ -5,10 +5,10 @@
  *
  * @author car.87cod :)
  * @version 1.0
- * Fecha de actualización:	2012-04-26
+ * Fecha de actualizaciï¿½n:	2012-04-26
  * @author lewis.chimarro
  * @version 1.0
- * Fecha de actualización:	2014-05-29 
+ * Fecha de actualizaciï¿½n:	2014-05-29 
  *
  * @package tesoreria.FRONT
  */
@@ -34,12 +34,12 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
 <HEAD>
 <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/tes_val_cliente.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/tes_val_cliente.js"></script>
 		
 		<script type="text/javascript" src="../../Librerias/exportar/jquery-1.3.2.min.js"></script>
 	    
-	    <script language="javascript">
+	    <script type="text/javascript">
 			$(document).ready(function() {
 				/* LLamado a la class del boton exportar */
 				$("#Boton_Excel").click(function(event) {
@@ -153,8 +153,8 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
         	<i class=" icon-arrow-right icon-white"></i>
         </button>
 		<input name="Cli_Cod" id="Cli_Cod" type="hidden" value="<?Php echo $row['Cli_Cod']; ?>">
-    	<input name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>" type="hidden">
-    	<input name="op_opciones" value="<?php echo $_POST['op_opciones'];?>" type="hidden">
+    	<input name="txt_busqueda" value="<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>" type="hidden">
+    	<input name="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8');?>" type="hidden">
     </form>
     </td>
    </tr> 
@@ -334,7 +334,7 @@ $obBD_con1 =  new Class_Log_Datos_Cli;
     
     <FIELDSET>
 	<LEGEND>
-		<label class="Titulos2">De la Emisión de Factura</label>
+		<label class="Titulos2">De la Emisiï¿½n de Factura</label>
 	</LEGEND>
 	<table width="629" border="0" cellpadding="2" cellspacing="0">  
   	<tr>

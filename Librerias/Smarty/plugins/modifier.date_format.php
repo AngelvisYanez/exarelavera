@@ -9,6 +9,7 @@
  * Include the {@link shared.make_timestamp.php} plugin
  */
 require_once $smarty->_get_plugin_filepath('shared','make_timestamp');
+require_once dirname(__FILE__) . '/../smarty_strftime.php';
 /**
  * Smarty date_format modifier plugin
  *
@@ -35,9 +36,9 @@ function smarty_modifier_date_format($string, $format="%b %e, %Y", $default_date
            $format = str_replace($_win_from, $_win_to, $format);
     }
     if($string != '') {
-        return strftime($format, smarty_make_timestamp($string));
+        return smarty_strftime($format, smarty_make_timestamp($string));
     } elseif (isset($default_date) && $default_date != '') {
-        return strftime($format, smarty_make_timestamp($default_date));
+        return smarty_strftime($format, smarty_make_timestamp($default_date));
     } else {
         return;
     }

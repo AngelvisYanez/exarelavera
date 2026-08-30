@@ -6,11 +6,14 @@ Fecha de actualización:	2011-03-24
 Desarrollador:	Lewis Chimarro 
 */
 ?>
+<meta charset="iso-8859-1" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <!-- <link rel="shortcut icon" type="image/x-icon" href="../../mascaras/model1/img/logo/exa-ico-2.png" /> -->
  <link rel="shortcut icon" type="image/x-icon" href="../../imagenes/ingresar/favicon.png" />
 <link href="../../mascaras/model1/estilos/interfaz.css" rel="stylesheet" type="text/css">
 <link href="../../mascaras/model1/estilos/forms.css" rel="stylesheet" type="text/css">
-<link href="../../mascaras/model1/estilos/bootstrap.min.css?x=1" rel="stylesheet">
+<!-- FIX: Bootstrap 3.3.5 (was Bootstrap 2.x causing rendering conflicts) -->
+<link href="../../framework/jquery/bootstrap/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet">
 
 <!-- INICIO J Q U E R Y    T E X T     B O X -->
 <link rel="stylesheet" href="../../Librerias/textbox/main.css" type="text/css" media="screen" />			
@@ -28,7 +31,9 @@ Desarrollador:	Lewis Chimarro
 
 <!-- INICIO J Q U E R Y    L O A D E R -->
 <link rel="stylesheet" href="../../Librerias/loader/jquery.loader.css" />
-<!-- FIN J Q U E R Y    L O A D E R -->
+ <!-- FIN J Q U E R Y    L O A D E R -->
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+ <script type="text/ecmascript" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
 /*.btn-success {
     color: #ffffff;

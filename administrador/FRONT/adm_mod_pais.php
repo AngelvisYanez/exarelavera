@@ -289,10 +289,10 @@ if(isset($anula)){
         </div>
     </div>       
    <script type="text/javascript">      
-       public $treeview=$('#using_json_2'),gridComp=$("#comp"),ciudad='',ciu_cod='';   
+       var $treeview=$('#using_json_2'),gridComp=$("#comp"),ciudad='',ciu_cod='';   
        function savePais(form){
             var data=$('#'+form).getData('save');
-            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                 if(response['success']===true){
                     $.alert("Transaccion Realizada con &Eacute;xito!");                          
                     $treeview.jstree(true).refresh();
@@ -302,7 +302,7 @@ if(isset($anula)){
              },'json').fail(function(error) { $.alert();});
         }   
         function anulaCiudad(){  
-            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{anula:ciu_cod}, function( response ) {
+            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{anula:ciu_cod}, function( response ) {
                 if(response['success']===true){ 
                     $.alert("La Ciudad se ha Anulado con Exito!");
                     $treeview.jstree(true).refresh();
@@ -312,7 +312,7 @@ if(isset($anula)){
         }
    
     gridComp.jqGrid({
-            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
             mtype: "GET", datatype: "local", regional : 'es',hidegrid:false,//ajaxRowOptions: { async: true },                             
             autowidth : true, shrinkToFit: true, height: 350,caption:'&nbsp;',responsive:true,
             cmTemplate: {sortable:false,title: false},
@@ -323,7 +323,7 @@ if(isset($anula)){
             rowNum: 10000000, pager: "", gridview: true, rownumbers: true, viewrecords: true, altRows: true, altclass: "myAltRowClass",pgbuttons: false,pgtext: null
         });
     
-    $treeview.jstree({'core' : {'data': { 'url': '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?planAjax=true' ,"dataType": "json" }}})
+    $treeview.jstree({'core' : {'data': { 'url': '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?planAjax=true' ,"dataType": "json" }}})
        .on('select_node.jstree', function (e, data) {
            var text=data.node.text,tipo=data.node.original.tipo,id=data.node.id.split("_")[1];
            gridComp.clearGrid();

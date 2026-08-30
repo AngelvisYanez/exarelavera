@@ -452,7 +452,10 @@ if (isset($ajaxDetalleVentas)) {
     <!-- <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE> -->
     <TITLE><?Php echo "Ventas Consultar [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
-    <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+    <?php
+    $mask_model = 'model1';
+    require_once("../../mascaras/unified-loader.php");
+    ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
@@ -474,7 +477,7 @@ if (isset($ajaxDetalleVentas)) {
         var es_fac_con_fac_ven = true;
     </script>
      <script>
-        var Ses_Emp_Cod = "<?php echo $Ses_Emp_Cod; ?>";
+        var Ses_Emp_Cod = <?php echo json_encode($Ses_Emp_Cod); ?>;
     </script>
     <script type="text/ecmascript" src="../VALIDACIONES/fac_val_factura.js?x=0"></script>
     <style></style>
@@ -1702,9 +1705,9 @@ if (isset($ajaxDetalleVentas)) {
                                         <div class="col-sm-10">
                                             <div class="input-group input-group-sm dateRangeInputs">
                                                 <span class="range input-group-addon alert-info">Desde</span>
-                                                <input type="text" name="Fec_Ini" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Ini']) ? $_GET['Fec_Ini'] : date('Y-01-01'); ?>" />
+                                                <input type="text" name="Fec_Ini" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Ini']) ? htmlspecialchars($_GET['Fec_Ini'], ENT_QUOTES, 'UTF-8') : date('Y-01-01'); ?>" />
                                                 <span class="range input-group-addon alert-info">Hasta</span>
-                                                <input type="text" name="Fec_Fin" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Fin']) ? $_GET['Fec_Fin'] : ''; ?>" />
+                                                <input type="text" name="Fec_Fin" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Fin']) ? htmlspecialchars($_GET['Fec_Fin'], ENT_QUOTES, 'UTF-8') : ''; ?>" />
                                             </div>
                                         </div>
                                     </div>
@@ -2060,7 +2063,7 @@ if (isset($ajaxDetalleVentas)) {
                                     $.createDateRange('#Fec_Ini_Tab4', '#Fec_Fin_Tab4');
                                     var kardexGrid = $("#kardex");
                                     kardexGrid.jqGrid({
-                                        url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                        url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                         mtype: "GET",
                                         datatype: "local",
                                         regional: 'es',
@@ -2327,7 +2330,7 @@ if (isset($ajaxDetalleVentas)) {
             //$('#ini').datepicker("setDate", new Date(today.getTime() - (30 * 24 * 3600 * 1000)));
             //$('#fin').datepicker("setDate", today);
             $('#proDialog').dialog('close');
-            $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>', {
+            $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>', {
                 'Pro_Cod': id,
                 'ajaxProd': true
             }, function(response) {
@@ -2476,7 +2479,7 @@ if (isset($ajaxDetalleVentas)) {
                         };
                         
                         // Crear un formulario temporal para enviar por POST al nuevo reporte 3.0
-                        public $form = $('<form>', {
+                        var $form = $('<form>', {
                             action: 'fac_pri_fac_total_3.0.php',
                             method: 'POST',
                             target: '_blank'
@@ -2611,7 +2614,7 @@ if (isset($ajaxDetalleVentas)) {
                     }
                 ],
                 loadComplete: function() {
-                    public $grid = $(this);
+                    var $grid = $(this);
                     var ids = $grid.jqGrid('getDataIDs');
                     ids.forEach(function(id) {
                         var rowData = $grid.jqGrid('getRowData', id);

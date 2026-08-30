@@ -3,7 +3,7 @@
  * @abstract Permite realizar la modificacion de viajes a un cliente
  * @author Cesar Bermeo
  * @version 1.0
- * Fecha de creación 2018-09-06
+ * Fecha de creaciï¿½n 2018-09-06
  *
  */
 
@@ -47,7 +47,7 @@ if(isset($cargmentoAjax)){
 
 }
 
-///Sección para cargar datos en el Jqgrid referente a los productos registrado
+///Secciï¿½n para cargar datos en el Jqgrid referente a los productos registrado
 if (isset($productoAjax)) {
    $data = filter_input_array(INPUT_GET);
    $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -62,7 +62,7 @@ if (isset($productoAjax)) {
    exit();
 }
 
-//Sección para cargar datos en el Jqgrid referente al personal registrado
+//Secciï¿½n para cargar datos en el Jqgrid referente al personal registrado
 if (isset($personaAjax)) {
    $data = filter_input_array(INPUT_GET);
    $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -78,7 +78,7 @@ if (isset($personaAjax)) {
    exit();
 }
 
-//Sección para cargar datos en el Jqgrid referente a los clientes registrados
+//Secciï¿½n para cargar datos en el Jqgrid referente a los clientes registrados
 if (isset($viajeAjax)) {
    $data = filter_input_array(INPUT_GET);
    $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -94,7 +94,7 @@ if (isset($viajeAjax)) {
    exit();
 }
 
-/*Sección para verificar si una persona ya se encuentra registrada como chofer*/
+/*Secciï¿½n para verificar si una persona ya se encuentra registrada como chofer*/
 if(isset($verificarCho)){
    $rs_chofer=$obBD_con1->getRowConsulta(18,$Prs_Cod.'*'.$Ses_Emp_Cod,$obBD_conexion,true);
    if(!empty($rs_chofer['Prs_Cod'])){$response['existe']=true;}
@@ -103,7 +103,7 @@ if(isset($verificarCho)){
    exit();
 }
 
-/*Sección para buscar una persona según el número de cédula*/
+/*Secciï¿½n para buscar una persona segï¿½n el nï¿½mero de cï¿½dula*/
 if(isset($buscarCliente)){
    $longitud=  strlen($Prs_Ced);
    if($longitud*1===13){$Prs_Ced = substr($Prs_Ced, 0, -3);}
@@ -114,7 +114,7 @@ if(isset($buscarCliente)){
    exit();
 }
 
-/*Sección para listar los viajes de un cliente*/
+/*Secciï¿½n para listar los viajes de un cliente*/
 if(isset($cargarViajes)){
    $response=$obBD_con1->getArrayConsulta(22,$Cli_Cod.'*'.$Fecha.'*'.$Fec_Ini.'*'.$Fec_Fin,$obBD_conexion,true);
    $obBD_con1->echoLog($response);
@@ -128,16 +128,16 @@ if(isset($cargarViajes)){
    exit();
 }
 
-/*Sección para guardar datos de los agregar*/
+/*Secciï¿½n para guardar datos de los agregar*/
 if(isset($save)){
    $response['success'] = false;
    $response['message'] = "No se ha logrado realizar la Transaccion # 1";
 
    $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 
-   if(isset($saveCargamento)){$case=4;$consultar=2;$datos=$Car_Des.'*'.$Pro_Cod;}              //Sección para registrar un cargamento
-   if(isset($saveModo)){$case=5;$consultar=3;$datos=$Mot_Des.'*'.$Ses_Emp_Cod;}                                 //Sección para registrar un modo_trabajo
-   if(isset($saveAutomotor)){$case=7;$consultar=8;$datos=$Ses_Emp_Cod.'*'.$Veh_Mar.'*'.$Veh_Pla.'*'.$Veh_Col;}  //Sección para registrar un vehiculo
+   if(isset($saveCargamento)){$case=4;$consultar=2;$datos=$Car_Des.'*'.$Pro_Cod;}              //Secciï¿½n para registrar un cargamento
+   if(isset($saveModo)){$case=5;$consultar=3;$datos=$Mot_Des.'*'.$Ses_Emp_Cod;}                                 //Secciï¿½n para registrar un modo_trabajo
+   if(isset($saveAutomotor)){$case=7;$consultar=8;$datos=$Ses_Emp_Cod.'*'.$Veh_Mar.'*'.$Veh_Pla.'*'.$Veh_Col;}  //Secciï¿½n para registrar un vehiculo
    if(isset($saveChofer)){
        $longitud=strlen($Prs_Ced);
        $rs_Ide_Cod = $obBD_con1->getRowConsulta(13,$longitud, $obBD_conexion,true);
@@ -148,7 +148,7 @@ if(isset($save)){
            $Prs_Cod = $obBD_con1->insercionid($obBD_conexion->conexion);
        }
        $case=10;$consultar=15;$datos=$Prs_Cod.'*'.$Ses_Emp_Cod.'*'.$Cho_Tli;
-   }                                                                                           //Sección para registrar un chofer
+   }                                                                                           //Secciï¿½n para registrar un chofer
 
    $obBD_con1->operacionobBD($case,$datos, $obBD_conexion);
    $codigo=$obBD_con1->insercionid($obBD_conexion->conexion);
@@ -159,7 +159,7 @@ if(isset($save)){
    exit();
 }
 
-/*Sección para registrar un viaje*/
+/*Secciï¿½n para registrar un viaje*/
 if(isset($saveViaje)){
    $obBD_con1->echoLog("mejoraProf");
    $response['success'] = false;
@@ -187,8 +187,8 @@ if(isset($saveViaje)){
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-        <script language="javascript" src="../VALIDACIONES/tca_mover_viajes.js?=147"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/tca_mover_viajes.js?=147"></script>
         <style>
         .chosen-drop .chosen-results {
             max-height: 70px;
@@ -309,7 +309,7 @@ if(isset($saveViaje)){
             </form>
          </div>
       </div>
-      <!-- Inicio del diálogo para buscar un cliente -->
+      <!-- Inicio del diï¿½logo para buscar un cliente -->
       <div id="viajeDialog" title="B&uacute;squeda de Clientes">
          <form class="form-horizontal normal" ></form>
       </div>

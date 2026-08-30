@@ -239,14 +239,14 @@ if(isset($save)){
    function saveCons(){
         if($('#Bene_Id').val()===''){ $('#btnBene').flyout('show'); return;}        
         $.createDialogConfirm('¿esta seguro que desea guardar el <u>Cheque</u> fuera de los periodos establecidos en el sistema?',$('#formCheque').getData('save'),function (data){
-           $.saveDataJson("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, resetFormC); 
+           $.saveDataJson("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, resetFormC); 
         });        
     }  
     function resetFormC(){ $('#formCheque')[0].reset();$('#Che_Est').trigger('change');$('#NumChe').clearMsg(); }
     function validaCheque(){
         if($('#NumChe').val()===''||$('#bancos').val()===''){ $('#NumChe').clearMsg(); return;}
         var ban=($('#bancos').val().split('*'))[0];
-        $.get( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{valida:true,Che_Num:$('#NumChe').val(),Ban_Cod:ban}, function( response ) {
+        $.get( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{valida:true,Che_Num:$('#NumChe').val(),Ban_Cod:ban}, function( response ) {
             if(!response['success']){
                 $('#NumChe').alertMsg('El numero de Cheque ya existe!');
             }else $('#NumChe').alertMsg();
@@ -268,7 +268,7 @@ if(isset($save)){
                }
        ]);  
 //   function saveBene() {
-//       $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{saveBene:true,apel:$('#beneApe').val(),nomb:$('#beneNom').val()}, function( response ) {
+//       $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{saveBene:true,apel:$('#beneApe').val(),nomb:$('#beneNom').val()}, function( response ) {
 //          if(response['success']===true){
 //              $('#apellido').val($('#beneApe').val());$('#nombre').val($('#beneNom').val());$('#Bene_Id').val(response['id']);
 //              $('#addBenef').dialog('close');$('#beneDialog').dialog('close');

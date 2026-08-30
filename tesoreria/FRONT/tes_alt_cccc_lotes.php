@@ -311,9 +311,9 @@ if(isset($save)){
                             }
                         }
                         function clearFooter(){ 
-                            public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");   
-                            public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
-                            public $name = $footRow.find('>td[aria-describedby="list_proveedor"]'),
+                            var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");   
+                            var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");
+                            var $name = $footRow.find('>td[aria-describedby="list_proveedor"]'),
                             $invdate = $footRow.find('>td[aria-describedby="list_act"]'),
                             width2 = $name.width()  + $invdate.outerWidth();
                             $invdate.css("display", "none");
@@ -352,14 +352,14 @@ if(isset($save)){
                         //$.createDateRange('#txt_fec_ini','#txt_fec_fin'); 
                         var compGrid=$("#list");
                         compGrid.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                             //postData: $("#form1").getData("ajaxGrid"),
                             autowidth : true, shrinkToFit: true, height: 270,
                             cmTemplate: {sortable:false /*,editrules: {edithidden: true}*/},
                             colModel: [                               
-                                { label: 'Cód.Int.', name: 'Cpc_Cod', key: true, hidden:true,viewable:true },  
-                                { label: 'Cód.Int.', name: 'Asi_Cod',  hidden:true },                                  
+                                { label: 'Cï¿½d.Int.', name: 'Cpc_Cod', key: true, hidden:true,viewable:true },  
+                                { label: 'Cï¿½d.Int.', name: 'Asi_Cod',  hidden:true },                                  
                                 {label:'Pld_Cod.',name:"Pld_Cod",hidden:true},
                                 {label:'Pld_Cdc.',name:"Pld_Cdc",hidden:true},
                                 {label:'Pld_Des.',name:"Pld_Des",hidden:true},
@@ -428,7 +428,7 @@ if(isset($save)){
                                 var subgrid_table_id = subgrid_id+"_t";         
                                 $("#"+subgrid_id).html("<table id='"+subgrid_table_id+"' class='scroll'></table>");
                                 $("#"+subgrid_table_id).jqGrid({
-                                        url:"<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?ajaxSubgrid="+row_id,datatype: "json",regional : 'es',
+                                        url:"<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?ajaxSubgrid="+row_id,datatype: "json",regional : 'es',
                                         autowidth : true, shrinkToFit: true,cmTemplate: {sortable:false},//colNames: ['No','Item','Qty','Unit','Line Total'],
                                         colModel: [
                                                 {label:'Cod.Int.',name:"Cpc_Cod",width:80,key:true,align:"center",hidden:true},
@@ -543,7 +543,7 @@ if(isset($save)){
                         //LoadCheNum();
                     }
                     function loadBancos(){ 
-                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{periAjax:true,Pec_Cod:$('#periodos').val()}, function( response ) {
+                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{periAjax:true,Pec_Cod:$('#periodos').val()}, function( response ) {
                                 if(response['success']===true){
                                     $('input[name="Pec_Cod"]').val(response['Pec']['Pec_Cod']);                                    
                                     $('input[name="periodo"]').val(response['Pec']['Periodo']);
@@ -612,7 +612,7 @@ if(isset($save)){
                                         var data=$('#formComp').serializeObject();
                                         data["save"]=batch;
                                         data["CtaPagar"]=fact;
-                                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+                                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                                             if(response['success']===true){
                                                 $('#impCompr').attr('href',response['link']);                                                                
                                                 $('#successDialog').dialog('open');
@@ -739,7 +739,7 @@ if(isset($save)){
                         $('#Che_Fec').toggleClass('disabled').find('input').toggleAttr('disabled');
                         var gridComp=$("#comp");
                         gridComp.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },                             
                             autowidth : true, shrinkToFit: true, height: 120,
                             cmTemplate: {sortable:false,title: false},
@@ -949,7 +949,7 @@ if(isset($save)){
         });
         function selectDetalle(Cpc,Com){                             
                            
-                                $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{detAjax:true,Cpc:Cpc,Com:Com}, function( response ) {
+                                $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{detAjax:true,Cpc:Cpc,Com:Com}, function( response ) {
                                    if(response['success']===true){                                       
                                         $("#lblComp2").val(response['com']['Com_Num']);
                                         $("#lblComFe2").val(response['com']['Com_Fec']);

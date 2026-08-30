@@ -336,7 +336,7 @@ if(isset($_POST["import"])){
         <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
 <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>                   
         <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-        <script language="javascript" src="../VALIDACIONES/fac_val_precios_2.0.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_precios_2.0.js"></script>
         <style type="text/css">                     
             .pagination>li>a, .pagination>li>span {padding: 4px 2px;}
             .pagination {/*display: block;*/margin:0;padding: 0;}
@@ -390,18 +390,18 @@ if(isset($_POST["import"])){
                                         <legend class="Titulos2">Filtros:</legend> <!-- Form Name -->
                                         <!-- Text input-->
                                         <div class="form-group">
-                                            <label class="col-sm-3 control-label label-xs " for="Cate_Cod">Categoría:</label>
+                                            <label class="col-sm-3 control-label label-xs " for="Cate_Cod">Categorï¿½a:</label>
                                             <div class="col-sm-6">
                                                 <?php $row_rs_categ = $obBD_con1->getArrayConsulta(1, $Ses_Emp_Cod, $obBD_conexion); ?>
                                                 <select name="Cate_Cod" id="Cate_Cod" class="form-control input-xs" data-placeholder="Todas">
                                                     <option value="">Todas</option>
-                                                    <?Php foreach ($row_rs_categ as $row) { ?><option value="<?Php echo $row['Cat_Cod']; ?>"><?Php echo /* strtoupper($row['Par_Cat_Des']).' » '. */$row['Cat_Des']; ?></option><?Php } ?>
+                                                    <?Php foreach ($row_rs_categ as $row) { ?><option value="<?Php echo $row['Cat_Cod']; ?>"><?Php echo /* strtoupper($row['Par_Cat_Des']).' ï¿½ '. */$row['Cat_Des']; ?></option><?Php } ?>
                                                 </select>
                                             </div>
                                          </div>
 
                                          <div class="form-group">
-                                            <label class="col-sm-3 control-label label-xs " for="Sub_Cod">Subcategoría:</label>
+                                            <label class="col-sm-3 control-label label-xs " for="Sub_Cod">Subcategorï¿½a:</label>
                                             <div class="col-sm-6">
                                                 <select name="Sub_Cod" id="Sub_Cod" class="form-control input-xs" data-placeholder="Todas">
                                                     <option value=''>Todas</option>
@@ -723,11 +723,11 @@ if(isset($_POST["import"])){
                         $('#prods').jqGrid('delRowData', rowid['Tpv_Des']);
                         $('#prods').trigger('reloadGrid');
                         verificar = true;
-                        $.alert('Acción realizada correctamente');
+                        $.alert('Acciï¿½n realizada correctamente');
                     }
                     else
                     {
-                        $.alert('No se pudo realizar la acción');
+                        $.alert('No se pudo realizar la acciï¿½n');
                     }
                 }
             ,'json').fail(function () {
@@ -751,18 +751,18 @@ if(isset($_POST["import"])){
         docuView.createGrid({
             height: 155,caption:'Precios de productos', cmTemplate: {sortable:false,title: false},
             colModel: [
-                { label: 'Cód. Int.',  name: 'Pre_Cod',  width: 25, align:"center" },  
+                { label: 'Cï¿½d. Int.',  name: 'Pre_Cod',  width: 25, align:"center" },  
                 { label: 'Precio', name: 'Pre_Pvp',  width: 40, align:"center" },
                 { label: 'Tipo', name: 'Tpv_Des', key: true, width: 40, align:"center"},
                 { label: 'Fecha Inicio', name: 'Pre_Ini',  width: 50, align:"right" },  
                 { label: 'Fecha Fin', name: 'Pre_Fin',  width: 50, align:"right"},
                 { label: 'Fecha', name: 'Pre_Fec',  width: 50, align:"right"},                
-                { label: 'Cód.Int.', name: 'Tpv_Cod', width: 15, align:"center", hidden:true },  
-                { label: 'Cód.Int.', name: 'Pre_Com', width: 15, align:"center", hidden:true },
-                { label: 'Cód.Int.', name: 'Pre_Por', width: 15, align:"center", hidden:true },  
-                { label: 'Cód.Int.', name: 'Pre_Uti', width: 15, align:"center", hidden:true },
-                { label: 'Cód.Int.', name: 'Suc_Cod', width: 15, align:"center", hidden:true },
-                { label: 'Cód.Int.', name: 'Pro_Cod', width: 15, align:"center", hidden:true },
+                { label: 'Cï¿½d.Int.', name: 'Tpv_Cod', width: 15, align:"center", hidden:true },  
+                { label: 'Cï¿½d.Int.', name: 'Pre_Com', width: 15, align:"center", hidden:true },
+                { label: 'Cï¿½d.Int.', name: 'Pre_Por', width: 15, align:"center", hidden:true },  
+                { label: 'Cï¿½d.Int.', name: 'Pre_Uti', width: 15, align:"center", hidden:true },
+                { label: 'Cï¿½d.Int.', name: 'Suc_Cod', width: 15, align:"center", hidden:true },
+                { label: 'Cï¿½d.Int.', name: 'Pro_Cod', width: 15, align:"center", hidden:true },
                 { label:'&nbsp;', name: 'act1', width: 8, align: 'center',viewable: false,
                     formatter:function (cellvalue, options, rowObject) {
                         if(rowObject.Tpv_Des != 'Standar'){
@@ -876,7 +876,7 @@ if(isset($_POST["import"])){
                 if(responce['success']){
                     $.alert('Precio guardado exitosamente');
                 }else{
-                    $.alert('No se pudo realizar la acción');
+                    $.alert('No se pudo realizar la acciï¿½n');
                 }
             }
         ,'json').fail(function () {

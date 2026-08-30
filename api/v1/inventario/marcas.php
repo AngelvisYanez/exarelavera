@@ -32,4 +32,21 @@ $app->post("/v1/marcas/modificar", function () {
     $marca_api = new MarcaClass($obBD_conexion, $obBD_con1);
     $marca_api->updateMarca($body);
 });
+
+$app->post("/v1/marcas/eliminar", function () {
+    $body = getBody();
+    require_once(__DIR__ . '/../../../classes/DataAPI.php');
+    try {
+        $api = new DataAPI($body['Bdd']);
+        $marCod = $body['Mar_Cod'] ?? null;
+        if (!$marCod) {
+            echo json_encode(['success' => false, 'error' => 'Mar_Cod es requerido']);
+            return;
+        }
+        $api->delete('marca', 'Mar_Cod', $marCod);
+        echo json_encode(['success' => true, 'message' => 'Marca eliminada exitosamente']);
+    } catch (\Throwable $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+});
 ?>

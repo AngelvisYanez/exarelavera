@@ -1,4 +1,5 @@
 <?Php
+if (!is_object($obBD_con1)) return;
 /*	Ajax que permite cargar:
 	Paises	= 	Todas
 	Regiones	=	Todas

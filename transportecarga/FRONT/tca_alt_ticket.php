@@ -541,7 +541,7 @@ if (isset($saveTicket)) {
     <meta charset="UTF-8">
     <title><?Php echo $Ses_Sys_Nom; ?></title>
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-    <script language="javascript" src="../VALIDACIONES/tca_val_ticket.js?x=4"></script>
+    <script type="text/javascript" src="../VALIDACIONES/tca_val_ticket.js?x=4"></script>
     <style>
         .footerTicket {
             text-align: right;

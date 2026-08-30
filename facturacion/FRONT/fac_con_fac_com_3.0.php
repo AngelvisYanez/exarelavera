@@ -68,29 +68,100 @@ if (isset($searchDocument)) {
     $data['Emp_Cod'] = $Ses_Emp_Cod;
     $responce = $obBD_con1->getPageGrid(34, $data, $obBD_conexion);
     if ($responce['records'] > 0) {
+        // [OPT] Elimina N+1: se recolectan IDs y se consultan los agregados en lote (antes 5 consultas por fila)
+        $cppCods = array();
+        $copCods = array();
+        $comCods = array();
+        foreach ($responce['rows'] as $row) {
+            if (!empty($row['Cpp_Cod'])) $cppCods[] = $row['Cpp_Cod'];
+            else $copCods[] = $row['Cop_Cod'];
+            if (!empty($row['Com_Cod'])) $comCods[] = $row['Com_Cod'];
+        }
+        $cppCods = array_values(array_unique($cppCods));
+        $copCods = array_values(array_unique($copCods));
+        $comCods = array_values(array_unique($comCods));
+
+        // Pagos vinculados (antes consulta 57: 3 por fila)
+        $mapPagos = array();
+        if (!empty($cppCods)) {
+            $in = "'" . implode("','", array_map('intval', $cppCods)) . "'";
+            $rs = $obBD_con1->getArrayConsultaSql(
+                "SELECT det_ccpp_p.Cpp_Cod,
+                        COUNT(IF(det_ccpp_p.Pag_Est='A',1,NULL)) AS total_act,
+                        COALESCE(SUM(IF(det_ccpp_p.Pag_Est='A',det_ccpp_p.Pag_Val,0)),0) AS total_act_sum,
+                        COUNT(det_ccpp_p.Cpp_Cod) AS total_all
+                 FROM det_ccpp_p
+                 INNER JOIN comprobantes ON det_ccpp_p.Com_Cod=comprobantes.Com_Cod
+                 WHERE det_ccpp_p.Cpp_Cod IN ($in) AND Com_Est='A'
+                 GROUP BY det_ccpp_p.Cpp_Cod", $obBD_conexion);
+            foreach ($rs as $r) $mapPagos[$r['Cpp_Cod']] = $r;
+        }
+
+        // Reposición de caja chica (antes consulta 58: 2 por fila)
+        $mapRepo = array();
+        if (!empty($copCods)) {
+            $in = "'" . implode("','", array_map('intval', $copCods)) . "'";
+            $rs = $obBD_con1->getArrayConsultaSql(
+                "SELECT Cop_Cod,
+                        COUNT(IF(Dre_Tip!='P',1,NULL)) AS total_det,
+                        COUNT(IF(Dre_Tip='P',1,NULL)) AS total_pend
+                 FROM det_reposicion
+                 WHERE Cop_Cod IN ($in)
+                 GROUP BY Cop_Cod", $obBD_conexion);
+            foreach ($rs as $r) $mapRepo[$r['Cop_Cod']] = $r;
+        }
+
+        // Cuentas y comprobantes vinculados (antes consultas 37/39/70 y 65)
+        $mapCtas = array();
+        $mapOtras = array();
+        if ($configs['Cof_Con'] == 'S' && !empty($comCods)) {
+            $in = "'" . implode("','", array_map('intval', $comCods)) . "'";
+            $rs = $obBD_con1->getArrayConsultaSql(
+                "SELECT asientos.Com_Cod,
+                        MAX(ccpp_prove.Pld_Cod) AS Pld_Ccpp,
+                        MAX(banco.Pld_Cod) AS Pld_Banco
+                 FROM asientos
+                 LEFT JOIN ccpp_prove ON asientos.Pld_Cod=ccpp_prove.Pld_Cod
+                 LEFT JOIN banco ON banco.Pld_Cod=asientos.Pld_Cod
+                 WHERE asientos.Com_Cod IN ($in)
+                 GROUP BY asientos.Com_Cod", $obBD_conexion);
+            foreach ($rs as $r) $mapCtas[$r['Com_Cod']] = $r;
+
+            $rs = $obBD_con1->getArrayConsultaSql(
+                "SELECT Com_Cod, COUNT(Cop_Cod) AS total
+                 FROM compr_auto
+                 WHERE Com_Cod IN ($in)
+                 GROUP BY Com_Cod", $obBD_conexion);
+            foreach ($rs as $r) $mapOtras[$r['Com_Cod']] = $r;
+        }
+
         foreach ($responce['rows'] as &$row) {
             $row['Cpp_Edit'] = 'S';
             $row['Cpp_Min'] = 0;
             if (!empty($row['Cpp_Cod'])) {
-                $Pagos1 = $obBD_con1->getRowConsulta(57, $row['Cpp_Cod'] . '*' . 'A', $obBD_conexion);
-                if ($Pagos1['total'] * 1 > 0) {
-                    $row['Cpp_Det'] = 'S'; //tiene pagos activos
-                    $Pagos1 = $obBD_con1->getRowConsulta(57, $row['Cpp_Cod'] . '*' . 'A' . '*' . 'SUM', $obBD_conexion);
-                    $row['Cpp_Min'] = round($Pagos1['total'] * 1, 2);
+                if (isset($mapPagos[$row['Cpp_Cod']])) {
+                    $p = $mapPagos[$row['Cpp_Cod']];
+                    if ($p['total_act'] * 1 > 0) {
+                        $row['Cpp_Det'] = 'S'; //tiene pagos activos
+                        $row['Cpp_Min'] = round($p['total_act_sum'] * 1, 2);
+                    }
+                    if ($p['total_all'] * 1 > 0) $row['Cpp_Edit'] = 'N'; //tiene algun pago vinculado
                 }
-                $Pagos2 = $obBD_con1->getRowConsulta(57, $row['Cpp_Cod'], $obBD_conexion);
-                if ($Pagos2['total'] * 1 > 0) $row['Cpp_Edit'] = 'N'; //tiene algun pago vinculado
             } else { // Caja Chica
-                $caja = $obBD_con1->getRowConsulta(58, $row['Cop_Cod'], $obBD_conexion);
-                if ($caja['total'] * 1 > 0) $row['Rcc_Det'] = 'S';
-                $caja_pend = $obBD_con1->getRowConsulta(58, $row['Cop_Cod'] . '*' . 'P', $obBD_conexion);
-                if ($caja_pend['total'] * 1 > 0) $row['Rcc_Pen'] = 'S';
+                if (isset($mapRepo[$row['Cop_Cod']])) {
+                    $r = $mapRepo[$row['Cop_Cod']];
+                    if ($r['total_det'] * 1 > 0) $row['Rcc_Det'] = 'S';
+                    if ($r['total_pend'] * 1 > 0) $row['Rcc_Pen'] = 'S';
+                }
             }
             if ($configs['Cof_Con'] == 'S' && !empty($row['Com_Cod'])) {
-                $cuentas = $obBD_con1->getRowConsulta((!empty($row['Cpp_Cod']) ? (!empty($row['Rcc_Pen']) ? 70 : 37) : 39), $row['Com_Cod'], $obBD_conexion);
-                $row['Pld_Cod_Pag'] = $cuentas['Pld_Cod'];
-                $otras_comp = $obBD_con1->getRowConsulta(65, $row['Com_Cod'], $obBD_conexion);
-                if ($otras_comp['total'] * 1 > 1) $row['Com_Edit'] = 'N';
+                $cta = isset($mapCtas[$row['Com_Cod']]) ? $mapCtas[$row['Com_Cod']] : null;
+                if (!empty($row['Cpp_Cod'])) {
+                    $row['Pld_Cod_Pag'] = (!empty($row['Rcc_Pen']) || is_null($cta)) ? null : $cta['Pld_Ccpp'];
+                } else {
+                    $row['Pld_Cod_Pag'] = is_null($cta) ? null : $cta['Pld_Banco'];
+                }
+                if (isset($mapOtras[$row['Com_Cod']]) && $mapOtras[$row['Com_Cod']]['total'] * 1 > 1) $row['Com_Edit'] = 'N';
             }
         }
         unset($row);
@@ -130,19 +201,9 @@ if (isset($ajaxTotales)) {
     foreach ($response['rows'] as &$row) {
         $row['proveedor'] = $row['Proveedor'];
         $row['vendedor'] = $row['Vendedor'];
-        $comprobante = $obBD_con1->getRowConsulta('comprobantes.getComprobanteByCopCod', $row['Cop_Cod'], $obBD_conexion);
-        if (!is_null($comprobante)) {
-            $row['Com_Codigo'] = $comprobante['Com_Codigo'];
-        }
-
-        $pagos = $obBD_con1->getRowConsulta("compras.1", $row['Cop_Cod'], $obBD_conexion);
-        $row['Forma_Pago'] = ($pagos['total'] > 0) ? 'Credito' : 'Contado';
-
         if ($row['Ret_Data'] == "S") {
-            $ret_data = $obBD_con1->getRowConsulta('retencion.selectWhere', array('where' => array('retencion.Ret_Cod' => $row['Ret_Cod']), 'group' => 'retencion.Ret_Cod', 'setWhere' => array('setTotales')), $obBD_conexion);
-            $row = array_merge(array('Ret_Fec' => $ret_data['Ret_Fec'], 'Ret_Aut' => $ret_data['Ret_Aut'], 'Secuencia' => $ret_data['Secuencia'], 'Autorizacion' => $ret_data['Autorizacion'], 'Tot_Iva' => $ret_data['Tot_Iva'], 'Tot_Renta' => $ret_data['Tot_Renta']), $row);
-            $response['userdata']['Tot_Renta'] += ($ret_data['Tot_Renta'] * 1);
-            $response['userdata']['Tot_Iva'] += ($ret_data['Tot_Iva'] * 1);
+            $response['userdata']['Tot_Renta'] += ($row['Tot_Renta'] * 1);
+            $response['userdata']['Tot_Iva'] += ($row['Tot_Iva'] * 1);
         }
     }
     $obBD_con1->echoJson($response);
@@ -195,7 +256,10 @@ $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
     <!--TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE-->
     <TITLE><?Php echo "Compras Consultar [EXA]"; ?></TITLE>
     <meta charset="utf-8">
-    <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+    <?php
+    $mask_model = 'model1';
+    require_once("../../mascaras/unified-loader.php");
+    ?>
     <script type="text/javascript">
         var anula = true,
             consultar = true,

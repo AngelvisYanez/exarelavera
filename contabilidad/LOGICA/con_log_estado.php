@@ -1,4 +1,4 @@
-﻿<?Php 
+<?Php 
 require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
 require_once("con_sql_estado.php");
 
@@ -58,7 +58,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 		$this->free_result($result);
 		$this->liberar();
 		
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

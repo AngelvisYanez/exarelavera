@@ -4,10 +4,10 @@
  *
  * @author car.87cod :)
  * @version 1.0
- * Fecha de actualización:	2012-04-18
+ * Fecha de actualizaciï¿½n:	2012-04-18
  * @author lewis.chimarro
  * @version 1.0
- * Fecha de actualización:	2014-05-21 
+ * Fecha de actualizaciï¿½n:	2014-05-21 
  *
  * @package administrador.FRONT
  */
@@ -34,10 +34,10 @@ $obBD_con1 =  new Class_Log_Datos_Admu;
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php")?>        
-		<script language="javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
+		<script type="text/javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
 		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 		<script type="text/javascript" src="../../Librerias/exportar/jquery-1.3.2.min.js"></script>
-	    <script language="javascript">
+	    <script type="text/javascript">
 			$(document).ready(function() {
 				/* LLamado a la class del boton exportar */
 				$("#Boton_Excel").click(function(event) {
@@ -126,7 +126,7 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Usu_Cod']))
     <thead>
       <tr>
         <th width="6%" >Cod. Int. </th>
-        <th width="8%" >Cédula</th>
+        <th width="8%" >Cï¿½dula</th>
         <th >Apellidos y Nombres </th>
         <th>Sucursal</th>
 		<th width="3%" >&nbsp;</th>
@@ -176,8 +176,8 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Usu_Cod']))
            		<i class=" icon-arrow-right icon-white"></i>
            	</button>					
             <input type="hidden" name="Usu_Cod" id="Usu_Cod" value="<?Php echo $row['Usu_Cod'];?>">
-			<input type="hidden" name="txt_busqueda" id="txt_busqueda" value="<?Php echo $_POST['txt_busqueda'];?>"/>
-			<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo $_POST['op_opciones']?>">
+			<input type="hidden" name="txt_busqueda" id="txt_busqueda" value="<?Php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>"/>
+			<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8')?>">
 			</form>
 <?php
 		}
@@ -288,7 +288,7 @@ if (isset($_POST['Usu_Cod']))
    <tr>
      <td width="34%">
      <form action="<?Php echo $_SERVER['PHP_SELF']?>" method="post" name="form2" id="form2">
-  <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
+  <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8').'*'.htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8').'*'.'1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        		 </button>
@@ -325,7 +325,7 @@ if (isset($_POST['Usu_Cod']))
     <thead>
       <tr>
         <th width="6%" >Cod. Int. </th>
-        <th width="8%" >Cédula</th>
+        <th width="8%" >Cï¿½dula</th>
         <th >Apellidos y Nombres </th>
         <th>Sucursal</th>
       </tr>

@@ -1,11 +1,11 @@
 <?php	
 /**
 * @abstract Permite realizar el registro de activo
-* @author José Ambuludí
+* @author Josï¿½ Ambuludï¿½
 * @version 1.0
-* Fecha de creación  2016-06-14
-* @author José Ambuludí
-* Fecha de modificación  2016-07-05
+* Fecha de creaciï¿½n  2016-06-14
+* @author Josï¿½ Ambuludï¿½
+* Fecha de modificaciï¿½n  2016-07-05
 */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/act_log_activo.php');
@@ -24,7 +24,7 @@ $obBD_con1 =  new Class_Log_Datos_Activo;
 */
 $thisPost = new Post_Block;
 
-/*Sección para cargar datos en el Jqgrid referente a los productos con factura de compra y sin la misma*/
+/*Secciï¿½n para cargar datos en el Jqgrid referente a los productos con factura de compra y sin la misma*/
 if(isset($productoCAjax)||isset($productoSAjax))
 {
     $data=filter_input_array(INPUT_GET);
@@ -34,14 +34,14 @@ if(isset($productoCAjax)||isset($productoSAjax))
     echo json_encode($responce);
     exit();
 }
-/*Sección para extraer código de proveedor=VARIOS EGRESOS, puesto que se registrará un activo sin factura de compra*/
+/*Secciï¿½n para extraer cï¿½digo de proveedor=VARIOS EGRESOS, puesto que se registrarï¿½ un activo sin factura de compra*/
 if(isset($compra_prov))
 {
     $response["row"]=$obBD_con1->getRowConsulta(630,$Ses_Emp_Cod,$obBD_conexion);
     echo json_encode($response);
     exit();
 }
-/*Sección para cargar datos en el Jqgrid referente a los peritos*/
+/*Secciï¿½n para cargar datos en el Jqgrid referente a los peritos*/
 if(isset($peritoAjax)){ 
    $data=filter_input_array(INPUT_GET);
    $data["Emp_Cod"]=$Ses_Emp_Cod;   
@@ -53,7 +53,7 @@ if(isset($peritoAjax)){
        $responce['rows'] =  $obBD_con1->getArrayConsulta(620, $data, $obBD_conexion);
    echo json_encode($responce);exit();
 }
-/*Sección para listar el plan de cuentas*/
+/*Secciï¿½n para listar el plan de cuentas*/
 if(isset($cuentaAjax)){ 
     $contar = $obBD_con1->getRowConsulta(623, $search_cuenta.'*'.$Ses_Emp_Cod.'*'.$Pec_Cod.'*'.$op_cuenta.'*', $obBD_conexion);	      
     $pagination= pages($contar['total'], $page, $rows);
@@ -61,7 +61,7 @@ if(isset($cuentaAjax)){
     $responce['rows']=  $obBD_con1->getArrayConsulta(623, $search_cuenta.'*'.$Ses_Emp_Cod.'*'.$Pec_Cod.'*'.$op_cuenta.'*'.$pagination['limits'], $obBD_conexion);	    
     echo json_encode($responce);exit();
 }
-/*Sección para listar los campos pertenecientes a un tipo de activo*/
+/*Secciï¿½n para listar los campos pertenecientes a un tipo de activo*/
 if(isset($buscarCampos)){ 
     $response = $obBD_con1->getArrayConsulta(616,$Tia_Cod, $obBD_conexion);
     echo json_encode($response);exit();
@@ -71,16 +71,16 @@ if(isset($tipoactivAjax)){
     $responce = $obBD_con1->getArrayConsulta(608,$Ses_Emp_Cod."*", $obBD_conexion);
     echo json_encode($responce);exit();
 }
-//Sección para guardar las fotos del activo (Se actualiza el activo para poder registrar en el campo Act_Fot)
+//Secciï¿½n para guardar las fotos del activo (Se actualiza el activo para poder registrar en el campo Act_Fot)
 if(isset($uploadfoto2)){      
-    //Se carga la ruta de donde se desea crear la carpeta que almacenará las imágenes
+    //Se carga la ruta de donde se desea crear la carpeta que almacenarï¿½ las imï¿½genes
     $carpeta = "../../imagenes/".$Ses_Emp_Cod.'/Activos';
-    //En caso de que la carpeta no exista se creará asignandole todos los permisos "0777"
+    //En caso de que la carpeta no exista se crearï¿½ asignandole todos los permisos "0777"
     if (!file_exists($carpeta)) {
         mkdir($carpeta, 0777, true);
     }
     
-    /*Se extrae la extensión de la foto jpg,png,etc*/
+    /*Se extrae la extensiï¿½n de la foto jpg,png,etc*/
     $archivo = $_FILES['file5']['name'];
     $nombre=explode('.',$archivo);  
     $last=count($nombre)-1;
@@ -96,7 +96,7 @@ if(isset($uploadfoto2)){
             $ruta='img_activo_'.$row.'_'.$file_id.'.'.$nombre[$last];
             //Copiamos la imagen cargada a la carpeta con la direccion establecida
             copy($_FILES['file5']['tmp_name'],$carpeta.'\\'.$ruta);
-            //Verificamos si el campo Act_Fot esta vacío o lleno(concatenar)
+            //Verificamos si el campo Act_Fot esta vacï¿½o o lleno(concatenar)
             $Act_Fot=$obBD_con1->getRowConsulta(621,$row,$obBD_conexion);
             if($Act_Fot['Act_Fot']=="")
             {
@@ -113,11 +113,11 @@ if(isset($uploadfoto2)){
     echo json_encode(true);
     exit();
 }
-/*Sección ajax para guardar un nuevo activo*/
+/*Secciï¿½n ajax para guardar un nuevo activo*/
 if(isset($uploadfoto)){ 
     $cont=1;$aux=0;
     $codigos="";//Variable para almacenar los Act_Cod que se registren para luego registrarlos con las fotos
-    /*Sección para guaradar los datos en la tabla activo*/
+    /*Secciï¿½n para guaradar los datos en la tabla activo*/
     $responce['success']=false;$responce['message']="No se ha logrado realizar la Transaccion"; 
     $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
     if($Pri_Cod==''){
@@ -127,10 +127,10 @@ if(isset($uploadfoto)){
     $cop_can=  explode("*",$Cop_Int);
     for($i=0;$i<$Act_Can;$i++){
         $obBD_con1->operacionobBD(601, $Tia_Cod.'*'.$Pri_Cod.'*'.$Ses_Suc_Cod.'*'.$Est_Cod.'*'.$Prv_Cod.'*'.$Pro_Cod.'*'.$Act_Des.'*'.$Act_Obs.'*'.$Act_Cdc.'*1*'.$Act_Bar.'*'.$Act_Gen.'*'.$Act_Val.'*'.$Act_Pde.'*'.$Act_Res.'*'.$Act_Ann.'*'.$Act_Fec.'*'.$Act_Ffd.'*'.$Act_Gar.'*'.$ruta, $obBD_conexion);
-        /*Sección para actualizar el campo de foto del activo primero obtenemos el último código de activo*/
+        /*Secciï¿½n para actualizar el campo de foto del activo primero obtenemos el ï¿½ltimo cï¿½digo de activo*/
         $Act_Cod = $obBD_con1->insercionid($obBD_conexion->conexion);
         $codigos=$Act_Cod."*".$codigos;
-        /*Sección para insertar datos en la tabla det_activo*/
+        /*Secciï¿½n para insertar datos en la tabla det_activo*/
         if($Tia_Cod>0){
             $campos = $obBD_con1->getArrayConsulta(616,$Tia_Cod, $obBD_conexion);
             foreach($campos as $valor)
@@ -182,7 +182,7 @@ if(isset($uploadfoto)){
             }
             $Act_Bar=$Act_Var;
             $Act_Gen='G';
-            //Update para agregar el código de barras
+            //Update para agregar el cï¿½digo de barras
             $obBD_con1->operacionobBD(603, $Act_Cod.'*'.$Act_Bar.'*'.$Act_Gen, $obBD_conexion);
             //Insert en la tabla activo_compra
             if($Cop_Int==""){$obBD_con1->operacionobBD(625, $Act_Cod.'*'.$Cop_Cod.'*'.$Cop_Int.'*'.$Pro_Cod, $obBD_conexion);}
@@ -295,7 +295,7 @@ if(isset($uploadfoto)){
                             </div>
                             
                             <div class="form-group">
-                                <label class="col-md-5 control-label label-xs" for="Cop_Fec">Fecha Inicio Depreciación:</label>
+                                <label class="col-md-5 control-label label-xs" for="Cop_Fec">Fecha Inicio Depreciaciï¿½n:</label>
                                 <div class="col-md-4">
                                     <div class="input-group">
                                         <span class="input-group-addon input-xs"><span class="glyphicon glyphicon-calendar"></span></span>
@@ -390,7 +390,7 @@ if(isset($uploadfoto)){
     <div class="panel panel-default">
       <div class="panel-heading">
         <h4 class="panel-title">
-          <a data-toggle="collapse" data-parent="#accordion" href="#collapse3">Elección Cuenta Contable</a>
+          <a data-toggle="collapse" data-parent="#accordion" href="#collapse3">Elecciï¿½n Cuenta Contable</a>
         </h4>
       </div>
       <div id="collapse3" class="panel-collapse collapse">
@@ -402,7 +402,7 @@ if(isset($uploadfoto)){
     <div class="panel panel-default">
       <div class="panel-heading">
         <h4 class="panel-title">
-          <a data-toggle="collapse" data-parent="#accordion" href="#collapse2">Elección Imágenes Activo</a>
+          <a data-toggle="collapse" data-parent="#accordion" href="#collapse2">Elecciï¿½n Imï¿½genes Activo</a>
         </h4>
       </div>
       <div id="collapse2" class="panel-collapse collapse">
@@ -414,7 +414,7 @@ if(isset($uploadfoto)){
     <div class="panel panel-default">
       <div class="panel-heading">
         <h4 class="panel-title">
-          <a data-toggle="collapse" data-parent="#accordion" href="#collapse3">Proyección Depreciación Activo</a>
+          <a data-toggle="collapse" data-parent="#accordion" href="#collapse3">Proyecciï¿½n Depreciaciï¿½n Activo</a>
         </h4>
       </div>
       <div id="collapse3" class="panel-collapse collapse">
@@ -435,28 +435,28 @@ if(isset($uploadfoto)){
                         </ul>
                         <form id="formActivo" class="form-horizontal normal" enctype="multipart/form-data" action="javascript:saveForm();">
                         <div id="info_activo">
-                            <!-- Sección para ingresar los datos de registro del activo -->
+                            <!-- Secciï¿½n para ingresar los datos de registro del activo -->
                             <div class="row">
                             <div class="col-sm-12">
                                 <fieldset class="exa-fieldset">                           
                                     <legend class="Titulos2">Formulario de Registro</legend>
-                                    <!-- Código de Activo necesario para guardar las imagenes -->
+                                    <!-- Cï¿½digo de Activo necesario para guardar las imagenes -->
                                     <input type="hidden" name="Act_Cod" id="Act_Cod" value="" />
-                                    <!-- Código del Perito almacenado o asignado a la variable oculta Pri_Cod -->
+                                    <!-- Cï¿½digo del Perito almacenado o asignado a la variable oculta Pri_Cod -->
                                     <input type="hidden" name="Pri_Cod" id="Pri_Cod" value=""/>
-                                    <!-- Código del proveedor -->
+                                    <!-- Cï¿½digo del proveedor -->
                                     <input type="hidden" name="Prv_Cod" id="Prv_Cod" value=""/>
-                                    <!-- Código de la factura de compra -->
+                                    <!-- Cï¿½digo de la factura de compra -->
                                     <input type="hidden" name="Cop_Cod" id="Cop_Cod" value=""/>
-                                    <!-- Código del detalla de la factura de compra -->
+                                    <!-- Cï¿½digo del detalla de la factura de compra -->
                                     <input type="hidden" name="Cop_Int" id="Cop_Int" value=""/>
-                                    <!-- Código de la cuenta depreciacion -->
+                                    <!-- Cï¿½digo de la cuenta depreciacion -->
                                     <input type="hidden" name="Cod_Dep" id="Cod_Dep" value=""/>
-                                    <!-- Código de la cuenta depreciacion acumulada -->
+                                    <!-- Cï¿½digo de la cuenta depreciacion acumulada -->
                                     <input type="hidden" name="Cod_Dea" id="Cod_Dea" value=""/>
-                                    <!-- Código del producto -->
+                                    <!-- Cï¿½digo del producto -->
                                     <input type="hidden" name="Pro_Cod" id="Pro_Cod" value=""/>
-                                    <!-- Campo para guardar la fecha final de depreciación -->
+                                    <!-- Campo para guardar la fecha final de depreciaciï¿½n -->
                                     <input type="hidden" name="Act_Ffd" id="Act_Ffd" value=""/>
                                             
                                     <div class="col-sm-8 col-md-7">
@@ -473,7 +473,7 @@ if(isset($uploadfoto)){
                                                 </div>                          
                                             </div>                                  
                                         </div>
-                                        <!-- Select básico-->
+                                        <!-- Select bï¿½sico-->
                                         <div class="form-group">
                                             <label class="col-md-3 control-label label-xs required" for="des_padre">Categor&iacute;a:</label>  
                                             <div class="col-md-9">
@@ -491,7 +491,7 @@ if(isset($uploadfoto)){
                                         </div>
                                         <!-- Text input-->
                                         <div class="form-group">
-                                            <label class="col-md-3 control-label label-xs required" for="des_padre">Cód. Barras:</label>  
+                                            <label class="col-md-3 control-label label-xs required" for="des_padre">Cï¿½d. Barras:</label>  
                                             <div class="col-md-7">
                                                 <div class="input-group">
                                                     <input id="Act_Bar" name="Act_Bar" type="text" placeholder="" class="form-control input-sm" value="" required />
@@ -501,21 +501,21 @@ if(isset($uploadfoto)){
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Muestra información cuando esta seleccionado el checkbox -->
+                                        <!-- Muestra informaciï¿½n cuando esta seleccionado el checkbox -->
                                         <div class="form-group">
                                             <label class="col-md-3 control-label label-xs"></label>
                                             <div id="mensaje_codigo" class="col-md-8" style="font-size:11px; font-weight:bold;">Generar c&oacute;digo autom&aacute;ticamente <span class="glyphicon glyphicon-ok"></span></div>
                                         </div>
                                         <!-- Textarea -->
                                         <div class="form-group">
-                                            <label class="col-md-3 control-label required" for="Act_Des">Descripción:</label>
+                                            <label class="col-md-3 control-label required" for="Act_Des">Descripciï¿½n:</label>
                                             <div class="col-md-9">                     
                                                 <textarea class="form-control input-xs" id="Act_Des" name="Act_Des" required></textarea>
                                             </div>
                                         </div>
                                         <!-- Textarea -->
                                         <div class="form-group">
-                                            <label class="col-md-3 control-label" for="Act_Obs">Observación:</label>
+                                            <label class="col-md-3 control-label" for="Act_Obs">Observaciï¿½n:</label>
                                             <div class="col-md-9">                     
                                                 <textarea class="form-control input-xs" id="Act_Obs" name="Act_Obs"></textarea>
                                             </div>
@@ -525,7 +525,7 @@ if(isset($uploadfoto)){
                                     <div class="col-sm-4 col-md-5">
                                         <!-- Text input -->
                                         <div class="form-group">
-                                            <label class="col-md-5 control-label label-xs required" for="Act_Val">Vida &Uacute;til (años):</label>
+                                            <label class="col-md-5 control-label label-xs required" for="Act_Val">Vida &Uacute;til (aï¿½os):</label>
                                             <div class="col-md-5">
                                                 <input type="text" name="Act_Ann" id="Act_Ann" class="form-control input-xs" required style="text-align: right;" onkeypress="return validar_numeric(event);">
                                             </div>
@@ -552,7 +552,7 @@ if(isset($uploadfoto)){
                                         </div>
                                         <!-- Text input-->
                                         <div class="form-group">
-                                            <label class="col-md-5 control-label label-xs required" for="des_padre">Código Secuencia:</label>  
+                                            <label class="col-md-5 control-label label-xs required" for="des_padre">Cï¿½digo Secuencia:</label>  
                                             <div class="col-md-5">
                                                 <input id="Act_Cdc" name="Act_Cdc" type="text" placeholder="" class="form-control input-xs" value="" style="text-align: right;" required />
                                             </div>
@@ -566,7 +566,7 @@ if(isset($uploadfoto)){
                                         </div>
                                         <!-- Text input-->
                                         <div class="form-group">
-                                            <label class="col-md-5 control-label label-xs required" for="des_padre">Garantía (meses):</label>  
+                                            <label class="col-md-5 control-label label-xs required" for="des_padre">Garantï¿½a (meses):</label>  
                                             <div class="col-md-5">
                                                 <input id="Act_Gar" name="Act_Gar" type="text" placeholder="" class="form-control input-xs" value="" style="text-align: right;" onkeypress="return validar_numeric(event);" required/>
                                             </div>
@@ -601,12 +601,12 @@ if(isset($uploadfoto)){
                                 </div>
                             </div>
                             </div>
-                            <!-- Fin de la sección para registrar los activos -->
+                            <!-- Fin de la secciï¿½n para registrar los activos -->
                         </div>
                         
                         <div id="imagenes">
                             <div class="row">   
-                                <!-- Sección para seleccionar las foto(s) correspondientes a activos -->
+                                <!-- Secciï¿½n para seleccionar las foto(s) correspondientes a activos -->
                                 <div class="col-xs-12">
                                     <fieldset class="exa-fieldset">                           
                                         <legend class="Titulos2">Foto</legend>
@@ -704,9 +704,9 @@ if(isset($uploadfoto)){
                         
                         <div id="detalle_activo">
                             <form id="formcampos" name="formcampos" class="form-horizontal normal" action="javascript:">
-                                <!-- Sección para ingresar los datos de registro del activo -->
+                                <!-- Secciï¿½n para ingresar los datos de registro del activo -->
                                 <div class="row">   
-                                    <!-- Sección para presentar los campos del tipo de activo seleccionado -->
+                                    <!-- Secciï¿½n para presentar los campos del tipo de activo seleccionado -->
                                     <div class="col-xs-12">
                                         <fieldset class="exa-fieldset">                           
                                             <legend class="Titulos2">Campos de Tipo de Activo</legend>
@@ -719,7 +719,7 @@ if(isset($uploadfoto)){
                         
                         <div id="cuenta_contable">
                             <form id="formcuenta_Contable" name="formcuenta_Contable" class="form-horizontal normal" action="javascript:">
-                                <!-- Sección para seleccionar las cuentas contables de depreciación y depreciación acumulada -->
+                                <!-- Secciï¿½n para seleccionar las cuentas contables de depreciaciï¿½n y depreciaciï¿½n acumulada -->
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <fieldset class="exa-fieldset">                           
@@ -770,7 +770,7 @@ if(isset($uploadfoto)){
         </div>
     </div>
     
-    <!-- Inicio del diálogo para buscar un producto en la tabla de compras -->
+    <!-- Inicio del diï¿½logo para buscar un producto en la tabla de compras -->
     <div id="productoCDialog" title="B&uacute;squeda de Productos con Factura de Compra">
         <form class="form-horizontal normal">
             <fieldset class="exa-fieldset">
@@ -795,7 +795,7 @@ if(isset($uploadfoto)){
         </form>
     </div>
     
-    <!-- Inicio del diálogo para buscar un productos que no se encuentran en una factura de compra -->
+    <!-- Inicio del diï¿½logo para buscar un productos que no se encuentran en una factura de compra -->
     <div id="productoSDialog" title="B&uacute;squeda de Productos sin Factura de Compra">
         <form class="form-horizontal normal">
             <fieldset class="exa-fieldset">
@@ -820,7 +820,7 @@ if(isset($uploadfoto)){
         </form>
     </div>
     
-    <!-- Inicio del diálogo para buscar un perito --> 
+    <!-- Inicio del diï¿½logo para buscar un perito --> 
     <div id="peritoDialog" title="B&uacute;squeda de Perito">  
         <form class="form-horizontal normal"> 
             <fieldset class="exa-fieldset">
@@ -829,7 +829,7 @@ if(isset($uploadfoto)){
                     <label class="col-md-2 control-label label-xs">Filtrar Por:</label>  
                     <div class="col-md-8 radioset" >
                         <input id="rad3" name="op_perito" type="radio" value="d" checked="" onclick="setfocus(this.form.search_perito)" alt="" /><label for="rad3">&nbsp;&nbsp;Apellido&nbsp;&nbsp;</label>
-                        <input id="rad4" name="op_perito" type="radio" value="c" onclick="setfocus(this.form.search_perito)" alt="" /><label for="rad4">&nbsp;&nbsp;Cédula/R.U.C.&nbsp;&nbsp;</label>
+                        <input id="rad4" name="op_perito" type="radio" value="c" onclick="setfocus(this.form.search_perito)" alt="" /><label for="rad4">&nbsp;&nbsp;Cï¿½dula/R.U.C.&nbsp;&nbsp;</label>
                     </div>
                 </div>
                 <div class="form-group">
@@ -845,7 +845,7 @@ if(isset($uploadfoto)){
         </form>    
     </div>
     
-    <!-- Inicio del diálogo para buscar un proveedoor --> 
+    <!-- Inicio del diï¿½logo para buscar un proveedoor --> 
     <div id="provDialog" title="B&uacute;squeda de Proveedores">  
         <form class="form-horizontal normal"> 
             <fieldset class="exa-fieldset">
@@ -854,7 +854,7 @@ if(isset($uploadfoto)){
                     <label class="col-md-2 control-label label-xs">Filtrar Por:</label>  
                     <div class="col-md-8 radioset">
                         <input id="rad5" name="op_opciones" type="radio" value="d" checked="" onclick="setfocus(this.form.search)" alt="" /><label for="rad5">&nbsp;&nbsp;Apellido&nbsp;&nbsp;</label>
-                        <input id="rad6" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" /><label for="rad6">&nbsp;&nbsp;Cédula/R.U.C.&nbsp;&nbsp;</label>
+                        <input id="rad6" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" alt="" /><label for="rad6">&nbsp;&nbsp;Cï¿½dula/R.U.C.&nbsp;&nbsp;</label>
                     </div>
                 </div>
                 <div class="form-group">
@@ -870,7 +870,7 @@ if(isset($uploadfoto)){
         </form>    
     </div>
     
-    <!-- Inicio del diálogo para buscar una cuenta contable -->
+    <!-- Inicio del diï¿½logo para buscar una cuenta contable -->
     <div id="cuentaDialog" title="B&uacute;squeda de Cuenta Contable">
         <form class="form-horizontal normal">
             <fieldset class="exa-fieldset">
@@ -904,13 +904,13 @@ if(isset($uploadfoto)){
     
     <script type="text/javascript">
     $('#btguardaractivo').prop('disabled',true);
-    //Sección para asignar la función de tabs a través de jquery
+    //Secciï¿½n para asignar la funciï¿½n de tabs a travï¿½s de jquery
     $("#tabs").tabs();
     $('#tabs').tabs({disabled:[0,1,2,3,4]});
-    //Sección para declarar datepicker
+    //Secciï¿½n para declarar datepicker
     $.createDatePickers("#Cop_Fec");
     $("#Cop_Fec").val('');
-    //Sección para calcular el porcentaje de depreciación
+    //Secciï¿½n para calcular el porcentaje de depreciaciï¿½n
     $(document).ready(function(){
         $('#Act_Res').on('input',function(){
             var vre=$("#Act_Res").val();
@@ -935,31 +935,31 @@ if(isset($uploadfoto)){
     });
         
     $(document).ready(function(){
-        //Deshabilito botones de la pestaña cuenta contable
+        //Deshabilito botones de la pestaï¿½a cuenta contable
         $("#btnDep").attr('disabled',true);
         $("#btnDepAcum").attr('disabled',true);
-        //Asignamos la opción de datepicker
+        //Asignamos la opciï¿½n de datepicker
         $.createDateRange('#Act_Fec');
-        //Asignamos la función de Chosen
+        //Asignamos la funciï¿½n de Chosen
         $("#Tia_Cod").createChosen('input-xs',{allow_single_deselect: true});                
     });
 	
     //Seccion para cargar campos segun el tipo de activo seleccionado
     $(document).ready(function()
     {
-        /*Sección para extraer los campos de un tipo de activo*/
+        /*Secciï¿½n para extraer los campos de un tipo de activo*/
         $('#Tia_Cod').on('change', function() {
             var id=this.value; 
             var codigo={Tia_Cod:id,buscarCampos:true};
-            $.post('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',codigo, function( response ){
+            $.post('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',codigo, function( response ){
                 campos_nuevos=response;
-                /*Llama a la función addcampos para agregar los campos que pertenecen al tipo de activo seleccionado*/
+                /*Llama a la funciï¿½n addcampos para agregar los campos que pertenecen al tipo de activo seleccionado*/
                 addcampos(); 
             },'json');
         });
     });
     
-    //Función para aderir campos del tipo de activo
+    //Funciï¿½n para aderir campos del tipo de activo
     function addcampos(){
         $("#campos_nuevos").html("");
         for(var i=0;i<campos_nuevos.length;i++){
@@ -973,7 +973,7 @@ if(isset($uploadfoto)){
         }
     }
     
-    //Sección para comboBox de periodo
+    //Secciï¿½n para comboBox de periodo
     $(document).ready(function(){
         $('#periodo_c').on('change', function() {
             var resultado=$(this).val();
@@ -988,7 +988,7 @@ if(isset($uploadfoto)){
         });
     });
     
-    //Sección para bloquear el ingreso de código de barras cuando este marcado el checkbox	
+    //Secciï¿½n para bloquear el ingreso de cï¿½digo de barras cuando este marcado el checkbox	
     $(document).ready(function(e) {
         $('#Act_Bar').attr('readonly',true);
         $('#Act_Bar1').click(function(e) {
@@ -996,18 +996,18 @@ if(isset($uploadfoto)){
             {
                 $('#Act_Bar').attr('readonly',true);
                 $('#Act_Bar').val('');
-                $('#mensaje_codigo').html('Generar código automaticamente <span class="glyphicon glyphicon-ok"></span>');
+                $('#mensaje_codigo').html('Generar cï¿½digo automaticamente <span class="glyphicon glyphicon-ok"></span>');
             }
             else
             {
-                $('#mensaje_codigo').html('Digíte código manualmente.');
+                $('#mensaje_codigo').html('Digï¿½te cï¿½digo manualmente.');
                 $('#Act_Bar').attr('readonly',false);
             }
         });
     });
     
-    //Sección para realizar el calculo de la depreciación anual dentro del tab=depreciacion
-    //Función para obtener el último día del mes 
+    //Secciï¿½n para realizar el calculo de la depreciaciï¿½n anual dentro del tab=depreciacion
+    //Funciï¿½n para obtener el ï¿½ltimo dï¿½a del mes 
     function daysInMonth(month, year) {
         var last_day=new Date(year || new Date().getFullYear(), month, 0).getDate();
         if(parseInt(month)===02){last_day=28;}
@@ -1016,11 +1016,11 @@ if(isset($uploadfoto)){
         return [last_day,last_date];
     }
     
-    //Función para calcular la depreciación segun el número de días
+    //Funciï¿½n para calcular la depreciaciï¿½n segun el nï¿½mero de dï¿½as
     //val_com=valor de compra
     //val_res=valor residual
     //vid_uti=vida util del activo
-    //dias=número de días a depreciar
+    //dias=nï¿½mero de dï¿½as a depreciar
     function depreciacion(val_com,val_res,vid_uti,dias){
         var resultado=((val_com-val_res)/(365*vid_uti))*dias;
         return resultado;
@@ -1036,33 +1036,33 @@ if(isset($uploadfoto)){
         if(($("#Act_Ann").val()!=='')&&($("#Act_Res").val()!=='')){$('#deprecia').show();$('#deprecia_mensaje').hide();}
         else{$('#deprecia').hide();$('#deprecia_mensaje').show();}
 
-        /*ÚNICA Y EXCLUSIVAMENTE CUANDO LA FECHA DE COMPRA SEA EL 29 DE FEBRERO*/
+        /*ï¿½NICA Y EXCLUSIVAMENTE CUANDO LA FECHA DE COMPRA SEA EL 29 DE FEBRERO*/
         var febrero=cop_fec.split('-');if(febrero[1]==='02'){cop_fec=febrero[0]+'-02-28';}
 
-        /*** CALCULO DE LA DEPRECIACIÓN ANUAL Y MENSUAL ***/
-        //Sección para autoajuste del jqgrid
+        /*** CALCULO DE LA DEPRECIACIï¿½N ANUAL Y MENSUAL ***/
+        //Secciï¿½n para autoajuste del jqgrid
         if($('#dep_anual').actual( 'outerWidth', { includeMargin : true })<300){ $('#dep_anual').trigger('resize');}
 
-        //Se limpia el jqGrid de la depreciación anual 
+        //Se limpia el jqGrid de la depreciaciï¿½n anual 
         $("#dep_anual").jqGrid('clearGridData',true).trigger('reloadGrid');
 
         //Calculo para obtener el valor a depreciar anualmente
         var datos=[],dep_acum=0,val_res=0,dep_acum_men=0,val_libros=cop_pru;
         var fecha=cop_fec.split('-');//Se descompone la fecha de compra
         var anio=fecha[0];var aux_mes=fecha[1];var mes=fecha[1];var dia=fecha[2];var meses=12;var dep_mensual=0;var i=0;var Act_Ffd='';
-        var anio_fin_dep=parseInt(anio)+parseInt(vid_uti);//Se establece el último año de depreciación
+        var anio_fin_dep=parseInt(anio)+parseInt(vid_uti);//Se establece el ï¿½ltimo aï¿½o de depreciaciï¿½n
         var fecha_compra=new Date(anio,mes-1,dia);
         var fecha_fin_anio=new Date(anio,'11','31');
-        var diferencia=fecha_fin_anio-fecha_compra;if(diferencia===0){diferencia=1;}//Se resta la fecha de fin de año con la fecha de compra 
+        var diferencia=fecha_fin_anio-fecha_compra;if(diferencia===0){diferencia=1;}//Se resta la fecha de fin de aï¿½o con la fecha de compra 
 
-        //Resultado en milisegundos, por tal razón se debe convertir a días
-        //se suma un día pues se desea iniciar la depreciación desde la fecha de compra 
+        //Resultado en milisegundos, por tal razï¿½n se debe convertir a dï¿½as
+        //se suma un dï¿½a pues se desea iniciar la depreciaciï¿½n desde la fecha de compra 
         var dias=(Math.floor(diferencia / (1000 * 60 * 60 * 24)));
         if(dias<365){dias=dias+1;}else{i=1;}
 
         var dep_anual=depreciacion(cop_pru,act_res,vid_uti,dias);
 
-        //Calculo depreciación mensual
+        //Calculo depreciaciï¿½n mensual
         var ult_dia=daysInMonth(aux_mes,anio);var dias_dep=(ult_dia[0]-dia)+1;
 
         $("#dep_anual").jqGrid('addRowData',0,{"periodo":"Apertura","Val_Res":cop_pru});
@@ -1120,13 +1120,13 @@ if(isset($uploadfoto)){
         });
         $("#tabs").tabs({
             activate:function (event, ui) {
-                public $activeTab = $('#tabs').tabs('option','active');
+                var $activeTab = $('#tabs').tabs('option','active');
                 if($activeTab === 4){calcula_depreciacion();}
             }
         });
     });
     
-    //Inicio del diálogo producto 
+    //Inicio del diï¿½logo producto 
     $(document).ready(function (){
         $.createSearchDialog('#productoCDialog',[
             {label:'Llave',name:'llave',key:true,hidden:true},
@@ -1141,7 +1141,7 @@ if(isset($uploadfoto)){
             {label:'<center><i class="ui-icon ui-icon-circle-check"></i></center>', name: 'act', width: 18, align: 'center',viewable: false, 
                 formatter: function(cellvalue, options, rowObject)
                 {
-                    public $input=$('<input id="Chk_'+rowObject.llave+'" type="checkbox"'+(cellvalue?'checked="checked"':'')+' onclick="cargar($(this).data(\'orig\'))" />');                    
+                    var $input=$('<input id="Chk_'+rowObject.llave+'" type="checkbox"'+(cellvalue?'checked="checked"':'')+' onclick="cargar($(this).data(\'orig\'))" />');                    
                     return $('<div/>').append($input.attr('data-orig',$.jsonParser(rowObject))).html();
                 }   
             }
@@ -1188,7 +1188,7 @@ if(isset($uploadfoto)){
         return null;
     }
         
-    //Función para cargar valores del producto seleccionado
+    //Funciï¿½n para cargar valores del producto seleccionado
     var iva_por=0;
     function cargarProducto(){
         var acum=0,cant=0,cop_int='',iva=0,total=0;
@@ -1233,7 +1233,7 @@ if(isset($uploadfoto)){
         $('#Act_Can').attr('readonly',true);$('#Act_Can').attr('title','No Editable');
     }
     
-    //Sección para recalcular iva,total y valor a depreciar
+    //Secciï¿½n para recalcular iva,total y valor a depreciar
     $('#Cop_Pru').on('input',function (){
         var iva=($('#Cop_Pru').val()*iva_por)/100;
         $("#Iva_Por").val(iva.toFixed(2));
@@ -1242,10 +1242,10 @@ if(isset($uploadfoto)){
         if(($('#Iva_Cos').val()==='SI')||($('#Iva_Cos_SFC').val()==='S')){$('#total').val(total);}else{$('#total').val($('#Cop_Pru').val());}
     });
     
-    //Inicio del diálogo para presentar productos sin factura de compra
+    //Inicio del diï¿½logo para presentar productos sin factura de compra
     $(document).ready(function() {               
         $.createSearchDialog('#productoSDialog',[
-            { label: 'Cód.Int.', name: 'Pro_Cod', key: true,hidden:true,viewable: true },                                
+            { label: 'Cï¿½d.Int.', name: 'Pro_Cod', key: true,hidden:true,viewable: true },                                
             { label: 'Producto', name: 'Ite_Lar', width: 50 },
             { label: 'P.Unitario', name: 'Pre_Pvp', width: 50 }, 
             { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center',viewable: false,
@@ -1284,7 +1284,7 @@ if(isset($uploadfoto)){
         $('#total').val(precio.toFixed(2));
         $('#Act_Can').attr('readonly',false);$('#Act_Can').attr('title','');
         var data={compra_prov:true};
-        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function(response) 
+        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function(response) 
         {
             $("#Prv_Cod").val(response['row']['Prv_Cod']);  
         },'json').fail(function(error) { $.alert();}); 
@@ -1296,11 +1296,11 @@ if(isset($uploadfoto)){
         }else{$('#total').val($('#Cop_Pru').val());}
     });
     
-    //Inicio del diálogo perito 
+    //Inicio del diï¿½logo perito 
     $(document).ready(function() {               
         $.createSearchDialog('#peritoDialog',[
-            { label: 'Cód.Int.', name: 'Pri_Cod', key: true,hidden:true,viewable: true },                                
-            { label: 'Cédula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
+            { label: 'Cï¿½d.Int.', name: 'Pri_Cod', key: true,hidden:true,viewable: true },                                
+            { label: 'Cï¿½dula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
             { label: 'Perito', name: 'perito', width: 190, cellattr: function (rowId, tv, rawObject, cm, rdata) { return 'style="white-space: normal;"'; }},                            
             { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center',viewable: false,
                 formatter:function (cellvalue, options, rowObject) { 
@@ -1311,11 +1311,11 @@ if(isset($uploadfoto)){
         ]);  						 
     }); 
     
-    //Inicio del diálogo proveedor 
+    //Inicio del diï¿½logo proveedor 
     $(document).ready(function() {               
         $.createSearchDialog('#provDialog',[
-            { label: 'Cód.Int.', name: 'Prv_Cod', key: true,hidden:true,viewable: true },                                
-            { label: 'Cédula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
+            { label: 'Cï¿½d.Int.', name: 'Prv_Cod', key: true,hidden:true,viewable: true },                                
+            { label: 'Cï¿½dula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
             { label: 'Proveedor', name: 'proveedor', width: 190, cellattr: function (rowId, tv, rawObject, cm, rdata) { return 'style="white-space: normal;"'; }},                   
             { label: 'Direcci&oacute;n', name: 'Prs_Dir',hidden:true,viewable: true },                      
             { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center',viewable: false,
@@ -1327,7 +1327,7 @@ if(isset($uploadfoto)){
         ]); 
     }); 
     
-    //Inicio de diálogo para buscar cuentas
+    //Inicio de diï¿½logo para buscar cuentas
     $(document).ready(function () { 
         $.createSearchDialog('cuentaDialog',[
             { label: 'C&oacute;d.Int.', name: 'Pld_Cod', key: true, width: 15,align:"center",hidden:true },                                
@@ -1344,34 +1344,34 @@ if(isset($uploadfoto)){
         ]);   
     });
     
-    //Función para agregar cuenta contable al jqgrid 
+    //Funciï¿½n para agregar cuenta contable al jqgrid 
     function addCuenta(Pld_Cod,Pld_Cdc,Pld_Des)
     {
-        //Se cierra el diálogo de las cuentas
+        //Se cierra el diï¿½logo de las cuentas
         $('#cuentaDialog').dialog('close');
         if(tipo==='D')
         {
             //Se carga el codigo de la cuenta depreciacion al campo oculto Cod_Dep
             $("#Cod_Dep").val(Pld_Cod);
-            //Se carga los valores seleccionados a los grid de las cuentas de depreciación
+            //Se carga los valores seleccionados a los grid de las cuentas de depreciaciï¿½n
             $("#depreciacion").jqGrid('addRowData', Pld_Cod, {"Pld_Cod":Pld_Cod,"Pld_Cdc": Pld_Cdc,"Pld_Des": Pld_Des});
             //Deshabilito el boton para agregar cuenta
             $("#btnDep").attr('disabled','disabled');
         }else{
             //Se carga el codigo de la cuenta depreciacion acumulada al campo oculto Cod_Dea
             $("#Cod_Dea").val(Pld_Cod);
-            //Se carga los valores seleccionados a los grid de las cuentas de depreciación
+            //Se carga los valores seleccionados a los grid de las cuentas de depreciaciï¿½n
             $("#depreciacion_acum").jqGrid('addRowData', Pld_Cod, {"Pld_Cod":Pld_Cod,"Pld_Cdc": Pld_Cdc,"Pld_Des": Pld_Des});
             //Deshabilito el boton para agregar cuenta
             $("#btnDepAcum").attr('disabled','disabled');
         }
     }
     
-    //Inicio de diálogo para presentar la cuenta de depreciación
+    //Inicio de diï¿½logo para presentar la cuenta de depreciaciï¿½n
     $(document).ready(function() { 
         var Tipo='D';
         $("#depreciacion").jqGrid({
-            url:'<?PHP echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',
+            url:'<?PHP echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',
             mtype:'GET',
             datatype:'local',
             regional:'es',
@@ -1394,11 +1394,11 @@ if(isset($uploadfoto)){
         });
     });
     
-    //Inicio de diálogo para presentar la cuenta de depreciación acumulada
+    //Inicio de diï¿½logo para presentar la cuenta de depreciaciï¿½n acumulada
     $(document).ready(function(){
         var Tipo='DA';
         $("#depreciacion_acum").jqGrid({
-            url:'<?PHP echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',
+            url:'<?PHP echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',
             mtype:'GET',
             datatype:'local',
             regional:'es',
@@ -1421,7 +1421,7 @@ if(isset($uploadfoto)){
         });
     });
     
-    //Elaboración de jqGrid para presentar el calculo de la depreciación anual del activo
+    //Elaboraciï¿½n de jqGrid para presentar el calculo de la depreciaciï¿½n anual del activo
     $(document).ready(function(){
         $("#dep_anual").jqGrid({
             mtype:'GET',
@@ -1484,7 +1484,7 @@ if(isset($uploadfoto)){
     
     function inicializar_input_file(){
         $("#file5").fileinput({
-            uploadUrl: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>', // you must set a valid URL here else you will get an error
+            uploadUrl: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>', // you must set a valid URL here else you will get an error
             showCaption: false,
             showRemove: false,
             showCancel: false,
@@ -1494,10 +1494,10 @@ if(isset($uploadfoto)){
             allowedFileExtensions : ['jpg', 'png','gif'],
             overwriteInitial: false,
             maxFileSize: 2000,
-            msgSizeTooLarge: 'Archivo: "{name}" (<b>{size} KB</b>) excede el tamaño máximo permitido de <b>{maxSize} KB</b>.',
-            dropZoneTitle:'Arrastrar y Soltar Imágenes Aquí...',
+            msgSizeTooLarge: 'Archivo: "{name}" (<b>{size} KB</b>) excede el tamaï¿½o mï¿½ximo permitido de <b>{maxSize} KB</b>.',
+            dropZoneTitle:'Arrastrar y Soltar Imï¿½genes Aquï¿½...',
             maxFileCount: 2,
-            msgFilesTooMany: 'Número de imágenes permitidas 2.',
+            msgFilesTooMany: 'Nï¿½mero de imï¿½genes permitidas 2.',
             validateInitialCount: true,
             disable: function () {
                 var self = this;
@@ -1519,7 +1519,7 @@ if(isset($uploadfoto)){
 	});
     }
     
-    /*Función para guardar un nuevo activo se lo efectua con formData, puesto que se esta enviando imagenes*/
+    /*Funciï¿½n para guardar un nuevo activo se lo efectua con formData, puesto que se esta enviando imagenes*/
     function saveForm(){ 
         calcula_depreciacion();
         //Seccion para validar los campos del tab detalle que por cierto se encuentran en otro formulario
@@ -1531,7 +1531,7 @@ if(isset($uploadfoto)){
                 return;
             }
         }
-        //Sección para validar que elija una cuenta contable
+        //Secciï¿½n para validar que elija una cuenta contable
         if(($('#Cod_Dep').val()==='')||($('#Cod_Dea').val()==='')){
             setTimeout(function (){$('#formcuenta_Contable').formSubmit();},200);
             $('#tabs').tabs('option','active',2);
@@ -1550,7 +1550,7 @@ if(isset($uploadfoto)){
             formData.append(detalle[i].name, detalle[i].value);
         }
         $.ajax({
-            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
             type: "post",
             dataType: "json",
             data: formData,
@@ -1567,7 +1567,7 @@ if(isset($uploadfoto)){
                 limpiar();
                 $('#file5').fileinput('clear');
                 $('#tabs').tabs({disabled:[0,1,2,3,4]});$('#btguardaractivo').prop('disabled',true);  
-                //Sección para actualizar el GridDialog de productos con factura de compra
+                //Secciï¿½n para actualizar el GridDialog de productos con factura de compra
                 $('#productoCDialog').getDialogGrid().trigger('reloadGrid',[{page:1}]);
                 items=[];
             }else{$.alert(responce.message);}
@@ -1575,9 +1575,9 @@ if(isset($uploadfoto)){
     };
    
     function limpiar(){
-        /*Sección para limpiar el chosen*/
+        /*Secciï¿½n para limpiar el chosen*/
         $('#Tia_Cod').val('').trigger('chosen:updated');
-        /*Sección para limpiar formularios*/ 
+        /*Secciï¿½n para limpiar formularios*/ 
         $('#formInfo')[0].reset();
         $('#formActivo')[0].reset();
         $('#depreciacion').jqGrid('clearGridData',true).trigger('reloadGrid');
@@ -1585,12 +1585,12 @@ if(isset($uploadfoto)){
         $('#dep_anual').jqGrid('clearGridData',true).trigger('reloadGrid');
         $('#dep_mensual').jqGrid('clearGridData',true).trigger('reloadGrid');
         $('#campos_nuevos').html("<div class='col-sm-4'></div><div class='alert alert-info col-sm-4' role='alert'><u><span class='glyphicon glyphicon-info-sign'></span><b> NOTA: </b></u> No se ha elegido una categor&iacute;a para el activo..!!</div>");
-        $('#datosPerito').html('Sin índice de búsqueda');
+        $('#datosPerito').html('Sin ï¿½ndice de bï¿½squeda');
         $('#Tia_Des').val('Seleccione un Tipo de Activo'); 
         inicializar_input_file();
         $('#periodo_c').val('');
     }
-    /*Función para visiaulizar mensaje de alerta dentro del tab cuenta contable*/
+    /*Funciï¿½n para visiaulizar mensaje de alerta dentro del tab cuenta contable*/
     function showAlert(){
         $("#alert_cc").show();$("#alert_cc").alert();
         $("#alert_cc").fadeTo(7000, 500).slideUp(500, function(){$("#alert_cc").slideUp(500);});   

@@ -2379,11 +2379,11 @@ function consultarRegimen() {
         action: 'obtener_regimen',
         emp_cods: empCods
     }, function(res) {
-        var msg = 'Régimen actual de las empresas seleccionadas:\n\n';
+        var msg = 'Régimen actual de las empresas seleccionadas:<br><br>';
         res.data.forEach(function(reg) {
-            msg += 'Empresa ' + reg.Emp_Cod + ': ' + (reg.Tipo_Regimen || 'No definido') + '\n';
+            msg += 'Empresa ' + reg.Emp_Cod + ': ' + (reg.Tipo_Regimen || 'No definido') + '<br>';
         });
-        alert(msg);
+        $.alert(msg,null,'warning');
     }, function(res) {
         mostrarAlerta('danger', res.message || 'Error al obtener régimen');
     });

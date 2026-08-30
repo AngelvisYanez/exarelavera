@@ -282,7 +282,7 @@ function setPeriodo() {
     }
     resetForm();
 }
-function getPeriodo() { return $('#perio_cont').val() === '' ? { Pec_Cod: null } : $('#perio_cont option:selected').data(); }
+function getPeriodo() { var opt = $('#perio_cont option:selected'); return (!opt.length || opt.val() === '' || opt.val() === null) ? { Pec_Cod: null } : opt.data(); }
 function deleteFilaCuenta(Pld_Cod) { gridCompAsien.jqGrid('delRowData', Pld_Cod); resizeGridComp(); gridCompAsien.updateGridDiario(); }
 function addFilaCuenta(cuenta, tipo) {
     var setter = { Index: $('#Index').val(), Glosa: '', Det_Tip: tipo, Debe: 0, Haber: 0 };

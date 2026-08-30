@@ -24,6 +24,8 @@ $obBD_con1 =  new Class_Log_Datos_Soc;
 $hoy = date("d-m-Y");
 $fecha = explode('-', $hoy);
 
+$row_rs_cabcomp = array();
+
 if (isset($codigo))
 {
     $row_rs_cabcomp = $obBD_con1->getRowConsulta(37, $codigo, $obBD_conexion);
@@ -47,9 +49,9 @@ if(count($row_rs_cabcomp) > 0){
 } ?>
 <html>
 <head>
-<title><?Php echo $Ses_Sys_Nom; ?></title>
+<title><?php echo $Ses_Sys_Nom; ?></title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<?Php require_once("../../mascaras/model1/estilos/print.php"); ?>
+<?php require_once("../../mascaras/model1/estilos/print.php"); ?>
 <style type="text/css">
 .Letra_punto_venta_2 {
 	font-family: Verdana;
@@ -131,11 +133,11 @@ if(count($row_rs_cabcomp) > 0){
 	      $contadorR++;
 			?>
 			<tr>
-				<td class="TablaRepComprLeft"><font class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?echo $asiento['Pld_Cdc'];?></font></td>
-				<td class="TablaRepComprLeft"><font class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?echo $asiento['Pld_Des'];?></font></td>
-				<td class="TablaRepComprLeft"><font class="Letra_punto_venta_2"><?echo $asiento['Asi_Glo'];?></font></td>
-				<td class="TablaRepComprLeft" align="right"><font class="Letra_punto_venta_2"><?echo $asiento['Debe'];?></font></td>
-				<td class="TablaRepComprLeft TablaRepComprRight" align="right"><font class="Letra_punto_venta_2"><?echo $asiento['Haber'];?></font></td>
+				<td class="TablaRepComprLeft"><font class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $asiento['Pld_Cdc'];?></font></td>
+				<td class="TablaRepComprLeft"><font class="Letra_punto_venta_2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $asiento['Pld_Des'];?></font></td>
+				<td class="TablaRepComprLeft"><font class="Letra_punto_venta_2"><?php echo $asiento['Asi_Glo'];?></font></td>
+				<td class="TablaRepComprLeft" align="right"><font class="Letra_punto_venta_2"><?php echo $asiento['Debe'];?></font></td>
+				<td class="TablaRepComprLeft TablaRepComprRight" align="right"><font class="Letra_punto_venta_2"><?php echo $asiento['Haber'];?></font></td>
 			</tr>
 			<?php } ?>
       <tr>
@@ -192,7 +194,7 @@ if(count($row_rs_cabcomp) > 0){
 	    <td width="19%" valign="top" align="center" class="TablaRepCompr Letra_punto_venta_2">RECIBI CONFORME</td>
 	    </tr>
 	  <tr>
-	    <td height="34" align="right" valign="bottom" class="TablaRepComprLeft TablaRepComprBottom">&nbsp;<div class="Letra_punto_venta_2"><?Php echo $row_rs_usuComp['Prs_Ape']." ".$row_rs_usuComp['Prs_Nom'];?></div></td>
+	    <td height="34" align="right" valign="bottom" class="TablaRepComprLeft TablaRepComprBottom">&nbsp;<div class="Letra_punto_venta_2"><?php echo $row_rs_usuComp['Prs_Ape']." ".$row_rs_usuComp['Prs_Nom'];?></div></td>
 	    <?php
             $nombre=  explode(' ', $row_rs_cabcomp['Prs_Nom']);
             $recibi=$row_rs_cabcomp['Prs_Ape'].' '.$nombre[0];
@@ -202,7 +204,7 @@ if(count($row_rs_cabcomp) > 0){
 	    <td valign="bottom" align="right" class="TablaRepComprLeft TablaRepComprBottom TablaRepComprRight">&nbsp;<div class="Letra_punto_venta_2"><?php echo isset($recibi)?$recibi:''; ?></div></td>
 	    </tr>
 	  </table>
-	<?Php
+	<?php 
 		break;
 		case 2: ?>
 	<table width="100%" border="0" align="center" cellpadding="2" cellspacing="0" class="">
@@ -215,7 +217,7 @@ if(count($row_rs_cabcomp) > 0){
 		  <td width="19%" valign="top" align="center" class="TablaRepCompr">RECIBI CONFORME</td>
 	    </tr>
 		<tr>
-		  <td height="40" align="right" valign="bottom" class="TablaRepCompr">&nbsp;&nbsp;<div class="Letra_punto_venta_2"><?Php echo $row_rs_usuComp['Prs_Ape']." ".$row_rs_usuComp['Prs_Nom'];?></div></td>
+		  <td height="40" align="right" valign="bottom" class="TablaRepCompr">&nbsp;&nbsp;<div class="Letra_punto_venta_2"><?php echo $row_rs_usuComp['Prs_Ape']." ".$row_rs_usuComp['Prs_Nom'];?></div></td>
           <?php
 		  /*if ($fecha[1] == 12)
 		  {
@@ -242,7 +244,7 @@ if(count($row_rs_cabcomp) > 0){
 	    <td width="19%" valign="top" align="center" class="TablaRepCompr">RECIBI CONFORME</td>
 	    </tr>
 	  <tr>
-	    <td height="40" align="right" valign="bottom" class="TablaRepCompr">&nbsp;<div class="Letra_punto_venta_2"><?Php echo $row_rs_usuComp['Prs_Ape']." ".$row_rs_usuComp['Prs_Nom'];?></div></td>
+	    <td height="40" align="right" valign="bottom" class="TablaRepCompr">&nbsp;<div class="Letra_punto_venta_2"><?php echo $row_rs_usuComp['Prs_Ape']." ".$row_rs_usuComp['Prs_Nom'];?></div></td>
 	    <?php
 		 /* if ($fecha[1] == 12)
 		  {
@@ -265,7 +267,7 @@ if(count($row_rs_cabcomp) > 0){
 </table>
 </body>
 </html>
-<?Php
+<?php 
 /**
 * Cierra las conexiones
 */

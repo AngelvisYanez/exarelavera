@@ -1,5 +1,4 @@
 <?php
-use \Exception;
 require_once(dirname(__file__)."/../DATA/libs/AbstractModel.php");
 class proveedore extends AbstractModel{
     protected $_name = 'proveedore';
@@ -15,7 +14,7 @@ class proveedore extends AbstractModel{
         $sel=$this->_selectBasic();
         $this->sqlByNombre("setEmpCod", $sel);
         if(isset($cond['op_opciones']))
-            $sel->where($cond['op_opciones']=="c"?"Prs_Ced=?":"CONCAT(Prs_Nom,' ',Prs_Ape)LIKE '%{$cond['search']}%'", $cond['search']);
+            $sel->where($cond['op_opciones']=="c"?"Prs_Ced=?":"CONCAT(Prs_Nom,' ',Prs_Ape)LIKE ?", $cond['op_opciones']=="c"?$cond['search']:"%{$cond['search']}%");
         return $sel;
     }
     public function formatData($data, $type, $allData=null){
@@ -45,7 +44,7 @@ class proveedore extends AbstractModel{
         //echo $sql."<br/>";
         return $sql;
     }
-    public function sqlByNumero($id,$Par_Sql){
+    public function sqlByNumero($id,$Par_Sql,$cond=null){
         if(is_object($Par_Sql)){ $sql=$Par_Sql; $Par_Sql=$cond; }else $sql='';
         switch($id){
             case 0:

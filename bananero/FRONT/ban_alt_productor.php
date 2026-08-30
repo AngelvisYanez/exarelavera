@@ -69,7 +69,7 @@ $hoy = date("Y-m-d");
     <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
     <meta charset="UTF-8">
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-    <script language="javascript" src="../VALIDACIONES/ban_val_productor.js"></script>
+    <script type="text/javascript" src="../VALIDACIONES/ban_val_productor.js"></script>
     <style></style>
 </HEAD>
 <BODY>

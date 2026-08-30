@@ -1032,7 +1032,7 @@ if (isset($saldoCCxPP)) {
         var edit_doc = <?php echo json_encode('S'); ?>;
     </script>
 
-    <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
     <script type="text/javascript" src="../VALIDACIONES/fac_val_factu.js?gh=998"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
 

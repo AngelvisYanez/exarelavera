@@ -157,7 +157,7 @@ if(isset($ajaxSubgrid)){
                     var subgrid_table_id = subgrid_id+"_t";         
                     $("#"+subgrid_id).addClass('condensed jqSecond').html("<table id='"+subgrid_table_id+"' class='scroll'></table>");
                     $("#"+subgrid_table_id).createGrid({
-                        //url:"<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?ajaxSubgrid="+row_id, datatype: "json",regional : 'es',
+                        //url:"<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?ajaxSubgrid="+row_id, datatype: "json",regional : 'es',
                         postData:$.extend({ajaxSubgrid:true,Foc_Cod:row_id},config),
                         colModel: [
                                 {label:'Cod.Int.',name:"Pld_Cod",width:80,key:true,align:"center",hidden:true},

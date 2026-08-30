@@ -120,10 +120,10 @@ if($ajax_1==1)
 <head>
 <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>		  	
 	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-    <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    <script language="javascript" src="../VALIDACIONES/fac_val_kardex.js"></script>        
+    <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script type="text/javascript" src="../VALIDACIONES/fac_val_kardex.js"></script>        
     <script type="text/javascript" src="../../Librerias/exportar/jquery-1.3.2.min.js"></script>
-    <script language="javascript">
+    <script type="text/javascript">
         $(document).ready(function() {
             /* LLamado a la class del boton exportar */
             $("#Boton_Excel").click(function(event) {

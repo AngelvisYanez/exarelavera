@@ -185,8 +185,8 @@ if (isset($txt_busqueda))
 <HTML><HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom;?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/fac_val_aju.js?x=20"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_aju.js?x=20"></script>
         <!--Librerias para interfaz -->       
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <!--Librerias para modal -->    
@@ -207,7 +207,7 @@ if (isset($txt_busqueda))
 if (isset($hdd_save) && !isset($hdd_volver))
 {
 ?>
-<script language="javascript">windows('fac_pri_aju_1.0.php?Aju_Cod=<?Php echo $Rcb_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');
+<script type="text/javascript">windows('fac_pri_aju_1.0.php?Aju_Cod=<?Php echo $Rcb_Cod; ?>','', 800,600,'yes', 'yes', 'yes', 'no');
 </script> 
 <?Php
 }//Fin del if (isset($hdd_save) && !isset($hdd_volver))

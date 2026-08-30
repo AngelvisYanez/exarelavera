@@ -3,7 +3,7 @@
  * @abstract Permite realizar el registro de productores de fruta
  * @author Erik Niebla
  * @version 1.0
- * Fecha de creación  2018-05-18
+ * Fecha de creaciï¿½n  2018-05-18
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/ban_log_exporta_plan.php');
@@ -91,7 +91,7 @@ $cur_periodo=current($periodos);
 <HEAD>		
     <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-    <script language="javascript" src="../VALIDACIONES/ban_val_planificacion.js"></script>
+    <script type="text/javascript" src="../VALIDACIONES/ban_val_planificacion.js"></script>
     <style></style>
 </HEAD>
 <BODY>
@@ -102,7 +102,7 @@ $cur_periodo=current($periodos);
                 <div class="col-sm-12">
                     <form id="searchForm" name="searchForm" class="form-horizontal normal" action="javascript:$('#searchGrid').Search('#searchForm','searchAjax');">
                         <fieldset class="exa-fieldset">
-                        <legend class="Titulos2">Consulta de Información</legend>
+                        <legend class="Titulos2">Consulta de Informaciï¿½n</legend>
                         <div class="col-sm-4">    
                             
                             <div class="form-group">
@@ -123,7 +123,7 @@ $cur_periodo=current($periodos);
                             <div class="form-group">
                                 <label class="col-xs-3 control-label label-xs">Marca:</label>
                                 <div class="col-xs-9" >
-                                    <select id="Bam_Cod" name="Bam_Cod" class="form-control input-xs getData ins"s>
+                                    <select id="Bam_Cod" name="Bam_Cod" class="form-control input-xs getData ins">
                                         <?php if(count($marcas)!=1){ ?><option value="">Selecione Marca...</option><?php } ?>
                                         <?php foreach ($marcas as $m) {
                                             echo "<option value='$m[Bam_Cod]' data--bam_-cod='$m[Bam_Cod]' data--bam_-tam='$m[Bam_Tam]'>$m[Bam_Nom] $m[Bam_Tam]</option>";
@@ -156,7 +156,7 @@ $cur_periodo=current($periodos);
                         <fieldset id="provFormTemp" class="exa-fieldset">
                             <legend class="Titulos2">Datos del Cliente</legend>
                             <div class="form-group">
-                                <label class="col-xs-3 control-label label-xs">Cédula/RUC:</label>  
+                                <label class="col-xs-3 control-label label-xs">Cï¿½dula/RUC:</label>  
                                 <div class="col-xs-9" >                                  
                                   <input name="Cli_Cod" data-name="Cli_Cod" type="text" style="display:none;" />
                                   <input name="op_opciones" data-name="op_opciones" type="text" value="c" style="display: none;">  
@@ -236,7 +236,7 @@ $cur_periodo=current($periodos);
                         </fieldset>    
                         <div class="form-group">
                             <div class="col-xs-9" >
-                                <button type="button" class="btn btn-sm btn-inverse" onclick="$('#divPedido').moveComp('#divSearch').updateGridsSizes();"><i class="glyphicon glyphicon-arrow-left"></i> Atrás</button>
+                                <button type="button" class="btn btn-sm btn-inverse" onclick="$('#divPedido').moveComp('#divSearch').updateGridsSizes();"><i class="glyphicon glyphicon-arrow-left"></i> Atrï¿½s</button>
                                 <button type="button" class="btn btn-sm btn-success" onclick="$('#formDocumentoPedido').formSubmit();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>   
                             </div>
                         </div>
@@ -359,7 +359,7 @@ $cur_periodo=current($periodos);
                 <div class="col-sm-12">
                     <div class="form-group">
                         <div class="col-xs-9" >
-                            <button type="button" class="btn btn-sm btn-inverse" onclick="$('#divDetalle').moveComp('#divSearch').updateGridsSizes();"><i class="glyphicon glyphicon-arrow-left"></i> Atrás</button>
+                            <button type="button" class="btn btn-sm btn-inverse" onclick="$('#divDetalle').moveComp('#divSearch').updateGridsSizes();"><i class="glyphicon glyphicon-arrow-left"></i> Atrï¿½s</button>
                             
                         </div>
                     </div>

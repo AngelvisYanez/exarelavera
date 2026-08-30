@@ -62,7 +62,6 @@ if ($err) {
 
     header('Content-Type: text/json; charset=utf-8');
     $responseData = json_decode($response, true);
-    print_r($responseData);
 }
 
 

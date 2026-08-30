@@ -1,9 +1,9 @@
 	<?php
 /**
- * @abstract Permite realizar la modificación de un proceso de facturación de viajes
- * @author José Ambuludí
+ * @abstract Permite realizar la modificaciï¿½n de un proceso de facturaciï¿½n de viajes
+ * @author Josï¿½ Ambuludï¿½
  * @version 2.0
- * Fecha de creación  2017-02-13
+ * Fecha de creaciï¿½n  2017-02-13
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tca_log_viaje.php');
@@ -19,7 +19,7 @@ $obBD_con1 = new Class_Log_Datos_Viaje;
 
 $hoy = date("Y-m-d");
 
-//Sección para cargar datos en el Jqgrid referente a las facturas registradas
+//Secciï¿½n para cargar datos en el Jqgrid referente a las facturas registradas
 if (isset($cargarDatos)) {
     $response['chofer'] = $obBD_con1->getArrayConsulta(27,$Ses_Emp_Cod,$obBD_conexion);
     $response['vehiculo'] = $obBD_con1->getArrayConsulta(30,$Ses_Emp_Cod,$obBD_conexion);
@@ -30,7 +30,7 @@ if (isset($cargarDatos)) {
     $obBD_con1->echoJson($response);
 }
 
-/*Sección para buscar una persona según el número de cédula*/
+/*Secciï¿½n para buscar una persona segï¿½n el nï¿½mero de cï¿½dula*/
 if(isset($buscarCliente)){
     $longitud=  strlen($Prs_Ced);
     if($longitud*1===13){$Prs_Ced = substr($Prs_Ced, 0, -3);}
@@ -43,7 +43,7 @@ if(isset($buscarCliente)){
     $obBD_con1->echoJson($response);
 }
 
-//Sección para cargar datos en el Jqgrid referente a los productos registrado
+//Secciï¿½n para cargar datos en el Jqgrid referente a los productos registrado
 if (isset($productoAjax)) {
     $data = filter_input_array(INPUT_GET);
     $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -62,7 +62,7 @@ if(isset($save)){
     $response['message'] = "No se ha logrado realizar la Transaccion";
     $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 
-    //Sección para guardar datos de un chofer
+    //Secciï¿½n para guardar datos de un chofer
     if($clave=='Cho_Cod'){
         foreach ($campos as $valor){
             if($valor['Cho_Aux']=='N'){
@@ -82,7 +82,7 @@ if(isset($save)){
         }
     }
 
-    //Sección para guardar datos de un Vehiculo
+    //Secciï¿½n para guardar datos de un Vehiculo
     if($clave=='Veh_Cod'){
         foreach ($campos as $v){
             if($v['Veh_Aux']=='N'){
@@ -93,7 +93,7 @@ if(isset($save)){
         }
     }
 
-    //Sección para guardar datos de un cargamento
+    //Secciï¿½n para guardar datos de un cargamento
     if($clave=='Car_Cod'){
         foreach ($campos as $v){
             if($v['Car_Aux']=='N'){
@@ -104,7 +104,7 @@ if(isset($save)){
         }
     }
 
-    //Sección para guardar datos de un modo_trabajo
+    //Secciï¿½n para guardar datos de un modo_trabajo
     if($clave=='Mot_Cod'){
         foreach ($campos as $v){
             if($v['Mot_Aux']=='N'){
@@ -147,7 +147,7 @@ if(isset($elimina)){
     <HEAD>
         <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
         <script>
             <?php $ciudades=$obBD_con1->getArrayConsulta(12,"",$obBD_conexion); ?>
         </script>
@@ -282,22 +282,22 @@ if(isset($elimina)){
                 </div>
             </div>
         </div>
-        <!-- Inicio del diálogo para buscar un cliente -->
+        <!-- Inicio del diï¿½logo para buscar un cliente -->
         <div id="clienteDialog" title="B&uacute;squeda de Clientes">
             <form class="form-horizontal normal"></form>
         </div>
-        <!-- Inicio del diálogo para buscar un chofer -->
+        <!-- Inicio del diï¿½logo para buscar un chofer -->
         <div id="choferDialog" title="B&uacute;squeda de Choferes">
             <form class="form-horizontal normal"></form>
         </div>
-        <!-- Inicio del diálogo para buscar un producto -->
+        <!-- Inicio del diï¿½logo para buscar un producto -->
         <div id="productoDialog" title="B&uacute;squeda de Productos">
             <form class="form-horizontal normal"><input type="hidden" name="row" id="row" value=""/></form>
         </div>
         <script type="text/javascript">
             $(function () {
                 cargarDatos();
-                //Inicialización
+                //Inicializaciï¿½n
                 $("#tabs").createTabs({});
                 $.createDatePickers('.datepicker');
                 $('#Fec_Ini').val('');
@@ -452,9 +452,9 @@ if(isset($elimina)){
                 },{ buttonicon:"glyphicon glyphicon-refresh", title:'Resetear', onClickButton: function (){actualizarFila('Des_Grid','Vlu_Cod','Vlu_Est');} }]);
 
 
-                //Inicio del diálogo para presentar productos
+                //Inicio del diï¿½logo para presentar productos
                 $.createSearchDialog('#productoDialog', [
-                    {label: 'Cód.Int.', name: 'Pro_Cod', key: true, hidden: false, viewable: true, width: 15, align: 'center'},
+                    {label: 'Cï¿½d.Int.', name: 'Pro_Cod', key: true, hidden: false, viewable: true, width: 15, align: 'center'},
                     {label: 'Producto', name: 'Ite_Lar', width: 70},
                     {label: 'Pld_Cod', name: 'Pld_Cod', hidden: true},
                     {label: '<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center', viewable: false,formatter: boton}
@@ -490,10 +490,10 @@ if(isset($elimina)){
 
             /*** FUNCIONES PARA EL MANEJO DE DATOS ***/
 
-            //Función que agrega una fila al grid
+            //Funciï¿½n que agrega una fila al grid
             function agregarFila(indice,grid,cod,aux){
                 $('#'+grid).jqGrid('resizeGrid');
-                public $this=$('#'+grid),id,nuevo;
+                var $this=$('#'+grid),id,nuevo;
                 if(indice<1){
                     id=($this.jqGrid('getCol',cod,false,'max')+1)||0;
                     nuevo='N';
@@ -507,7 +507,7 @@ if(isset($elimina)){
                 $('#'+id+aux).val(nuevo);
             }
 
-            //Función para eliminar un registro del grid
+            //Funciï¿½n para eliminar un registro del grid
             function eliminarFila(objeto){
                 var aux=$('#'+objeto.id+objeto.aux).val();
                 if(aux==='N'){
@@ -522,7 +522,7 @@ if(isset($elimina)){
                 }
             }
 
-            //Función para actualizar grid
+            //Funciï¿½n para actualizar grid
             function actualizarFila(grid,codigo,estado){
                 var data=$('#'+grid).getGridBatch();
                 $.each(data,function(i,v){
@@ -534,14 +534,14 @@ if(isset($elimina)){
                 $('#'+grid).startGridEdit();
             }
 
-            //Estilo cargar persona según su número de cédula
+            //Estilo cargar persona segï¿½n su nï¿½mero de cï¿½dula
             function cargarPersona(e,obj,opt){
                 $(e).on('change',function (){
                     buscarCliente(this.value,obj);
                 });
             }
 
-            //Función para cargar los datos de un producto
+            //Funciï¿½n para cargar los datos de un producto
             function cargarProducto(obj){
                 $('#productoDialog').dialog('close');
                 var producto=$('#productoForm').getData();
@@ -549,11 +549,11 @@ if(isset($elimina)){
                 $('#'+producto.row+'_Ite_Lar').val(obj.Ite_Lar);
             }
 
-            //Función que recibe el número de cédula
+            //Funciï¿½n que recibe el nï¿½mero de cï¿½dula
             function buscarCliente(cliente,obj){
                 var respuesta=validaNoIdentif(cliente);
                 if(respuesta['success']===true){
-                    $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",{buscarCliente:true,Prs_Ced:cliente},function(response){
+                    $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",{buscarCliente:true,Prs_Ced:cliente},function(response){
                         if(response['existe']===true && response['existeChofer']===false){
                             $('#Cho_Grid').find('tr#'+obj['rowId']).setData(response,false);
                         }
@@ -605,10 +605,10 @@ if(isset($elimina)){
                 return resp;
             }
 
-            //Función para cargar los datos a cada una de los grids
+            //Funciï¿½n para cargar los datos a cada una de los grids
             function cargarDatos(){
                 $('.grid').jqGrid('clearGridData',true).trigger('reloadGrid');
-                $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",{cargarDatos:true},function(response){
+                $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",{cargarDatos:true},function(response){
                     $.each(response['chofer'],function(i,v){
                         agregarFila(v['Cho_Cod'],'Cho_Grid','Cho_Cod','_Cho_Aux');$('#Cho_Grid').find('tr#'+v['Cho_Cod']).setData(v,false);
                     });
@@ -630,7 +630,7 @@ if(isset($elimina)){
                 },'json').fail(function(){$.alert();});
             }
 
-            //Función para guardar un registro
+            //Funciï¿½n para guardar un registro
             function save(grid,variables,clave){
                 $.createDialogConfirm('Desea Guardar los cambios realizados..!!',null,function(){
                     var index=0, data=$('#'+grid).getGridBatch();
@@ -640,7 +640,7 @@ if(isset($elimina)){
                             var campo=variables[ind];
                             if(v[campo]===''){
                                 index = $('#'+grid).jqGrid('getInd',v[clave]);
-                                $.alert('Debe completar información en la fila: '+index);
+                                $.alert('Debe completar informaciï¿½n en la fila: '+index);
                                 $('#'+grid).startGridEdit();
                                 return false;
                             }
@@ -648,7 +648,7 @@ if(isset($elimina)){
                     });
 
                     if(index*1>0){return false;}
-                    $.post("<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING);?>",{campos:data,save:true,clave:clave},function(response){
+                    $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8');?>",{campos:data,save:true,clave:clave},function(response){
                         if(response.success===true){
                             $.alert("Transaccion Realizada con &Eacute;xito!");
                             cargarDatos();

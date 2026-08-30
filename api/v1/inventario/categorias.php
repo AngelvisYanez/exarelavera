@@ -37,4 +37,21 @@
         $categoria_api = new CategoriaClass($obBD_conexion, $obBD_con1);
         $categoria_api->updateCategoria($body);
     });
+
+    $app->post('/v1/categorias/eliminar', function () {
+        $body = getBody();
+        require_once(__DIR__ . '/../../../classes/DataAPI.php');
+        try {
+            $api = new DataAPI($body['Bdd']);
+            $catCod = $body['Cat_Cod'] ?? null;
+            if (!$catCod) {
+                echo json_encode(['success' => false, 'error' => 'Cat_Cod es requerido']);
+                return;
+            }
+            $api->delete('categoria', 'Cat_Cod', $catCod);
+            echo json_encode(['success' => true, 'message' => 'Categoría eliminada exitosamente']);
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    });
 ?>

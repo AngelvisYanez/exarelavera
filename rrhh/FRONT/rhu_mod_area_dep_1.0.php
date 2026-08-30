@@ -311,10 +311,10 @@ if(isset($eliminar)){
             });
             
             //Variable para manejo del arbol jstree
-            public $treeview=$('#using_json_2'),campo='',cod_eli=0,type='';     
+            var $treeview=$('#using_json_2'),campo='',cod_eli=0,type='';     
 
             function updateTipoActivo(){
-                $treeview.jstree(true).settings.core.data = {'url': '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?areaAjax=true',"dataType": "json" };
+                $treeview.jstree(true).settings.core.data = {'url': '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?areaAjax=true',"dataType": "json" };
                 $treeview.jstree(true).refresh();
             } 
             $treeview.jstree({'core' : {'data': {}},
@@ -348,7 +348,7 @@ if(isset($eliminar)){
                                 $('#btn_sud').show(); 
                                 $('#Dep_Cod').val(data.node.id);
                                 $('#Are_Des_SD').val(data.node.original.Are_Des);
-                                $.post('<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING)?>',{'Dep_Cod':data.node.parent,'nombreDep':true},
+                                $.post('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',{'Dep_Cod':data.node.parent,'nombreDep':true},
                                 function (response){
                                     $('#Dep_Des_SD').val(response['Dep_Des']);
                                 },'json').fail(function (){$.alert('El servidor ha fallado en responder');});
@@ -362,7 +362,7 @@ if(isset($eliminar)){
                                 $('#btn_car').show();
                                 var Tic_Cod=data.node.id.replace('C_','');
                                 $('#Tic_Cod').val(Tic_Cod);$('#dep_des').val(data.node.original.Dep_Des);
-                                $.post('<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING)?>',{'Tic_Cod':Tic_Cod,'cargo':true},
+                                $.post('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',{'Tic_Cod':Tic_Cod,'cargo':true},
                                 function(response){
                                     $("#Tic_Per").summernote('code',response['Tic_Per']);
                                     $('#Tic_Des').val(response['Tic_Des']);
@@ -382,7 +382,7 @@ if(isset($eliminar)){
             {
                 var data=$('#'+form).serializeObject();
                 data['save']=true;
-                $.post('<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING)?>',data,function (response){
+                $.post('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',data,function (response){
                     if(response['success']===true){
                         setTimeout(function(){ $.alert('Transaccion Realizada con &Eacute;xito!'); }, 1);
                         $treeview.jstree(true).refresh();
@@ -392,7 +392,7 @@ if(isset($eliminar)){
             }
             //Funci�n para dar de baja a un departamento y subdepartamento
             function anular(){  
-            $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{eliminar:cod_eli,tipo:type}, function( response ) {
+            $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{eliminar:cod_eli,tipo:type}, function( response ) {
                 if(response['success']===true){ 
                     $.alert("El registro se ha anulado con &eacute;xito!");
                     $treeview.jstree(true).refresh();

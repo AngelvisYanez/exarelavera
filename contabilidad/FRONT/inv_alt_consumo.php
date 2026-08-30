@@ -249,21 +249,21 @@ if(isset($saveForm)){
                               </div>                                  
                             </div>                            
                             <div class="form-group">
-                              <label class="col-sm-3 control-label label-xs ">Número:</label>  
+                              <label class="col-sm-3 control-label label-xs ">Nï¿½mero:</label>  
                               <div class="col-sm-9">   
                                   <input id="Aju_Num" name="Aju_Num" type="number" class="form-control input-xs nospin" required="" />                                 
                               </div>                                  
                             </div>
                             <!-- static input-->
                             <div class="form-group">
-                              <label class="col-sm-3 control-label label-xs ">Descripción:</label>  
+                              <label class="col-sm-3 control-label label-xs ">Descripciï¿½n:</label>  
                               <div class="col-sm-9"> 
                                   <textarea name="Aju_Det" class="form-control input-xs" ></textarea>
                               </div>                                  
                             </div>   
                             <!-- static input-->
                             <div class="form-group">
-                              <label class="col-sm-3 control-label label-xs ">Observación:</label>  
+                              <label class="col-sm-3 control-label label-xs ">Observaciï¿½n:</label>  
                               <div class="col-sm-9"> 
                                   <textarea name="Aju_Obs" class="form-control input-xs" ></textarea>
                               </div>                                  
@@ -311,16 +311,16 @@ if(isset($saveForm)){
                                 $.createDialog('#successDialog',150,550);
                                 <?php $cons = $obBD_con1->getArrayConsulta(18,$Ses_Emp_Cod,$obBD_conexion); ?>
                                 kardexGrid.jqGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                                     //postData: $("#form1").getData("ajaxGrid"),
                                     autowidth : true, shrinkToFit: true, height: 270,responsive:true,footerRow:true,
                                     caption:'Listado de Productos',hidegrid:false,
                                     cmTemplate: {sortable:false /*,editrules: {edithidden: true}*/},
                                     colModel: [                               
-                                        { label: 'Cód.Int.', name: 'Index', key:true, hidden:true,viewable:true, width: 25,align:'center' }, 
-                                        { label: 'Cód.Int.', name: 'Pro_Cod', hidden:false,viewable:true, width: 25,align:'center' }, 
-                                        { label: 'Cód.Int.', name: 'Iva_Cod',hidden:true,viewable:false, width: 0,align:'center' }, 
+                                        { label: 'Cï¿½d.Int.', name: 'Index', key:true, hidden:true,viewable:true, width: 25,align:'center' }, 
+                                        { label: 'Cï¿½d.Int.', name: 'Pro_Cod', hidden:false,viewable:true, width: 25,align:'center' }, 
+                                        { label: 'Cï¿½d.Int.', name: 'Iva_Cod',hidden:true,viewable:false, width: 0,align:'center' }, 
                                         { label: 'Detalle',name: 'Ite_Lar', width: 150},                                        
                                         { label: 'Stock',name: 'Stk_Can', width: 40,classes:'columnHighlight3',align:'center'},
                                         { label: 'C. Consumo',name:'Con_Cod', width:55, editable: true, edittype:"select",formatter:'select', editoptions:{value:":Seleccione...<?php foreach($cons as $r){ echo ";$r[Con_Cod]:$r[Con_Des]"; } ?>"}},  
@@ -341,7 +341,7 @@ if(isset($saveForm)){
                                     footerrow: true, userDataOnFooter: false,
                                     rowNum: 10000000, pager: "#kardexPager", gridview: true, rownumbers: true, viewrecords: true, pgbuttons: false,pgtext: null
                                 }); 
-                                public $footRow = $("#gbox_prods #gview_prods .ui-jqgrid-sdiv .footrow");
+                                var $footRow = $("#gbox_prods #gview_prods .ui-jqgrid-sdiv .footrow");
                                 $footRow.find('>td:not(:last-child,:first-child,.Tot)').css("border-right-color", "transparent");
                                 $footRow.find('>td:not(.Total)').addClass("whiteI");
                             });
@@ -384,7 +384,7 @@ if(isset($saveForm)){
                                 } return state;   
                             }
                             function updateNumber(val){
-                                $.post("<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{Aju_Tip:val,updateNumber:true}, function(response) { 
+                                $.post("<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{Aju_Tip:val,updateNumber:true}, function(response) { 
                                     if(response['success']) $('#Aju_Num').val(response['next']['Aju_Num']);
                                 },'json');
                             }
@@ -410,7 +410,7 @@ if(isset($saveForm)){
                     <label class="col-md-2 control-label">B&uacute;squeda:</label>  
                     <div class="col-md-7" >
                         <div class="input-group">                        
-                        <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese búsqueda..." autofocus  class="form-control input-sm "/>
+                        <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese bï¿½squeda..." autofocus  class="form-control input-sm "/>
                         <span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm" title="Buscar Producto" ><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
                       </div><!-- /input-group --> 
                     </div>                    
@@ -423,7 +423,7 @@ if(isset($saveForm)){
         // DIALOG BUSCAR CUENTAS            
              $.createSearchDialog('proDialog',[
                     { label: 'C&oacute;d.Int.', name: 'Pro_Cod', key: true, width: 15,align:"center",hidden:true },                                
-                    { label: 'Descripción', name: 'Ite_Lar', width: 110 },                      
+                    { label: 'Descripciï¿½n', name: 'Ite_Lar', width: 110 },                      
                     { label: 'Marca', name: 'Mar_Des', width: 40},
                     { label: 'Tipo', name: 'Cat_Des', width: 110,align:"center" },
                         { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 20, align: 'center',viewable: false,
@@ -467,7 +467,7 @@ if(isset($saveForm)){
     function guardar(data){
         $('.btn-frm').attr('disabled','disabled');
         $('#loader').show();
-        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
             //console.log(response['success']);
             if(response['success']===true){
                 $('.btn-new').removeAttr('disabled');  

@@ -5,10 +5,10 @@
  *
  * @author car.87cod :)
  * @version 1.0
- * Fecha de actualización:	2012-04-18
+ * Fecha de actualizaciï¿½n:	2012-04-18
  * @author lewis.chimarro
  * @version 1.0
- * Fecha de actualización:	2014-05-21 
+ * Fecha de actualizaciï¿½n:	2014-05-21 
  *
  * @package administrador.FRONT
  */
@@ -63,7 +63,7 @@ if (isset($_POST['hdd_save']))
 		$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 				
 		/**
-		 * Inserción de datos de la inscripción 
+		 * Inserciï¿½n de datos de la inscripciï¿½n 
 		 */
 		$obBD_con1->operacionobBD(18, $_POST['Usu_Cod'], $obBD_conexion);
 		
@@ -97,7 +97,7 @@ if (isset($_POST['hdd_save']))
 		//$obBD_con1->grabarAuditoria($_SERVER['PHP_SELF'], $Ses_Usu_Cod, $obBD_conexion);
 		
 		/**
-		 * Cierre de la transacción 
+		 * Cierre de la transacciï¿½n 
 		 */
 		$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 		
@@ -110,7 +110,7 @@ if (isset($_POST['hdd_save']))
 	<head>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php")?>        
-		<script language="javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
+		<script type="text/javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
 		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>	
         <!--Librerias para interfaz -->               
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
@@ -145,7 +145,7 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Usu_Cod']))
 	    <thead>
 	      <tr>
 	        <th width="5%" >Cod. Int. </th>
-	        <th width="8%" >Cédula</th>
+	        <th width="8%" >Cï¿½dula</th>
 	        <th>Apellidos y Nombres </th>
 	        <th>Sucursal</th>
 			<th width="3%" >&nbsp;</th>
@@ -194,8 +194,8 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Usu_Cod']))
 	           		<i class=" icon-arrow-right icon-white"></i>
 	           	</button>					
 	            <input type="hidden" name="Usu_Cod" id="Usu_Cod" value="<?Php echo $row['Usu_Cod'];?>">
-				<input type="hidden" name="txt_busqueda" id="txt_busqueda" value="<?Php echo $_POST['txt_busqueda'];?>"/>
-				<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo $_POST['op_opciones']?>">
+				<input type="hidden" name="txt_busqueda" id="txt_busqueda" value="<?Php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>"/>
+				<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8')?>">
 			</form>
 <?php
 		}
@@ -325,7 +325,7 @@ $thisPost->startPost();?>
    <table width="300" border="0" cellpadding="0" cellspacing="0">
 	   <tr>
 		     <td width="34%">
-		  		<button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
+		  		<button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8').'*'.htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8').'*'.'1';?>')">
 		               <i class=" icon-arrow-left icon-white"></i>
 		               <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
 		       		 </button>
@@ -340,7 +340,7 @@ $thisPost->startPost();?>
 	   </tr>
    </table>
    <input name="hdd_save" type="hidden" id="hdd_save" value="insertar">
-   <input type="hidden" name="Usu_Cod" id="Usu_Cod" value="<?Php echo $_POST['Usu_Cod'];?>"/>  
+   <input type="hidden" name="Usu_Cod" id="Usu_Cod" value="<?Php echo htmlspecialchars($_POST['Usu_Cod'], ENT_QUOTES, 'UTF-8');?>"/>  
 </form>
 <?Php } //fin del if(isset($hdd_aux))
 

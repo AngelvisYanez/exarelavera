@@ -86,8 +86,8 @@ if (isset($guardarCliente)) {
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/javascript" src="../../framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
-    <!--<script language="javascript" src="../VALIDACIONES/tes_val_cliente.js?a=12"></script>-->
-    <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
+    <!--<script type="text/javascript" src="../VALIDACIONES/tes_val_cliente.js?a=12"></script>-->
+    <script type="text/javascript" src="../../framework/plugins/cedulaRuc.js"></script>
 </HEAD>
 
 <BODY>
@@ -476,7 +476,7 @@ if (isset($guardarCliente)) {
         }
 
         function setTipoDoc() {
-            public $Prs_Ced = $('#Prs_Ced'),
+            var $Prs_Ced = $('#Prs_Ced'),
                 Prs_Ced = $Prs_Ced.val(),
                 isRuc = $('#isRuc').is(':checked');
 

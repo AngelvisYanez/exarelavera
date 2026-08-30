@@ -10,7 +10,7 @@ $nivel = explode("-",$niv);
 <title>Ginus</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <link href="../../Estilos/Estilo1.css" rel="stylesheet" type="text/css">
-<script language="javascript" src="../Librerias/validaciones/validacion.js"></script>
+<script type="text/javascript" src="../Librerias/validaciones/validacion.js"></script>
 </head>
 <body class="Cuerpo">
 <table width="652"  height="968" border="0" align="center">

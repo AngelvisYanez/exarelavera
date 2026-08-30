@@ -22,9 +22,9 @@ $fecha = explode('-', $hoy);
 ?>
 <html>
 <head>
-<title><?Php echo $Ses_Sys_Nom; ?></title>
+<title><?php echo $Ses_Sys_Nom; ?></title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+<?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
 <style type="text/css">
 .TablaRepComprLeft {
     font-weight: normal;
@@ -68,7 +68,7 @@ $fecha = explode('-', $hoy);
             <td rowspan="3" width="150"><img class="img-imp-ant" src="<?php echo $Ses_Emp_Log?>" alt=""></td>
             <td colspan="2" align="center"><b><?php echo $Ses_Emp_Nom?></b></td>
             <td>
-            <td style="text-align:right;" colspan="2"><?/*echo $sucur['Ciu_Des'].", ";*/?>
+            <td style="text-align:right;" colspan="2"><?php /*echo $sucur['Ciu_Des'].", ";*/?>
                <?php 
                $dias = array("Domingo","Lunes","Martes","Miercoles","Jueves","Viernes","Sábado");
                $meses = array("Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre");
@@ -79,17 +79,17 @@ $fecha = explode('-', $hoy);
             </td>
          </tr>
          <tr>           
-            <td colspan="2" align="center"><b>Direc.:</b> <?echo $sucur['Suc_Dir']?></td>
+            <td colspan="2" align="center"><b>Direc.:</b> <?php echo $sucur['Suc_Dir']?></td>
          </tr>
          <tr>
-            <td colspan="2" align="center"><b>Tel.:</b> <?echo $sucur['Suc_Te1']?></td>
+            <td colspan="2" align="center"><b>Tel.:</b> <?php echo $sucur['Suc_Te1']?></td>
             <td><td><td width="150" style="border:1px solid;text-align:right;">$ <?php echo number_format($anticipo['Ant_Val'], 2, '.', ',')?></td></td></td>
          </tr>
       </table>
    </div>
    <hr>
    
-   <div align="center"> <b class="titulo-print"><u>ANTICIPO DE CLIENTE</u> &nbsp; #ANT-<span id="ant_doc_ver"><?echo $anticipo['Ant_Doc']?></span></b> </div><br>
+   <div align="center"> <b class="titulo-print"><u>ANTICIPO DE CLIENTE</u> &nbsp; #ANT-<span id="ant_doc_ver"><?php echo $anticipo['Ant_Doc']?></span></b> </div><br>
    <table>
       <tr>
          <td width="20%"></td>
@@ -97,7 +97,7 @@ $fecha = explode('-', $hoy);
       </tr>
       <tr>
          <td style="vertical-align:top;"><b>Recibimos de:</b></td>
-         <td><?echo $cliente['nombre']?> CON C&Eacute;DULA <?echo $cliente['Prs_Ced']?></td>
+         <td><?php echo $cliente['nombre']?> CON C&Eacute;DULA <?php echo $cliente['Prs_Ced']?></td>
       </tr>
       <tr>
          <td><b>La cantidad de:</b></td>
@@ -151,13 +151,13 @@ $fecha = explode('-', $hoy);
          <td><u>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;</u></td>
       </tr>
       <tr align="center">
-         <td><b><?echo $cliente['nombre']?></b></td>
+         <td><b><?php echo $cliente['nombre']?></b></td>
       </tr>
       </table>
       <br>
       <table>
       <tr>
-      <td><?echo $sucur['Ciu_Des']?>, 
+      <td><?php echo $sucur['Ciu_Des']?>, 
          <?php 
          $dias = array("Domingo","Lunes","Martes","Miercoles","Jueves","Viernes","Sábado");
          $meses = array("Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre");

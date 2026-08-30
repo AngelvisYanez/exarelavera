@@ -150,7 +150,7 @@ $mes = date("m");
         <TITLE><?Php echo "Bodega Registrar [EXA]"; ?></TITLE>
         <meta charset= "UTF-8">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>    
-        <script language="javascript" src="../VALIDACIONES/inv_val_bodega.js"></script>
+        <script type="text/javascript" src="../VALIDACIONES/inv_val_bodega.js"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">

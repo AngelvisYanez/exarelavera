@@ -19,7 +19,7 @@ function validar_balance(form, campo) {
 		if (ini >= Pec_Fei && fin <= Pec_Fef) {
 			form.submit();
 		} else {
-			alert ("Las fechas deben estar en el rango del periodo contable seleccionado \n Inicio: " + Pec_Fei + " \n Fin    : " + Pec_Fef);	
+			$.alert("Las fechas deben estar en el rango del periodo contable seleccionado <br> Inicio: " + Pec_Fei + " <br> Fin    : " + Pec_Fef,null,'warning');
 		}
 	}
 }//Fin del function validar_balance(form)

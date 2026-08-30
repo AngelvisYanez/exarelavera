@@ -986,7 +986,7 @@ if (isset($generarFacturasAjax)) {
         var autorizacionInfo = <?php echo json_encode($autorizaci_info); ?>;
     </script>
 
-    <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
+    <script type="text/javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
     <script type="text/ecmascript" src="../VALIDACIONES/man_fac_mas.js?x=3"></script>
     </script>
 
@@ -1212,9 +1212,9 @@ if (isset($generarFacturasAjax)) {
                                     <div class="col-sm-10">
                                         <div class="input-group input-group-sm dateRangeInputs">
                                             <span class="range input-group-addon alert-info">Desde</span>
-                                            <input type="text" id="Fec_Ini" name="Fec_Ini" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Ini']) ? $_GET['Fec_Ini'] : date('Y-01-01'); ?>" />
+                                            <input type="text" id="Fec_Ini" name="Fec_Ini" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Ini']) ? htmlspecialchars($_GET['Fec_Ini'], ENT_QUOTES, 'UTF-8') : date('Y-01-01'); ?>" />
                                             <span class="range input-group-addon alert-info">Hasta</span>
-                                            <input type="text" id="Fec_Fin" name="Fec_Fin" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Fin']) ? $_GET['Fec_Fin'] : ''; ?>" />
+                                            <input type="text" id="Fec_Fin" name="Fec_Fin" class="form-control range" required="" value="<?php echo isset($_GET['Fec_Fin']) ? htmlspecialchars($_GET['Fec_Fin'], ENT_QUOTES, 'UTF-8') : ''; ?>" />
                                         </div>
                                     </div>
                                 </div>
@@ -1323,7 +1323,7 @@ if (isset($generarFacturasAjax)) {
                         footerrow: true,
                         userDataOnFooter: false,
                         datatype: "local",
-                        caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar </option><option value="order by manifiesto.Man_Fes DESC ">Fecha Creacion</option><option value="order by Man_Num DESC ">Num. Documento DESC</option><select>&nbsp;</div>',
+                        caption: 'Resultados <div class="pull-right"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy"><option value="">No ordenar </option><option value="order by manifiesto.Man_Fes DESC ">Fecha Creacion</option><option value="order by Man_Num DESC ">Num. Documento DESC</option></select>&nbsp;</div>',
                         colModel: [{
                                 label: 'Cód. Int.',
                                 name: 'Man_Cod',
@@ -1600,7 +1600,7 @@ if (isset($generarFacturasAjax)) {
                                             },
                                             dataType: 'json',
                                             success: function(plantas) {
-                                                public $selectPla = $('select[name="Pla_Cod"]');
+                                                var $selectPla = $('select[name="Pla_Cod"]');
                                                 // Guardar el valor actual si existe
                                                 var valorActual = $selectPla.val();
                                                 // Limpiar opciones excepto "TODOS"
@@ -1639,7 +1639,7 @@ if (isset($generarFacturasAjax)) {
                                 actualizarInfoFacturacion();
 
                                 // Calcular y mostrar totales en el footer
-                                public $grid = $('#manifiestosGrid');
+                                var $grid = $('#manifiestosGrid');
                                 var subtotalSum = $grid.jqGrid('getCol', 'subtotal', false, 'sum') || 0;
                                 var ivaSum = $grid.jqGrid('getCol', 'total_iva', false, 'sum') || 0;
                                 var totalSum = $grid.jqGrid('getCol', 'total', false, 'sum') || 0;
@@ -1664,8 +1664,8 @@ if (isset($generarFacturasAjax)) {
 
                     // Aviso de manifiestos hoy a facturar (consulta 78): warning clickeable que abre tool con detalle por planta
                     $(function() {
-                        public $alert = $('#manifiestos_facturar_alert');
-                        public $content = $('#manifiestos_facturar_content');
+                        var $alert = $('#manifiestos_facturar_alert');
+                        var $content = $('#manifiestos_facturar_content');
                         $content.text('Cargando...');
                         $alert.show();
                         $.get('', {
@@ -1681,7 +1681,7 @@ if (isset($generarFacturasAjax)) {
                                     color: '#0044aa',
                                     fontWeight: '600'
                                 });
-                                public $tool = $('#manifiestos_facturar_tool');
+                                var $tool = $('#manifiestos_facturar_tool');
                                 $alert.off('click.manifiestos').on('click.manifiestos', function(e) {
                                     e.stopPropagation();
                                     if ($tool.is(':visible')) {
@@ -1723,9 +1723,9 @@ if (isset($generarFacturasAjax)) {
                         var op_opciones = $('#serachDocDorm input[name="op_opciones"]:checked').val();
                         var plaCod = $('select[name="Pla_Cod"]').val();
                         var searchVal = $('#serachDocDorm input[name="search"]').val();
-                        public $checkboxGrupo = $('#fac_group');
-                        public $checkboxIndividual = $('#fac_individual');
-                        public $btnRegister = $('#btn_register');
+                        var $checkboxGrupo = $('#fac_group');
+                        var $checkboxIndividual = $('#fac_individual');
+                        var $btnRegister = $('#btn_register');
 
                         // Habilitar solo si: búsqueda por Cliente (op_opciones == 'p') Y planta seleccionada (plaCod != '') Y hay un cliente escrito (searchVal != '')
                         if (op_opciones == 'p' && plaCod && plaCod !== '' && searchVal && searchVal.trim() !== '') {
@@ -1787,8 +1787,8 @@ if (isset($generarFacturasAjax)) {
                     function actualizarInfoFacturacion() {
                         var facGroupChecked = $('#fac_group').is(':checked');
                         var facIndividualChecked = $('#fac_individual').is(':checked');
-                        public $infoDiv = $('#infoFacturacionContent');
-                        public $infoTexto = $('#infoFacturacionTexto');
+                        var $infoDiv = $('#infoFacturacionContent');
+                        var $infoTexto = $('#infoFacturacionTexto');
 
                         if (facGroupChecked) {
                             var cantidadSeleccionados = $('.row-select:checked').length;
@@ -1906,13 +1906,13 @@ if (isset($generarFacturasAjax)) {
 
                     // Función para gestionar la exclusividad entre Periodo/Mes y Rango de Fechas
                     window.gestionarFiltrosFecha = function(select) {
-                        public $pec = $(select);
+                        var $pec = $(select);
                         var pecCod = $pec.val();
-                        public $cmbMes = $('#Cmb_Mes');
-                        public $fecIni = $('#Fec_Ini');
-                        public $fecFin = $('#Fec_Fin');
-                        public $hiddenIni = $('input[name="fecha_inicio"]');
-                        public $hiddenFin = $('input[name="fecha_fin"]');
+                        var $cmbMes = $('#Cmb_Mes');
+                        var $fecIni = $('#Fec_Ini');
+                        var $fecFin = $('#Fec_Fin');
+                        var $hiddenIni = $('input[name="fecha_inicio"]');
+                        var $hiddenFin = $('input[name="fecha_fin"]');
 
                         if (pecCod !== '') {
                             // Periodo seleccionado: habilitar mes, bloquear rango de fechas
@@ -1921,7 +1921,7 @@ if (isset($generarFacturasAjax)) {
                             $fecFin.prop('disabled', true).val('');
 
                             // Actualizar hidden inputs con el rango del periodo seleccionado
-                            public $opt = $pec.find('option:selected');
+                            var $opt = $pec.find('option:selected');
                             $hiddenIni.val($opt.data('inicio'));
                             $hiddenFin.val($opt.data('fin'));
                         } else {
@@ -1955,7 +1955,7 @@ if (isset($generarFacturasAjax)) {
                         $('#serachDocDorm input[name="search"]').val('');
 
                         // Restaurar el select de plantas a << TODOS >>
-                        public $selectPla = $('select[name="Pla_Cod"]');
+                        var $selectPla = $('select[name="Pla_Cod"]');
                         // Si el select fue modificado dinámicamente, podríamos querer restaurar todas las plantas activas
                         // pero según el requerimiento, basta con ponerlo en vacio (TODOS)
                         $selectPla.val('').trigger('change');
@@ -1979,7 +1979,7 @@ if (isset($generarFacturasAjax)) {
                     window.selectCliente = function(row) {
                         if (row && row.Prs_Ced) {
                             // Cambiar a búsqueda por Cliente (radsc1)
-                            public $radCliente = $('#radsc1');
+                            var $radCliente = $('#radsc1');
                             $radCliente.prop('checked', true);
 
                             // Llamar a setOpt para configurar búsqueda por cliente ('p')
@@ -2008,7 +2008,7 @@ if (isset($generarFacturasAjax)) {
                                     },
                                     dataType: 'json',
                                     success: function(plantas) {
-                                        public $selectPla = $('select[name="Pla_Cod"]');
+                                        var $selectPla = $('select[name="Pla_Cod"]');
                                         $selectPla.empty();
                                         $selectPla.append('<option value=""><< TODOS >></option>');
                                         if (plantas && plantas.length > 0) {
@@ -2133,7 +2133,7 @@ if (isset($generarFacturasAjax)) {
                                         var id = ids[i];
                                         var row = $('#sfGrid').jqGrid('getRowData', id) || {};
                                         var n = parseFloat(String(row.cant_manifiestos || '0').replace(/,/g, '')) || 0;
-                                        public $tds = $('#' + id + ' td:not(.jqgrid-rownum)');
+                                        var $tds = $('#' + id + ' td:not(.jqgrid-rownum)');
                                         if (n > 0) {
                                             $tds.addClass('cellRed2');
                                             $tds.removeClass('cellGreen2');

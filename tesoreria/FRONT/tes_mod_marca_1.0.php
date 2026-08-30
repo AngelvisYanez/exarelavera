@@ -5,7 +5,7 @@
  * 
  * @author Lewis Chimarro
  * @version 1.0
- * Fecha de actualización:	2012-06-01
+ * Fecha de actualizaciï¿½n:	2012-06-01
  * 
  * @package tesoreria.FRONT
  */
@@ -66,8 +66,8 @@ if (isset($hdd_save))
 ?>
 <HTML>
 	<HEAD>		
-    	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/tes_val_marca.js"></script>
+    	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/tes_val_marca.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -117,7 +117,7 @@ if (isset($hdd_save))
     <thead>
 	  <tr>
           <th width="4%">C&oacute;d. Int.</th>
-          <th width="82%">Descripción</th>
+          <th width="82%">Descripciï¿½n</th>
 		  <th width="4%">&nbsp;</th>
       </tr>
       </thead>

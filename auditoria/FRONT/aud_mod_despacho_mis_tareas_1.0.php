@@ -614,7 +614,7 @@ if (!empty($_REQUEST['generarTareaEventual'])) {
 
 <script type="text/javascript">
 (function () {
-    var urlBase = '<?php echo str_replace("'", "\\'", $_SERVER['PHP_SELF']); ?>';
+    var urlBase = <?php echo json_encode($_SERVER['PHP_SELF']); ?>;
     var urlAdjuntos = '../adjuntos/despacho/';
     var rowsAll = [];
     var sinVinculoFlag = false;
@@ -959,8 +959,8 @@ if (!empty($_REQUEST['generarTareaEventual'])) {
         // -------- Nueva tarea eventual (modal) --------
         function cargarClientesNuevaTarea() {
             var per = $('#nuevaTareaPeriodo').val() || '';
-            public $cli = $('#nuevaTareaCliente');
-            public $act = $('#nuevaTareaActividad');
+            var $cli = $('#nuevaTareaCliente');
+            var $act = $('#nuevaTareaActividad');
             if ($cli.hasClass('select2-hidden-accessible')) $cli.select2('destroy');
             if ($act.hasClass('select2-hidden-accessible')) $act.select2('destroy');
             $cli.find('option:gt(0)').remove();
@@ -977,7 +977,7 @@ if (!empty($_REQUEST['generarTareaEventual'])) {
         function cargarActividadesEventualesNuevaTarea() {
             var per = $('#nuevaTareaPeriodo').val() || '';
             var cli = $('#nuevaTareaCliente').val() || '';
-            public $act = $('#nuevaTareaActividad');
+            var $act = $('#nuevaTareaActividad');
             if ($act.hasClass('select2-hidden-accessible')) $act.select2('destroy');
             $act.find('option:gt(0)').remove();
             if (!per || !cli) {
@@ -1038,7 +1038,7 @@ if (!empty($_REQUEST['generarTareaEventual'])) {
             if (!per || per.length < 7) { alert('Indique el período (mes).'); return; }
             if (!cli) { alert('Seleccione el cliente.'); return; }
             if (!act) { alert('Seleccione la actividad eventual.'); return; }
-            public $btn = $(this);
+            var $btn = $(this);
             $btn.prop('disabled', true);
             $('#nuevaTareaResultado').html('<span class="text-muted"><span class="glyphicon glyphicon-refresh glyphicon-spin"></span> Creando...</span>');
             $.post(urlBase, { generarTareaEventual: 1, Tar_Periodo: per, Cli_Cod: cli, Act_Cod: act, Tar_Fecha_Limite: fec }, function (r) {

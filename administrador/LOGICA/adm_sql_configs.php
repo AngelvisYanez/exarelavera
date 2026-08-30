@@ -19,7 +19,7 @@ function sentencias_configs($id, $Par_Sql)
             //echo $sql.'<br/>';
             break;
         case 2:
-            $sql = "UPDATE empresas SET Emp_Nom = '$Par_Sql[Emp_Nom]', Emp_Rco = '$Par_Sql[Emp_Rco]', Emp_Rep = '$Par_Sql[Emp_Rep]', Emp_Ren = '$Par_Sql[Emp_Rep]', Emp_Con = '$Par_Sql[Emp_Con]',   Emp_Rre='$Par_Sql[Emp_Rre]', Emp_Reg = '$Par_Sql[Emp_Reg]', Emp_Cnt = '$Par_Sql[Emp_Cnt]',Art_Calif = '$Par_Sql[Art_Calif]',Ret_Scom = '$Par_Sql[Ret_Scom]' WHERE Emp_Cod = '$_SESSION[Ses_Emp_Cod]'";
+            $sql = "UPDATE empresas SET Emp_Nom = '$Par_Sql[Emp_Nom]', Emp_Rco = '$Par_Sql[Emp_Rco]', Emp_Rep = '$Par_Sql[Emp_Rep]', Emp_Ren = '$Par_Sql[Emp_Ren]', Emp_Con = '$Par_Sql[Emp_Con]',   Emp_Rre='$Par_Sql[Emp_Rre]', Emp_Reg = '$Par_Sql[Emp_Reg]', Emp_Cnt = '$Par_Sql[Emp_Cnt]',Art_Calif = '$Par_Sql[Art_Calif]',Ret_Scom = '$Par_Sql[Ret_Scom]' WHERE Emp_Cod = '$_SESSION[Ses_Emp_Cod]'";
            // $sql = "UPDATE empresas SET Emp_Nom = '$Par_Sql[Emp_Nom]', Emp_Rco = '$Par_Sql[Emp_Rco]', Emp_Rep = '$Par_Sql[Emp_Rep]', Emp_Ren = '$Par_Sql[Emp_Rep]', Emp_Con = '$Par_Sql[Emp_Con]',   Emp_Rre='$Par_Sql[Emp_Rre]', Emp_Reg = '$Par_Sql[Emp_Reg]', Emp_Cnt = '$Par_Sql[Emp_Cnt]' WHERE Emp_Cod = '$_SESSION[Ses_Emp_Cod]'";
             //echo $sql.'<br/>';
             break;

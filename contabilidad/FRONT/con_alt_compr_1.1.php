@@ -713,9 +713,9 @@ else
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/XML.js"></script>
-		<script language="javascript" src="../VALIDACIONES/con_val_compr.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/XML.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/con_val_compr.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -750,16 +750,16 @@ if (isset($bt_save) && isset($ultimo) && !isset($hdd_volver))
 		
 	if ($op=="I") 
 	{ ?>
-	<script language="javascript">
+	<script type="text/javascript">
 		windows('<?Php echo $hdd_comprobante; ?>?Com_Num=<?php echo $Com_Num; ?>&codigo=<?php echo $ultimo; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $Tia_Cod; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec_Cod;?>&op=<?Php echo $op; ?>','',800,600,'yes','yes', 'yes'); 
 	</script>
     <?php } else if ($op=="E") 
 	{ ?>	   
-	<script language="javascript">
+	<script type="text/javascript">
 		windows('<?Php echo $hdd_comprobante; ?>?Com_Num=<?php echo $Com_Num; ?>&codigo=<?php echo $ultimo; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $Tia_Cod; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec_Cod;?>&op=<?Php echo $op; ?>','',800,600,'yes','yes', 'yes'); 	
 	</script>
 	<?php } else { ?>
-	<script language="javascript">
+	<script type="text/javascript">
 	windows('<?Php echo $hdd_comprobante; ?>?Com_Num=<?php echo $Com_Num; ?>&codigo=<?php echo $ultimo; ?>&tabla=<?php echo $tabla; ?>&tipo=<?php echo $Tia_Cod; ?>&campo=<?php echo $campo; ?>&Pec_Cod=<?php echo $Pec_Cod;?>&op=<?Php echo $op; ?>','',800,600,'yes','yes', 'yes'); 
     </script>
     <?php 
@@ -921,7 +921,7 @@ else
 	      </tr>
 	    </table>
 <br />
-	  	<script language="javascript">
+	  	<script type="text/javascript">
 		ShowHide('tbl_caja');
 		ShowHide('tbl_compra');
 		</script>
@@ -1089,7 +1089,7 @@ else
 if ((isset($Cli_Cod) && ($op=="I")) || (isset($Prv_Cod) && ($op=="E" || $op=="D")))
 {
 ?>
-	<script language="javascript">
+	<script type="text/javascript">
 	/* Evita el sumbit */
 	document.onkeypress = stopRKey; 
 	</script>
@@ -1604,7 +1604,7 @@ if ((isset($Cli_Cod) && ($op=="I")) || (isset($Prv_Cod) && ($op=="E" || $op=="D"
 		  if (count($row_rs_codigos) == 1)
 		  { 
 		  ?>
-		  <script language="javascript">
+		  <script type="text/javascript">
 			/* Asigna los valores cuando se trata de un solo registro */
 		  document.getElementById('datos[<?php echo $fila; ?>,3]').selectedIndex = 1;
 	 	  document.getElementById('datos[<?php echo $fila; ?>,1]').value = '<?Php echo $Pld_Cod; ?>'; 
@@ -1956,7 +1956,7 @@ if ((isset($Cli_Cod) && ($op=="I")) || (isset($Prv_Cod) && ($op=="E" || $op=="D"
 		  </tr>
 		</table>
 	</form>
-    <script language="javascript">
+    <script type="text/javascript">
 	document.getElementById('Com_Val').value = '<?Php echo round($total_d,2); ?>';
 	</script>
 	<br>

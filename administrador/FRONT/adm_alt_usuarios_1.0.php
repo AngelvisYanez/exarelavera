@@ -5,7 +5,7 @@
  *
  * @author car.87cod :)
  * @version 2.0
- * Fecha de actualización:	2012-04-18
+ * Fecha de actualizaciï¿½n:	2012-04-18
  *
  * @package administrador.FRONT
  */
@@ -44,7 +44,7 @@ if (isset($_POST['hdd_save']))
 	if ($thisPost->postBlock($_POST['postID']))
 	{
 	/**
-	 * Inicio de Transacción
+	 * Inicio de Transacciï¿½n
 	 */
 	$obBD_con1->inicio_transaccion($obBD_conexion->conexion);
 	
@@ -83,7 +83,7 @@ if (isset($_POST['hdd_save']))
 	 */
 	//$obBD_con1->grabarAuditoria($_SERVER['PHP_SELF'], $Ses_Usu_Cod, $obBD_conexion);
 	
-	/* Cierre de la transacción */
+	/* Cierre de la transacciï¿½n */
 	$obBD_con1->fin_transaccion($obBD_conexion->conexion);
 
 		/**
@@ -98,7 +98,7 @@ if (isset($_POST['hdd_save']))
 		$obBD_con_master =  new Class_Log_Datos_Admu;
 
 		/**
-		* Transacción Anidada
+		* Transacciï¿½n Anidada
 		*/
 		$obBD_con_master->inicio_transaccion($obBD_conexion_master->conexion);		
 		
@@ -113,7 +113,7 @@ if (isset($_POST['hdd_save']))
 		$obBD_con_master->operacionobBD(36, $Ses_Suc_Cod.'*'.$row_data['Dat_Cod'].'*'.$_POST['Prs_Ced'], $obBD_conexion_master);
 
 		/**
-		* Cierre de la transacción 
+		* Cierre de la transacciï¿½n 
 		*/
 		$obBD_con_master->fin_transaccion($obBD_conexion_master->conexion);
 
@@ -127,7 +127,7 @@ if (isset($_POST['hdd_save']))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php")?>        
-		<script language="javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
+		<script type="text/javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
 		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>	
         <!--Librerias para interfaz -->               
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
@@ -223,8 +223,8 @@ if(isset($_POST['txt_busqueda']) && !isset($_POST['Prs_Cod']))
 		           		<i class=" icon-arrow-right icon-white"></i>
 		           	</button>					
 		            <input type="hidden" name="Prs_Cod" id="Prs_Cod" value="<?Php echo $row['Prs_Cod'];?>">
-					<input type="hidden" name="txt_busqueda" id="txt_busqueda" value="<?Php echo $_POST['txt_busqueda'];?>"/>
-					<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo $_POST['op_opciones']?>">
+					<input type="hidden" name="txt_busqueda" id="txt_busqueda" value="<?Php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>"/>
+					<input type="hidden" name="op_opciones" id="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8')?>">
 					<input type="hidden" name="id_tabla" id="id_tabla" value="<?php echo $obBD_con1->id_tabla?>">
 				</form>
 			<?php
@@ -373,7 +373,7 @@ if (isset($_POST['Prs_Cod']))
    <table width="300" border="0" cellpadding="0" cellspacing="0">
    <tr>
      <td width="34%">
-  <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
+  <button type="button" class="btn btn-inverse fileinput-button" title="Atras" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8').'*'.htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8').'*'.'1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atras&nbsp;&nbsp;</span>
        		 </button>

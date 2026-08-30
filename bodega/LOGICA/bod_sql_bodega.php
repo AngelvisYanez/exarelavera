@@ -152,7 +152,7 @@ function sentencias_bodega($id,$Par_Sql){
       }else{
         $campos="(SUM(IFNULL(kar.Kar_Can,0))-SUM(IFNULL(kar.Kar_Sal,0))) AS cantidad, marca.Mar_Des,cat.Cat_Des, uni.Uni_Des, item.Ite_Lar, sum(kar.Kar_Sal)AS salida, sum(kar.Kar_Can) AS entrada, sum(kar.Kar_Can) - sum(kar.Kar_Sal) stocka_act, pro.*";
       }
-      $sql="SELECT $campos FROM kardex_ie AS kar INNER JOIN producto AS pro ON pro.Pro_Cod = kar.Pro_Cod INNER JOIN unidad AS uni ON uni.Uni_Cod=pro.Uni_Cod INNER JOIN marca ON marca.Mar_Cod= pro.Mar_Cod  INNER JOIN item ON item.Ite_Cod = pro.Pro_Cod INNER JOIN categorias as cat ON cat.Cat_Cod= item.Cat_Cod INNER JOIN bodega AS bod ON bod.Bod_Cod=kar.Bod_Cod WHERE pro.Pro_Est='A' $search AND $bodega_search GROUP BY pro.Pro_Cod";
+      $sql="SELECT $campos FROM kardex_ie AS kar INNER JOIN producto AS pro ON pro.Pro_Cod = kar.Pro_Cod INNER JOIN unidad AS uni ON uni.Uni_Cod=pro.Uni_Cod INNER JOIN marca ON marca.Mar_Cod= pro.Mar_Cod  INNER JOIN item ON item.Ite_Cod = pro.Ite_Cod INNER JOIN categorias as cat ON cat.Cat_Cod= item.Cat_Cod INNER JOIN bodega AS bod ON bod.Bod_Cod=kar.Bod_Cod WHERE pro.Pro_Est='A' $search AND $bodega_search GROUP BY pro.Pro_Cod";
       break;
     case 27:
       if ($Par_Sql['Bod_Cod']==0) {
@@ -170,7 +170,7 @@ function sentencias_bodega($id,$Par_Sql){
     }
     $sql="SELECT $campos FROM kardex_ie AS kar 
           INNER JOIN producto AS pro ON pro.Pro_Cod = kar.Pro_Cod 
-          INNER JOIN item ON item.Ite_Cod = pro.Pro_Cod
+          INNER JOIN item ON item.Ite_Cod = pro.Ite_Cod
           INNER JOIN bodega AS bod ON bod.Bod_Cod=kar.Bod_Cod
           INNER JOIN ajuste_kar AS aju ON aju.Aju_Cod = kar.Aju_Cod
           LEFT JOIN entrada_salida AS en ON en.Aju_Cod = aju.Aju_Cod

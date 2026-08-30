@@ -27,7 +27,7 @@ if (!file_exists('mpdf_source.php')) {
 
 echo '<html>
 <head>
-<script language=javascript>
+<script type="text/javascript">
 checked=false;
 function checkedAll (frm1) {
 	var aa= document.getElementById("frm1");

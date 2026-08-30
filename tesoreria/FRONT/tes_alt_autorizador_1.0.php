@@ -115,7 +115,7 @@
 		<HEAD>
 			<TITLE><?php echo $Ses_Sys_Nom; ?></TITLE>
 			<?php require_once "../../mascaras/model1/estilos/estilos.php"; ?>	
-			<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+			<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 			<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 		</HEAD>
 	<BODY>

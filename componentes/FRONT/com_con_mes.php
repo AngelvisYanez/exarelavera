@@ -1,4 +1,5 @@
-<?php 
+<?php
+if (!function_exists('error_alerta')) return; 
 /* 	Componente que muestra los meses en un combo Excepto el "<<TODOS>>" 
 	Desarrollador: 	Jose Cumbicos Ortiz
 	Fecha:			02/06/2010

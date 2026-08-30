@@ -46,6 +46,9 @@ if (isset($_POST['getDashboardData'])) {
     }
     // Usar conexion directa con mysqli
     $conexion = $obBD_conexion->conexion;
+    if ($conexion instanceof mysqli) {
+        $conexion->set_charset("utf8");
+    }
     $baseDatos = isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : 'NO_DEFINIDA';
     $errores = array();
     // ========== CONSULTA VENTAS - CON FILTRO DE EMPRESA ==========
@@ -88,18 +91,20 @@ if (isset($_POST['getDashboardData'])) {
         $errores['ventas'] = mysqli_error($conexion);
     }
     $rsVentas = $resultVentas ? mysqli_fetch_assoc($resultVentas) : null;
-    if ($resultVentas) 
-    // Si no hay resultados, inicializar con ceros
-    if (!$rsVentas || !isset($rsVentas['subtotal'])) {
-        $rsVentas = array('total' => 0, 'cantidad' => 0, 'subtotal' => 0, 'iva' => 0);
-    } else {
-        // Total = Subtotal + IVA + ICE (calculados con los porcentajes reales)
-        $subtotal = floatval($rsVentas['subtotal']);
-        $iva = floatval($rsVentas['iva']);
-        $ice = floatval($rsVentas['ice']);
-        $rsVentas['subtotal'] = round($subtotal, 2);
-        $rsVentas['iva'] = round($iva, 2);
-        $rsVentas['total'] = round($subtotal + $iva + $ice, 2);
+    
+    if ($resultVentas) {
+        // Si no hay resultados, inicializar con ceros
+        if (!$rsVentas || !isset($rsVentas['subtotal'])) {
+            $rsVentas = array('total' => 0, 'cantidad' => 0, 'subtotal' => 0, 'iva' => 0, 'ice' => 0);
+        } else {
+            // Total = Subtotal + IVA + ICE (calculados con los porcentajes reales)
+            $subtotal = floatval($rsVentas['subtotal']);
+            $iva = floatval($rsVentas['iva']);
+            $ice = floatval($rsVentas['ice']);
+            $rsVentas['subtotal'] = round($subtotal, 2);
+            $rsVentas['iva'] = round($iva, 2);
+            $rsVentas['total'] = round($subtotal + $iva + $ice, 2);
+        }
     }
     // ========== CONSULTA COMPRAS - FILTRO POR PROVEEDOR DE EMPRESA ==========
     // Nota: Tic_Sri=4 es Nota de Crédito Proveedor y debe RESTAR del total
@@ -138,24 +143,28 @@ if (isset($_POST['getDashboardData'])) {
         $errores['compras'] = mysqli_error($conexion);
     }
     $rsCompras = $resultCompras ? mysqli_fetch_assoc($resultCompras) : null;
-    if ($resultCompras) 
-    // Si no hay resultados, inicializar con ceros
-    if (!$rsCompras || !isset($rsCompras['subtotal'])) {
-        $rsCompras = array('total' => 0, 'cantidad' => 0, 'subtotal' => 0, 'iva' => 0);
-    } else {
-        // Total = Subtotal + IVA + ICE (calculados con los porcentajes reales)
-        $subtotal = floatval($rsCompras['subtotal']);
-        $iva = floatval($rsCompras['iva']);
-        $ice = floatval($rsCompras['ice']);
-        $rsCompras['subtotal'] = round($subtotal, 2);
-        $rsCompras['iva'] = round($iva, 2);
-        $rsCompras['total'] = round($subtotal + $iva + $ice, 2);
+    
+    if ($resultCompras) {
+        // Si no hay resultados, inicializar con ceros
+        if (!$rsCompras || !isset($rsCompras['subtotal'])) {
+            $rsCompras = array('total' => 0, 'cantidad' => 0, 'subtotal' => 0, 'iva' => 0, 'ice' => 0);
+        } else {
+            // Total = Subtotal + IVA + ICE (calculados con los porcentajes reales)
+            $subtotal = floatval($rsCompras['subtotal']);
+            $iva = floatval($rsCompras['iva']);
+            $ice = floatval($rsCompras['ice']);
+            $rsCompras['subtotal'] = round($subtotal, 2);
+            $rsCompras['iva'] = round($iva, 2);
+            $rsCompras['total'] = round($subtotal + $iva + $ice, 2);
+        }
     }
     // ========== CONSULTA CLIENTES - CON FILTRO DE EMPRESA ==========
     $sqlClientes = "SELECT COUNT(DISTINCT Cli_Cod) AS nuevos FROM cliente WHERE Emp_Cod = $empCod AND Cli_Fec BETWEEN '$fechaInicio' AND '$fechaFin 23:59:59'";
     $resultClientes = mysqli_query($conexion, $sqlClientes);
     $rsClientes = $resultClientes ? mysqli_fetch_assoc($resultClientes) : null;
-    if ($resultClientes) 
+    if ($resultClientes) {
+        // Manejar el caso
+    }
     // ========== DATOS PARA GRÁFICOS - SIMPLIFICADOS ==========
     $ventasPorPeriodo = array();
     $comprasPorPeriodo = array();
@@ -317,7 +326,9 @@ if (isset($_POST['getDashboardData'])) {
     $sqlClientesTotal = "SELECT COUNT(DISTINCT Cli_Cod) AS total FROM cliente WHERE Emp_Cod = $empCod";
     $resultCT = mysqli_query($conexion, $sqlClientesTotal);
     $rsClientesTotal = $resultCT ? mysqli_fetch_assoc($resultCT) : null;
-    if ($resultCT) 
+    if ($resultCT) {
+        // Success
+    }
     // ========== DOCUMENTOS ELECTRÓNICOS AUTORIZADOS - CON FILTRO DE FECHAS ==========
     // Facturas autorizadas (Tic_Sri = 01) con Vet_Sri no vacío
     $sqlFacturas = "SELECT COUNT(DISTINCT v.Vet_Cod) AS total

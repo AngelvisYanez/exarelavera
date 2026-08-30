@@ -301,7 +301,7 @@ else
 			$row_rs_vercodigo = $obBD_con1->getRowConsulta(1, $codpla.'*'.$cod_cuenta.'*'.$Ses_Emp_Cod, $obBD_conexion);
 			if (count($row_rs_vercodigo) > 0)
 			{ ?>
-            	<script language="javascript">
+            	<script type="text/javascript">
 					alert('El código de cuenta <?php echo $cod_cuenta; ?> ya existe');
 				</script>
 			<?php
@@ -341,8 +341,8 @@ else
     <meta charset= "UTF-8">
 		<?php require_once("../../mascaras/model1/estilos/estilos.php"); ?>  
   
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/con_val_estado.js?x=5"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/con_val_estado.js?x=5"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
 		<script type="text/javascript"> 

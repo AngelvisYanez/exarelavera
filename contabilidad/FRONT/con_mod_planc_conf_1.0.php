@@ -1,12 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <?php	
 /** 
-* Descripción: Permite modificar las cuentas del plan de cuentas
-* Fecha de actualización:	2012-04-19
+* Descripciï¿½n: Permite modificar las cuentas del plan de cuentas
+* Fecha de actualizaciï¿½n:	2012-04-19
 * Desarrollador:	Lewis Chimarro
-* Fecha de actualización:	2013-02-22
+* Fecha de actualizaciï¿½n:	2013-02-22
 * Desarrollador:	Lewis Chimarro
-* Fecha de actualización:	2014-07-07
+* Fecha de actualizaciï¿½n:	2014-07-07
 * Desarrollador:	Lewis Chimarro
 */
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -23,7 +23,7 @@ $obBD_conexion = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 */
 $obBD_con1 =  new Class_Log_Datos_Con;
 /**
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;  
 
@@ -36,7 +36,7 @@ if (isset($ajax_codigo))
 	?>
      <input name="cod_cuenta" type="text" id="cod_cuenta" value="<?php echo $cod_cuenta; ?>" onBlur="parametro_x(this, '.') 
               ajax_datos('<?Php echo $_SERVER['PHP_SELF']; ?>?ajax_codigo&codpla=<?Php echo $codpla; ?>&cod_cuenta='+this.value+'&Pld_Cdc='+document.getElementById('Pld_Cdc').value, 'div_existe')">	  
-    <font color="#FF0000">El código de cuenta <?Php echo $cod_cuenta; ?> ya existe</font>
+    <font color="#FF0000">El cï¿½digo de cuenta <?Php echo $cod_cuenta; ?> ya existe</font>
     <?Php	
 	}
 	else
@@ -62,7 +62,7 @@ if (isset($hdd_save1))
 		{
 			case 1:
 			/**
-			* Guardado de la asignación de la cuenta del iva
+			* Guardado de la asignaciï¿½n de la cuenta del iva
 			*/
 			if (/*isset($hdd_iva) &&*/ !isset($hdd_volver))
 			{
@@ -78,7 +78,7 @@ if (isset($hdd_save1))
 			break;
 			case 2:
 			/**
-			* Guardado de la asignación de la cuenta del iva pagado
+			* Guardado de la asignaciï¿½n de la cuenta del iva pagado
 			*/
 			if (!isset($hdd_volver))
 			{
@@ -93,7 +93,7 @@ if (isset($hdd_save1))
 			}	
 		}		
 		/**
-		* fin de la transacción 
+		* fin de la transacciï¿½n 
 		*/
 		$obBD_con1->fin_transaccion($obBD_conexion->conexion);		
 
@@ -131,8 +131,8 @@ else
 	<HEAD>
     <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/con_val_planc.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/con_val_planc.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -224,7 +224,7 @@ else
 	 }//FIn del if (!isset($np))
 	
 	/**
-	* Modificación de una cuenta 
+	* Modificaciï¿½n de una cuenta 
 	*/
 	if (isset($np)) 
 	{
@@ -266,7 +266,7 @@ else
     <thead>
 	  <tr>
 	    <th width="7%" align="center"><strong>C&oacute;d. Int.</strong></th>
-		<th width="9%" align="center"><strong>Código</strong></th>
+		<th width="9%" align="center"><strong>Cï¿½digo</strong></th>
 		<th width="31%" align="center"><strong>Cuenta</strong></th>
 		<th width="9%" align="center"><strong>Tipo</strong></th>
 		<th width="10%" align="center"><strong>Estado</strong></th>
@@ -405,12 +405,12 @@ else
 	if ($np!=0) 
 	{
 		/**
-		* Link para volver atrás
+		* Link para volver atrï¿½s
 		*/
 		$row_rs_direca = $obBD_con1->getRowConsulta(306, $np, $obBD_conexion); ?>                
 			    <td width="114">
                 <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name= "form3">
-<button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="this.form.submit()">
+<button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="this.form.submit()">
                     <i class=" icon-arrow-left icon-white"></i>
                     <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        </button>

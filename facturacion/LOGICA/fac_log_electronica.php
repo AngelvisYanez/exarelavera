@@ -115,10 +115,7 @@ class Class_Log_Datos_Elect extends MysqlDatos
         try {
             $template = $this->getByTag('mail', $this->tag);
             $body = $this->reporteHtml($datos, '../../templates/' . (empty($template) ? 'doc_elect_exa.html' : $template));
-            //require '../../Librerias/PHPMail/class.phpmailer.php';
-            require '../../Librerias/PHPMailer/PHPMailer.php';
-            require '../../Librerias/PHPMailer/SMTP.php';
-            require '../../Librerias/PHPMailer/Exception.php';
+            require_once '../../Librerias/PHPMailer_compat.php';
                
             $mail = new PHPMailer(true); // Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
             $mail->charSet = "UTF-8";
@@ -183,7 +180,7 @@ class Class_Log_Datos_Elect extends MysqlDatos
             $template=$this->getByTag('mail',$this->tag);
             $body = $this->reporteHtml($datos, '../../templates/'.(empty($template)?'doc_elect_exa.html':$template));
 
-            require '../../Librerias/PHPMail/class.phpmailer.php';
+            require_once '../../Librerias/PHPMailer_compat.php';
             $mail = new PHPMailer(true); // Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
             // Configuramos el protocolo SMTP con autenticaci�n
             $mail->IsSMTP();

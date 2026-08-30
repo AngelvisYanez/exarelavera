@@ -9,6 +9,6 @@ function validar_cuentas(form, campo)
 		
 	if (ceros != false)
 		{
-			form.submit;
+			form.submit();
 		}
 }

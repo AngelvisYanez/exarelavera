@@ -1,4 +1,4 @@
-﻿<?Php 
+<?Php 
 /**
  * Logica de las paginas para el control de categorias de los productos
  *
@@ -31,6 +31,14 @@ class Class_Log_Conexion_Tes extends Class_Mysql{
  */
 
 class Class_Log_Datos_Tes extends Class_Datos{
+	
+	/**
+	* Alias de liberacion de un resultset (compatibilidad)
+	*/
+	function result(&$rs_consulta = null)
+	{
+		return $this->free_result($rs_consulta);
+	}
 	
 	/**
 	* Realiza una consulta en la base de datos -  STARDARD
@@ -75,7 +83,7 @@ class Class_Log_Datos_Tes extends Class_Datos{
 		
 		$this->free_result($result);
 		
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

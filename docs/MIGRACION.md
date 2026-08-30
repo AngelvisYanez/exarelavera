@@ -5,7 +5,7 @@
 **PHP destino:** 8.2.32 (ruta crítica: 5.3.8 → 7.1.14 → 8.2)
 **Archivos PHP totales:** ~2,815
 **Archivos modificados:** ~464 (+9,463 / -2,530 líneas, exclude vendor/)
-**Última actualización:** Julio 2026
+**Última actualización:** Agosto 2026
 
 ---
 
@@ -63,11 +63,11 @@ EXA es un ERP monolítico en PHP procedural + clases legacy, organizado por mód
 | 1b `each()` → `foreach` (app) | ✅ Completo | 95+ archivos de aplicación |
 | 1c `each()` → `foreach` (librerías) | ✅ Completo | MPDF57, TCPDF, Smarty, NuSOAP |
 | 2 Librerías legacy (lint) | ✅ Completo | Todos los archivos clave pasan `php -l` en PHP 8.2 |
-| 3a `utf8_encode/decode` | ✅ Completo | 14+ archivos con wrappers + calls directos |
+| 3a `utf8_encode/decode` | ✅ Completo | 0 llamadas reales restantes en app (excl. `QUARANTINE/`); solo quedan menciones en comentarios |
 | 3b `${var}` en strings | ✅ N/A | No existe en código (solo JS template literals) |
-| 3c `var $prop` → visibilidad explícita | ⏳ Pendiente | ~150+ archivos con `var $prop` |
-| 3d Propiedades dinámicas | ⏳ Pendiente | `#[AllowDynamicProperties]` en clases base |
-| 4 Pruebas módulo por módulo | ⏳ Pendiente | 21 módulos por probar |
+| 3c `var $prop` → visibilidad explícita | ✅ Completo | 411 ocurrencias convertidas en 13 archivos (NuSOAP ×12 + `framework/php/ventanasSocket/phpwebsocket.php`); solo resta `control-tributario-ec/` (excluido) |
+| 3d Propiedades dinámicas | ✅ Completo | `#[AllowDynamicProperties]` en bases: `AbstractModel`, `Zend_Db_Adapter_Abstract`, `base_mysql` (además de los ya presentes en `MysqlConexion/Datos`, `DAC`, `TreeMenu`) |
+| 4 Pruebas módulo por módulo | ⏳ Pendiente | 21 módulos por probar (suite PHPUnit parcial: 598 tests, 885 assertions) |
 
 ---
 
@@ -265,6 +265,9 @@ Reemplazo masivo por `mb_convert_encoding()` en 14+ archivos, incluyendo:
 - `Librerias/procedimientos/almacenados_standar.php`
 - `administrador/LOGICA/adm_log_menu_tree.php`
 - Wrappers en `vendor/symfony/polyfill-php72` (reparado tras reemplazo masivo)
+- Últimos 2 usos de `utf8_decode` en NuSOAP (agos 2026): `WS/libs/nuSoap/nusoap.php` y `WS/libs/nuSoap/class.soap_parser.php` → `mb_convert_encoding($data, 'ISO-8859-1', 'UTF-8')`
+
+Quedan menciones de `utf8_encode/decode` solo en comentarios (`refactor_utf8.php`, NuSOAP) y en `QUARANTINE/` (excluido).
 
 #### `$var{index}` → `$var[index]`
 - `Librerias/MPDF57/mpdf.php` (×2, 128 ocurrencias c/u)
@@ -470,15 +473,21 @@ COMPRAS ──→ compr_auto ──→ CONTABILIDAD
 
 ### 11.1 PHP 8.x — Correcciones Restantes
 
-- [ ] Reemplazar `utf8_encode`/`utf8_decode` por `mb_convert_encoding` (donde falte)
-- [ ] Revisar uso de `${var}` (deprecado en PHP 8.2, ~86 matches en app)
-- [ ] Eliminar dependencia de `register_globals.php` (emulación, ~270 includes)
+**Resueltas (agos 2026, rama `fix/security-auth-sql-injection`):**
+
+- [x] Reemplazar `utf8_encode`/`utf8_decode` por `mb_convert_encoding` — ✅ 0 llamadas reales restantes; los 2 usos de `utf8_decode` de NuSOAP (`WS/libs/nuSoap/nusoap.php`, `class.soap_parser.php`) → `mb_convert_encoding($data, 'ISO-8859-1', 'UTF-8')`. Quedan menciones solo en comentarios (`refactor_utf8.php`, NuSOAP) y en `QUARANTINE/`.
+- [x] Revisar uso de `${var}` (deprecado en PHP 8.2) — ✅ N/A: los matches restantes son template literals JS dentro de archivos PHP (no código PHP). Los `${var}` PHP se eliminaron en la fase 1.
+- [x] `var $prop` → visibilidad explícita — ✅ 411 ocurrencias convertidas a `public` vía tokenizer (`T_VAR`) en 12 archivos NuSOAP + `framework/php/ventanasSocket/phpwebsocket.php`. Restan solo `control-tributario-ec/libs/fpdf/*` (excluido de la migración).
+- [x] Propiedades dinámicas → `#[AllowDynamicProperties]` en clases base — ✅ escaneo con php-parser: 30 accesos reales, todos cubiertos. Se añadió el atributo a `AbstractModel`, `Zend_Db_Adapter_Abstract` (Abstract.php) y `base_mysql` (DAC.php). Ya lo tenían `MysqlConexion`, `MysqlDatos` (heredado por `MysqlDatosContab` y todas las clases `Class_*_Log_*`), clases de `TreeMenu` y DAC. `SriScraperJob` está protegido por `property_exists`.
+- [x] `continue` targeting switch warning — ✅ verificado con php-parser en TCPDF, MPDF57 (×2), PHPMailer_2023 y toda la app: 0 casos reales. Las líneas citadas (`TCPDF:17778`, `PHPMailer:4891`) usan `continue 2` en switch+loop, válido en PHP 8.2 (solo `continue;` sin nivel dentro de switch genera warning).
+- [x] Eliminar dependencia de `register_globals.php` (emulación insegura) — ✅ el archivo es ahora un bootstrap de seguridad: solo inyecta variables de sesión `Ses_` + helpers (`Req`, `esc`, CSRF). Los ~270 includes restantes son el mecanismo compartido de arranque; ya no hay inyección global de variables de petición.
+
+**Pendientes reales:**
+
 - [ ] Reemplazar operador `@` silenciador por manejo explícito
 - [ ] Migrar librerías legacy a versiones Composer (mPDF 8.x, Smarty 5.x, TCPDF 6.x, NuSOAP → soapclient nativo)
 - [ ] Type hinting y declaraciones de tipo estrictas
-- [ ] `var $prop` → visibilidad explícita `public`/`protected`/`private` (~150+ archivos)
-- [ ] Propiedades dinámicas → `#[AllowDynamicProperties]` en clases base (~81 accesos)
-- [ ] `continue` targeting switch warning (TCPDF línea 17778, MPDF57)
+- [ ] Deprecations restantes de NuSOAP/SOAP (por ejemplo, `wsdl`/`soap` no soportados por ext-soap en funciones de cliente)
 
 ### 11.2 Pruebas por Módulo
 
@@ -537,7 +546,8 @@ Orden recomendado de validación funcional:
 | Librerías actualizadas | mPDF, TCPDF, PHPMailer, NuSoap, FPDF, Smarty |
 | Archivos con `each()` reemplazado | 95+ (app) + ~10 (librerías) |
 | Archivos con `split()` reemplazado | 12 |
-| Archivos con `utf8_encode/decode` reemplazado | 14+ |
+| Archivos con `utf8_encode/decode` reemplazado | 14+ (0 llamadas reales restantes en app) |
+| `var $prop` → `public` convertidos | 411 (NuSOAP ×12 + websocket) |
 
 ### Volumen por Módulo (archivos PHP)
 

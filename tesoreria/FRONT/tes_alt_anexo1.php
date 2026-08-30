@@ -9,7 +9,7 @@ if (isset($bt_save))
 	$obBD_con1 =  new Class_Datos; 	  
 	$ini = $anio.'-'.$mes.'-'.'01';
 	$fin = $anio.'-'.$mes.'-'.ultimoDia($mes,$anio);
-	/* Identificación */
+	/* Identificaciï¿½n */
 	$rs_identifica = $obBD_con1->consulta(sentencias_tes(226, $obBD_con1->parametros('')), $obBD_conexion->conexion);
 	$row_rs_identifica = $obBD_con1->registros();
 	$total_rs_identifica = $obBD_con1->numregistros();
@@ -17,7 +17,7 @@ if (isset($bt_save))
 	$rs_etiquetas = $obBD_con1->consulta(sentencias_tes(227, $obBD_con1->parametros('-1'.'*'.'1')), $obBD_conexion->conexion);
 	$row_rs_etiquetas = $obBD_con1->registros();
 	$total_rs_etiquetas = $obBD_con1->numregistros();
-	/* Inicio de bucle de la identificación */
+	/* Inicio de bucle de la identificaciï¿½n */
 	do{
 		$identificacion[] = $row_rs_etiquetas['Esq_Xml'];
 	}while($row_rs_etiquetas = mysqli_fetch_assoc($rs_etiquetas));
@@ -481,8 +481,8 @@ if ($total_rs_compras > 0)
 		<link href="../../Estilos/Estilo1.css" rel="stylesheet" type="text/css">
 		<link href="../../Estilos/Interfaz1.css" rel="stylesheet" type="text/css">
 		<link rel="stylesheet" type="text/css" media="all" href="../../Librerias/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
-		<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	</HEAD>
 <BODY>

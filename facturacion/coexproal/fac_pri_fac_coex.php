@@ -1,7 +1,7 @@
 <?php include('../IMPRIMIR/datos_fact.php') ?>
 <html>
     <head>
-        <title><?Php echo $Ses_Sys_Nom; ?></title>
+        <title><?php echo $Ses_Sys_Nom; ?></title>
         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">    
         <style type="text/css">   
              body{width:830px;padding:0;margin:0;}
@@ -13,11 +13,11 @@
         </style>
     </head>
 <body>
-    <?Php  list($anio, $mes, $dia) = preg_split('![/.-]!', $row_rs_cliente['Caj_Fec']);?>
+    <?php  list($anio, $mes, $dia) = preg_split('![/.-]!', $row_rs_cliente['Caj_Fec']);?>
     <!--fecha  --><span style="<?php echo getCss($docp,'fecha'); ?>" class="flota"><?php echo $dia.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$mes.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$anio; ?></span>
     <!--cliente--><span style="<?php echo getCss($docp,'cliente'); ?>" class="flota truncate"><?php if ($row_rs_representante['Cli_Fac'] != ""){echo $row_rs_representante['Cli_Fac'];}else{ echo $row_rs_cliente['Prs_Ape'].' '.$row_rs_cliente['Prs_Nom'];}?></span>
     <!--direcci--><span style="<?php echo getCss($docp,'direccion'); ?>" class="flota truncate"><?php if ($row_rs_representante['Cli_Dir'] != ""){echo substr($row_rs_representante['Cli_Dir'],0,31);}else{echo substr($row_rs_cliente['Prs_Dir'],0,31);}?></span>
-    <!--ci/ruc --><span style="<?php echo getCss($docp,'cedu_ruc'); ?>" class="flota"><?echo $row_rs_cliente['Prs_Ced'];?></span>
+    <!--ci/ruc --><span style="<?php echo getCss($docp,'cedu_ruc'); ?>" class="flota"><?php echo $row_rs_cliente['Prs_Ced'];?></span>
     <!--ciudad --><!--<span style="<?php echo getCss($docp,'ciudad'); ?>" class="flota truncate"><?php echo $row_institucion['Ciu_Des'];?></span>-->
     
     <?php $aux=getCss($docp,'item','y');
@@ -31,17 +31,17 @@
 
     ?>
     <!--Tipo Pago --><span style="<?php echo getCss($docp,'pago'); ?>" class="flota"><?php echo 'x'; ?></span>  
-    <!--Subtotal  --><span style="<?php echo getCss($docp,'subtot'); ?>text-align:right;" class="flota"><?Php echo formato_numero($resultados[0], 2, 1); ?></span>
-    <!--Descuento --><span style="<?php echo getCss($docp,'descue'); ?>text-align:right;" class="flota"><?Php echo formato_numero($resultados[4], 2, 1); ?></span>
-    <!--Tarifa 0% --><span style="<?php echo getCss($docp,'subt_0'); ?>text-align:right;" class="flota"><?Php echo formato_numero($resultados[1]+0, 2, 1); ?></span>
-    <!--Tarifa 12%<span style="<?php //echo getCss($docp,'subt_i');?>text-align:right;" class="flota"><?Php //echo formato_numero($resultados[2]+0, 2, 1); ?></span>-->
-    <!--IVA       --><span style="<?php echo getCss($docp,'iva'); ?>text-align:right;" class="flota"><?Php echo formato_numero($resultados[3], 2, 1); ?></span>
+    <!--Subtotal  --><span style="<?php echo getCss($docp,'subtot'); ?>text-align:right;" class="flota"><?php echo formato_numero($resultados[0], 2, 1); ?></span>
+    <!--Descuento --><span style="<?php echo getCss($docp,'descue'); ?>text-align:right;" class="flota"><?php echo formato_numero($resultados[4], 2, 1); ?></span>
+    <!--Tarifa 0% --><span style="<?php echo getCss($docp,'subt_0'); ?>text-align:right;" class="flota"><?php echo formato_numero($resultados[1]+0, 2, 1); ?></span>
+    <!--Tarifa 12%<span style="<?php //echo getCss($docp,'subt_i');?>text-align:right;" class="flota"><?php //echo formato_numero($resultados[2]+0, 2, 1); ?></span>-->
+    <!--IVA       --><span style="<?php echo getCss($docp,'iva'); ?>text-align:right;" class="flota"><?php echo formato_numero($resultados[3], 2, 1); ?></span>
     
     <!--Total--><span style="<?php echo getCss($docp,'total'); ?>text-align:right;" class="flota"><!--TOTAL&nbsp;--><strong><?php echo number_format($resultados[5], 2); ?></strong></span>
 
 </body>
 </html>
-<?Php
+<?php 
 @$obBD_con1->liberar();
 @$obBD_conexion->cerrar();
 ?>

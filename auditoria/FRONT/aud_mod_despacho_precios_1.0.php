@@ -207,15 +207,15 @@ $embed = !empty($_GET['embed']);
 
 <script type="text/javascript">
 $(function () {
-    var urlBase = '<?php echo str_replace("'", "\\'", $_SERVER['PHP_SELF']); ?>';
+    var urlBase = <?php echo json_encode($_SERVER['PHP_SELF']); ?>;
 
     $(document).on('click', '.btn-guardar-fila', function () {
         var act = $(this).data('act');
-        public $row = $(this).closest('tr');
+        var $row = $(this).closest('tr');
         var peq = parseFloat($row.find('.precio-pequeno').val().replace(',', '.')) || 0;
         var med = parseFloat($row.find('.precio-mediano').val().replace(',', '.')) || 0;
         var gra = parseFloat($row.find('.precio-grande').val().replace(',', '.')) || 0;
-        public $btn = $(this);
+        var $btn = $(this);
         $btn.prop('disabled', true);
         $.post(urlBase, {
             guardarPreciosActividad: 1,

@@ -220,7 +220,7 @@ if(isset($save)){
                     <label class="Titulos2">Seleccionar Cliente</label>
 		</LEGEND>
                     <form id="provFormTemp">
-                       <div class="segmento">Cédula/R.U.C.:</div>                          
+                       <div class="segmento">Cï¿½dula/R.U.C.:</div>                          
                        <div class="datasegmento">
 
                                <input id="docu" name="search" maxlength="13" onkeydown='if (event.keyCode === 13) $.SearchOrDialog("#provDialog",selectProvee);' type="text" class="search ui-corner-all" placeholder="Ingrese Cedula/R.U.C. ..."  autofocus />                               
@@ -232,7 +232,7 @@ if(isset($save)){
                        </div>
                     </form>
                     <div class="segmento">Cliente:</div><div  class="datasegmento"><input id="lblProv" type="text" class="label ui-widget-content ui-corner-all" readonly /></div><br />
-                    <div class="segmento">Dirección:</div><div  class="datasegmento"><input id="lblDirec" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
+                    <div class="segmento">Direcciï¿½n:</div><div  class="datasegmento"><input id="lblDirec" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
              </FIELDSET>    
               
              
@@ -251,7 +251,7 @@ if(isset($save)){
                         <div class="segmento">Por Vencer: <input name="op_opciones" type="radio" value="I" alt="" onchange="setCombo('I');" /></div>
                     </div>
                     <div>
-                        <div class="segmento">Búscar:
+                        <div class="segmento">Bï¿½scar:
                           </div> 
                         <div class="datasegmento" style="text-align: left;" >
                             <select name="Cmb_Ven" id="Cmb_Ven" class="text medium ui-corner-all"  >                                
@@ -314,7 +314,7 @@ if(isset($save)){
                             }
                         }
                         function clearFooter(){ 
-                            public $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");   
+                            var $footRow = $("#grillaComp .ui-jqgrid-sdiv .footrow");   
 
                             $footRow.find('>td[aria-describedby="list_subgrid"]').css("border-right-color", "transparent");                            
                             $footRow.find('>td[aria-describedby="list_Com_Codigo"]').css("border-right-color", "transparent");
@@ -342,7 +342,7 @@ if(isset($save)){
                         //$.createDateRange('#txt_fec_ini','#txt_fec_fin'); 
                         var compGrid=$("#list");
                         compGrid.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                             //postData: $("#form1").getData("ajaxGrid"),
                             autowidth : true, shrinkToFit: true, height: 270,
@@ -412,7 +412,7 @@ if(isset($save)){
                                 var subgrid_table_id = subgrid_id+"_t";         
                                 $("#"+subgrid_id).html("<table id='"+subgrid_table_id+"' class='scroll'></table>");
                                 $("#"+subgrid_table_id).jqGrid({
-                                        url:"<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?ajaxSubgrid="+row_id,datatype: "json",regional : 'es',
+                                        url:"<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?ajaxSubgrid="+row_id,datatype: "json",regional : 'es',
                                         autowidth : true, shrinkToFit: true,cmTemplate: {sortable:false},//colNames: ['No','Item','Qty','Unit','Line Total'],
                                         colModel: [
                                                 {label:'Cod.Int.',name:"Cpc_Cod",width:80,key:true,align:"center",hidden:true},
@@ -445,7 +445,7 @@ if(isset($save)){
                        //loadBancos();
                     });  
                     function loadBancos(){ 
-                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{periAjax:true,Pec_Cod:$('#periodos').val()}, function( response ) {
+                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{periAjax:true,Pec_Cod:$('#periodos').val()}, function( response ) {
                                 if(response['success']===true){
                                     $('input[name="Pec_Cod"]').val(response['Pec']['Pec_Cod']);                                    
                                     $('input[name="periodo"]').val(response['Pec']['Periodo']);
@@ -546,7 +546,7 @@ if(isset($save)){
                                     if(batch.length>0){ 
                                         var data=$('#formComp').serializeObject();
                                         data["save"]=batch;
-                                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+                                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                                             if(response['success']===true){
                                                 $('#impCompr').attr('href',response['link']); 
                                                 $('#impRecib').attr('href',response['link_rec']);
@@ -707,7 +707,7 @@ if(isset($save)){
                         $('#Che_Fec').toggleClass('disabled').find('input').toggleAttr('disabled');
                         var gridComp=$("#comp");
                         gridComp.jqGrid({
-                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                             mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },                             
                             autowidth : true, shrinkToFit: true, height: 120,
                             cmTemplate: {sortable:false,title: false},
@@ -824,19 +824,19 @@ if(isset($save)){
                 <fieldset>
                     <legend><label class="Titulos2">Datos del Cliente</label></legend>
                         <div class="row">
-                            <div class="segmento">Cédula:</div><div  class="datasegmento"><input id="lblCed2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
+                            <div class="segmento">Cï¿½dula:</div><div  class="datasegmento"><input id="lblCed2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
                         </div>
                         <div class="row">
                             <div class="segmento">Cliente:</div><div  class="datasegmento"><input id="lblProv2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
                         </div>
                         <div class="row">
-                            <div class="segmento">Dirección:</div><div  class="datasegmento"><input id="lblDirec2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
+                            <div class="segmento">Direcciï¿½n:</div><div  class="datasegmento"><input id="lblDirec2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
                         </div>
                 </fieldset> 
             </div>
             <div class="row" style="padding-top: 5px;padding-bottom: 15px;">
                  <fieldset>
-                    <legend><label class="Titulos2">Observación</label></legend>
+                    <legend><label class="Titulos2">Observaciï¿½n</label></legend>
                     <div  class="datasegmento" style="width:95%;"><input id="lblConce2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
                  </fieldset>            
             </div>
@@ -863,7 +863,7 @@ if(isset($save)){
                             <div class="segmento">Vencimiento:</div><div  class="datasegmento"><input id="lblVen2" type="text" class="label medium ui-widget-content ui-corner-all" readonly /></div>
                         </div>
                         <div class="row">
-                            <div class="segmento">Observacón:</div><div  class="datasegmento"><input id="lblObsV2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
+                            <div class="segmento">Observacï¿½n:</div><div  class="datasegmento"><input id="lblObsV2" type="text" class="label ui-widget-content ui-corner-all" readonly /></div>
                         </div>
                         <div class="row">
                             <div class="segmento">Tipo Pago:</div><div  class="datasegmento"><input id="lblTipPa2" type="text" class="label medium ui-widget-content ui-corner-all" readonly /></div>
@@ -916,7 +916,7 @@ if(isset($save)){
         }); 
         function selectDetalle(Cpc,Com){                             
                            
-                                $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{detAjax:true,Cpc:Cpc,Com:Com}, function( response ) {
+                                $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{detAjax:true,Cpc:Cpc,Com:Com}, function( response ) {
                                    if(response['success']===true){                                       
                                         $("#lblComp2").val(response['com']['Com_Num']);
                                         $("#lblComFe2").val(response['com']['Com_Fec']);

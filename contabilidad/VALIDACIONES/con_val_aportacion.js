@@ -49,9 +49,9 @@ $( document ).ready(function() {
       datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
       width:590, height:100,postData: {CheListAjax:true},caption:'Asiento Contable',
       cmTemplate: {sortable:false},colModel: [
-          { label: 'Cód.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },
+          { label: 'Cï¿½d.Int.', name: 'Asi_Cod', key: true, width: 15,align:"center", hidden:true },
                   { label: 'Tipo', name: 'Asi_Deh', hidden:true },
-                  { label: 'Código', name: 'Pld_Cdc', width: 45 },
+                  { label: 'Cï¿½digo', name: 'Pld_Cdc', width: 45 },
                   { label: 'Cuenta', name: 'Pld_Des', width: 130  },
                   { label: 'Glosa', name: 'Asi_Glo', width: 130},
                   { label: 'Debe', name: 'Debe', width: 65, align: 'right', formatter:'currency', formatoptions: {prefix:'$ ', thousandsSeparator:',',decimalSeparator:'.',defaultValue:''},summaryType: "sum"},
@@ -151,8 +151,8 @@ function setPeriodo(){
     var perio_cont2=getPeriodo2();
     $("#Com_Fec_mod").dateLimits(perio_cont2["Pec_Fei"],perio_cont2["Pec_Fef"]);
 }
-function getPeriodo(){ return $('#Pec_Cod').val()===''?{Pec_Cod:null}:$('#Pec_Cod option:selected').data(); }
-function getPeriodo2(){ return $('#Pec_Cod_mod').val()===''?{Pec_Cod:null}:$('#Pec_Cod_mod option:selected').data(); }
+function getPeriodo(){ var opt=$('#Pec_Cod option:selected'); return (!opt.length||opt.val()===''||opt.val()===null)?{Pec_Cod:null}:opt.data(); }
+function getPeriodo2(){ var opt=$('#Pec_Cod_mod option:selected'); return (!opt.length||opt.val()===''||opt.val()===null)?{Pec_Cod:null}:opt.data(); }
 
 //creamos modales al cargar la pagina
 $(function() {
@@ -169,7 +169,7 @@ $(function() {
 
           },
           { label: '&nbsp;', name: 'grid_tipp', hidden:true },
-          { label: 'Cód.Int.', name: 'Pld_Cod',key: true, width: 20,align:"center", hidden:false },
+          { label: 'Cï¿½d.Int.', name: 'Pld_Cod',key: true, width: 20,align:"center", hidden:false },
           { label: 'Tipo', name: 'Det_Tip', hidden:true },
           { label: 'Codigo', name: 'Pld_Cdc', width: 45 },
           { label: 'Cuenta', name: 'Pld_Des', width: 150  },
@@ -276,8 +276,8 @@ $(function() {
 
               },
               { label: '&nbsp;', name: 'grid_tipp', hidden:true },
-              { label: 'Cód.Int.', name: 'Index', key: true, width: 15, align:"center", hidden:true },
-              { label: 'Cód.Int.', name: 'Pld_Cod', width: 20,align:"center", hidden:false },
+              { label: 'Cï¿½d.Int.', name: 'Index', key: true, width: 15, align:"center", hidden:true },
+              { label: 'Cï¿½d.Int.', name: 'Pld_Cod', width: 20,align:"center", hidden:false },
               { label: 'Tipo', name: 'Det_Tip', hidden:true },
               { label: 'Codigo', name: 'Pld_Cdc', width: 45 },
               { label: 'Cuenta', name: 'Pld_Des', width: 150  },

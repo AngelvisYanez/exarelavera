@@ -709,9 +709,9 @@ exit();
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    		
-		<script language="javascript" src="../VALIDACIONES/XML.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/con_val_compr.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/XML.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/con_val_compr.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -1152,7 +1152,7 @@ if ($cod > 0 && !(isset($txt_busqueda)))
     </button> </td>		
 	  </tr>
 	</table>-->
-	<script language="javascript">
+	<script type="text/javascript">
 		//sumar_totales();
 	</script>
 	

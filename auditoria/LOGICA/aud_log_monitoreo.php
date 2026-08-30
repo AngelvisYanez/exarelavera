@@ -60,7 +60,7 @@ class Class_Log_Datos extends MysqlDatos{
 
 		$this->free_result($result);
 
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**

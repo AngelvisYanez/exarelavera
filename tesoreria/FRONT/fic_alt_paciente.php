@@ -173,17 +173,17 @@ if(isset($cargarReportes)){
             . '<td>' . $key['med_dur'] . '</td>'
             . '</tr>';
     }
-    $table{'observacion'} = $medicamentos[0]['fic_obs'];
-    $table{'motivo'} = $medicamentos[0]['fic_mot'];
-    $table{'historia'} = $medicamentos[0]['fic_hea'];
-    $table{'ruc'} = $medicamentos[0]['Emp_Ruc'];
-    $table{'tel'} = $medicamentos[0]['Suc_Te1'];
-    $table{'logo'} = $medicamentos[0]['Suc_Log'];
-    $table{'dir'} = $medicamentos[0]['Suc_Dir'];
-    $table{'rep'} = $medicamentos[0]['Emp_Rre'];
-    $table{'nom'} = $medicamentos[0]['Emp_Rep'];
-    $table{'empresa'} = $medicamentos[0]['Emp_Nom'];
-    $table{'src'} = $medicamentos[0]['Emp_Log'];
+    $table['observacion'] = $medicamentos[0]['fic_obs'];
+    $table['motivo'] = $medicamentos[0]['fic_mot'];
+    $table['historia'] = $medicamentos[0]['fic_hea'];
+    $table['ruc'] = $medicamentos[0]['Emp_Ruc'];
+    $table['tel'] = $medicamentos[0]['Suc_Te1'];
+    $table['logo'] = $medicamentos[0]['Suc_Log'];
+    $table['dir'] = $medicamentos[0]['Suc_Dir'];
+    $table['rep'] = $medicamentos[0]['Emp_Rre'];
+    $table['nom'] = $medicamentos[0]['Emp_Rep'];
+    $table['empresa'] = $medicamentos[0]['Emp_Nom'];
+    $table['src'] = $medicamentos[0]['Emp_Log'];
 
     $responce['html']=reporteHtml($table,'tes_alt_paciente.html');
     $responce['success']=true;
@@ -203,14 +203,14 @@ if(isset($ajaxCertificado)){
     $responce['medicamentos'] = $obBD_con1->getArrayConsulta(16, $_POST, $obBD_conexion_get);
     $medicamentos = $responce['medicamentos'];
 
-    $table{'empresa'} = $medicamentos[0]['Emp_Nom'];
-    $table{'ruc'} = $medicamentos[0]['Emp_Ruc'];
-    $table{'src'} = $medicamentos[0]['Emp_Log'];
-    $table{'tel'} = $medicamentos[0]['Suc_Te1'];
-    $table{'dir'} = $medicamentos[0]['Suc_Dir'];
-    $table{'ciudad'} = $medicamentos[0]['Ciu_Des'];
-    $table{'provincia'} = $medicamentos[0]['Pro_Nom'];
-    $table{'pais'} = $medicamentos[0]['Pas_Nom'];
+    $table['empresa'] = $medicamentos[0]['Emp_Nom'];
+    $table['ruc'] = $medicamentos[0]['Emp_Ruc'];
+    $table['src'] = $medicamentos[0]['Emp_Log'];
+    $table['tel'] = $medicamentos[0]['Suc_Te1'];
+    $table['dir'] = $medicamentos[0]['Suc_Dir'];
+    $table['ciudad'] = $medicamentos[0]['Ciu_Des'];
+    $table['provincia'] = $medicamentos[0]['Pro_Nom'];
+    $table['pais'] = $medicamentos[0]['Pas_Nom'];
 
     $responce['html']=reporteHtml($table,'tes_alt_pac_certificado.html');
     $responce['success']=true;
@@ -228,7 +228,7 @@ if(isset($ajaxCertificado)){
         <link rel="stylesheet" href="../../framework/jquery/bootstrap/popover/jquery.flyout.css">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
         <script src="../../framework/jquery/bootstrap/popover/jquery.flyout.js"></script>
-        <script language="javascript" src="../VALIDACIONES/fic_val_paciente.js?x=0"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fic_val_paciente.js?x=0"></script>
 
         <script>
         $('.panel-main').hide();

@@ -56,7 +56,7 @@ $.post("",datos,
                 {					
                     $("#list").jqGrid("setCell", el, "act","No");					
                     //$(el).removeAttr("checked");
-                    alert("La reposicion no puede sobrepasar los $" + $("#monto").val()); 
+                    $.alert("La reposicion no puede sobrepasar los $" + $("#monto").val(),null,'warning'); 
                     return;
                 }
             }            
@@ -123,7 +123,7 @@ $.post("",datos,
                         var row = grid.jqGrid('getRowData');
 			for (i = 0; i < c; i++) { 
                             if ( i < row.length){
-                                suma += Number.parseFloat(row[i].total);
+                                suma += parseFloat(row[i].total);
                             }
                             
                             $(rows[i].cells[iCol]).click(function (e) { 											
@@ -131,7 +131,7 @@ $.post("",datos,
                             });
 			}
                         $('#fac_val').val(suma.toFixed(2));
-                        $('#sal_act').val(  (   Number.parseFloat($('#monto').val()) - suma).toFixed(2));
+                        $('#sal_act').val(  (   parseFloat($('#monto').val()) - suma).toFixed(2));
 		}                          			
 	});                        
 		jgrid.navGrid('#listPager',{ edit: false, add: false, del: false, search: false, refresh: true, view: true, position: "left", cloneToTop: false });

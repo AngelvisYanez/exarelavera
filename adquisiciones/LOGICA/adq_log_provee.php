@@ -15,7 +15,7 @@ class Class_Log_Conexion_Prv extends MysqlConexion{
 }
 
 /* Clase para acceder a los datos */
-class Class_Log_Datos_Prv extends MysqlDatos{
+class Class_Log_Datos_Prv extends MysqlDatosContab{
     function __construct() {
         $this->setSentencias('sentencias_provee');
     }

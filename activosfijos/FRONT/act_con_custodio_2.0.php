@@ -1,10 +1,10 @@
 <?php 
 /* 
  * Alias: Consulta de Custodio
- *Descripción: Permite la consulta de custodio 
+ *Descripciï¿½n: Permite la consulta de custodio 
  *Desarrollador: Fabian Gallardo
  				 Didimo Zamora
- *Fecha de actualización:	2013/06/11
+ *Fecha de actualizaciï¿½n:	2013/06/11
 */
 
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -21,7 +21,7 @@ $obBD_conexion = new Class_Log_Conexion_Cch($Ses_Dat_Dis);
 */
 $obBD_con1 = new Class_Log_Datos_Cch;
 /**
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block;  
 /**
@@ -65,8 +65,8 @@ $hoy = date("Y-m-d");
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
@@ -91,7 +91,7 @@ $hoy = date("Y-m-d");
                         <td width="205"><input name="op_opciones" type="radio" value="1" onClick="setfocus(this.form.txt_busqueda)" checked>
                             <span class="LetraNegra">Apellidos</span></td>
                         <td width="266"><input type="radio" name="op_opciones" value="2" onClick="setfocus(this.form.txt_busqueda)">
-                            <span class="LetraNegra">Cédula</span></td>
+                            <span class="LetraNegra">Cï¿½dula</span></td>
                   </tr>
                   </table>
                 </td>
@@ -118,7 +118,7 @@ $hoy = date("Y-m-d");
     </LEGEND>
         <table width="99%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
           <thead>
-            <th width="5%">Cód. Int.</th>
+            <th width="5%">Cï¿½d. Int.</th>
               <th width="18%">C&eacute;dula</th>
               <th width="68%">Custodio</th>
               <th>&nbsp;</th>
@@ -165,7 +165,7 @@ $hoy = date("Y-m-d");
             <tr>
             <td></td>
             <td>&nbsp;</td>
-             <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+             <td><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
               <td></td>
             </tr>
           <?php } // fin del if ($total_rs_buscar > 0)?>
@@ -188,7 +188,7 @@ if(isset($codigo)){
 ?>
 <table width="80%" border="0" align="left" cellpadding="0" cellspacing="0">
       <tr>
-        <td width="14%" ><span class="Etiqueta1">Institución :</span></td>
+        <td width="14%" ><span class="Etiqueta1">Instituciï¿½n :</span></td>
         <td width="26%"><span class="LetraNegra"><?Php echo $rs_institucion['Emp_Nom'].' - '.$rs_institucion['Suc_Des']; ?></span></td>
         <td width="6%">&nbsp;</td>
         <td width="54%">&nbsp;</td>
@@ -202,7 +202,7 @@ if(isset($codigo)){
       <tr>
         <td><span class="Etiqueta1">Nombre del Custodio :</span></td>
         <td><span class="LetraNegra"><?php echo  $rs_custodio['Nombre']; ?></span></td>
-        <td><span class="Etiqueta1">Cédula :</span></td>
+        <td><span class="Etiqueta1">Cï¿½dula :</span></td>
         <td><span class="LetraNegra"><?php echo $rs_custodio['Prs_Ced']; ?></span></td>
       </tr>
     </table>

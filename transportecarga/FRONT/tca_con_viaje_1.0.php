@@ -1,9 +1,9 @@
 <?php
 /**
- * @abstract Permite realizar la modificación de un proceso de facturación de viajes
- * @author José Ambuludí
+ * @abstract Permite realizar la modificaciï¿½n de un proceso de facturaciï¿½n de viajes
+ * @author Josï¿½ Ambuludï¿½
  * @version 2.0
- * Fecha de creación  2017-02-13
+ * Fecha de creaciï¿½n  2017-02-13
  */
 require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/tca_log_viaje.php');
@@ -19,7 +19,7 @@ $obBD_con1 = new Class_Log_Datos_Viaje;
 
 $hoy = date("Y-m-d");
 
-//Sección para cargar datos en el Jqgrid referente a las facturas registradas
+//Secciï¿½n para cargar datos en el Jqgrid referente a las facturas registradas
 if (isset($facturasAjax)) {
     $data = filter_input_array(INPUT_GET);
     $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -35,7 +35,7 @@ if (isset($facturasAjax)) {
     exit();
 }
 
-//Sección para cargar datos en el Jqgrid referente a los clientes registrados
+//Secciï¿½n para cargar datos en el Jqgrid referente a los clientes registrados
 if (isset($clienteAjax)) {
     $data = filter_input_array(INPUT_GET);
     $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -51,7 +51,7 @@ if (isset($clienteAjax)) {
     exit();
 }
 
-//Sección para cargar datos en el Jqgrid referente a los clientes registrados
+//Secciï¿½n para cargar datos en el Jqgrid referente a los clientes registrados
 if (isset($choferAjax)) {
     $data = filter_input_array(INPUT_GET);
     $data["Emp_Cod"] = $Ses_Emp_Cod;
@@ -73,7 +73,7 @@ if (isset($choferAjax)) {
     <HEAD>
         <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
-        <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">
@@ -167,17 +167,17 @@ if (isset($choferAjax)) {
                 </div>
             </div>
         </div>
-        <!-- Inicio del diálogo para buscar un cliente -->
+        <!-- Inicio del diï¿½logo para buscar un cliente -->
         <div id="clienteDialog" title="B&uacute;squeda de Clientes">
             <form class="form-horizontal normal"></form>
         </div>
-        <!-- Inicio del diálogo para buscar un chofer -->
+        <!-- Inicio del diï¿½logo para buscar un chofer -->
         <div id="choferDialog" title="B&uacute;squeda de Choferes">
             <form class="form-horizontal normal"></form>
         </div>
         <script type="text/javascript">
             $(function () {
-                //Inicialización
+                //Inicializaciï¿½n
                 $.createDatePickers('.datepicker');
                 $.createDateRange('#Fec_Ini','#Fec_Fin');
                 //$('#Fec_Ini').val('');
@@ -222,9 +222,9 @@ if (isset($choferAjax)) {
                     }
                 }, false, "#Pag_Lis");
                 
-                //Inicio del diálogo para presentar clientes
+                //Inicio del diï¿½logo para presentar clientes
                 $.createSearchDialog('#clienteDialog', [
-                    {label: 'Cód.Int.', name: 'Cli_Cod', key: true, hidden: true},
+                    {label: 'Cï¿½d.Int.', name: 'Cli_Cod', key: true, hidden: true},
                     {label: 'C&eacute;dula', name: 'Prs_Ced', width: 30},
                     {label: 'Cliente(s)', name: 'cliente', width: 70},
                     {label: '<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center', viewable: false,
@@ -235,9 +235,9 @@ if (isset($choferAjax)) {
                 ], null, null, null, null, {title: 'Clientes', options: [{label: '&nbsp;&nbsp;Apellido&nbsp;&nbsp;', value: 'd'},
                 {label: '&nbsp;&nbsp;C&eacute;dula&nbsp;&nbsp;', value: 'c'}]});
                 
-                //Inicio del diálogo para presentar choferes
+                //Inicio del diï¿½logo para presentar choferes
                 $.createSearchDialog('#choferDialog', [
-                    {label: 'Cód.Int.', name: 'Cho_Cod', key: true, hidden: true},
+                    {label: 'Cï¿½d.Int.', name: 'Cho_Cod', key: true, hidden: true},
                     {label: 'C&eacute;dula', name: 'Prs_Ced1', width: 30},
                     {label: 'Cliente(s)', name: 'chofer', width: 70},
                     {label: '<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center', viewable: false,
@@ -252,7 +252,7 @@ if (isset($choferAjax)) {
             });
             
             /*** FUNCIONES PARA EL MANEJO DE DATOS ***/
-            //Función para pasar datos seleccionados
+            //Funciï¿½n para pasar datos seleccionados
             function pasarDatos(objeto){
                 $('#'+objeto['dialog']+'Dialog').dialog('close');
                 $('#'+objeto['frm']).setData(objeto,false);

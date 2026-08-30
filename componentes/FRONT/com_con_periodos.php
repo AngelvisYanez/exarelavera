@@ -1,4 +1,5 @@
 <?Php
+if (!function_exists('error_alerta')) return;
 /* Evalua si estan seteadas las variables */
 if (isset($Eta_Cod))
 {

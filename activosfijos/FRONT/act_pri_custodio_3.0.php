@@ -1,10 +1,10 @@
 <?php 
 /** 
  @Alias:		 Imprimir
- @Descripción:   Permite la impresión de activos por Custodio
+ @Descripciï¿½n:   Permite la impresiï¿½n de activos por Custodio
  @Desarrollador: Didimo Zamora.
 ***********************************
- @Fecha de actualización:	2013-06-10
+ @Fecha de actualizaciï¿½n:	2013-06-10
 */
 
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -23,7 +23,7 @@ $obBD_conexion = new Class_Log_Conexion_Cch($Ses_Dat_Dis);
  */
 $obBD_con1 =  new Class_Log_Datos_Cch;
 /** 
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block;  
 /**
@@ -49,8 +49,8 @@ if (isset($_POST['codigo']))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	</HEAD>
 <BODY>
@@ -80,7 +80,7 @@ if (isset($_POST['codigo']))
  	 <td colspan="4" valign="top" class="TITULO_REPORTE_2">&nbsp;</td>
   </tr>
   <tr>
-    <td width="20%" ><span class="Etiqueta1">Institución :</span></td>
+    <td width="20%" ><span class="Etiqueta1">Instituciï¿½n :</span></td>
     <td width="31%"><span class="LetraNegra"><?Php echo $row_rs_institucion['Emp_Nom'].' - '.$row_rs_institucion['Suc_Des']; ?></span></td>
     <td width="7%">&nbsp;</td>
     <td width="42%">&nbsp;</td>
@@ -95,7 +95,7 @@ if (isset($_POST['codigo']))
   <tr>
     <td><span class="Etiqueta1">Nombre del Custodio :</span></td>
     <td><span class="LetraNegra"><?php echo $Nombre; ?></span></td>
-    <td><span class="Etiqueta1">Cédula :</span></td>
+    <td><span class="Etiqueta1">Cï¿½dula :</span></td>
     <td><span class="LetraNegra"><?php echo $Cedula; ?></span></td>
   </tr>
 </table>
@@ -106,7 +106,7 @@ if (isset($_POST['codigo']))
     <td width="5%">Cod. Art.</td>
     <td width="15%">Departamento</td>
     <td width="35%">Nombre del Art&iacute;culo</td>
-    <td width="15%">Observación</td>
+    <td width="15%">Observaciï¿½n</td>
     <?Php 
 		 /**
 			 * seleccionar toodos los campos de busqueda
@@ -193,7 +193,7 @@ if (isset($_POST['codigo']))
 	/*
 		foreach($Observaciones as $Obser => $valor) { 
 			echo  "<tr class='Etiqueta1' >";			
-			echo " <td width='55%' align='left' valign='top'><span class='Etiqueta1'> &nbsp; El Ord: ".$Obser." tiene la Observación: ".$valor." </span></td> "; 
+			echo " <td width='55%' align='left' valign='top'><span class='Etiqueta1'> &nbsp; El Ord: ".$Obser." tiene la Observaciï¿½n: ".$valor." </span></td> "; 
 			echo " </tr>";
 		}*/
 		
@@ -204,7 +204,7 @@ if (isset($_POST['codigo']))
       <td width="25%" style="font-size:12px" align="justify"  >
       
       <p>&nbsp;</p>
-      <p><b>En la ciudad de Machala y en esta fecha, se procede a realizar la legalización del traspaso de responsabilidad y custodia de los bienes a usted entregados por el Ministerio de Cordinación de Seguridad - Centro Zonal de Seguridad ECU-911, para el normal desempeño de sus labores, cumpliendo con lo señalado en el Reglamento General Sustitutivo para el Control de Manejo y Control de los Bienes del Sector Público(Art. 3 - Art. 92) y en el Manual General de Administración y Control de los Activos fijos del Sector Público(Acuerdo No. 12 CG), publicado en el suplemento del Registro Oficial No. 59 Capitulo III, del 7 de Mayo de 1997 y de acuerdo con lo establecido en el manual de funciones. Para constancia de lo antes detallado firmamos por triplicado. </b></p></td>   
+      <p><b>En la ciudad de Machala y en esta fecha, se procede a realizar la legalizaciï¿½n del traspaso de responsabilidad y custodia de los bienes a usted entregados por el Ministerio de Cordinaciï¿½n de Seguridad - Centro Zonal de Seguridad ECU-911, para el normal desempeï¿½o de sus labores, cumpliendo con lo seï¿½alado en el Reglamento General Sustitutivo para el Control de Manejo y Control de los Bienes del Sector Pï¿½blico(Art. 3 - Art. 92) y en el Manual General de Administraciï¿½n y Control de los Activos fijos del Sector Pï¿½blico(Acuerdo No. 12 CG), publicado en el suplemento del Registro Oficial No. 59 Capitulo III, del 7 de Mayo de 1997 y de acuerdo con lo establecido en el manual de funciones. Para constancia de lo antes detallado firmamos por triplicado. </b></p></td>   
     </tr>
 </table>
 

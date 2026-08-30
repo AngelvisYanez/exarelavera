@@ -4,6 +4,9 @@
  * @param $fecha 
  * @param $row_institucion 
  */
+if (empty($APP_REAL_PATH)) {
+    $APP_REAL_PATH = realpath(__DIR__.'/../../..');
+}
 require_once($APP_REAL_PATH.'/auditoria/LOGICA/aud_log_auditoria.php');
 require_once($APP_REAL_PATH.'/tesoreria/LOGICA/tes_log_cheque_2.0.php');
 require_once($APP_REAL_PATH.'/Librerias/procedimientos/almacenados_standar.php'); 

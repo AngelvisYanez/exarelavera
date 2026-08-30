@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Suprimir advertencias y noticias que puedan romper el JSON devuelto
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
 ini_set("display_errors", 0);
@@ -12,8 +12,12 @@ register_shutdown_function(function () {
     ) {
         header("Content-Type: application/json");
         http_response_code(500);
+        error_log("Fatal error: {$e["message"]} in {$e["file"]}:{$e["line"]}");
         echo json_encode([
-            "error" => "Fatal: {$e["message"]} in {$e["file"]}:{$e["line"]}",
+            "error" => "Error interno del servidor",
+            "detail" => $e["message"],
+            "file" => basename($e["file"]),
+            "line" => $e["line"]
         ]);
     }
 });
@@ -34,11 +38,18 @@ require "framework/Slim/Slim.php";
 \Slim\Slim::registerAutoloader();
 
 $app = new \Slim\Slim([
-    "debug" => true,
+    "debug" => false,
 ]);
 
 // Habilitar CORS para permitir llamadas desde el frontend de React
-$app->response->headers->set("Access-Control-Allow-Origin", "*");
+$allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://exa-contable.vercel.app',
+];
+$origin = $app->request->headers->get('Origin');
+$allowedOrigin = in_array($origin, $allowedOrigins) ? $origin : $allowedOrigins[0];
+$app->response->headers->set("Access-Control-Allow-Origin", $allowedOrigin);
 $app->response->headers->set(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, OPTIONS"
@@ -74,17 +85,45 @@ $app->hook("slim.before.router", function () use ($app) {
     $requestMethod = $app->request->getMethod();
     $resourceUri = $app->request->getResourceUri();
 
-    // Siempre permitir OPTIONS (CORS preflight), test, y auth
+    // Siempre permitir OPTIONS (CORS preflight), test, docs, openapi.json y auth
     if ($requestMethod === "OPTIONS") {
         return;
     }
-    if (preg_match("#^/v1/test|^/v1/auth/|^/v1/facturacion/#", $resourceUri)) {
+    if (preg_match("#^/v1/test|^/test|^/v1/auth/|^/v1/facturacion/|^/v1/docs|^/docs|openapi\\.json|^/v1/api-tokens-demo|^/v1/api-tokens-probar#", $resourceUri)) {
         return;
     }
 
-    // Leer header Authorization
+    // Rutas administrativas del panel: además del Bearer, se acepta la sesión
+    // activa del panel de administración (misma cookie de sesión en producción).
+    $esAdminSession = false;
+    if (preg_match("#^/v1/admin/#", $resourceUri)) {
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        $esAdminSession = !empty($_SESSION['Ses_Usu_Cod']);
+        if ($esAdminSession) {
+            return;
+        }
+    }
+
+    // Leer header Authorization con múltiples fallbacks para máxima compatibilidad
     $authHeader = $app->request->headers->get("Authorization");
-    if (!$authHeader || !str_starts_with($authHeader, "Bearer ")) {
+    if (empty($authHeader) && isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+    }
+    if (empty($authHeader) && isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+        $authHeader = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+    }
+    if (empty($authHeader) && function_exists('apache_request_headers')) {
+        $reqHeaders = apache_request_headers();
+        $authHeader = $reqHeaders['Authorization'] ?? ($reqHeaders['authorization'] ?? null);
+    }
+    if (empty($authHeader)) {
+        $authHeader = $_GET['token'] ?? ($_GET['api_token'] ?? ($_GET['access_token'] ?? ($_POST['token'] ?? null)));
+    }
+
+    $rawAuth = trim((string)$authHeader);
+    if ($rawAuth === '') {
         $app->response->setStatus(401);
         $app->response->body(
             json_encode([
@@ -95,9 +134,33 @@ $app->hook("slim.before.router", function () use ($app) {
         $app->stop();
     }
 
-    $token = substr($authHeader, 7);
-    $decoded = base64_decode($token, true);
-    if ($decoded === false || substr_count($decoded, ":") < 2) {
+    // Limpiar prefijo Bearer si viene incluido
+    $token = $rawAuth;
+    while (stripos($token, 'Bearer ') === 0) {
+        $token = trim(substr($token, 7));
+    }
+
+    $tokenData = validateAuthToken($token);
+    $managedData = null;
+
+    // Si el token HMAC del login no es válido, intentar con un token gestionado
+    // (creado desde el panel de administración con límite de consultas).
+    if ($tokenData === false) {
+        if (!class_exists('APITokenManager')) {
+            require_once __DIR__ . "/../classes/APITokenManager.php";
+        }
+        try {
+            $mgr = new APITokenManager();
+            $managed = $mgr->validate($token, true);
+            if ($managed && !empty($managed['valid'])) {
+                $managedData = $managed;
+            }
+        } catch (\Throwable $e) {
+            error_log("Validación token gestionado error: " . $e->getMessage());
+        }
+    }
+
+    if ($tokenData === false && $managedData === null) {
         $app->response->setStatus(401);
         $app->response->body(
             json_encode([
@@ -108,44 +171,50 @@ $app->hook("slim.before.router", function () use ($app) {
         $app->stop();
     }
 
-    [$tokenUser, $tokenEmpresa, $tokenTime] = explode(":", $decoded, 3);
+    if ($managedData !== null) {
+        // Token gestionado: verificar permisos por módulo/proceso si existen
+        $permisosMgr = new APITokenManager();
+        $permisos = $permisosMgr->getPermisos($managedData['id']);
+        if (!empty($permisos)) {
+            $rutaActual = $resourceUri;
+            $permitido = false;
+            foreach ($permisos as $p) {
+                $rutaPermitida = $p['Tip_Ruta'];
+                if ($rutaActual === $rutaPermitida ||
+                    strpos($rutaActual, rtrim($rutaPermitida, '/') . '/') === 0 ||
+                    strpos('/api' . $rutaActual, rtrim($rutaPermitida, '/') . '/') === 0 ||
+                    '/api' . $rutaActual === $rutaPermitida) {
+                    $permitido = true;
+                    break;
+                }
+            }
+            if (!$permitido) {
+                $app->response->setStatus(403);
+                $app->response->body(
+                    json_encode([
+                        "success" => false,
+                        "error" => "El token no tiene permisos para acceder a esta ruta ({$rutaActual})"
+                    ])
+                );
+                $app->stop();
+            }
+        }
 
-    if ((int) $tokenTime < time() - 86400) {
-        $app->response->setStatus(401);
-        $app->response->body(
-            json_encode([
-                "success" => false,
-                "error" => "Sesión expirada"
-            ])
-        );
-        $app->stop();
-    }
-
-    $token = substr($authHeader, 7); // quitar "Bearer "
-    $decoded = base64_decode($token, true);
-    if ($decoded === false || substr_count($decoded, ":") < 2) {
-        $app->response->setStatus(401);
-        $app->response->body(
-            json_encode([
-                "success" => false,
-                "error" => "Token inválido"
-            ])
-        );
-        return;
-    }
-
-    [$tokenUser, $tokenEmpresa, $tokenTime] = explode(":", $decoded, 3);
-
-    // Opcional: validar expiración (24 h)
-    if ((int) $tokenTime < time() - 86400) {
-        $app->response->setStatus(401);
-        $app->response->body(
-            json_encode([
-                "success" => false,
-                "error" => "Sesión expirada"
-            ])
-        );
-        return;
+        $tokenEmpresa = $managedData['Emp_Cod'];
+        $GLOBALS["_API_BDD"] = $managedData['Bdd'];
+    } else {
+        // Token HMAC del login
+        if (time() - $tokenData['timestamp'] > 86400) {
+            $app->response->setStatus(401);
+            $app->response->body(
+                json_encode([
+                    "success" => false,
+                    "error" => "Sesión expirada"
+                ])
+            );
+            $app->stop();
+        }
+        $tokenEmpresa = $tokenData['empresa'];
     }
 
     // Inyectar Emp_Cod en body si la ruta lo necesita
@@ -160,7 +229,13 @@ $app->hook("slim.before.router", function () use ($app) {
 function getBody()
 {
     if (isset($GLOBALS["_API_BODY"])) {
-        return $GLOBALS["_API_BODY"];
+        $body = $GLOBALS["_API_BODY"];
+        // Inyectar Bdd si fue derivada de un token gestionado
+        if (isset($GLOBALS["_API_BDD"]) && is_array($body) && !isset($body["Bdd"])) {
+            $body["Bdd"] = $GLOBALS["_API_BDD"];
+            $GLOBALS["_API_BODY"] = $body;
+        }
+        return $body;
     }
     $raw = "";
     if (class_exists("\\Slim\\Environment")) {
@@ -172,15 +247,19 @@ function getBody()
     if (empty($raw)) {
         $raw = file_get_contents("php://input");
     }
-    if (empty($raw)) {
-        $raw = file_get_contents("php://input", false, null, 0, 65535);
+    $parsed = !empty($raw) ? json_decode($raw, true) : null;
+    $body = is_array($parsed) ? $parsed : [];
+    if (!empty($_GET)) {
+        $body = array_merge($_GET, $body);
     }
-    if (empty($raw)) {
-        // Last resort: try $_POST for form-encoded
-        return $_POST ?: [];
+    if (!empty($_POST)) {
+        $body = array_merge($_POST, $body);
     }
-    $parsed = json_decode($raw, true);
-    return is_array($parsed) ? $parsed : [$raw];
+    if (isset($GLOBALS["_API_BDD"]) && !isset($body["Bdd"])) {
+        $body["Bdd"] = $GLOBALS["_API_BDD"];
+    }
+    $GLOBALS["_API_BODY"] = $body;
+    return $body;
 }
 
 if (!function_exists("utf8_encode_deep")) {
@@ -200,6 +279,21 @@ if (!function_exists("utf8_encode_deep")) {
     }
 }
 
+// Endpoint de test y diagnóstico
+$app->get('/v1/test', function () use ($app) {
+    if (!class_exists('APITokenManager')) {
+        require_once __DIR__ . "/../classes/APITokenManager.php";
+    }
+    $mgr = new APITokenManager();
+    
+    echo json_encode([
+        'success' => true,
+        'php_version' => PHP_VERSION,
+        'info' => $mgr->empresaInfo(620),
+        
+    ]);
+});
+
 // Módulos con API REST existentes
 require_once __DIR__ . "/v1/auth/auth.php";
 require_once __DIR__ . "/v1/tesoreria/clientes.php";
@@ -210,8 +304,10 @@ require_once __DIR__ . "/v1/inventario/productos.php";
 require_once __DIR__ . "/v1/relavera/manifiestos.php";
 require_once __DIR__ . "/v1/facturacion/comprobantes.php";
 require_once __DIR__ . "/v1/facturacion/emitir.php";
+require_once __DIR__ . "/v1/facturacion/sri-scraper.php";
 require_once __DIR__ . "/v1/auditoria/tareas.php";
 require_once __DIR__ . "/v1/admin/conexion.php";
+require_once __DIR__ . "/v1/admin/dashboard.php";
 
 // Nuevos módulos legacy con API REST
 require_once __DIR__ . "/v1/data/index.php";
@@ -227,10 +323,160 @@ require_once __DIR__ . "/v1/camaronera/index.php";
 require_once __DIR__ . "/v1/tesoreria/bancos.php";
 require_once __DIR__ . "/v1/admin/soporte.php";
 require_once __DIR__ . "/v1/admin/modulo-uso.php";
+require_once __DIR__ . "/v1/admin/directorio.php";
+require_once __DIR__ . "/v1/admin/api-tokens.php";
+require_once __DIR__ . "/v1/flujo/index.php";
 
-$app->get("/v1/test", function () {
-    echo json_encode(["mysqli" => function_exists("mysqli_connect")]);
+// Endpoints de Directorio Operativo
+require_once __DIR__ . "/v1/contactos.php";
+require_once __DIR__ . "/v1/plantas.php";
+require_once __DIR__ . "/v1/choferes.php";
+require_once __DIR__ . "/v1/vehiculos.php";
+
+// Swagger UI - Documentación de la API
+$docsHandler = function () use ($app) {
+    $app->response->headers->set('Content-Type', 'text/html; charset=utf-8');
+    readfile(__DIR__ . '/v1/docs/index.php');
+};
+
+$app->get('/v1/docs', $docsHandler);
+$app->get('/v1/docs/', $docsHandler);
+$app->get('/docs', $docsHandler);
+$app->get('/docs/', $docsHandler);
+
+$openapiHandler = function () use ($app) {
+    $app->response->headers->set('Content-Type', 'application/json; charset=utf-8');
+    $fullSpecPath = __DIR__ . '/openapi.json';
+    if (!is_file($fullSpecPath)) {
+        echo json_encode(array('openapi' => '3.0.3', 'info' => array('title' => 'EXA Contable API', 'version' => '1.0.0'), 'paths' => new stdClass()));
+        return;
+    }
+
+    $isFull = isset($_GET['full']) || isset($_GET['all']) || 
+              (isset($_GET['view']) && in_array(strtolower($_GET['view']), array('all', 'full', 'completo'), true)) ||
+              (isset($_GET['mode']) && in_array(strtolower($_GET['mode']), array('all', 'full', 'completo'), true));
+    
+    $modulo = isset($_GET['modulo']) ? trim($_GET['modulo']) : (isset($_GET['tag']) ? trim($_GET['tag']) : '');
+
+    // Si se solicita la especificación completa (vía parámetro explícito)
+    if ($isFull) {
+        readfile($fullSpecPath);
+        return;
+    }
+
+    // Cargar y filtrar la especificación OpenAPI
+    $raw = file_get_contents($fullSpecPath);
+    $spec = json_decode($raw, true);
+    if (!is_array($spec)) {
+        readfile($fullSpecPath);
+        return;
+    }
+
+    if (!empty($modulo) && strtolower($modulo) !== 'all') {
+        // Filtrar por módulo / tag específico
+        $filteredPaths = array();
+        $modLower = strtolower($modulo);
+        if (isset($spec['paths']) && is_array($spec['paths'])) {
+            foreach ($spec['paths'] as $path => $methods) {
+                if (is_array($methods)) {
+                    foreach ($methods as $method => $op) {
+                        if (isset($op['tags']) && is_array($op['tags'])) {
+                            foreach ($op['tags'] as $tag) {
+                                if (strtolower($tag) === $modLower) {
+                                    if (!isset($filteredPaths[$path])) $filteredPaths[$path] = array();
+                                    $filteredPaths[$path][$method] = $op;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        $spec['paths'] = !empty($filteredPaths) ? $filteredPaths : new stdClass();
+        $spec['tags'] = array_values(array_filter(isset($spec['tags']) ? $spec['tags'] : array(), function ($t) use ($modLower) {
+            return strtolower(isset($t['name']) ? $t['name'] : '') === $modLower;
+        }));
+        $spec['info']['description'] = "Documentación de la API REST - Módulo: **" . htmlspecialchars($modulo) . "**.";
+    } else {
+        // Por defecto: Directorio Operativo: Contactos, Plantas, Choferes, Vehículos
+        $publicPaths = array('/v1/contactos', '/v1/plantas', '/v1/choferes', '/v1/vehiculos');
+        $filteredPaths = array();
+        foreach ($publicPaths as $p) {
+            if (isset($spec['paths'][$p])) {
+                $filteredPaths[$p] = $spec['paths'][$p];
+            }
+        }
+        $spec['paths'] = !empty($filteredPaths) ? $filteredPaths : new stdClass();
+
+        $spec['tags'] = array(
+            array(
+                'name' => 'contactos',
+                'description' => 'Directorio de contactos autorizados para notificaciones operativas'
+            ),
+            array(
+                'name' => 'plantas',
+                'description' => 'Directorio de plantas de beneficio y ubicaciones operativas'
+            ),
+            array(
+                'name' => 'choferes',
+                'description' => 'Directorio de choferes y conductores por planta'
+            ),
+            array(
+                'name' => 'vehiculos',
+                'description' => 'Directorio de volquetas mineras y vehículos de carga por planta'
+            )
+        );
+
+        $spec['info']['description'] = "## EXA Contable API - Directorio Operativo\n\n" .
+            "Endpoints autorizados para la integración y consulta de contactos para notificaciones, plantas de beneficio, choferes de planta y vehículos/volquetas asignadas.\n\n" .
+            "Requiere autenticación mediante token Bearer con permisos habilitados sobre cada recurso.";
+    }
+
+    echo json_encode($spec, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+};
+
+$app->get('/v1/docs/openapi.json', $openapiHandler);
+$app->get('/docs/openapi.json', $openapiHandler);
+$app->get('/v1/openapi.json', $openapiHandler);
+$app->get('/openapi.json', $openapiHandler);
+
+// Guía de consumo en HTML (pública)
+$app->get('/v1/docs/guia', function () use ($app) {
+    $file = __DIR__ . '/docs/guia.html';
+    if (!is_file($file)) {
+        $app->response->setStatus(404);
+        $app->response->headers->set('Content-Type', 'application/json');
+        echo json_encode(['success' => false, 'error' => 'Guía no encontrada']);
+        return;
+    }
+    $app->response->headers->set('Content-Type', 'text/html; charset=utf-8');
+    echo file_get_contents($file);
+});
+
+// Demo interactiva de tokens con permisos por módulo/proceso (pública, mismo origen)
+$app->get('/v1/api-tokens-demo', function () use ($app) {
+    $file = __DIR__ . '/docs/api-tokens-demo.html';
+    if (!is_file($file)) {
+        $app->response->setStatus(404);
+        $app->response->headers->set('Content-Type', 'application/json');
+        echo json_encode(['success' => false, 'error' => 'Demo no encontrada']);
+        return;
+    }
+    $app->response->headers->set('Content-Type', 'text/html; charset=utf-8');
+    echo file_get_contents($file);
+});
+
+// Herramienta para probar un token (pública, mismo origen) — solo pega el token
+$app->get('/v1/api-tokens-probar', function () use ($app) {
+    $file = __DIR__ . '/docs/api-tokens-probar.html';
+    if (!is_file($file)) {
+        $app->response->setStatus(404);
+        $app->response->headers->set('Content-Type', 'application/json');
+        echo json_encode(['success' => false, 'error' => 'Herramienta no encontrada']);
+        return;
+    }
+    $app->response->headers->set('Content-Type', 'text/html; charset=utf-8');
+    echo file_get_contents($file);
 });
 
 $app->run();
-?>

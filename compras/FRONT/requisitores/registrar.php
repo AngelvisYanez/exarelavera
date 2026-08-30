@@ -101,8 +101,8 @@ if (isset($savePersonal)) {
         <script type="text/javascript" src="/framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
         <script type="text/javascript" src="/framework/jquery/chosen/chosenDesc/chosenDesc.js"></script>
         <script src="/framework/jquery/bootstrap/bootstrap-fileinput/js/fileinput.js" type="text/javascript"></script>
-        <script language="javascript" src="/Librerias/validaciones/validacion.js"></script>
-        <script language="javascript" src="/framework/plugins/cedulaRuc.js"></script>
+        <script type="text/javascript" src="/Librerias/validaciones/validacion.js"></script>
+        <script type="text/javascript" src="/framework/plugins/cedulaRuc.js"></script>
         <style>
             .kv-avatar .file-preview-frame,.kv-avatar .file-preview-frame:hover {
                 margin: 0;
@@ -181,7 +181,7 @@ if (isset($savePersonal)) {
                                                             <?php $rs_identi = $obBD_con1->getArrayConsulta('identifica.selectWhere',array('addCols'=>array(''=>array('Tipo'=>"IF(ISNULL(Ide_Pre),'Ec','Ex')")),'where'=>array("Ide_Est"=>'A')), $obBD_conexion); ?>
                                                             <select name="Ide_Cod" id="Ide_Cod" class="form-control input-xs readOnly" >
                                                                 <option value="">Seleccionar</option>
-                                                                <?php foreach($rs_identi as $row){ echo "<option value='$row[Ide_Cod]' data-tipo='$row[Tipo]'>$row[Ide_Des]</option>"; } ?>
+                                                                <?php foreach($rs_identi as $row){ echo "<option value='{$row['Ide_Cod']}' data-tipo='{$row['Tipo']}'>{$row['Ide_Des']}</option>"; } ?>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -367,7 +367,7 @@ if (isset($savePersonal)) {
                 //var respuesta = validar_cedula(cedula, campo);
                 //if (respuesta === true){
                     var data = {Prs_Ced: cedula, existePersona: true};
-                    $.post("<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>", data, function (response) {
+                    $.post("<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>", data, function (response) {
                         if (response['personal'] === true) {
                             limpiar();
                             $.alert('La persona ya se encuentra registrada como empleado..!!');
@@ -403,7 +403,7 @@ if (isset($savePersonal)) {
                 var formData = $('#formPersonal').getFormData('savePersonal');//new FormData(document.getElementById("formPersonal"));
                 //formData.append("savePersonal", true);
                 $.ajax({
-                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                     type: "post",dataType: "json",data: formData,cache: false,contentType: false,processData: false
                 })
                 .done(function (response) {

@@ -30,7 +30,6 @@
 			case 2:
 			$sql="SELECT `data`.Dat_Dis, `data`.Dat_Aut, `data`.Dat_Stg FROM
 			  access INNER JOIN `data` ON (access.Dat_Cod = `data`.Dat_Cod) WHERE data.`Emp_Cod`=$Par_Sql[0] AND `access`.`Acc_Usr`='$Par_Sql[1]'";
-echo $sql;
 			return $sql;
 			break;
 
@@ -163,7 +162,6 @@ echo $sql;
      Usu_Ced = '$Par_Sql[0]' AND sucursal.Suc_Cod=$Par_Sql[2]
      AND empresas.Emp_Cod = $Par_Sql[1] AND 
      usuarios.Usu_Est = 'A' AND sucursal.Suc_Est = 'A'";
-	 echo $sql;
 			return $sql;
 		}
 	}

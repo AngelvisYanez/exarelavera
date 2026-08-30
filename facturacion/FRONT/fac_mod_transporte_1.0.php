@@ -5,7 +5,7 @@
  *
  * @author Jose Cumbicos
  * @version 1.0
- * Fecha de actualización:	2015-06-30
+ * Fecha de actualizaciï¿½n:	2015-06-30
  * @package tesoreria.FRONT
  */
 
@@ -67,8 +67,8 @@ if (isset($_POST['hdd_save']))
 <HEAD>
 <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/fac_val_transporte.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_transporte.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {
@@ -131,8 +131,8 @@ if (isset($_POST['hdd_save']))
 				<i class=" icon-arrow-right icon-white"></i>
 			</button>
 			<input name="Tra_Cod" id="Tra_Cod" type="hidden" value="<?Php echo $row['Tra_Cod']; ?>">
-			<input name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>" type="hidden">
-			<input name="op_opciones" value="<?php echo $_POST['op_opciones'];?>" type="hidden">
+			<input name="txt_busqueda" value="<?php echo htmlspecialchars($_POST['txt_busqueda'], ENT_QUOTES, 'UTF-8');?>" type="hidden">
+			<input name="op_opciones" value="<?php echo htmlspecialchars($_POST['op_opciones'], ENT_QUOTES, 'UTF-8');?>" type="hidden">
 		</form>
 		</td>
 	   </tr>   
@@ -171,7 +171,7 @@ if (isset($_POST['hdd_save']))
 	 $row_rs_persona = $obBD_con1->getRowConsulta(11,$_POST['Tra_Cod'],$obBD_conexion);
    ?>
     <input name="Prs_Cod" type="hidden" id="Prs_Cod" value="<?php echo $row_rs_persona['Prs_Cod'];?>" />
-    <input name="Tra_Cod" type="hidden" id="Tra_Cod" value="<?php echo $_POST['Tra_Cod'];?>" />
+    <input name="Tra_Cod" type="hidden" id="Tra_Cod" value="<?php echo htmlspecialchars($_POST['Tra_Cod'], ENT_QUOTES, 'UTF-8');?>" />
     
     <table width="100%" border="0" cellpadding="2" cellspacing="0">
   	<tr>
@@ -246,7 +246,7 @@ if (isset($_POST['hdd_save']))
     <table width="300" border="0" cellpadding="0" cellspacing="0">
       <tr> 
       	<td width="110">
-      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
+      		 <button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="campos_hide(this.form, 'txt_busqueda*op_opciones*hdd_volver', '<?php echo $_POST['txt_busqueda'].'*'.$_POST['op_opciones'].'*'.'1';?>')">
                <i class=" icon-arrow-left icon-white"></i>
                <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
        		 </button>

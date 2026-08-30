@@ -76,7 +76,7 @@ if (isset($ajax_mar))
 	<?php	
 		}					
 		?>
-        <script language="javascript">
+        <script type="text/javascript">
 			document.getElementById('btnGuardar').disabled=false;
 		</script>
         <?php
@@ -89,8 +89,8 @@ exit();
   <TITLE><?Php echo "Marca Registrar [EXA]"; ?></TITLE>
     <meta charset="UTF-8">
     	<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/fac_val_marca.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/fac_val_marca.js"></script>
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 		<script type="text/javascript"> 
           $(function() {

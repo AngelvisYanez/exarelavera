@@ -20,7 +20,7 @@
 			
 			case 134:
 			/**
-			 * Consultar sucursal en base al código 
+			 * Consultar sucursal en base al cï¿½digo 
 			 */
 			$cons_codsuc = "SELECT empresas.Emp_Cod, empresas.Emp_Nom, empresas.Emp_Ruc, ciudad.Ciu_Cod, ciudad.Ciu_Des, sucursal.Suc_Sri, sucursal.Suc_Dir, sucursal.Suc_Des, sucursal.Suc_Te1, sucursal.Suc_Te2, sucursal.Suc_Fax, sucursal.Suc_Cor, sucursal.Suc_Web,empresas.Emp_Log FROM empresas,ciudad,sucursal WHERE sucursal.Ciu_Cod = ciudad.Ciu_Cod AND sucursal.Emp_Cod = empresas.Emp_Cod AND sucursal.Suc_Cod = $Par_Sql[0]";
 			//echo $cons_codsuc;
@@ -901,7 +901,7 @@
 		   break;
 		   
 		   /**
-			* Consulta de los Departamentos por Código
+			* Consulta de los Departamentos por Cï¿½digo
 			*/
 		   case 666:
 		   $direc_666="SELECT 
@@ -1112,8 +1112,7 @@
 					WHERE 
 						tipo_activo.Emp_Cod=$Par_Sql[0]     
 						ORDER BY Tia_Cdc";
-			echo $sql;				
-			return $sql;
+				return $sql;
 		   break;
 			
 			
@@ -1152,7 +1151,7 @@
 		   break;
      
 		   /**
-		   *  Consulta la información la ciudada en base a la sucursal
+		   *  Consulta la informaciï¿½n la ciudada en base a la sucursal
 		   */
 		   case 5001:
 			$sql="SELECT 

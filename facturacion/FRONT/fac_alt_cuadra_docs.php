@@ -3,7 +3,7 @@
 * @abstract Permite
 * @author Erik Niebla
 * @version 1.0
-* Fecha de creación  2016-11-24
+* Fecha de creaciï¿½n  2016-11-24
 */
 require_once('../../Librerias/config.php/register_globals.php'); 
 //require_once('../../administrador/LOGICA/seguridad.php');
@@ -108,7 +108,7 @@ if(isset($getPlantilla)){
                                         <select id="type" name="type" class="form-control input-sm" required="" onchange="setType(this.value)">                                           
                                             <option value="fact">Ventas</option>                                            
                                             <option value="retenc">Retenciones</option>
-                                            <option value="notcred">Notas de Crédito</option>
+                                            <option value="notcred">Notas de Crï¿½dito</option>
                                             <option value="liquida">Liquidaciones</option>
                                         </select>
                                     </div>
@@ -172,7 +172,7 @@ if(isset($getPlantilla)){
                     </form>
                     <form id="formImage" class="form-horizontal normal" > 
                         <fieldset class="exa-fieldset ">                           
-                            <legend class="Titulos2">Imagen Guía</legend>
+                            <legend class="Titulos2">Imagen Guï¿½a</legend>
                             <div class="form-group">
                                 <label class="col-xs-2 control-label label-sm">Imagen:</label>  
                                 <div class="col-xs-10"> 
@@ -309,7 +309,7 @@ if(isset($getPlantilla)){
              formData.append("saveFondo", true);
              formData.append("type", type);
              $.ajax({
-                url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
+                url: "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",
                 type: "post", dataType: "json", data: formData, cache: false, contentType: false, processData: false,
                 success:function(re){ $.alert(re.message); }
             });

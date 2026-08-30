@@ -55,7 +55,7 @@ if(isset($ajaxGrid)){
                     <div class="col-xs-12">
                         <form  class="form-horizontal normal" id="form1"  >
                            <fieldset class="exa-fieldset">                           
-                           <legend class="Titulos2">Búsqueda:</legend> <!-- Form Name -->
+                           <legend class="Titulos2">Bï¿½squeda:</legend> <!-- Form Name -->
                               <div class="row">  
                                     
                               </div>
@@ -77,7 +77,7 @@ if(isset($ajaxGrid)){
                                 $.createDateRange('#ini','#fin');
                                 var kardexGrid=$("#kardex");
                                 kardexGrid.jqGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET", datatype: "json", regional : 'es',//ajaxRowOptions: { async: true },
                                     postData: $("#form1").getData("ajaxGrid"),
                                     autowidth : true, shrinkToFit: true, height: 270,responsive:true,
@@ -87,7 +87,7 @@ if(isset($ajaxGrid)){
                                         { label: 'Cod.Int.', name: 'Mes_Cod', key: true, hidden:false,viewable:true,width:20 },                                         
                                         { label: 'Cod.Int.', name: 'Pro_Cod', hidden:true,viewable:false,width:20 },                                         
                                         { label: 'Nombre', name: 'Mes_Nom', width: 100  }, 
-                                        { label: 'Descripción', name: 'Mes_Des', width: 150  },
+                                        { label: 'Descripciï¿½n', name: 'Mes_Des', width: 150  },
                                         { label: 'Marca',name: 'Bam_Nom', width: 30,align:"center"},
                                         { label: 'Resultado',name: 'Ite_Lar', width: 150,classes:'columnHighlight2'},
                                         { label: 'Max. Lote',name: 'Mes_Max', width: 30,align:"center"},
@@ -128,12 +128,12 @@ if(isset($ajaxGrid)){
                        <form  class="form-horizontal normal"   >
   
                         <fieldset class="exa-fieldset">                           
-                           <legend class="Titulos2">Artículo a Producir:</legend> <!-- Form Name -->
+                           <legend class="Titulos2">Artï¿½culo a Producir:</legend> <!-- Form Name -->
                               <div class="row">                                  
                                   <div class="col-xs-4">
                                       <!-- static input-->
                                         <div class="form-group">
-                                          <label class="col-xs-3 control-label label-xs ">Descripción:</label>  
+                                          <label class="col-xs-3 control-label label-xs ">Descripciï¿½n:</label>  
                                           <div class="col-xs-8"> 
                                                                               
                                                 <span  class="form-control input-xs" id="producto"><?php echo $prod['Ite_Lar']; ?></span>                              
@@ -155,7 +155,7 @@ if(isset($ajaxGrid)){
                                         </div>
                                       <!-- static input-->
                                         <div class="form-group">
-                                          <label class="col-xs-3 control-label label-xs ">Adquisición:</label>  
+                                          <label class="col-xs-3 control-label label-xs ">Adquisiciï¿½n:</label>  
                                           <div class="col-xs-8">                                    
                                               <span  class="form-control input-xs" id="pro_adq"><?php echo $prod['Adq_Des']; ?></span>                              
                                           </div>                                  
@@ -178,7 +178,7 @@ if(isset($ajaxGrid)){
                                         </div>
                                       <!-- static input-->
                                         <div class="form-group">
-                                          <label class="col-xs-3 control-label label-xs ">Observación:</label>  
+                                          <label class="col-xs-3 control-label label-xs ">Observaciï¿½n:</label>  
                                           <div class="col-xs-8">                                    
                                               <span  class="form-control input-xs" id="pro_obs"><?php echo $prod['Pro_Obs']; ?></span>                              
                                           </div>                                  
@@ -226,7 +226,7 @@ if(isset($ajaxGrid)){
                             </div>
                             <!-- static input-->
                             <div class="form-group">
-                              <label class="col-sm-3 control-label label-xs ">Descripción:</label>  
+                              <label class="col-sm-3 control-label label-xs ">Descripciï¿½n:</label>  
                               <div class="col-sm-9"> 
                                   <textarea name="Mes_Des" class="form-control input-xs" readonly=""><?php echo $mescla['Mes_Des']; ?></textarea>
                               </div>                                  
@@ -274,12 +274,12 @@ if(isset($ajaxGrid)){
 //                                
 //                                $('.btn-frm').attr('disabled','disabled');
 //                                //console.log(data);
-//                                $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+//                                $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
 //                                    if(response['success']===true){
 //                                        $('.btn-new').removeAttr('disabled');
 //                                        $.alert('Registro Guardado Con Exito!');
 //                                    }else{
-//                                        $('.btn-frm').removeAttr('disabled');$.alert("No se Logro Guardar la Información");$("#prods").startGridEdit();                                        
+//                                        $('.btn-frm').removeAttr('disabled');$.alert("No se Logro Guardar la Informaciï¿½n");$("#prods").startGridEdit();                                        
 //                                    }
 //                                    //console.log(data);
 //                                },'json').fail(function(error) { $('.btn-frm').removeAttr('disabled');$.alert("El Servidor ha fallado en responder!");$("#prods").startGridEdit(); })
@@ -289,7 +289,7 @@ if(isset($ajaxGrid)){
                             $(document).ready(function () {
                                 var kardexGrid=$("#prods");
                                 kardexGrid.jqGrid({
-                                    url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                    url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                     mtype: "GET", datatype: "local", regional : 'es',//ajaxRowOptions: { async: true },
                                     //postData: $("#form1").getData("ajaxGrid"),
                                     data:<?php echo json_encode($materiales); ?>,

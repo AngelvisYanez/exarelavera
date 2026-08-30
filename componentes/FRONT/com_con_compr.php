@@ -1,4 +1,5 @@
 <?Php
+if (!function_exists('mensaje_requerido')) return;
 /* Componente para la busqueda depago a proveedores segun el apellidos o numero de comprobante */
 ?>
 <FIELDSET>

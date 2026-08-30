@@ -1,0 +1,12 @@
+# Ambientes virtuales
+venv/
+.env
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Resultados de markdown que quizas no quieran subir
+*.md
+!README.md

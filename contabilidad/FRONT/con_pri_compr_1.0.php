@@ -33,7 +33,7 @@ if (isset($codigo))
 	list($ann, $mes, $dia) = preg_split('![/.-]!', $row_rs_cabcomp['Com_Fec']);	
 }//FIn del if (isset($codigo))
 
-if(count($row_rs_cabcomp) > 0) 
+if(count((array)$row_rs_cabcomp) > 0) 
 {	
 	switch($tipo)
 	{
@@ -212,7 +212,7 @@ if(count($row_rs_cabcomp) > 0)
 	/* Cargado de los cheques del comprobante */
 	$row_rs_carcheq = $obBD_con1->getArrayConsulta(334, $row_rs_cabcomp['Com_Cod'], $obBD_conexion);
 	
-	if (count($row_rs_carcheq) > 0) 
+	if (count((array)$row_rs_carcheq) > 0) 
 	{
 	?>
 	<span class="TITULO_REPORTE">CHEQUES DEL COMPROBANTE</span> <br>
@@ -241,7 +241,7 @@ if(count($row_rs_cabcomp) > 0)
         </tbody>
       </table>
 	  <?php 
-	 }//Fin del if (count($row_rs_carcheq) > 0)
+	 }//Fin del if (count((array)$row_rs_carcheq) > 0)
 	?>
 	<?php 
 	switch ($tipo)

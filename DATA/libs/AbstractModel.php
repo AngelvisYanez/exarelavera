@@ -1,5 +1,6 @@
-﻿<?php
+<?php
 require_once dirname(__file__).'/Expr.php';
+#[AllowDynamicProperties]
 class AbstractModel {
     //protected $_debug=true; //protected $_db; //protected $_schema = '';
     protected $_primary = null;
@@ -114,7 +115,7 @@ class AbstractModel {
         return $where;
     }
     public function selectWhere($cond,$obj=false){
-        $where=' '; $distinct=false; $order=' '; $group=' '; $limits=' ';
+        $where=' '; $distinct=false; $order=' '; $group=' '; $limits=' '; $clean=false; $having=false;
         if(is_array($cond)){
             $clean=isset($cond['clean'])?$cond['clean']:false; if(isset($cond['clean'])) unset($cond['clean']);
             $having=isset($cond['having'])?$cond['having']:false; if(isset($cond['having'])) unset($cond['having']);
@@ -150,7 +151,7 @@ class AbstractModel {
             if($distinct==true) $sel->distinct();
             if(!empty($unsetColsInit)) $sel->unsetCols(null);
             if(!empty($setWhere)){ $this->setWhere($sel, $setWhere, $cond); }
-            if(!empty($join)){ foreach($join as $tbl=>$val){ if(is_string($tbl))$tbl=trim($tbl);else if(isset($val['table'])){ $tbl=$val['table']; if(is_array($val['table'])) list($firstKey)=array_keys($val['table']); } $jt=isset($val['type'])?$val['type']:'join'; $sel->$jt($tbl,isset($val['on'])?$val['on']:((is_string($tbl)?$tbl:$tbl[$firstKey]).".{$val['pk']}=$this->_name.{$val['pk']}"),(isset($val['cols'])?$val['cols']:array())); } }
+            if(!empty($join)){ $firstKey=null; foreach($join as $tbl=>$val){ if(is_string($tbl))$tbl=trim($tbl);else if(isset($val['table'])){ $tbl=$val['table']; if(is_array($val['table'])) list($firstKey)=array_keys($val['table']); } $jt=isset($val['type'])?$val['type']:'join'; $sel->$jt($tbl,isset($val['on'])?$val['on']:((is_string($tbl)?$tbl:$tbl[$firstKey]).".{$val['pk']}=$this->_name.{$val['pk']}"),(isset($val['cols'])?$val['cols']:array())); } }
             if(trim($where)!='') $sel->where($where,null);
             if(trim($group)!='') $sel->group($group);
             if(trim($order)!='') $sel->order($order);

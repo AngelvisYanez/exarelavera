@@ -18,6 +18,10 @@ $obBD_conexion = new Class_Log_Conexion_rrhh($Ses_Dat_Dis);
  */
 $obBD_con1 = new Class_Log_Datos_rrhh;
 
+if (!isset($Per_Cod) || $Per_Cod == '') {
+    exit;
+}
+
 /*Secci�n para obtener los datos de la cabecera*/
 $rs_cabecera = $obBD_con1->getRowConsulta(14, $Ses_Suc_Cod, $obBD_conexion);
 /*Secci�n para obtener la informaci�n de un empleado*/

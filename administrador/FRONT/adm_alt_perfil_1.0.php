@@ -1,10 +1,10 @@
 <?php	
 /* 
 * Alias:					Registrar
-* Descripción: 				Permite registrar los perfiles
-* Fecha de actualización:	2011-03-13
+* Descripciï¿½n: 				Permite registrar los perfiles
+* Fecha de actualizaciï¿½n:	2011-03-13
 * Desarrollador:			Lewis Chimarro
-* Fecha de actualización:	2013-06-24
+* Fecha de actualizaciï¿½n:	2013-06-24
 * Desarrollador:			Fabian Gallardo G.
 */
 
@@ -13,7 +13,7 @@ require_once('../LOGICA/adm_log_perfil.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');	
 require_once('../../Librerias/postclass.php');
 
-/* Creación del objeto para evitar el reenvio*/
+/* Creaciï¿½n del objeto para evitar el reenvio*/
 $thisPost = new Post_Block;
 
 if (isset($hdd_save))
@@ -41,7 +41,7 @@ if ($thisPost->postBlock($_POST['postID']))
 	$parametros = $Per_Des.'*'.$Ses_Emp_Cod;
 	
 	/*
-	* Inserción en la tabla de Perfiles 
+	* Inserciï¿½n en la tabla de Perfiles 
 	*/
 	$obBD_con1->operacionobBD(1, $parametros ,$obBD_conexion);	
 	
@@ -72,7 +72,7 @@ if ($thisPost->postBlock($_POST['postID']))
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php")?>        
-		<script language="javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
+		<script type="text/javascript" src="../VALIDACIONES/adm_val_usuarios.js"></script>	
 		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>	
         <!--Librerias para interfaz -->               
 	    <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>

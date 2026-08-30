@@ -13,7 +13,7 @@ require_once '../../Librerias/procedimientos/almacenados_standar.php';
 require_once '../../Librerias/postclass.php';
 	
 /** 
-* Creación del objeto para evitar el reenvio 
+* Creaciï¿½n del objeto para evitar el reenvio 
 */
 $thisPost = new Post_Block;
 /** 
@@ -21,7 +21,7 @@ $thisPost = new Post_Block;
 */  
 $obBD_conexion = new Class_Log_Conexion_Tes;
 /**
-* Creación del Objeto para consultas
+* Creaciï¿½n del Objeto para consultas
 */
 $obBD_con1 =  new Class_Log_Datos_Tes; 	
 /**
@@ -73,7 +73,7 @@ if(isset($_POST['cdc_nivel']))
 		
 		$nivel_superior = $row['Cat_Rec'];
 		/**
-		* Devuelve la descripción de un directorio superior
+		* Devuelve la descripciï¿½n de un directorio superior
 		*/		
 		$rs_nivel_s = $obBD_con1->consulta(sentencias_tes(1025,$obBD_con1->parametros("".$nivel_superior)),$obBD_conexion->conexion);
 		$row = $obBD_con1->fetch_assoc($rs_nivel_s);
@@ -358,7 +358,7 @@ if(isset($_POST['cdc_nivel']))
 		<input type="hidden" id="nivel_actual" name="nivel_actual" value="<?php echo $nivel_actual ?>" />
 		<input type="hidden" id="cdc_nivel" name="cdc_nivel" value="<?php echo $cadena_codigo ?>" />
 		<input type="hidden" id="nivel_superior" name="nivel_superior" value="<?php echo $nivel_superior ?>" />
-		<input type="hidden" id="Cat_Cod" name="Cat_Cod" value="<?php echo $_POST['Cat_Cod'] ?>" />
+		<input type="hidden" id="Cat_Cod" name="Cat_Cod" value="<?php echo htmlspecialchars($_POST['Cat_Cod'], ENT_QUOTES, 'UTF-8') ?>" />
         <button type="button" class="btn btn-primary start" title="Guardar" onClick="validar_requeridos(this.form,'Cat_Des',1)">
            <i class="icon-book icon-white"></i>
            <span>Guardar</span>

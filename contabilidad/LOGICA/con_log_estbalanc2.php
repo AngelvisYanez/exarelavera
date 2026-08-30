@@ -1,4 +1,4 @@
-﻿<?php 
+<?php 
 /**
  * Logica de las paginas de balances
  *
@@ -72,7 +72,7 @@ class Class_Log_Datos_Con extends MysqlDatos{
 		
 		$this->free_result($result);
 		
-		return $row;
+		return is_array($row) ? $row : array();
 	}
 
 	/**
@@ -340,7 +340,7 @@ function formatCuentaDiario($cuenta,$cant_cuent,$total,$format){
     $grupoUtilidad = substr($ctaUtilidad,0,1);
 
     if($utilidadSiNo == 'si' and $cta == ''){
-    	echo  '<script language="javascript">alert("Debe parametrizar la cuenta para utilidad antes de participacion e impuestos!");</script>';
+    	echo  '<script type="text/javascript">alert("Debe parametrizar la cuenta para utilidad antes de participacion e impuestos!");</script>';
     	exit();
     }
     /* consulto los valores del mayor (con filtro opcional de sucursal via SQL 240 $Par_Sql[3]) */

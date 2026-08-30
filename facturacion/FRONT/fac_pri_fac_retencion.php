@@ -47,7 +47,7 @@ $total_rs_institucion = mysqli_num_rows ($rs_institucion);
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <link href="../../Estilos/Estilo1.css" rel="stylesheet" type="text/css">
 <link href="../../Estilos/Interfaz1.css" rel="stylesheet" type="text/css">	
-<script language="javascript" src="../Librerias/validaciones/validacion.js"></script>
+<script type="text/javascript" src="../Librerias/validaciones/validacion.js"></script>
 <body>
 <table width="652"  height="232" border="0" align="center">
   <tr>

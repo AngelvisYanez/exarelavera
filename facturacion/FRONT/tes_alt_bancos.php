@@ -11,7 +11,7 @@
 	  else
 		{
 ?>
-			<script LANGUAGE="JavaScript">	
+			<script type="text/javascript">	
 				alert ("�No se ha podido guardar los datos porque el banco ya existe en la base de datos!");
 			</script>
 <?Php
@@ -22,9 +22,9 @@
 	<HEAD>
 		<TITLE>Ginus</TITLE>
 		<link href="../../Estilos/Estilo1.css" rel="stylesheet" type="text/css">
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../../Librerias/validaciones/tesoreria.js"></script>
-		<script language="javascript" src="../../Librerias/fecha.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/tesoreria.js"></script>
+		<script type="text/javascript" src="../../Librerias/fecha.js"></script>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 	</HEAD>
 <BODY>

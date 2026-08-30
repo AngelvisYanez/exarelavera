@@ -110,7 +110,7 @@ class Class_Log_Datos_Con extends MysqlDatosContab{
 						<?php if ($row['Pld_Tip'] == 'D'){ echo "Detalle"; }else{ 
 								if ($row['Pld_Tip'] == 'G'){ echo "GRUPO"; } }?>
 					</td>
-				<tr>
+				</tr>
 					<?php									
 					$this->cargarNodos($cod,$row['Pld_Cod'], $categoria, $obBD);
 				} //Fin del foreach($row_nodosrep as $row)
@@ -229,7 +229,7 @@ class Class_Log_Datos_Con extends MysqlDatosContab{
    		  <tr align="center">
 		    <td colspan="2" valign="top"><hr /></td>
   		  </tr>
-		  <tr>
+				</tr>
 		    <td align="center" width="50%" valign="top" class="Texto_Reporte"><div align="center"><strong>Fecha de Impresi&oacute;n:</strong> &nbsp;<?php echo $fechaHoy; ?>&nbsp;</div></td>
 		    <td align="center" width="50%" valign="top" class="Texto_Reporte"><strong>Usuario:</strong>&nbsp;<?php echo $row_usuario['Prs_Ape'].' '.$row_usuario['Prs_Nom'] ; ?></td>
 	      </tr>

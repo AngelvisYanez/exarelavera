@@ -179,7 +179,7 @@ if(isset($loginAjax)){
 	<script src="../../mascaras/model1/js/libs/modernizr-2.5.3.min.js"></script>
 	<script src="../LOGICA/TreeMenu.js" language="JavaScript" type="text/javascript"></script>
 	<script src="../../Librerias/validaciones/validacion.js" language="javascript" type="text/javascript"></script>
-    <script language="javascript" type="text/javascript">
+    <script type="text/javascript" type="text/javascript">
 	/**
 	* Funciï¿½n para amplicar el alto de un IFRAME
 	*/
@@ -246,14 +246,14 @@ if(isset($loginAjax)){
                                 $('#myModal').modal('show');
                             }
                             function loginAjax(){
-                                public $msg;
-                                $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",{loginAjax:true,Emp_Cod:$('#Emp_Cod').val(),Suc_Cod:$('#Suc_Cod').val(),user_name:$('#Usu_Ced').val(),encryptor:md5($('#Usu_Pas').val())}, function( response ) {
+                                var msg;
+                                $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",{loginAjax:true,Emp_Cod:$('#Emp_Cod').val(),Suc_Cod:$('#Suc_Cod').val(),user_name:$('#Usu_Ced').val(),encryptor:md5($('#Usu_Pas').val())}, function( response ) {
                                     if(response['success']===true){
-                                         $msg='<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';
-                                         setTimeout(function (){window.location.href ="<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>";},2500);
-                                    }else{ $msg='<div class="alert alert-error"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;Usuario o Contrase&ntilde;a Incorrectos.</div>';}                                   
-                                 },'json').fail(function(error) { $msg='<div class="alert alert-error fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;El Servidor ha fallado en responder!.</div>'; })
-                                     .always(function() {$('#msgAlert').html($msg);$('#msgAlert .alert').hide();$('#msgAlert .alert').show('bounce',{},350);setTimeout(function (){$('#msgAlert .alert').hide('pulsate',{},250);},4000);});
+                                         msg='<div class="alert alert-success fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[SISTEMA]</strong> &nbsp;&nbsp;Login Correcto. Direccionando....</div>';
+                                         setTimeout(function (){window.location.href ="<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>";},2500);
+                                    }else{ msg='<div class="alert alert-error"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;Usuario o Contrase&ntilde;a Incorrectos.</div>';}                                   
+                                 },'json').fail(function(error) { msg='<div class="alert alert-error fade in"><button type="button" class="close" data-dismiss="alert">x</button><strong>[ERROR]</strong> &nbsp;&nbsp;El Servidor ha fallado en responder!.</div>'; })
+                                     .always(function() {$('#msgAlert').html(msg);$('#msgAlert .alert').hide();$('#msgAlert .alert').show('bounce',{},350);setTimeout(function (){$('#msgAlert .alert').hide('pulsate',{},250);},4000);});
                             }
                         </script>
 			<ul class="pull-right">
@@ -459,7 +459,7 @@ if(isset($loginAjax)){
 
 <!-- Prepended text-->
 <div class="control-group">
-  <label class="control-label" for="Usu_Pas">Contraseña:</label>
+  <label class="control-label" for="Usu_Pas">Contraseï¿½a:</label>
   <div class="controls">
     <div class="input-prepend">
       <span class="add-on"><i class="icon-lock"></i></span>

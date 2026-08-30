@@ -1,10 +1,10 @@
 <?php 
 /************************************************************************** 
- * Alias: Autorización de Activos a Custodio.							  *
- * Descripción: Permite la confirmación final de los activos a un custodio*
+ * Alias: Autorizaciï¿½n de Activos a Custodio.							  *
+ * Descripciï¿½n: Permite la confirmaciï¿½n final de los activos a un custodio*
  * Desarrollador:  Didimo Zamora						                  *
- * Fecha de actualización:	2013/06/11	
- * Fecha de actualización:	2013/09/06					                  *
+ * Fecha de actualizaciï¿½n:	2013/06/11	
+ * Fecha de actualizaciï¿½n:	2013/09/06					                  *
  **************************************************************************/
 
 require_once('../../administrador/LOGICA/seguridad.php');
@@ -22,7 +22,7 @@ $obBD_conexion = new Class_Log_Conexion_Cch($Ses_Dat_Dis);
  */
 $obBD_con1 = new Class_Log_Datos_Cch;
 /**
- * Creación del objeto para evitar el reenvio 
+ * Creaciï¿½n del objeto para evitar el reenvio 
  */
 $thisPost = new Post_Block;  
 /**
@@ -112,7 +112,7 @@ $Ses_Emp_Cod =1;
                         ?>
                             <tr>
                                 <td>&nbsp;</td>
-                                <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?>  </td>
+                                <td align="center"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?>  </td>
                                 <td class="LetraNegra">&nbsp;</td> 
                             </tr>     
                         <?Php 
@@ -174,7 +174,7 @@ $hoy = date("Y-m-d");
 			//$Sec_Cod=1;
 			for ($j=1; $j<= count($cant_act)-1; $j++)
 				{				
-					//Actualiza estado de confirmación del activo fijo para el custodio.
+					//Actualiza estado de confirmaciï¿½n del activo fijo para el custodio.
 						
 							$obBD_con1->operacionobBD(2004, $codigo.'*'.$cant_act[$j],$obBD_conexion);						
 				}				
@@ -184,7 +184,7 @@ $hoy = date("Y-m-d");
 		 unset($cadena);
 		 unset($codigo);
 		 /**
-		  * Inserción de los activos seleccionados 
+		  * Inserciï¿½n de los activos seleccionados 
 		  */
 	 }	 
 ?> 
@@ -192,8 +192,8 @@ $hoy = date("Y-m-d");
 	<HEAD>
 		<TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
 		<?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-		<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-		<script language="javascript" src="../VALIDACIONES/Validaciones.js"></script>
+		<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+		<script type="text/javascript" src="../VALIDACIONES/Validaciones.js"></script>
         <script type="text/javascript" src="../VALIDACIONES/act_val_transfere_activo.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
         <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
@@ -272,7 +272,7 @@ $hoy = date("Y-m-d");
 					?>                   
                    			<tr>                               
                                 <td> </td>
-                                <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+                                <td align="center"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
                                 <td> </td>                               
                             </tr>          
                     <?php	
@@ -284,7 +284,7 @@ $hoy = date("Y-m-d");
 					?>
                         <tr>                               
                             <td> </td>
-                            <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
+                            <td align="center"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?></td>
                             <td> </td>                                
                         </tr>
                     <?php  
@@ -333,7 +333,7 @@ $thisPost->startPost();
                           <td width="50%" >&nbsp;<span class=" LetraNegra"><?php echo  $rs_custodio['Dep_Des'];?></span></td>
                       </tr> 
                       <tr>
-                        <td width="15%" class="Etiqueta1" ><span class="Etiqueta1">Cédula:</span></td>
+                        <td width="15%" class="Etiqueta1" ><span class="Etiqueta1">Cï¿½dula:</span></td>
                         <td width="22%">&nbsp;<span class="LetraNegra"><?php echo  $rs_custodio['Prs_Ced'];?></span></td>
                          <td width="13%" ><span  class="Etiqueta1"></span></td>
                           <td width="50%" ><span  class="Etiqueta1"> </span></td>
@@ -354,7 +354,7 @@ $thisPost->startPost();
                             <th width="25%">Activo</th>    
                             <th width="8%">Fecha</th> 
                             <th width="19%">Origen</th>
-                            <th width="29%">Observación</th>
+                            <th width="29%">Observaciï¿½n</th>
                             <th width="6%">Estado</th> 
                             <th width="8%">
                             <input title="Seleccionar/deseleccionar todos" type="checkbox" name="todos" id="todos" onClick="seleccionar_todos(document.getElementById('cant').value,'todos')"><samp class="LetraNegra">Todos</samp></th> 
@@ -394,7 +394,7 @@ $thisPost->startPost();
                             <tr>
                                 <td>&nbsp;</td>
                                 <td>&nbsp;</td>
-                                <td align="center"><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?>  </td>
+                                <td align="center"><?Php echo error_alerta("ï¿½No hay resultados que mostrar!", 1) ?>  </td>
                                 <td class="LetraNegra">&nbsp;</td> 
                                 <td>&nbsp;</td> 
                                 <td>&nbsp;</td> 
@@ -426,7 +426,7 @@ $thisPost->startPost();
         	<td width="88">
             	
             		<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
-                    <button type="button" class="btn btn-inverse fileinput-button" title="Atrás" onClick="this.form.submit();"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
+                    <button type="button" class="btn btn-inverse fileinput-button" title="Atrï¿½s" onClick="this.form.submit();"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
                     <input type="hidden" name="hdd_volver" value="1">
                    </form>
                 

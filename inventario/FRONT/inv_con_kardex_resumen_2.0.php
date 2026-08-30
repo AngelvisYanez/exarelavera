@@ -202,7 +202,7 @@ if (isset($productos)) {
 							$('#ini').val('2000-01-01'); //$('#ini').datepicker("setDate", new Date(today.getTime() - (30 * 24 * 3600 * 1000)));
 							$('#fin').datepicker("setDate", new Date());
 							kardexGrid.createGrid({
-								url: '<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+								url: '<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
 								mtype: "GET",
 								datatype: "json",
 								regional: 'es', //ajaxRowOptions: { async: true },

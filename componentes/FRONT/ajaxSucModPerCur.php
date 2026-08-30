@@ -43,7 +43,7 @@ if(isset($_GET['ajax_periodo']))
 			 $combo .= "</option>";
 	}
 	
-	echo $combo;
+	echo $combo."</select>";
 	
 	if (count($Arr_periodos) == 0)
 	{ 

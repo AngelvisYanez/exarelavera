@@ -41,8 +41,8 @@ if (!isset($Pec_Cod)) {
 	<meta charset="UTF-8">
 	<meta http-equiv="Content-Type">
 	<?php require_once("../../mascaras/model1/estilos/estilos.php"); ?>
-	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-	<script language="javascript" src="../VALIDACIONES/con_val_balances.js"></script>
+	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+	<script type="text/javascript" src="../VALIDACIONES/con_val_balances.js"></script>
 	<script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
 	<script type="text/javascript">
 		$(function() {
@@ -52,7 +52,7 @@ if (!isset($Pec_Cod)) {
 		});
 	</script>
 	<!--Librerias para exportar a excel -->
-	<script language="javascript">
+	<script type="text/javascript">
 		$(document).ready(function() {
 			/* LLamado a la class del boton exportar */
 			$("#Boton_Excel").click(function(event) {

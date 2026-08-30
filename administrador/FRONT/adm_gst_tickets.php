@@ -668,7 +668,7 @@ $usuarioTipo = $obBD_con1->getRowConsulta(12,  $Ses_Usu_Cod, $obBD_conexion);
       </div>
     </div>
   </div>
-  <script language="javascript" src="../VALIDACIONES/adm_val_tickets.js?x=x11"></script>
+  <script type="text/javascript" src="../VALIDACIONES/adm_val_tickets.js?x=x11"></script>
   <script type="text/javascript">
     $('#documentoMain').hide();
     loadTasks(true);

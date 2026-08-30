@@ -1,0 +1,45 @@
+/**
+ * Model3 - Unified UI ERP Design System
+ * 
+ * This is the main CSS bundle for the ERP system. It provides a consistent
+ * look and feel across all modules while allowing for customization.
+ * 
+ * Usage:
+ *   require_once('../../mascaras/model3/estilos/estilos.php');
+ * 
+ * HTML Structure:
+ *   <div class="panel panel-main exa-ui-panel">
+ *     <div class="panel-heading exa-header"><h3 class="panel-title">Title</h3></div>
+ *     <div class="panel-body exa-body">...</div>
+ *   </div>
+ * 
+ * Available Modules:
+ *   00-default-theme.css - Default theme variables (NEW)
+ *   01-variables.css - Panel-specific variables
+ *   02-shell.css - Main panel layout
+ *   03-tabs.css - Tab navigation
+ *   04-forms.css - Form elements
+ *   05-grids.css - Grid/table styles
+ *   06-jqgrid-dialogs.css - Dialog/modal styles
+ *   07-density-overrides.css - Responsive density
+ *   08-layout-maestro-detalle.css - Master-detail layout
+ *   09-jqgrid-cells.css - Grid cell styling
+ *   10-layout-viewport.css - Viewport layout
+ *   11-jqgrid-layout.css - Grid layout
+ *   12-jqgrid-subgrid.css - Subgrid styles
+ *   13-form-busqueda.css - Search form styles
+ */
+@import url('modules/00-default-theme.css');
+@import url('modules/01-variables.css');
+@import url('modules/02-shell.css');
+@import url('modules/03-tabs.css');
+@import url('modules/04-forms.css');
+@import url('modules/05-grids.css');
+@import url('modules/06-jqgrid-dialogs.css');
+@import url('modules/07-density-overrides.css');
+@import url('modules/08-layout-maestro-detalle.css');
+@import url('modules/09-jqgrid-cells.css');
+@import url('modules/10-layout-viewport.css');
+@import url('modules/11-jqgrid-layout.css');
+@import url('modules/12-jqgrid-subgrid.css');
+@import url('modules/13-form-busqueda.css');

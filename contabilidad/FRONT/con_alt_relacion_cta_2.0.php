@@ -79,7 +79,7 @@ if(isset($deleteCuenta)){
            $Year = explode('-',$Pec[1]);
      } ?>
     <div class="panel panel-main">
-        <div class="panel-heading exa-header"><h3 class="panel-title">&raquo;   Registrar Relación Producto - Plan De Cuentas <?Php if(isset($Year[0])) echo 'Periodo '.$Year[0];?></h3></div>
+        <div class="panel-heading exa-header"><h3 class="panel-title">&raquo;   Registrar Relaciï¿½n Producto - Plan De Cuentas <?Php if(isset($Year[0])) echo 'Periodo '.$Year[0];?></h3></div>
         
         <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
             <?php if(isset($Pec_Cod)&&$Pec_Cod!=''){ ?>               
@@ -116,7 +116,7 @@ if(isset($deleteCuenta)){
                     <div class="col-sm-6">
                        
                         <fieldset class="exa-fieldset">                           
-                           <legend class="Titulos2">Parametrización Productos:</legend> <!-- Form Name -->
+                           <legend class="Titulos2">Parametrizaciï¿½n Productos:</legend> <!-- Form Name -->
                            
                            <div class="form-horizontal normal">
                                <!-- Text input-->
@@ -185,13 +185,13 @@ if(isset($deleteCuenta)){
                                 $(function() {
                                     
                                      $("#list").jqGrid({
-                                            url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                            url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                             mtype: "GET", datatype: "json", regional : 'es',//ajaxRowOptions: { async: true },
                                             postData: $("#prodForm").getData("productoAjax"),
                                             autowidth : true, shrinkToFit: true, height: 295,responsive:true,caption:'Listado de Productos',hidegrid:false,
                                             cmTemplate: {sortable:false},
                                             colModel: [
-                                                { label: 'Cód.Int.', name: 'Pro_Cod', key: true, width: 25,align:"center", hidden:false },  
+                                                { label: 'Cï¿½d.Int.', name: 'Pro_Cod', key: true, width: 25,align:"center", hidden:false },  
                                                 { label: 'Cod.Int.', name: 'Ite_Cod', width: 25,align:"center", hidden:true },  
                                                 { label: 'Categoria', name: 'Cat_Des', width: 60,align:"center"},  
                                                 { label: 'Desc. Corta', name: 'Ite_Cor', width: 60,align:"center" }, 
@@ -209,10 +209,10 @@ if(isset($deleteCuenta)){
                                         $('#list').navGrid('#listPager',{ edit: false, add: false, del: false, search: false, refresh: true, view: true, position: "left", cloneToTop: false });
                                         $("#list").jqGrid('bindKeys'); 
                                         
-                                    public $tabs=$( "#tabs" );
+                                    var $tabs=$( "#tabs" );
                                     $tabs.tabs({ selected: 0}); 
                                     $("#inventar").jqGrid({
-                                        url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                        url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                         mtype: "GET", datatype: "local", regional : 'es',                
                                         autowidth : true, shrinkToFit: true, height: 50,hidegrid:false,
                                         cmTemplate: {sortable:false},caption:'<b>INVENTARIO&raquo;</b> Cuentas Contables',
@@ -232,7 +232,7 @@ if(isset($deleteCuenta)){
                                     }); 
                                     $tabs.tabs( "option", "active", 1 );
                                     $("#compras").jqGrid({
-                                        url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                        url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                         mtype: "GET", datatype: "local", regional : 'es',                
                                         autowidth : true, shrinkToFit: true, height: 50,hidegrid:false,
                                         cmTemplate: {sortable:false},caption:'<b>COMPRAS&raquo;</b> Cuentas Contables',
@@ -251,7 +251,7 @@ if(isset($deleteCuenta)){
                                         loadComplete:function (){var ids = $("#compras").jqGrid('getDataIDs'); if(ids.length===0) $('#btnCompra').removeAttr('disabled'); else $('#btnCompra').attr('disabled','disabled'); }
                                     }); 
                                     $("#ventas").jqGrid({
-                                        url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                        url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                         mtype: "GET", datatype: "local", regional : 'es',                
                                         autowidth : true, shrinkToFit: true, height: 50,hidegrid:false,
                                         cmTemplate: {sortable:false},caption:'<b>VENTAS&raquo;</b> Cuentas Contables',
@@ -271,7 +271,7 @@ if(isset($deleteCuenta)){
                                     }); 
                                     $tabs.tabs( "option", "active", 2 );
                                     $("#consumos").jqGrid({
-                                        url: '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',
+                                        url: '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',
                                         mtype: "GET", datatype: "local", regional : 'es',                
                                         autowidth : true, shrinkToFit: true, height: 50,hidegrid:false,
                                         cmTemplate: {sortable:false},caption:'<b>CONSUMOS&raquo;</b> Cuentas Contables',
@@ -300,11 +300,11 @@ if(isset($deleteCuenta)){
                     var tipo='';
                     function deleteCuenta(a2,a3){
                         var data={Pro_Cod:$('#Pro_Cod').val(),Pld_Cod:a2,deleteCuenta:a3};
-                        $.createDialogConfirm('¿Está seguro que desea eliminar esta relación?',data,deleteCta);
+                        $.createDialogConfirm('ï¿½Estï¿½ seguro que desea eliminar esta relaciï¿½n?',data,deleteCta);
                     }
                     function deleteCta(data){   
 //                        //var data={Pro_Cod:$('#Pro_Cod').val(),Pld_Cod:data['Pld_cod'],deleteCuenta:data['Pld_cod']};
-                        $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+                        $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                             if(response['success']===true){
                                 $.alert("Transaccion Realizada con &Eacute;xito!");                          
                                 if(response['tipo']==='C')
@@ -322,7 +322,7 @@ if(isset($deleteCuenta)){
                          $('#cuenDialog').dialog('close');
                          if($('#Pro_Cod').val()===''){$.alert('Seleccione un Producto!');return;}
                          var data={Pro_Cod:$('#Pro_Cod').val(),Pld_Cod:a2,addCuenta:tipo};                         
-                         $.post( "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",data, function( response ) {
+                         $.post( "<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>",data, function( response ) {
                              if(response['success']===true){
                                  $.alert("Transaccion Realizada con &Eacute;xito!");                          
                                  if(response['tipo']==='C')

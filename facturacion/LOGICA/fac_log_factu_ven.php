@@ -4,7 +4,7 @@
  *
  * @author Lewis Chimarro
  * @version 1.0
- * Fecha de actualización:	2013-01-08
+ * Fecha de actualizaciï¿½n:	2013-01-08
 
  *
  * @package tesoreria.LOGICA
@@ -64,7 +64,7 @@ class Class_Log_Datos_Factu extends MysqlDatosContab{
             
             $tan_sql="SELECT Esq_Cod,Esq_Rec,Esq_Des,Esq_Xml,Esq_Ord FROM esquema WHERE esquema.Tan_Cod=$Tan_Cod AND esquema.Esq_Rec={Esq_Rec} AND esquema.Esq_Est='A' order by Esq_Ord Asc";
             $rs_esquema = $this->getArrayConsultaSql(str_replace("{Esq_Rec}",$Esq_Rec,$tan_sql), $obBD_conexion); // Consultamos las estiquetas Raiz del XML Factura Electronica
-            /* Inicio de bucle de la identificación */	
+            /* Inicio de bucle de la identificaciï¿½n */	
             foreach($rs_esquema as $row){ // Asignamos las etiquetas consultadas a la variable "$etiqueta[]"
                 $Eti_raiz[] = $row['Esq_Xml'];
                 $Cod_raiz[] = $row['Esq_Cod'];					
@@ -261,9 +261,9 @@ class Class_Log_Datos_Factu extends MysqlDatosContab{
                     $Cod_infoAdicional[] = $row['Esq_Cod'];					
                 }
                 if($rs_infoCliente['Prs_Dir']!='')
-                { $armado_xml.="<".$Eti_infoAdicional[0]." nombre='Dirección'>".$rs_infoCliente['Prs_Dir']."</".$Eti_infoAdicional[0].">";	}
+                { $armado_xml.="<".$Eti_infoAdicional[0]." nombre='Direcciï¿½n'>".$rs_infoCliente['Prs_Dir']."</".$Eti_infoAdicional[0].">";	}
                 if($rs_infoCliente['Prs_Tel']!='')
-                { $armado_xml.="<".$Eti_infoAdicional[0]." nombre='Teléfono'>".$rs_infoCliente['Prs_Tel']."</".$Eti_infoAdicional[0].">"; }
+                { $armado_xml.="<".$Eti_infoAdicional[0]." nombre='Telï¿½fono'>".$rs_infoCliente['Prs_Tel']."</".$Eti_infoAdicional[0].">"; }
                 if($rs_infoCliente['Prs_Cor']!='')
                 { $armado_xml.="<".$Eti_infoAdicional[0]." nombre='Email'>".$rs_infoCliente['Prs_Cor']."</".$Eti_infoAdicional[0].">"; }
                 $armado_xml .="</".$Eti_raiz[3].">";  //</infoAdicional>
@@ -372,25 +372,25 @@ class Class_Log_Datos_Factu extends MysqlDatosContab{
         $ban=true;        
         if(empty($data['{Prs_Cor}'])||empty($body)||strlen($data['{Prs_Cor}'])<4) return false;
         try{
-            require '../../Librerias/PHPMail/class.phpmailer.php';            
+            require_once '../../Librerias/PHPMailer_compat.php';
             $mail = new PHPMailer(true); // Crear una nueva  instancia de PHPMailer habilitando el tratamiento de excepciones
-            // Configuramos el protocolo SMTP con autenticación
+            // Configuramos el protocolo SMTP con autenticaciï¿½n
             $mail->IsSMTP();
             $mail->SMTPAuth = true;
             $mail->IsHTML(true);
-            // Configuración del servidor SMTP
+            // Configuraciï¿½n del servidor SMTP
             $mail->Port = 25;
             $mail->Host = 'ofsercont.com';
             $mail->Username = "facturacion.electronica@ofsercont.com";
             $mail->Password = "p.123456";
-            // Configuración cabeceras del mensaje
+            // Configuraciï¿½n cabeceras del mensaje
             $mail->From = "facturacion.electronica@ofsercont.com";
             $mail->FromName = $data['{Emp_Nom}'];
             $mail->AddAddress(trim($data['{Prs_Cor}']),strtoupper($data['{proveedor}']));
             //$mail->AddAddress("destino2@correo.com","Nombre 2");
             //$mail->AddCC("copia1@correo.com","Nombre copia 1");
             //$mail->AddBCC("copia1@correo.com","Nombre copia 1");
-            $mail->Subject = "Comprobante Electrónico";
+            $mail->Subject = "Comprobante Electrï¿½nico";
             // Creamos en una variable el cuerpo, contenido HMTL, del correo //$body  = "Proebando los correos con un tutorial<br>";
             $mail->Body = $body;
             // Ficheros adjuntos //$mail->AddAttachment("misImagenes/foto1.jpg", "developandoFoto.jpg");

@@ -5,7 +5,7 @@
 * Desarrollador: Lewis Chimarro
 */	
 require_once('../../administrador/LOGICA/seguridad.php');
-require_once('../LOGICA/tes_log_fac_ven.php');	  	
+require_once('../LOGICA/fac_log_fac_ven.php');	  	
 require_once('../../Librerias/procedimientos/almacenados_standar.php');		
 
 /*
@@ -20,8 +20,10 @@ $obBD_con1 =  new Class_Log_Datos_Tes;
 /**
 * Color para la factura
 */
-define(fix_color, "#000099");
-	  
+define('fix_color', "#000099");
+	 	  
+$row_provincia = array();
+$row_rs_cabecera = array();
 if (isset($Vet_Cod))
 {
 	$rs_cliente = $obBD_con1->getArrayConsulta(37, $Vet_Cod, $obBD_conexion);	

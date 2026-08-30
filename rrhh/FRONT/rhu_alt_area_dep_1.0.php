@@ -273,10 +273,10 @@ if(isset($saveCargo))
             });
             
             //Variable para manejo del arbol jstree
-            public $treeview=$('#using_json_2');     
+            var $treeview=$('#using_json_2');     
             var Dep_Cod=0,Dep_Des='';
             function updateTipoActivo(){
-                $treeview.jstree(true).settings.core.data = {'url': '<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>?areaAjax=true',"dataType": "json" };
+                $treeview.jstree(true).settings.core.data = {'url': '<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>?areaAjax=true',"dataType": "json" };
                 $treeview.jstree(true).refresh();
             } 
             $treeview.jstree({'core' : {'data': {}},
@@ -293,7 +293,7 @@ if(isset($saveCargo))
                                 $('#btn_ade').show();
                                 $('#Are_Des_D').val(data.node.text);
                                 Are_Cod=data.node.original.Are_Cod;$("#Are_Cod_D").val(Are_Cod);
-                                $.post('<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',{'Are_Cod':Are_Cod,'case':'D','ajaxCodigo':true},
+                                $.post('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',{'Are_Cod':Are_Cod,'case':'D','ajaxCodigo':true},
                                     function(response){
                                         $("#Dep_Cdc").val(response['next']); 
                                     },'json').fail(function(error) { $.alert("El Servidor ha fallado en responder!");});
@@ -304,7 +304,7 @@ if(isset($saveCargo))
                                 $('#Dep_Des_SD').val(descomponer[1]);
                                 Dep_Des=descomponer[1];
                                 Dep_Cod=data.node.id;$('#Dep_Rec_SD').val(Dep_Cod);
-                                $.post('<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',{'Are_Cod':Dep_Cod,'case':'SD','ajaxCodigo':true},
+                                $.post('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',{'Are_Cod':Dep_Cod,'case':'SD','ajaxCodigo':true},
                                     function(response){
                                         $("#Dep_Cdc_SD").val(descomponer[0].trim()+'.'+response['next']);$('#Are_Cod_SD').val(data.node.original.Are_Cod);
                                         $('#Are_Des_SD').val(data.node.original.Are_Des);$('#Are_Des_sd').attr('readonly',true);
@@ -325,7 +325,7 @@ if(isset($saveCargo))
             {
                 var data=$('#'+form).serializeObject();
                 data['save']=true;
-                $.post('<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING)?>',data,function (response){
+                $.post('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',data,function (response){
                     if(response['success']===true){
                         setTimeout(function(){ $.alert('Transaccion Realizada con &Eacute;xito!'); }, 1);
                         $treeview.jstree(true).refresh();
@@ -338,7 +338,7 @@ if(isset($saveCargo))
             {
                 var data=$('#formCargo').serializeObject();
                 data['saveCargo']=true;
-                $.post('<?php echo filter_input(INPUT_SERVER,'PHP_SELF',FILTER_SANITIZE_STRING)?>',data,function (response){
+                $.post('<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8')?>',data,function (response){
                     if(response['success']===true){
                         $.alert('Transaccion Realizada con &Eacute;xito!');
                         $('#dep_des').val('');

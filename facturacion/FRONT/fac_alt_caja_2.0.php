@@ -93,7 +93,7 @@ if(isset($closeCaja))
     <HEAD>
         <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>       
-        <script language="javascript" src="../VALIDACIONES/fac_val_caja_2.0.js?a=a1"></script>
+        <script type="text/javascript" src="../VALIDACIONES/fac_val_caja_2.0.js?a=a1"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">
@@ -148,7 +148,7 @@ if(isset($closeCaja))
 
                                         <!-- Button -->
                                         <div class="col-sm-1">
-                                          <label class="control-label" for="">Acción</label>                                              
+                                          <label class="control-label" for="">Acciï¿½n</label>                                              
                                           <button id="btnGuardar" name="btnGuardar" class="btn btn-primary">Guardar</button>                                              
                                         </div>
                                         
@@ -189,7 +189,7 @@ if(isset($closeCaja))
                                             
                                                 <!-- Button -->
                                             <div class="col-sm-1">
-                                              <label class="control-label" for="">Acción</label>                                              
+                                              <label class="control-label" for="">Acciï¿½n</label>                                              
                                               <button id="btnBuscar" name="btnBuscar" class="btn btn-success">Buscar</button>                                              
                                             </div>
                                             

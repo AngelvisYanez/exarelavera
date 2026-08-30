@@ -288,7 +288,7 @@ $obBD_con1 =  new Class_Log_Datos_Cch;
         <TITLE><?Php echo "Caja Chica Registrar [EXA]"; ?></TITLE>
         <meta charset= "UTF-8">
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>       
-        <script language="javascript" src="../VALIDACIONES/cch_val_cajachica_1.0.js?a=4"></script>
+        <script type="text/javascript" src="../VALIDACIONES/cch_val_cajachica_1.0.js?a=4"></script>
     </HEAD>
     <BODY>
         <div class="panel panel-main">

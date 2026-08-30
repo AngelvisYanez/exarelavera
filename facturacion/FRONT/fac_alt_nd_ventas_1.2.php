@@ -98,8 +98,8 @@ if(isset($saveForm)){
         }
         if(isset($Aut_Tem)&&$Aut_Tem=='E'&&$Vet_Num!==0){ $Vet_Aut='N';
              $claveAcceso=$obBD_con1->getDocClaveAcceso($Ses_Emp_Cod, $Ses_Suc_Cod, $Tic_Sri, $row_rs_autorizaci['Aut_Cod'], $Caj_Fec, $Vet_Num, $obBD_conexion);
-             if(empty($claveAcceso)) $responce['message']="Error al generar <u>Clave de Acceso</u> del <i>Comprobante Electrónico</i>!";
-             //if(!$obBD_con1->createUsuCliente($Ses_Emp_Cod, $Ses_Suc_Cod, $Prs_Cod, $Prs_Ced, $obBD_conexion)) $responce['message']='Error al crear usuario de <u>Comprobantes Electrónicos</u>!';
+             if(empty($claveAcceso)) $responce['message']="Error al generar <u>Clave de Acceso</u> del <i>Comprobante Electrï¿½nico</i>!";
+             //if(!$obBD_con1->createUsuCliente($Ses_Emp_Cod, $Ses_Suc_Cod, $Prs_Cod, $Prs_Ced, $obBD_conexion)) $responce['message']='Error al crear usuario de <u>Comprobantes Electrï¿½nicos</u>!';
          }
         $rise=($Tic_Sri*1==2||$Tic_Sri*1==9); // rise, nota de venta
         if($rise) $iva_cero=$obBD_con1->getRowConsulta(68,'0',$obBD_conexion);
@@ -309,7 +309,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(139, $Tic_Cod.'*'.$row_rs_vended
                                 <!-- Text input-->
                                
                                     <div class="form-group">
-                                      <label class="col-xs-2 control-label label-xs required" for="cliente">Cédula/R.U.C:</label>  
+                                      <label class="col-xs-2 control-label label-xs required" for="cliente">Cï¿½dula/R.U.C:</label>  
                                       <div class="col-xs-6">
                                             <div class="input-group input-group-xs">                                                
                                                 <input type="text" id="Cli_Cod" name="Cli_Cod" data-cliente="Cli_Cod" value="" style="display: none" />
@@ -330,7 +330,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(139, $Tic_Cod.'*'.$row_rs_vended
                                       </div>
                                     </div>
                                     <div class="form-group">  
-                                      <label class="col-xs-2 control-label label-xs" for="direccion">Dirección:</label>  
+                                      <label class="col-xs-2 control-label label-xs" for="direccion">Direcciï¿½n:</label>  
                                       <div class="col-xs-10">                                    
                                               <span id="direccion" data-cliente="Prs_Ced" class="form-control input-xs"></span>
 
@@ -412,7 +412,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(139, $Tic_Cod.'*'.$row_rs_vended
                                         <?php if(count($row_rs_autorizaci) > 0){ ?>
                                         <img class="imgMsg" src="../../mascaras/model1/imagenes/ok-s.gif" /><label class="lblMsg"></label>
                                         <?php }else{ ?>
-                                        <img class="imgMsg" src="../../mascaras/model1/imagenes/32x32/cancel.gif"><label class="lblMsg">No tiene <b>Autorización</b> para Facturar en <b><?php echo $hoy; ?></b></label>
+                                        <img class="imgMsg" src="../../mascaras/model1/imagenes/32x32/cancel.gif"><label class="lblMsg">No tiene <b>Autorizaciï¿½n</b> para Facturar en <b><?php echo $hoy; ?></b></label>
                                         <?php } ?>
                                       </div>
                                     </div> 
@@ -478,7 +478,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(139, $Tic_Cod.'*'.$row_rs_vended
                            </div> 
                               <div class="col-sm-12" style="padding-top:10px">
                                   
-                                  <button type="button" class="btn btn-inverse btn-sm" title="Atrás" onclick="window.history.back();" >
+                                  <button type="button" class="btn btn-inverse btn-sm" title="Atrï¿½s" onclick="window.history.back();" >
                                                 <i class="glyphicon glyphicon-arrow-left"></i>
                                                 <span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span>
                                    </button>
@@ -506,7 +506,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(139, $Tic_Cod.'*'.$row_rs_vended
                                          autowidth : true, shrinkToFit: true, height: 100,responsive:true,
                                          //colNames:['Inv No','Date', 'Client', 'Amount','Tax','Total','Notes'],
                                          colModel:[
-                                                 {name:'Pro_Cod',label:'Cód. Int', width:60, sorttype:"int",align:'center'},
+                                                 {name:'Pro_Cod',label:'Cï¿½d. Int', width:60, sorttype:"int",align:'center'},
                                                  {name:'Iva_Cod',label:'CodIva', width:20,hidden:true},
                                                  {name:'Ite_Lar',label:'Producto', width:200},                                                 
                                                  {name:'Vet_Can',label:'Cant.', width:40, align:"right"},
@@ -517,7 +517,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(139, $Tic_Cod.'*'.$row_rs_vended
                                                  
                                                  {name:'Iva_Por',label:'IVA', width:20,align:"right"},
                                                  {name:'Adq_Cor',label:'Adq.', width:20,align:"center"},
-                                                 {name:'Pro_Obs',label:'Observación', width:120}		
+                                                 {name:'Pro_Obs',label:'Observaciï¿½n', width:120}		
                                          ],
                                          pager: "#pitems",
                                          footerrow:true,
@@ -553,7 +553,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(139, $Tic_Cod.'*'.$row_rs_vended
                                   var periodo=value.split("*");
                                   $( "#Caj_Fec" ).datepicker( "option", "minDate",periodo[2] );
                                   $( "#Caj_Fec" ).datepicker( "option", "maxDate",periodo[3] );
-                                  $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{cuentas:true,Pla_Cod:periodo[1],Pec_Cod:periodo[0]}, function(response){
+                                  $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{cuentas:true,Pla_Cod:periodo[1],Pec_Cod:periodo[0]}, function(response){
                                         $( "#Pag_Pld" ).html(response['html']);
                                   },'json').fail(function(error) { $.alert("El Servidor ha fallado en responder!");});
                               }
@@ -578,20 +578,20 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(139, $Tic_Cod.'*'.$row_rs_vended
                               function validaVetNum(){  
                                     var numAnt=$("#Vet_Num").val();
                                     if(numAnt!==''&&numAnt!=='0'){                                       
-                                        $.get('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',{'Caj_Fec':$('#Caj_Fec').val(),'valVetNum': numAnt}, function(response){
+                                        $.get('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',{'Caj_Fec':$('#Caj_Fec').val(),'valVetNum': numAnt}, function(response){
                                             if(response['success']===true){
                                                 $("#Vet_Num").alertMsg();
                                                 if(response['valid']===false){
-                                                    $("#Vet_Num").val('').alertMsg('El Número de Factura <b>'+response['Vet_Num']+'</b> no esta <b>Autorizado</b>.');
+                                                    $("#Vet_Num").val('').alertMsg('El Nï¿½mero de Factura <b>'+response['Vet_Num']+'</b> no esta <b>Autorizado</b>.');
                                                     $("#Vet_Num").focus();
                                                 }
                                                 if(response['exist']===true){
-                                                    $("#Vet_Num").val('').alertMsg('El Número de Factura <b>'+response['Vet_Num']+'</b> ya esta <b>Registrado</b>.');
+                                                    $("#Vet_Num").val('').alertMsg('El Nï¿½mero de Factura <b>'+response['Vet_Num']+'</b> ya esta <b>Registrado</b>.');
                                                     $("#Vet_Num").focus();
                                                 }
                                             }else {numChe=0;$("#NumChe").val(numChe);$.alert("No se logro obtener n&uacutemero del cheque");}                                
                                         },'json').fail(function(error) { $.alert("El Servidor ha fallado en responder!");});;        
-                                    }else{$("#Vet_Num").alertMsg('El Número de <b>Factura</b> es incorrecto.');}  
+                                    }else{$("#Vet_Num").alertMsg('El Nï¿½mero de <b>Factura</b> es incorrecto.');}  
                                 }
                                 function saveForm(){
                                     var data=$('#factForm').getData('saveForm');
@@ -600,7 +600,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(139, $Tic_Cod.'*'.$row_rs_vended
                                     data['Vet_Tot']=$('#total').val();
                                     data['Iva_Tot']=$('#iva').val();
                                     data['items'] = $("#items").getGridBatch();
-                                    $.saveDataJson('<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>',data, function(response){                                       
+                                    $.saveDataJson('<?Php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8'); ?>',data, function(response){                                       
                                             <?php if($rs_infoEmpresa['Cof_Con']=='S'){ ?>                                                
                                                 $('#impCompr').data('url',response['Com_Link']);
                                                 $('#successDialog').dialog('open');
@@ -681,7 +681,7 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(139, $Tic_Cod.'*'.$row_rs_vended
                             rowNum: 10000000, rownumbers:true,
                             pgtext: ' ',  
                             colModel: [                               
-                                { label: 'Cód.Int.', name: 'Pro_Cod', key: true, hidden:false,viewable:true, width:20 },
+                                { label: 'Cï¿½d.Int.', name: 'Pro_Cod', key: true, hidden:false,viewable:true, width:20 },
                                 { label: 'Producto', name: 'Producto', width: 100, classes:'bgNoRight'},
                                 { label: 'Cantidad', name: 'Pro_Can',align:"right", width: 50  },  
                                 { label: 'Pre.Unit.', name: 'Pro_Uni',align:"right", width: 50  },
@@ -725,17 +725,17 @@ $row_rs_autorizaci = $obBD_con1->getRowConsulta(139, $Tic_Cod.'*'.$row_rs_vended
         </div>
     </div>
     <!--INICIO DEL DIALOGO BUSCAR CLIENTE--> 
-    <div id="cliDialog" title="Búsqueda de Clientes"></div>
-    <div id="cliFactDialog" title="Búsqueda de Clientes"></div>
+    <div id="cliDialog" title="Bï¿½squeda de Clientes"></div>
+    <div id="cliFactDialog" title="Bï¿½squeda de Clientes"></div>
     <script type="text/javascript">
         $(document).ready(function() {
             let model=[
-                { label: 'Cód.Int.', name: 'Cli_Cod', key: true,hidden:true,viewable: true },                
-                { label: 'Cédula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
+                { label: 'Cï¿½d.Int.', name: 'Cli_Cod', key: true,hidden:true,viewable: true },                
+                { label: 'Cï¿½dula/R.U.C.', name: 'Prs_Ced', width: 50 },                      
                 { label: 'Cliente', name: 'cliente', width: 190, cellattr: function (rowId, tv, rawObject, cm, rdata) { return 'style="white-space: normal;"'; }},                   
-                { label: 'Dirección', name: 'Prs_Dir',hidden:true,viewable: true },                      
+                { label: 'Direcciï¿½n', name: 'Prs_Dir',hidden:true,viewable: true },                      
                 { label:'<center><i class="ui-icon ui-icon-gear"></i></center>', name: 'act1', width: 18, align: 'center',viewable: false,formatter:'gridButton',formatoptions:{action:'selectCliente',data:'Cli_Cod'}},
-                { label: 'Cód.Int.', name: 'Prs_Cod', hidden:true,viewable: true }
+                { label: 'Cï¿½d.Int.', name: 'Prs_Cod', hidden:true,viewable: true }
             ];
             $('#cliDialog').createSearchDialog({colModel:model},{title:'Cliente'});
             model[4]['formatoptions']['action']='selectClienteFact';

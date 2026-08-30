@@ -20,7 +20,7 @@
 			 * Modificar un tipo de activo
 			 */
 			case 602:
-				$sql = "UPDATE tipo_activo SET Tia_Des='$Par_Sql[1]',Tia_Tip='$Par_Sql[2]',Tia_Dep='$Par_Sql[3]',Tia_Obs='$Par_Sql[4]', Tia_Est='$Par_Sql[3]' WHERE Tia_Cod=$Par_Sql[0]";
+				$sql = "UPDATE tipo_activo SET Tia_Des='$Par_Sql[1]',Tia_Tip='$Par_Sql[2]',Tia_Dep='$Par_Sql[3]',Tia_Obs='$Par_Sql[4]', Tia_Est='$Par_Sql[5]' WHERE Tia_Cod=$Par_Sql[0]";
 				//echo $sql;
 				return $sql;
 			break;
