@@ -1463,11 +1463,9 @@ if (isset($_POST['enviarMensajeMasivoVisitanteAjax'])) {
                                                 </div>
                                             </div>
                                             <div class="vis-btn-registrar-wrap" style="display: flex; gap: 5px;">
-                                                <!--
-                                                <button id="btnEnvioMasivoTop" class="btn btn-primary vis-btn-registrar" type="button" onclick="abrirModalEnvioMasivo();" style="background-color: #2563eb; border-color: #1d4ed8;" title="Enviar mensaje de difusión por WhatsApp a los seleccionados">
-                                                    <i class="glyphicon glyphicon-bullhorn"></i> Envío Masivo
+                                                <button id="btnEnvioMasivoTop" class="btn btn-primary vis-btn-registrar" type="button" onclick="abrirModalEnvioMasivo();" style="background-color: #2563eb; border-color: #1d4ed8;" title="Enviar Certificados PDF o Mensajes Masivos a los visitantes seleccionados">
+                                                    <i class="glyphicon glyphicon-send"></i> Envíos Masivos
                                                 </button>
-                                                -->
                                                 <button id="btnAbrirModalRegistrar" class="btn btn-success vis-btn-registrar" type="button" onclick="abrirModalVisitante();">
                                                     <i class="glyphicon glyphicon-plus"></i> Registrar Visitante
                                                 </button>
@@ -1755,7 +1753,7 @@ if (isset($_POST['enviarMensajeMasivoVisitanteAjax'])) {
     <!-- JS Scripts -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=10"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=17"></script>
 </body>
 
 </html>

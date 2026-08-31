@@ -270,7 +270,7 @@ if (isset($_POST['saveEventoAjax'])) {
         $manTcrf = isset($_POST['Man_Tcrf']) ? trim((string)$_POST['Man_Tcrf']) : '';
         $manWms = isset($_POST['Man_Wms']) ? trim((string)$_POST['Man_Wms']) : '';
         $manMmsg = isset($_POST['Man_Mmsg']) ? trim((string)$_POST['Man_Mmsg']) : '';
-        $manMdel = (isset($_POST['Man_Mdel']) && (int)$_POST['Man_Mdel'] > 0) ? (int)$_POST['Man_Mdel'] : 5;
+        $manMdel = (isset($_POST['Man_Mdel']) && (int)$_POST['Man_Mdel'] >= 10) ? (int)$_POST['Man_Mdel'] : 10;
         $manAfir = isset($_POST['Man_Afir']) ? trim((string)$_POST['Man_Afir']) : 'ÁREA DE CAPACITACIÓN';
         if ($manAfir === '') $manAfir = 'ÁREA DE CAPACITACIÓN';
         $manEEst = 'A';
@@ -2453,7 +2453,7 @@ $obBD_con1->utf8_change_param($transportes);
                                 <div class="col-xs-8">
                                     <div class="input-group input-group-xs">
                                         <span class="input-group-addon" style="background: #f8fafc; border-color: #cbd5e1;"><i class="glyphicon glyphicon-time" style="color: #0284c7;"></i></span>
-                                        <input type="text" id="evt_Man_EHor" name="evt_Man_EHor" class="form-control input-xs bold" placeholder="Ej: 2:30 o 6" value="6" required style="text-align: center; font-size: 13px; font-weight: 700; color: #1e293b;">
+                                        <input type="text" id="evt_Man_EHor" name="evt_Man_EHor" class="form-control input-xs bold" placeholder="Ej: 2:30 o 6" value="" required style="text-align: center; font-size: 13px; font-weight: 700; color: #1e293b;">
                                         <span class="input-group-addon" style="background: #f1f5f9; font-weight: 600; font-size: 11px; color: #475569; border-color: #cbd5e1;">Horas</span>
                                     </div>
                                     <div style="margin-top: 4px; display: flex; gap: 4px; align-items: center;">
@@ -2491,7 +2491,7 @@ $obBD_con1->utf8_change_param($transportes);
                             <div class="form-group" style="margin-bottom: 8px;">
                                 <label class="col-xs-4 control-label label-xs required">Tipo Evento:</label>
                                 <div class="col-xs-8">
-                                    <input type="text" id="evt_Man_Teve" name="evt_Man_Teve" class="form-control input-xs bold" placeholder="Ej: DE ASISTENCIA, DE PARTICIPACIÓN" value="DE ASISTENCIA" maxlength="100" style="color: #047857; font-weight: 700;">
+                                    <input type="text" id="evt_Man_Teve" name="evt_Man_Teve" class="form-control input-xs bold" placeholder="Ej: DE ASISTENCIA, DE PARTICIPACIÓN" value="" maxlength="100" style="color: #047857; font-weight: 700;">
                                     <div style="margin-top: 3px; display: flex; gap: 4px; align-items: center;">
                                         <span style="font-size: 10px; color: #64748b;">Sugeridos:</span>
                                         <button type="button" class="btn btn-default btn-xs" onclick="$('#evt_Man_Teve').val('DE ASISTENCIA');" style="font-size: 10px; padding: 0px 5px; border-radius: 3px;">Asistencia</button>
@@ -2505,7 +2505,7 @@ $obBD_con1->utf8_change_param($transportes);
                             <div class="form-group" style="margin-bottom: 8px;">
                                 <label class="col-xs-4 control-label label-xs" style="color: #1e3a8a; font-weight: bold;"><i class="glyphicon glyphicon-pencil"></i> Firma 2 (Área):</label>
                                 <div class="col-xs-8">
-                                    <input type="text" id="evt_Man_Afir" name="evt_Man_Afir" class="form-control input-xs bold" placeholder="Ej: ÁREA DE CAPACITACIÓN" value="ÁREA DE CAPACITACIÓN" maxlength="100" style="color: #1e3a8a; font-weight: 700;">
+                                    <input type="text" id="evt_Man_Afir" name="evt_Man_Afir" class="form-control input-xs bold" placeholder="Ej: ÁREA DE CAPACITACIÓN" value="" maxlength="100" style="color: #1e3a8a; font-weight: 700;">
                                     <div style="margin-top: 3px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
                                         <span style="font-size: 10px; color: #64748b;">Sugeridos:</span>
                                         <button type="button" class="btn btn-default btn-xs" onclick="$('#evt_Man_Afir').val('ÁREA DE CAPACITACIÓN');" style="font-size: 10px; padding: 0px 5px; border-radius: 3px;">Capacitación</button>
@@ -2572,12 +2572,14 @@ $obBD_con1->utf8_change_param($transportes);
                                     </div>
                                 </div>
                                 <div class="col-xs-3" style="width: 25%;">
-                                    <label class="control-label label-xs" style="color: #475569; font-weight: bold; display: block; margin-bottom: 2px; text-align: left;"><i class="glyphicon glyphicon-time" style="color: #2563eb;"></i> Intervalo Cola:</label>
+                                    <label class="control-label label-xs" style="color: #1e3a8a; font-weight: bold; display: block; margin-bottom: 2px; text-align: left;"><i class="glyphicon glyphicon-time" style="color: #2563eb;"></i> Intervalo Cola:</label>
                                     <div class="input-group input-group-xs">
-                                        <input type="number" id="evt_Man_Mdel" name="evt_Man_Mdel" class="form-control input-xs text-center" min="1" max="60" value="5" placeholder="5" style="font-weight: bold; color: #1e3a8a;" />
+                                        <input type="number" id="evt_Man_Mdel" name="evt_Man_Mdel" class="form-control input-xs text-center" min="5" max="60" value="10" placeholder="10" style="font-weight: bold; color: #1e3a8a;" />
                                         <span class="input-group-addon" style="font-size: 10px; font-weight: bold;">seg</span>
                                     </div>
-                                    <span class="help-block" style="font-size: 9px; color: #64748b; margin-top: 3px; line-height: 1.2;">Pausa entre cada mensaje (Recomendado: 4 - 8 seg).</span>
+                                    <span class="help-block" style="font-size: 9.5px; color: #475569; margin-top: 3px; line-height: 1.25;">
+                                        <i class="glyphicon glyphicon-info-sign" style="color: #2563eb;"></i> <b>Recomendado:</b> 10 seg entre cada envío para no saturar WhatsApp.
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -2587,7 +2589,7 @@ $obBD_con1->utf8_change_param($transportes);
                         <button type="button" class="btn btn-default btn-xs" onclick="limpiarFormEvento();">
                             <i class="glyphicon glyphicon-erase"></i> Limpiar
                         </button>
-                        <button type="button" class="btn btn-primary btn-xs" onclick="guardarEvento();">
+                        <button type="button" id="btnGuardarEvento" class="btn btn-primary btn-xs" onclick="guardarEvento();">
                             <i class="glyphicon glyphicon-floppy-disk"></i> Guardar Evento
                         </button>
                     </div>
@@ -3876,7 +3878,7 @@ $obBD_con1->utf8_change_param($transportes);
 <script>
     var esPerfilLectura = <?php echo (isset($esPerfilLectura) && $esPerfilLectura) ? 'true' : 'false'; ?>;
 </script>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=57"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=59"></script>
 
 
 </script>

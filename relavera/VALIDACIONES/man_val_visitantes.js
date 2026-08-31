@@ -648,9 +648,8 @@ function initGridVisitantesEvento() {
     ],
     rownumbers: true,
     rownumWidth: 40,
-    // multiselect: true,
-    // multiselectWidth: 30,
-    multiselect: false,
+    multiselect: true,
+    multiselectWidth: 30,
     cmTemplate: { sortable: false },
     rowNum: 50,
     rowList: [50, 100, 200, 500, 999999],
@@ -915,30 +914,36 @@ function verCertificadoPdf(prsNom, prsApe, prsCed, manEve) {
 
 function enviarCertificadoVisitanteEvento(MVis_Cod, btnEl) {
   if (!MVis_Cod) return;
+
+  if (window._enviandoCertificadoActivo) {
+    mostrarAlertaUI(
+      "Operación en curso",
+      "Ya hay un envío de certificado en proceso. Por favor espere a que finalice para evitar saturar el servicio.",
+      "warning"
+    );
+    return;
+  }
+
   var $btn = $(btnEl);
   var eraEnviado = ($btn.attr("data-sent") === "1");
   var labelOriginal = eraEnviado ? 'Reenviar' : 'Enviar';
   var iconOriginal = eraEnviado ? 'glyphicon-repeat' : 'glyphicon-send';
 
-  $btn.prop("disabled", true).html('<i class="glyphicon glyphicon-refresh spin"></i>');
-
   swal({
     title: (eraEnviado ? "Reenviar Certificado" : "Enviar Certificado"),
-    text: "¿Desea enviar el certificado PDF por WhatsApp y Correo?",
+    text: "¿Desea generar y enviar el certificado PDF por WhatsApp y Correo?",
     type: "info",
     showCancelButton: true,
     confirmButtonText: (eraEnviado ? "Reenviar" : "Enviar"),
     cancelButtonText: "Cancelar"
   }, function (isConfirm) {
-    if (!isConfirm) {
-      $btn.prop("disabled", false).html('<i class="glyphicon ' + iconOriginal + '"></i> ' + labelOriginal);
-      return;
-    }
+    if (!isConfirm) return;
+
+    window._enviandoCertificadoActivo = true;
+    $btn.prop("disabled", true).html('<i class="glyphicon glyphicon-refresh spin"></i> Enviando...');
 
     var manEve = $("#selMan_Eve").val() || "";
-    var payload = { enviarCertificadoVisitanteEventoAjax: true, MVis_Cod: MVis_Cod, Man_Eve: manEve };
-
-    console.log("[EnviarCertificado] POST payload:", payload);
+    var payload = { enviarCertificadoVisitanteEventoAjax: true, MVis_Cod: MVis_Cod, Man_Eve: manEve, canal: 'ambos' };
 
     $.ajax({
       url: "",
@@ -946,7 +951,6 @@ function enviarCertificadoVisitanteEvento(MVis_Cod, btnEl) {
       data: payload,
       dataType: "json",
       success: function (r) {
-        console.log("[EnviarCertificado] Respuesta JSON:", r);
         if (r && r.success) {
           mostrarAlertaUI("Éxito", r.message || "Certificado PDF notificado correctamente.", "success");
           $btn.attr("data-sent", "1")
@@ -955,17 +959,14 @@ function enviarCertificadoVisitanteEvento(MVis_Cod, btnEl) {
               .attr("title", "Reenviar Certificado PDF")
               .html('<i class="glyphicon glyphicon-repeat"></i> Reenviar');
         } else {
-          console.warn("[EnviarCertificado] success=false. message:", r && r.message);
-          console.warn("[EnviarCertificado] debug_info:", r && r.debug_info);
           mostrarAlertaUI("Error", (r && r.message) || "No se pudo enviar el certificado.", "error");
         }
       },
       error: function (xhr, status, err) {
-        console.error("[EnviarCertificado] Error AJAX. Status:", status, "| Error:", err);
-        console.error("[EnviarCertificado] responseText:", xhr.responseText);
-        mostrarAlertaUI("Error", "Error de comunicación con el servidor. Ver consola.", "error");
+        mostrarAlertaUI("Error", "Error de comunicación con el servidor al enviar certificado.", "error");
       },
       complete: function () {
+        window._enviandoCertificadoActivo = false;
         var isNowSent = ($btn.attr("data-sent") === "1");
         $btn.prop("disabled", false);
         if (isNowSent) {
@@ -978,10 +979,11 @@ function enviarCertificadoVisitanteEvento(MVis_Cod, btnEl) {
   });
 }
 
-// --- COLA DE ENVÍO MASIVO DE WHATSAPP ---
+// --- COLA DE ENVÍO MASIVO DE WHATSAPP / CORREO CON PROTECCIÓN ANTI-BANEO ---
 window._queueEnvioMasivo = {
   activo: false,
   pausado: false,
+  tipoEnvio: 'cert_correo', // 'cert_correo' | 'cert_ambos' | 'mensaje_wa'
   items: [],
   indiceActual: 0,
   delaySegundos: 5,
@@ -995,10 +997,8 @@ window._queueEnvioMasivo = {
 
 function abrirModalEnvioMasivo() {
   var selIds = $("#gridVisitantesEvento").jqGrid('getGridParam', 'selarrrow') || [];
-  var idEvento = $("#selMan_Eve").val() || "";
+  var idEvento = $("#selMan_Eve").val() || $("#hdn_man_eve_vigente").val() || "";
   var postUrl = (window.location.href || '').split('#')[0];
-
-  console.log("[EnvioMasivo] abrirModalEnvioMasivo - selIds:", selIds, "idEvento:", idEvento);
 
   if (!idEvento) {
     mostrarAlertaUI("Atención", "Por favor seleccione un evento específico en el filtro superior para realizar el envío masivo.", "warning");
@@ -1010,46 +1010,71 @@ function abrirModalEnvioMasivo() {
     return;
   }
 
-  // Obtener datos del evento (mensaje configurado y delay)
+  // Consultar configuración del evento para obtener delay y mensaje
   $.post(postUrl, { getDatosEventoEnvioMasivoAjax: 1, Man_Eve: idEvento }, function (res) {
-    console.log("[EnvioMasivo] getDatosEventoEnvioMasivoAjax resp:", res);
-    if (!res || !res.success) {
-      mostrarAlertaUI("Error", "No se pudieron obtener los datos de configuración del evento.", "danger");
-      return;
-    }
+    var rawDelay = (res && res.Man_Mdel) ? (parseInt(res.Man_Mdel, 10) || 10) : 10;
+    var delaySecs = rawDelay >= 10 ? rawDelay : 10; // Garantizar piso mínimo de 10s de seguridad
+    var nomEvento = (res && res.Man_ENom) ? res.Man_ENom : 'Evento #' + idEvento;
 
-    var delaySecs = parseInt(res.Man_Mdel, 10) || 5;
-    var msgPlantilla = $.trim(res.Man_Mmsg);
-    var nomEvento = res.Man_ENom || 'Evento';
+    var dlgHtml =
+      '<div style="padding: 10px 5px;">' +
+      '  <p style="font-size: 13px; color: #1e293b; margin-bottom: 12px;">' +
+      '    Ha seleccionado <b>' + selIds.length + ' persona(s)</b> del evento <i>"' + nomEvento + '"</i>.<br>' +
+      '    Seleccione la modalidad de envío deseada:' +
+      '  </p>' +
+      '  <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">' +
+      '    <label style="border: 1px solid #93c5fd; background: #eff6ff; padding: 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px;">' +
+      '      <input type="radio" name="optModalidadMasiva" value="cert_correo" checked style="margin-top: 3px;">' +
+      '      <div>' +
+      '        <strong style="color: #1e40af;"><i class="glyphicon glyphicon-envelope"></i> Certificados PDF: Solo por Correo (Recomendado)</strong>' +
+      '        <div style="font-size: 11.5px; color: #475569; margin-top: 2px;">Envío inmediato por correo electrónico. Ideal para entregas masivas rápidas.</div>' +
+      '      </div>' +
+      '    </label>' +
+      '    <label style="border: 1px solid #fed7aa; background: #fff7ed; padding: 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px;">' +
+      '      <input type="radio" name="optModalidadMasiva" value="cert_ambos" style="margin-top: 3px;">' +
+      '      <div>' +
+      '        <strong style="color: #c2410c;"><i class="glyphicon glyphicon-send"></i> Certificados PDF: Correo + WhatsApp</strong>' +
+      '        <div style="font-size: 11.5px; color: #475569; margin-top: 2px;">Envía uno por uno con una pausa de <b>' + delaySecs + ' seg</b> entre cada persona para no saturar WhatsApp.</div>' +
+      '      </div>' +
+      '    </label>' +
+      '    <label style="border: 1px solid #bbf7d0; background: #f0fdf4; padding: 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px;">' +
+      '      <input type="radio" name="optModalidadMasiva" value="mensaje_wa" style="margin-top: 3px;">' +
+      '      <div>' +
+      '        <strong style="color: #166534;"><i class="glyphicon glyphicon-bullhorn"></i> Mensaje de Difusión / Recordatorio (WhatsApp)</strong>' +
+      '        <div style="font-size: 11.5px; color: #475569; margin-top: 2px;">Envía el mensaje informativo con una pausa de <b>' + delaySecs + ' seg</b> entre cada persona.</div>' +
+      '      </div>' +
+      '    </label>' +
+      '  </div>' +
+      '</div>';
 
-    if (!msgPlantilla) {
-      mostrarAlertaUI("Aviso", "El evento seleccionado no tiene configurado un Mensaje Masivo / Difusión en la pantalla de Configuración de Eventos.", "warning");
-      return;
-    }
-
-    // Confirmar con el usuario
-    swal({
-      title: "¿Iniciar Envío Masivo?",
-      text: "Se enviará el mensaje masivo de WhatsApp a " + selIds.length + " visitante(s) seleccionado(s) con una pausa de seguridad de " + delaySecs + " segundos entre cada mensaje.",
-      type: "info",
-      showCancelButton: true,
-      confirmButtonColor: "#2563eb",
-      confirmButtonText: "Sí, Iniciar Envío",
-      cancelButtonText: "Cancelar",
-      closeOnConfirm: true
-    }, function (isConfirm) {
-      if (isConfirm) {
-        iniciarColaEnvioMasivo(selIds, idEvento, nomEvento, delaySecs);
+    var $optDlg = $("#alertCustomDialog");
+    $optDlg.dialog("option", "title", "Opciones de Envío Masivo");
+    $optDlg.html(dlgHtml);
+    $optDlg.dialog("option", "buttons", [
+      {
+        text: "Iniciar Proceso",
+        class: "btn btn-sm btn-primary",
+        click: function () {
+          var modoSeleccionado = $('input[name="optModalidadMasiva"]:checked').val() || 'cert_correo';
+          $(this).dialog("close");
+          iniciarColaEnvioMasivo(selIds, idEvento, nomEvento, delaySecs, modoSeleccionado);
+        }
+      },
+      {
+        text: "Cancelar",
+        class: "btn btn-sm btn-default",
+        click: function () {
+          $(this).dialog("close");
+        }
       }
-    });
-  }, "json").fail(function (xhr, status, err) {
-    console.error("[EnvioMasivo] Error al consultar evento:", status, err, xhr.responseText);
-    mostrarAlertaUI("Error", "Ocurrió un error de comunicación al consultar el evento.", "danger");
+    ]);
+    $optDlg.dialog("open");
+  }, "json").fail(function () {
+    mostrarAlertaUI("Error", "No se pudo consultar la configuración del evento.", "danger");
   });
 }
 
-function iniciarColaEnvioMasivo(selIds, idEvento, nomEvento, delaySecs) {
-  // Recopilar objetos de visitantes seleccionados desde el grid
+function iniciarColaEnvioMasivo(selIds, idEvento, nomEvento, delaySecs, tipoEnvio) {
   var queueItems = [];
   $.each(selIds, function (i, id) {
     var rowData = $("#gridVisitantesEvento").jqGrid('getRowData', id);
@@ -1057,22 +1082,23 @@ function iniciarColaEnvioMasivo(selIds, idEvento, nomEvento, delaySecs) {
     var nombre = rowData.nombre || rowData.Prs_Nom || ('Visitante #' + mvisCod);
     var cedula = rowData.Prs_Ced || '';
     var tel = rowData.Prs_Tel || '';
+    var email = rowData.Prs_Cor || '';
     queueItems.push({
       MVis_Cod: mvisCod,
       nombre: nombre,
       cedula: cedula,
-      telefono: tel
+      telefono: tel,
+      correo: email
     });
   });
-
-  console.log("[EnvioMasivo] Iniciar cola con", queueItems.length, "items:", queueItems);
 
   window._queueEnvioMasivo = {
     activo: true,
     pausado: false,
+    tipoEnvio: tipoEnvio || 'cert_correo',
     items: queueItems,
     indiceActual: 0,
-    delaySegundos: delaySecs,
+    delaySegundos: (tipoEnvio === 'cert_correo' ? 1 : delaySecs),
     idEvento: idEvento,
     nombreEvento: nomEvento,
     exitos: 0,
@@ -1081,7 +1107,6 @@ function iniciarColaEnvioMasivo(selIds, idEvento, nomEvento, delaySecs) {
     countdownId: null
   };
 
-  // Inicializar UI del diálogo
   actualizarUIProgresoMasivo();
   $("#boxProgresoMasivoTimer").hide();
   $("#btnPausarEnvioMasivo").html('<i class="glyphicon glyphicon-pause"></i> Pausar').removeClass('btn-success').addClass('btn-warning');
@@ -1091,7 +1116,7 @@ function iniciarColaEnvioMasivo(selIds, idEvento, nomEvento, delaySecs) {
     width: 480,
     resizable: false,
     closeOnEscape: false,
-    dialogClass: "modal-model1",
+    dialogClass: "exa-ui-panel exa-ui-dialog",
     open: function () {
       $(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide();
     }
@@ -1107,7 +1132,12 @@ function actualizarUIProgresoMasivo() {
   var pct = total > 0 ? Math.round((actual / total) * 100) : 0;
   if (pct > 100) pct = 100;
 
-  $("#txtProgresoMasivoContador").html('<i class="glyphicon glyphicon-bullhorn"></i> Procesando: ' + actual + ' de ' + total + ' (' + pct + '%)');
+  var titulo = 'Procesando: ';
+  if (q.tipoEnvio === 'cert_correo') titulo = 'Enviando Certificados por Correo: ';
+  else if (q.tipoEnvio === 'cert_ambos') titulo = 'Enviando Certificados (Correo + WA): ';
+  else titulo = 'Enviando Mensajes Difusión WA: ';
+
+  $("#txtProgresoMasivoContador").html('<i class="glyphicon glyphicon-send"></i> ' + titulo + actual + ' de ' + total + ' (' + pct + '%)');
   $("#txtProgresoMasivoPorcentaje").text(pct + '%');
   $("#barProgresoMasivo").css('width', pct + '%').text(pct + '%').attr('aria-valuenow', pct);
 
@@ -1132,31 +1162,33 @@ function procesarSiguienteEnCola() {
 
   var item = q.items[q.indiceActual];
   $("#boxProgresoMasivoTimer").hide();
-  $("#txtProgresoMasivoDestinatario").text(item.nombre + (item.telefono ? ' (' + item.telefono + ')' : ''));
-  $("#txtProgresoMasivoEstado").html('<span style="color: #2563eb;"><i class="glyphicon glyphicon-refresh spin"></i> Enviando WhatsApp...</span>');
+  $("#txtProgresoMasivoDestinatario").text(item.nombre + (item.telefono ? ' | Cel: ' + item.telefono : '') + (item.correo ? ' | ' + item.correo : ''));
+  $("#txtProgresoMasivoEstado").html('<span style="color: #2563eb;"><i class="glyphicon glyphicon-refresh spin"></i> Procesando destinatario...</span>');
 
   var postUrl = (window.location.href || '').split('#')[0];
-  console.log("[EnvioMasivo] Procesando item:", item);
+  var payload = {};
 
-  $.post(postUrl, {
-    enviarMensajeMasivoVisitanteAjax: 1,
-    MVis_Cod: item.MVis_Cod,
-    Man_Eve: q.idEvento
-  }, function (res) {
-    console.log("[EnvioMasivo] Resultado item", item.MVis_Cod, ":", res);
+  if (q.tipoEnvio === 'cert_correo') {
+    payload = { enviarCertificadoVisitanteEventoAjax: true, MVis_Cod: item.MVis_Cod, Man_Eve: q.idEvento, canal: 'correo' };
+  } else if (q.tipoEnvio === 'cert_ambos') {
+    payload = { enviarCertificadoVisitanteEventoAjax: true, MVis_Cod: item.MVis_Cod, Man_Eve: q.idEvento, canal: 'ambos' };
+  } else {
+    payload = { enviarMensajeMasivoVisitanteAjax: 1, MVis_Cod: item.MVis_Cod, Man_Eve: q.idEvento };
+  }
+
+  $.post(postUrl, payload, function (res) {
     if (res && res.success) {
       q.exitos++;
       $("#txtProgresoMasivoEstado").html('<span style="color: #16a34a;"><i class="glyphicon glyphicon-ok"></i> ' + (res.message || 'Enviado con éxito') + '</span>');
     } else {
       q.fallos++;
-      var errMsg = (res && res.message) ? res.message : 'Error desconocido';
+      var errMsg = (res && res.message) ? res.message : 'Error al procesar';
       $("#txtProgresoMasivoEstado").html('<span style="color: #dc2626;"><i class="glyphicon glyphicon-remove"></i> Falló: ' + errMsg + '</span>');
     }
 
     q.indiceActual++;
     actualizarUIProgresoMasivo();
 
-    // Si aún quedan elementos, aplicar la pausa con cuenta regresiva
     if (q.indiceActual < q.items.length && q.activo && !q.pausado) {
       iniciarPausaCuentaRegresiva(q.delaySegundos, function () {
         procesarSiguienteEnCola();
@@ -1164,12 +1196,11 @@ function procesarSiguienteEnCola() {
     } else if (q.indiceActual >= q.items.length) {
       finalizarColaEnvioMasivo();
     }
-  }, "json").fail(function (xhr, status, err) {
-    console.error("[EnvioMasivo] Error AJAX item:", status, err, xhr.responseText);
+  }, "json").fail(function () {
     q.fallos++;
     q.indiceActual++;
     actualizarUIProgresoMasivo();
-    $("#txtProgresoMasivoEstado").html('<span style="color: #dc2626;"><i class="glyphicon glyphicon-remove"></i> Error de red/servidor al procesar el envío.</span>');
+    $("#txtProgresoMasivoEstado").html('<span style="color: #dc2626;"><i class="glyphicon glyphicon-remove"></i> Error de conexión con el servidor.</span>');
 
     if (q.indiceActual < q.items.length && q.activo && !q.pausado) {
       iniciarPausaCuentaRegresiva(q.delaySegundos, function () {
@@ -1183,6 +1214,11 @@ function procesarSiguienteEnCola() {
 
 function iniciarPausaCuentaRegresiva(segundos, callback) {
   var remaining = segundos;
+  if (remaining <= 0) {
+    if (typeof callback === 'function') callback();
+    return;
+  }
+
   $("#boxProgresoMasivoTimer").show();
   $("#txtProgresoMasivoCountdown").text('Pausa de seguridad: ' + remaining + 's...');
 
@@ -1214,7 +1250,7 @@ function togglePausarColaEnvioMasivo() {
   if (q.pausado) {
     if (q.countdownId) clearInterval(q.countdownId);
     $("#btnPausarEnvioMasivo").html('<i class="glyphicon glyphicon-play"></i> Reanudar').removeClass('btn-warning').addClass('btn-success');
-    $("#txtProgresoMasivoEstado").html('<span style="color: #f59e0b;"><i class="glyphicon glyphicon-pause"></i> Envío pausado por el usuario.</span>');
+    $("#txtProgresoMasivoEstado").html('<span style="color: #f59e0b;"><i class="glyphicon glyphicon-pause"></i> Proceso pausado por el usuario.</span>');
   } else {
     $("#btnPausarEnvioMasivo").html('<i class="glyphicon glyphicon-pause"></i> Pausar').removeClass('btn-success').addClass('btn-warning');
     $("#txtProgresoMasivoEstado").html('<span style="color: #2563eb;"><i class="glyphicon glyphicon-refresh spin"></i> Reanudando cola...</span>');
@@ -1231,7 +1267,7 @@ function cancelarColaEnvioMasivo() {
 
   swal({
     title: "¿Detener Envío?",
-    text: "¿Desea detener la cola de envío masivo? Los mensajes ya enviados no se revertirán.",
+    text: "¿Desea detener la cola de envío masivo? Los envíos ya realizados no se revertirán.",
     type: "warning",
     showCancelButton: true,
     confirmButtonColor: "#dc2626",
@@ -1255,14 +1291,14 @@ function finalizarColaEnvioMasivo() {
   $("#txtProgresoMasivoPorcentaje").text('100%').removeClass('label-primary').addClass('label-success');
   $("#barProgresoMasivo").css('width', '100%').text('100%').removeClass('progress-bar-striped active').css('background-color', '#16a34a');
   $("#txtProgresoMasivoDestinatario").text('Todos los registros fueron procesados.');
-  $("#txtProgresoMasivoEstado").html('<span style="color: #16a34a; font-weight: bold;"><i class="glyphicon glyphicon-ok-sign"></i> ¡Proceso de difusión completado!</span>');
+  $("#txtProgresoMasivoEstado").html('<span style="color: #16a34a; font-weight: bold;"><i class="glyphicon glyphicon-ok-sign"></i> ¡Proceso finalizado con éxito!</span>');
   $("#boxProgresoMasivoTimer").hide();
 
   setTimeout(function () {
     $("#progresoEnvioMasivoDialog").dialog('close');
     swal({
       title: "¡Envío Masivo Finalizado!",
-      text: "Se procesaron todos los registros seleccionados.\n\n✓ Mensajes Enviados: " + q.exitos + "\n✗ Mensajes Fallidos / Sin Tel: " + q.fallos,
+      text: "Se procesaron todos los registros seleccionados.\n\n✓ Enviados con éxito: " + q.exitos + "\n✗ Fallidos / Omitidos: " + q.fallos,
       type: (q.fallos === 0 ? "success" : "warning"),
       confirmButtonText: "Aceptar"
     });

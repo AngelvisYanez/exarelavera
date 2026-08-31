@@ -4,19 +4,46 @@
  * Una sola generacion de PDF para visualizar y para enviar (WhatsApp/Email).
  */
 
-if (!function_exists('man_cert_asistencia_txt')) {
-    function man_cert_asistencia_txt($texto)
+if (!function_exists('man_cert_asistencia_limpiar_texto')) {
+    function man_cert_asistencia_limpiar_texto($texto)
     {
         $texto = (string) $texto;
         if ($texto === '') {
             return '';
         }
+        // 1. Decodificar entidades HTML (&quot;, &ntilde;, &#39;, &aacute;, etc.)
+        $texto = html_entity_decode($texto, ENT_QUOTES, 'UTF-8');
+
+        // 2. Corregir posibles secuencias Mojibake / doble UTF-8 comunes en MySQL
+        $reemplazos = array(
+            'Ã¡' => 'á', 'Ã©' => 'é', 'Ã­' => 'í', 'Ã³' => 'ó', 'Ãº' => 'ú',
+            'Ã ' => 'Á', 'Ã‰' => 'É', 'Ã ' => 'Í', 'Ã“' => 'Ó', 'Ãš' => 'Ú',
+            'Ã±' => 'ñ', 'Ã‘' => 'Ñ', 'Ã¼' => 'ü', 'Ãœ' => 'Ü',
+            'â€“' => '–', 'â€”' => '—', 'â€œ' => '“', 'â€' => '”', 'â€˜' => '‘', 'â€™' => '’',
+            'Â°' => '°', 'Â«' => '«', 'Â»' => '»'
+        );
+        $texto = strtr($texto, $reemplazos);
+
+        // 3. Si no es UTF-8 valido, intentar convertir desde ISO-8859-1 o Windows-1252
         if (function_exists('mb_check_encoding') && !mb_check_encoding($texto, 'UTF-8')) {
-            if (function_exists('utf8_encode')) {
-                return utf8_encode($texto);
+            if (function_exists('mb_convert_encoding')) {
+                $texto = mb_convert_encoding($texto, 'UTF-8', 'ISO-8859-1');
+            } elseif (function_exists('utf8_encode')) {
+                $texto = utf8_encode($texto);
             }
         }
+
+        // 4. Limpiar espacios no separables
+        $texto = str_replace(array("\xC2\xA0", "\xA0"), ' ', $texto);
+
         return $texto;
+    }
+}
+
+if (!function_exists('man_cert_asistencia_txt')) {
+    function man_cert_asistencia_txt($texto)
+    {
+        return man_cert_asistencia_limpiar_texto($texto);
     }
 }
 

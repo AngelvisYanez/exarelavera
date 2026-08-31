@@ -101,6 +101,46 @@ if (!function_exists('relavera_ultramsg_request')) {
     }
 }
 
+if (!function_exists('relavera_whatsapp_sanitizar_texto')) {
+    /**
+     * Sanitiza caracteres especiales, entidades HTML y posibles fallos de codificación
+     * para que el mensaje de WhatsApp se vea limpio, legible y sin caracteres extraños.
+     */
+    function relavera_whatsapp_sanitizar_texto($texto)
+    {
+        $texto = (string) $texto;
+        if ($texto === '') {
+            return '';
+        }
+        // 1. Decodificar entidades HTML (&quot; -> ", &amp; -> &, &ntilde; -> ñ, etc.)
+        $texto = html_entity_decode($texto, ENT_QUOTES, 'UTF-8');
+
+        // 2. Corregir posibles secuencias Mojibake / doble UTF-8
+        $reemplazos = array(
+            'Ã¡' => 'á', 'Ã©' => 'é', 'Ã­' => 'í', 'Ã³' => 'ó', 'Ãº' => 'ú',
+            'Ã ' => 'Á', 'Ã‰' => 'É', 'Ã ' => 'Í', 'Ã“' => 'Ó', 'Ãš' => 'Ú',
+            'Ã±' => 'ñ', 'Ã‘' => 'Ñ', 'Ã¼' => 'ü', 'Ãœ' => 'Ü',
+            'â€“' => '–', 'â€”' => '—', 'â€œ' => '“', 'â€' => '”', 'â€˜' => '‘', 'â€™' => '’',
+            'Â°' => '°', 'Â«' => '«', 'Â»' => '»'
+        );
+        $texto = strtr($texto, $reemplazos);
+
+        // 3. Asegurar codificación UTF-8
+        if (function_exists('mb_check_encoding') && !mb_check_encoding($texto, 'UTF-8')) {
+            if (function_exists('mb_convert_encoding')) {
+                $texto = mb_convert_encoding($texto, 'UTF-8', 'ISO-8859-1');
+            } elseif (function_exists('utf8_encode')) {
+                $texto = utf8_encode($texto);
+            }
+        }
+
+        // 4. Limpiar espacios duros / no separables
+        $texto = str_replace(array("\xC2\xA0", "\xA0"), ' ', $texto);
+
+        return trim($texto);
+    }
+}
+
 if (!function_exists('relavera_enviar_whatsapp_notif')) {
     /**
      * Envía un mensaje de texto por WhatsApp (UltraMsg messages/chat).
@@ -115,6 +155,7 @@ if (!function_exists('relavera_enviar_whatsapp_notif')) {
         if ($numero === '') {
             return false;
         }
+        $mensaje = relavera_whatsapp_sanitizar_texto($mensaje);
         $params = array('token' => 'ao5aoi2f77trfaxc', 'to' => $numero, 'body' => $mensaje);
         $data = relavera_ultramsg_request('https://api.ultramsg.com/instance164295/messages/chat', $params, 30);
         return (is_array($data) && isset($data['id'])) ? $data['id'] : null;
@@ -136,7 +177,7 @@ if (!function_exists('relavera_enviar_whatsapp_imagen_notif')) {
         if ($numero === '' || $imageBase64 === '') {
             return false;
         }
-        $caption = (string) $caption;
+        $caption = relavera_whatsapp_sanitizar_texto($caption);
         if (function_exists('mb_strlen') && function_exists('mb_substr')) {
             if (mb_strlen($caption, 'UTF-8') > 1024) {
                 $caption = mb_substr($caption, 0, 1021, 'UTF-8') . '...';
@@ -175,7 +216,7 @@ if (!function_exists('relavera_enviar_whatsapp_documento_notif')) {
         if ($filename === '') {
             $filename = 'documento.pdf';
         }
-        $caption = (string) $caption;
+        $caption = relavera_whatsapp_sanitizar_texto($caption);
         if (function_exists('mb_strlen') && function_exists('mb_substr')) {
             if (mb_strlen($caption, 'UTF-8') > 1024) {
                 $caption = mb_substr($caption, 0, 1021, 'UTF-8') . '...';

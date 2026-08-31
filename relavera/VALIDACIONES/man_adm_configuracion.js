@@ -802,15 +802,15 @@ function toggleVigenciaEvento(id, nuevaVig) {
 function limpiarFormEvento() {
     $('#evt_Man_Eve').val('0');
     $('#evt_Man_ENom').val('');
-    $('#evt_Man_EHor').val('6');
+    $('#evt_Man_EHor').val('');
     $('#evt_Man_EFei').val('');
     $('#evt_Man_EFef').val('');
-    $('#evt_Man_Teve').val('DE ASISTENCIA');
-    $('#evt_Man_Afir').val('ÁREA DE CAPACITACIÓN');
+    $('#evt_Man_Teve').val('');
+    $('#evt_Man_Afir').val('');
     $('#evt_Man_Tcrf').val('');
     $('#evt_Man_Wms').val('');
     $('#evt_Man_Mmsg').val('');
-    $('#evt_Man_Mdel').val('5');
+    $('#evt_Man_Mdel').val('10');
     $('#evt_Man_EEst').val('A');
 }
 
@@ -832,7 +832,7 @@ function editarEvento(id) {
     $('#evt_Man_Tcrf').val(evt.Man_Tcrf || '');
     $('#evt_Man_Wms').val(evt.Man_Wms || '');
     $('#evt_Man_Mmsg').val(evt.Man_Mmsg || '');
-    $('#evt_Man_Mdel').val(evt.Man_Mdel || 5);
+    $('#evt_Man_Mdel').val(evt.Man_Mdel || 10);
     $('#evt_Man_EEst').val(evt.Man_EEst || 'A');
 }
 
@@ -848,7 +848,12 @@ function guardarEvento() {
     var msg = $.trim($('#evt_Man_Wms').val());
     var mmsg = $.trim($('#evt_Man_Mmsg').val());
     var mdel = parseInt($('#evt_Man_Mdel').val(), 10);
-    if (isNaN(mdel) || mdel < 1) mdel = 5;
+    if (isNaN(mdel) || mdel < 10) {
+        mdel = 10;
+        $('#evt_Man_Mdel').val('10');
+        $.alert('Por seguridad, el tiempo mínimo entre envíos es de 10 segundos para no saturar WhatsApp. Se ha ajustado automáticamente a 10 seg.');
+        return;
+    }
     var est = 'A';
 
     if (!nom) {
@@ -892,8 +897,12 @@ function guardarEvento() {
         Man_EEst: est
     };
 
+    var $btn = $('#btnGuardarEvento');
+    $btn.prop('disabled', true).html('<i class="glyphicon glyphicon-refresh spin"></i> Guardando...');
     $('#loader').show();
+
     $.post(postUrl, payload, function (r) {
+        $btn.prop('disabled', false).html('<i class="glyphicon glyphicon-floppy-disk"></i> Guardar Evento');
         $('#loader').fadeOut('slow');
         if (r && r.success) {
             $.alert(r.message || 'Evento guardado correctamente.');
@@ -904,6 +913,7 @@ function guardarEvento() {
             $.alert((r && r.message) ? r.message : 'Error al guardar evento.');
         }
     }, 'json').fail(function () {
+        $btn.prop('disabled', false).html('<i class="glyphicon glyphicon-floppy-disk"></i> Guardar Evento');
         $('#loader').fadeOut('slow');
         $.alert('Error de comunicación al guardar el evento.');
     });
