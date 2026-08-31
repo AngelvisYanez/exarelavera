@@ -598,7 +598,7 @@ function initGridVisitantesEvento() {
     colNames: [
       "Código",
       "Cédula",
-      "Nombres y Apellidos",
+      "Apellidos y Nombres",
       "Teléfono",
       "Correo Electrónico",
       "Tipo Sangre",
@@ -609,7 +609,23 @@ function initGridVisitantesEvento() {
     colModel: [
       { name: "MVis_Cod", index: "MVis_Cod", width: 65, align: "center", key: true },
       { name: "Prs_Ced", index: "Prs_Ced", width: 100, align: "center" },
-      { name: "nombre", index: "nombre", width: 220, align: "left" },
+      {
+        name: "nombre",
+        index: "nombre",
+        width: 230,
+        align: "left",
+        formatter: function (cellvalue, options, rowObject) {
+          var ape = (rowObject && rowObject.Prs_Ape) ? $.trim(rowObject.Prs_Ape) : "";
+          var nom = (rowObject && rowObject.Prs_Nom) ? $.trim(rowObject.Prs_Nom) : "";
+          var full = "";
+          if (ape || nom) {
+            full = (ape + " " + nom).trim();
+          } else {
+            full = (cellvalue || "").toString().trim();
+          }
+          return full.toUpperCase();
+        }
+      },
       { name: "Prs_Tel", index: "Prs_Tel", width: 100, align: "center" },
       { name: "Prs_Cor", index: "Prs_Cor", width: 160, align: "left" },
       { name: "MVis_Tsa", index: "MVis_Tsa", width: 80, align: "center" },
@@ -657,7 +673,7 @@ function initGridVisitantesEvento() {
     caption: "Historial de Registro",
     hidegrid: false,
     pager: "#gridVisitantesEventoPager",
-    sortname: "nombre",
+    sortname: "MVis_Cod",
     sortorder: "asc",
     viewrecords: true,
     autowidth: true,
@@ -667,6 +683,7 @@ function initGridVisitantesEvento() {
       $grid.jqGrid("setLabel", "rn", "#");
       $('.ui-pg-selbox option[value="999999"]').text("Todos");
       verificarVigenciaBotonRegistrar();
+      insertarSelectOrdenVisitantes();
     }
   });
 
@@ -687,6 +704,40 @@ function initGridVisitantesEvento() {
       }
     }
   });
+
+  insertarSelectOrdenVisitantes();
+}
+
+function insertarSelectOrdenVisitantes() {
+  var $titlebar = $("#gview_gridVisitantesEvento .ui-jqgrid-titlebar");
+  if (!$titlebar.length) return;
+  $titlebar.css("position", "relative");
+
+  if ($("#selOrdenVisitantes").length) return;
+
+  var selectHtml =
+    '<div class="vis-grid-sort-wrap" style="position: absolute !important; right: 12px !important; top: 50% !important; transform: translateY(-50%) !important; margin: 0 !important; padding: 0 !important; display: flex !important; align-items: center !important; gap: 8px !important; z-index: 25 !important;">' +
+      '<label id="lblOrdenVisitantes" for="selOrdenVisitantes" style="color: #ffffff !important; font-size: 11px !important; margin: 0 !important; font-weight: 600 !important; text-shadow: none !important; white-space: nowrap !important; text-transform: none !important; letter-spacing: normal !important;">Ordenar por:</label>' +
+      '<select id="selOrdenVisitantes" class="form-control input-xs" style="width: 175px !important; height: 24px !important; line-height: 24px !important; padding: 1px 8px !important; font-size: 11px !important; color: #000000 !important; -webkit-text-fill-color: #000000 !important; background-color: #ffffff !important; border: 1px solid #94a3b8 !important; border-radius: 4px !important; font-weight: normal !important; text-transform: none !important; display: inline-block !important; cursor: pointer !important; text-shadow: none !important;" onchange="cambiarOrdenVisitantesGrid();">' +
+        '<option value="codigo" selected style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; background-color: #ffffff !important;">No Ordenar</option>' +
+        '<option value="cedula" style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; background-color: #ffffff !important;">Cédula</option>' +
+        '<option value="visitante_asc" style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; background-color: #ffffff !important;">Visitante ASC</option>' +
+        '<option value="visitante_desc" style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; background-color: #ffffff !important;">Visitante DESC</option>' +
+      '</select>' +
+    '</div>';
+
+  $titlebar.append(selectHtml);
+}
+
+function cambiarOrdenVisitantesGrid() {
+  var orden = $("#selOrdenVisitantes").val() || "codigo";
+  var $grid = $("#gridVisitantesEvento");
+  var postData = $grid.jqGrid("getGridParam", "postData") || {};
+  postData.orden = orden;
+  $grid.jqGrid("setGridParam", {
+    postData: postData,
+    page: 1
+  }).trigger("reloadGrid");
 }
 
 function actualizarGridVisitantesEvento() {
@@ -700,6 +751,9 @@ function actualizarGridVisitantesEvento() {
 
   if (!postData.Man_Eve) {
     postData.Man_Eve = $("#selMan_Eve").val() || $("#hdn_man_eve_vigente").val() || "";
+  }
+  if (!postData.orden) {
+    postData.orden = $("#selOrdenVisitantes").val() || "codigo";
   }
 
   $("#gridVisitantesEvento")

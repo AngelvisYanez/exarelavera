@@ -761,6 +761,15 @@ if (isset($_REQUEST['listVisitantesEventoGridAjax'])) {
     if (!empty($req['search'])) {
         $params['search'] = $req['search'];
     }
+    if (!empty($req['orden'])) {
+        $params['orden'] = $req['orden'];
+    }
+    if (!empty($req['sidx'])) {
+        $params['sidx'] = $req['sidx'];
+    }
+    if (!empty($req['sord'])) {
+        $params['sord'] = $req['sord'];
+    }
     $contar = $obBD_con1->getRowConsulta(19, $params, $obBD_conexion);
     $total = isset($contar['total']) ? intval($contar['total']) : 0;
     $pagination = pages($total, $page, $rows);
@@ -1377,7 +1386,7 @@ if (isset($_POST['enviarMensajeMasivoVisitanteAjax'])) {
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <?php require_once("../../mascaras/model3/estilos/estilos.php") ?>
-    <link rel="stylesheet" type="text/css" href="../RECURSOS/visitantes.css?v=3">
+    <link rel="stylesheet" type="text/css" href="../RECURSOS/visitantes.css?v=6">
     <style type="text/css">
         .exa-ui-panel .ui-jqgrid tr.ui-state-highlight td,
         .exa-ui-panel .ui-jqgrid tr.ui-state-highlight td:not(.jqgrid-rownum),
@@ -1401,6 +1410,73 @@ if (isset($_POST['enviarMensajeMasivoVisitanteAjax'])) {
         #gridVisitantesEvento tr.jqgrow:hover td {
             background: #FEF9C3 !important;
             background-color: #FEF9C3 !important;
+        }
+
+        /* Posicionamiento relativo de la barra de título para anclar elementos a la derecha */
+        #gbox_gridVisitantesEvento .ui-jqgrid-titlebar,
+        #gview_gridVisitantesEvento .ui-jqgrid-titlebar {
+            position: relative !important;
+        }
+
+        /* Selector de orden anclado al extremo derecho de la barra de título */
+        .vis-grid-sort-wrap,
+        #gview_gridVisitantesEvento .ui-jqgrid-titlebar .vis-grid-sort-wrap,
+        #gbox_gridVisitantesEvento .ui-jqgrid-titlebar .vis-grid-sort-wrap {
+            position: absolute !important;
+            right: 12px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            z-index: 25 !important;
+            float: none !important;
+        }
+
+        .vis-grid-sort-wrap label,
+        #lblOrdenVisitantes {
+            color: #ffffff !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            margin: 0 !important;
+            text-shadow: none !important;
+            white-space: nowrap !important;
+            text-transform: none !important;
+            letter-spacing: normal !important;
+        }
+
+        #gview_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes,
+        #gview_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes *,
+        #gview_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes option,
+        #gbox_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes,
+        #gbox_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes *,
+        #gbox_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes option,
+        select#selOrdenVisitantes,
+        select#selOrdenVisitantes *,
+        select#selOrdenVisitantes option,
+        #selOrdenVisitantes,
+        #selOrdenVisitantes *,
+        #selOrdenVisitantes option,
+        .vis-grid-sort-wrap select,
+        .vis-grid-sort-wrap select *,
+        .vis-grid-sort-wrap select option {
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            font-size: 11px !important;
+            font-weight: normal !important;
+            text-transform: none !important;
+            text-shadow: none !important;
+            opacity: 1 !important;
+        }
+
+        #selOrdenVisitantes option,
+        select#selOrdenVisitantes option,
+        .vis-grid-sort-wrap select option {
+            padding: 4px 8px !important;
         }
     </style>
 </head>
@@ -1778,7 +1854,7 @@ if (isset($_POST['enviarMensajeMasivoVisitanteAjax'])) {
     <!-- JS Scripts -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=18"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=23"></script>
 </body>
 
 </html>
