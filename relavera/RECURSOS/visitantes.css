@@ -96,6 +96,30 @@ body {
     background-color: #f8fafc !important;
 }
 
+/* Resaltado amarillo distintivo EXA Model1 para fila seleccionada */
+.exa-ui-panel .ui-jqgrid tr.ui-state-highlight td,
+.exa-ui-panel .ui-jqgrid tr.ui-state-highlight td:not(.jqgrid-rownum),
+.exa-ui-panel .ui-jqgrid tr.ui-state-highlight > td,
+.ui-jqgrid tr.ui-state-highlight,
+.ui-jqgrid tr.ui-state-highlight td,
+.ui-jqgrid tr.ui-state-highlight > td,
+.ui-jqgrid .ui-widget-content tr.ui-state-highlight,
+.ui-jqgrid .ui-widget-content tr.ui-state-highlight td,
+#gridVisitantesEvento tr.ui-state-highlight td,
+#gridVisitantesEvento tr.ui-state-highlight > td {
+    background: #FFF7AA !important;
+    background-color: #FFF7AA !important;
+    color: #000000 !important;
+    border-color: #FACC15 !important;
+}
+
+.exa-ui-panel .ui-jqgrid tr.jqgrow:hover td:not(.jqgrid-rownum),
+.ui-jqgrid tr.jqgrow.ui-state-hover td,
+#gridVisitantesEvento tr.jqgrow:hover td {
+    background: #FEF9C3 !important;
+    background-color: #FEF9C3 !important;
+}
+
 /* Barra de Título del Grid (Historial de Registro) - Altura Aumentada y Alineación Vertical */
 #gbox_gridVisitantesEvento .ui-jqgrid-titlebar,
 #gview_gridVisitantesEvento .ui-jqgrid-titlebar,

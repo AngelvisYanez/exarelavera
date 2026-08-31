@@ -649,6 +649,7 @@ function initGridVisitantesEvento() {
     rownumbers: true,
     rownumWidth: 40,
     multiselect: true,
+    multiboxonly: true,
     multiselectWidth: 30,
     cmTemplate: { sortable: false },
     rowNum: 50,

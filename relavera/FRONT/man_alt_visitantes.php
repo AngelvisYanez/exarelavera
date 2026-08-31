@@ -1377,7 +1377,32 @@ if (isset($_POST['enviarMensajeMasivoVisitanteAjax'])) {
     <link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <?php require_once("../../mascaras/model3/estilos/estilos.php") ?>
-    <link rel="stylesheet" type="text/css" href="../RECURSOS/visitantes.css">
+    <link rel="stylesheet" type="text/css" href="../RECURSOS/visitantes.css?v=3">
+    <style type="text/css">
+        .exa-ui-panel .ui-jqgrid tr.ui-state-highlight td,
+        .exa-ui-panel .ui-jqgrid tr.ui-state-highlight td:not(.jqgrid-rownum),
+        .exa-ui-panel .ui-jqgrid tr.ui-state-highlight > td,
+        .ui-jqgrid tr.ui-state-highlight,
+        .ui-jqgrid tr.ui-state-highlight td,
+        .ui-jqgrid tr.ui-state-highlight > td,
+        .ui-jqgrid .ui-widget-content tr.ui-state-highlight,
+        .ui-jqgrid .ui-widget-content tr.ui-state-highlight td,
+        #gridVisitantesEvento tr.ui-state-highlight td,
+        #gridVisitantesEvento tr.ui-state-highlight > td,
+        #gridVisitantesEvento tr.ui-state-highlight td:not(.jqgrid-rownum) {
+            background: #FFF7AA !important;
+            background-color: #FFF7AA !important;
+            color: #000000 !important;
+            border-color: #FACC15 !important;
+        }
+
+        .exa-ui-panel .ui-jqgrid tr.jqgrow:hover td:not(.jqgrid-rownum),
+        .ui-jqgrid tr.jqgrow.ui-state-hover td,
+        #gridVisitantesEvento tr.jqgrow:hover td {
+            background: #FEF9C3 !important;
+            background-color: #FEF9C3 !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -1753,7 +1778,7 @@ if (isset($_POST['enviarMensajeMasivoVisitanteAjax'])) {
     <!-- JS Scripts -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=17"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_visitantes.js?e=18"></script>
 </body>
 
 </html>
