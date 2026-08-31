@@ -463,22 +463,40 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
         $yParrafo = $pdf->GetY();
         $pdf->writeHTMLCell($wParrafo, 0, $xParrafo, $yParrafo, '<div style="text-align: center; color: #334155; font-size: 11pt; line-height: 1.6;">' . $parrafoHtml . '</div>', 0, 1, false, true, 'C', true);
 
+        // Fecha de emisión ubicada en posición intermedia equilibrada
         $pdf->SetY($pdf->GetY() + 4);
         $pdf->SetTextColor(51, 65, 85);
         $pdf->SetFont('helvetica', '', 11);
         $pdf->Cell(0, 5, $fechaEmisionStr, 0, 1, 'C');
 
-        // Firmas
-        $yFirmas = $pageH - 40;
+        // Firmas (Firma 1 centrada, Firma 2 comentada)
+        $yFirmas = $pageH - 32;
         $pdf->SetDrawColor(11, 37, 69);
         $pdf->SetLineWidth(0.6);
+
+        $wFirma = 80;
+        $xCenter = ($pageW - $wFirma) / 2;
+
+        // Línea de firma centrada
+        $pdf->Line($xCenter, $yFirmas, $xCenter + $wFirma, $yFirmas);
+
+        // Texto justo debajo de la línea sin separación excesiva
+        $pdf->SetY($yFirmas + 1.5);
+        $pdf->SetTextColor(11, 37, 69);
+        $pdf->SetFont('helvetica', 'B', 9.5);
+        $pdf->SetX($xCenter);
+        $pdf->Cell($wFirma, 4.5, 'Gerencia General', 0, 1, 'C');
+
+        $pdf->SetTextColor(100, 116, 139);
+        $pdf->SetFont('helvetica', '', 8.5);
+        $pdf->SetX($xCenter);
+        $pdf->Cell($wFirma, 4, 'ECOPARKMINING S.A.', 0, 1, 'C');
+
+        /* Segunda firma comentada
         $x1 = 55;
         $x2 = $pageW - 125;
-
-        // Líneas de firma
         $pdf->Line($x1, $yFirmas, $x1 + 70, $yFirmas);
         $pdf->Line($x2, $yFirmas, $x2 + 70, $yFirmas);
-
         $pdf->SetY($yFirmas + 2);
         $pdf->SetTextColor(11, 37, 69);
         $pdf->SetFont('helvetica', 'B', 9);
@@ -487,13 +505,13 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
         $pdf->SetX($x2);
         $areaFirma2 = !empty($params['area_firma2']) ? $params['area_firma2'] : 'Área de Capacitación';
         $pdf->Cell(70, 5, $areaFirma2, 0, 1, 'C');
-
         $pdf->SetTextColor(100, 116, 139);
         $pdf->SetFont('helvetica', '', 8);
         $pdf->SetX($x1);
         $pdf->Cell(70, 4, 'ECOPARKMINING S.A.', 0, 0, 'C');
         $pdf->SetX($x2);
         $pdf->Cell(70, 4, 'ECOPARKMINING S.A.', 0, 1, 'C');
+        */
 
         // --- Imagen del Sello y Firmas (igual al HTML) ---
         $rutaSello = realpath(__DIR__ . '/../../imagenes/620/sello.png');
@@ -503,26 +521,32 @@ if (!function_exists('man_cert_asistencia_generar_pdf')) {
 
         // 1. Sello en la esquina inferior izquierda
         if ($rutaSello && is_file($rutaSello)) {
-            $pdf->Image($rutaSello, 15, $pageH - 50, 32, 32, '', '', '', false, 300, '', false, false, 0, false, false, false);
+            $pdf->Image($rutaSello, 15, $pageH - 48, 30, 30, '', '', '', false, 300, '', false, false, 0, false, false, false);
         }
 
-        // 2. Firma 1 sobre la línea de Gerencia General (Firma del Gerente)
+        // 2. Firma 1 al ras sobre la línea centrada de Gerencia General
         $rutaFirma1 = realpath(__DIR__ . '/../../imagenes/620/firma1.png');
         if (!$rutaFirma1 || !is_file($rutaFirma1)) {
             $rutaFirma1 = $rutaSello; // Fallback al sello si no hay firma
         }
         if ($rutaFirma1 && is_file($rutaFirma1)) {
-            $pdf->Image($rutaFirma1, 72.5, $yFirmas - 23, 35, 25, '', '', '', false, 300, '', false, false, 0, false, false, false);
+            $wFirmaImg = 40;
+            $hFirmaImg = 20;
+            $xFirmaImg = ($pageW - $wFirmaImg) / 2;
+            $yFirmaImg = $yFirmas - $hFirmaImg + 2;
+            $pdf->Image($rutaFirma1, $xFirmaImg, $yFirmaImg, $wFirmaImg, $hFirmaImg, '', '', '', false, 300, '', false, false, 0, false, false, false);
         }
 
+        /* Segunda firma comentada
         // 3. Firma 2 sobre la línea de Área de Capacitación
         $rutaFirma2 = realpath(__DIR__ . '/../../imagenes/620/firma2.png');
         if (!$rutaFirma2 || !is_file($rutaFirma2)) {
-            $rutaFirma2 = $rutaSello; // Fallback al sello si no hay firma
+            $rutaFirma2 = $rutaSello;
         }
         if ($rutaFirma2 && is_file($rutaFirma2)) {
             $pdf->Image($rutaFirma2, 189.5, $yFirmas - 23, 35, 25, '', '', '', false, 300, '', false, false, 0, false, false, false);
         }
+        */
 
         $safeCed = preg_replace('/[^a-zA-Z0-9_-]/', '', $prsCed);
         if ($safeCed === '') {

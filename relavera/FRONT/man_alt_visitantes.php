@@ -278,23 +278,24 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
                 filter: drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.15));
             }
 
-            .cert-sello-box-left {
-                position: absolute;
-                left: 185px;
-                bottom: 68px;
-                z-index: 10;
+            .signature-img-wrap {
+                height: 52px;
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+                margin-bottom: -5px;
                 pointer-events: none;
             }
 
-            .cert-sello-img-left {
-                width: 115px;
-                height: 115px;
+            .cert-signature-img {
+                max-height: 65px;
+                max-width: 170px;
                 object-fit: contain;
-                transform: rotate(-12deg);
-                opacity: 0.92;
-                filter: drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.15));
+                opacity: 0.95;
+                filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.15));
             }
 
+            /* Segunda firma comentada
             .cert-sello-box-right {
                 position: absolute;
                 right: 185px;
@@ -311,6 +312,7 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
                 opacity: 0.92;
                 filter: drop-shadow(0px 2px 5px rgba(0, 0, 0, 0.15));
             }
+            */
 
             .cert-content {
                 position: relative;
@@ -454,7 +456,7 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
                 align-items: center;
                 justify-content: center;
                 gap: 6px;
-                margin-bottom: 15px;
+                margin: 14px auto 12px auto;
             }
 
             .location-tag span {
@@ -464,20 +466,24 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
             .cert-footer {
                 width: 100%;
                 display: flex;
-                justify-content: space-around;
+                justify-content: center;
                 align-items: flex-end;
                 padding-bottom: 5px;
             }
 
             .signature-block {
-                width: 260px;
+                width: 280px;
                 text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
 
             .signature-line {
                 width: 100%;
                 border-top: 2px solid #0b2545;
-                height: 35px;
+                height: 0;
+                margin-bottom: 5px;
             }
 
             .signature-role {
@@ -485,12 +491,14 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
                 font-weight: 800;
                 color: #0b2545;
                 text-transform: uppercase;
+                line-height: 1.2;
             }
 
             .signature-company {
                 font-size: 10px;
                 color: #64748b;
                 font-weight: 600;
+                line-height: 1.2;
             }
 
             @media print {
@@ -540,14 +548,6 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
                 <img src="<?php echo $srcSello; ?>" class="cert-sello-img-corner" alt="Sello Esquina" onerror="this.src='/imagenes/620/sello.png';">
             </div>
 
-            <div class="cert-sello-box-left">
-                <img src="<?php echo $srcFirma1; ?>" class="cert-sello-img-left" alt="Firma Gerencia General" onerror="this.src='/imagenes/620/firma1.png';">
-            </div>
-
-            <div class="cert-sello-box-right">
-                <img src="<?php echo $srcFirma2; ?>" class="cert-sello-img-right" alt="Firma Área de Capacitación" onerror="this.src='/imagenes/620/firma2.png';">
-            </div>
-
             <div class="cert-content">
                 <div>
                     <div class="company-title">ECOPARKMINING S.A.</div>
@@ -572,24 +572,29 @@ if (isset($_GET['verCertificadoPdfAjax'])) {
                     <div class="cert-paragraph">
                         <?php echo $parrafoHtml; ?>
                     </div>
-                </div>
 
-                <div class="bottom-section">
                     <div class="location-tag">
                         <span>📍</span> <?php echo $fechaEmisionStr; ?>
                     </div>
+                </div>
 
+                <div class="bottom-section">
                     <div class="cert-footer">
                         <div class="signature-block">
+                            <div class="signature-img-wrap">
+                                <img src="<?php echo $srcFirma1; ?>" class="cert-signature-img" alt="Firma Gerencia General" onerror="this.src='/imagenes/620/firma1.png';">
+                            </div>
                             <div class="signature-line"></div>
                             <div class="signature-role">Gerencia General</div>
                             <div class="signature-company">ECOPARKMINING S.A.</div>
                         </div>
+                        <!-- Segunda firma comentada
                         <div class="signature-block">
                             <div class="signature-line"></div>
                             <div class="signature-role"><?php echo htmlspecialchars(!empty($evData['area_firma2']) ? $evData['area_firma2'] : 'Área de Capacitación', ENT_QUOTES, 'UTF-8'); ?></div>
                             <div class="signature-company">ECOPARKMINING S.A.</div>
                         </div>
+                        -->
                     </div>
                 </div>
             </div>
