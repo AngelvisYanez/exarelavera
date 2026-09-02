@@ -1410,3 +1410,235 @@ body {
     .adjust-hint-wrap { display: none !important; }
     body { background: white; padding: 0; }
 }
+
+/* === ESTILOS PARA COMPARATIVA POR PERÍODOS Y PDF COMPARATIVA === */
+.btn-pdf-compare {
+    background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 8px 18px rgba(13, 148, 136, 0.3) !important;
+}
+.btn-pdf-compare:hover {
+    background: linear-gradient(135deg, #115e59 0%, #0f766e 100%) !important;
+}
+
+.compare-mode-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+}
+.compare-tab-btn {
+    background: var(--light);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+.compare-tab-btn:hover {
+    border-color: var(--teal);
+    color: var(--teal-deep);
+}
+.compare-tab-btn.active {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #ffffff;
+}
+
+.period-filter-box {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-top: 10px;
+    margin-bottom: 12px;
+}
+.period-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+}
+.period-chip {
+    background: var(--light);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.period-chip:hover {
+    border-color: var(--copper);
+    color: var(--copper);
+}
+.period-chip.active {
+    background: var(--copper);
+    border-color: var(--copper);
+    color: #ffffff;
+}
+.period-dates-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+}
+.period-dates-row label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.period-date-input {
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: var(--font);
+    color: var(--ink);
+}
+.period-date-input:focus {
+    outline: none;
+    border-color: var(--teal);
+}
+.period-summary-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #e7f3f1;
+    color: var(--teal-deep);
+    border: 1px solid #c2e2dd;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+
+.server-pick-container {
+    width: 100%;
+    max-width: 680px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.server-pick-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.server-pick-header label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--teal-deep);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+
+.server-pick-count {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.server-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.server-search-wrap .search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--teal);
+    font-size: 13px;
+    pointer-events: none;
+}
+
+.server-search-input {
+    width: 100%;
+    padding: 9px 34px 9px 34px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: var(--font);
+    background: var(--paper);
+    color: var(--ink);
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+}
+
+.server-search-input:focus {
+    outline: none;
+    border-color: var(--teal);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(27, 107, 99, 0.12);
+}
+
+.btn-clear-search {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.btn-clear-search:hover {
+    color: var(--danger);
+}
+
+#serverProjectPick {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 13px;
+    background: #ffffff;
+    color: var(--ink);
+    box-sizing: border-box;
+}
+
+#serverProjectPick optgroup {
+    font-weight: 700;
+    color: var(--teal-deep);
+    background: var(--paper);
+    font-size: 12px;
+    padding: 4px 0;
+}
+
+#serverProjectPick option {
+    font-weight: 500;
+    color: var(--ink);
+    padding: 4px 8px;
+}

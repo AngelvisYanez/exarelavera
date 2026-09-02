@@ -136,33 +136,84 @@ function dashboard_resolve_scan_path($rawPath, $allowFile) {
 if (isset($_GET['action']) && $_GET['action'] === 'list_allowed') {
     $roots = dashboard_get_scan_bases($allowFile);
     $projects = array();
-    $skipDirNames = array('node_modules', 'vendor', '.git');
-    foreach ($roots as $root) {
-        $items = @scandir($root);
-        if (!$items) {
-            continue;
-        }
-        foreach ($items as $i) {
-            if ($i === '.' || $i === '..') {
-                continue;
+    $skipDirNames = array('node_modules', 'vendor', '.git', 'cache', 'tmp', 'assets', 'img', 'fonts', '.gemini', '.agents');
+    $currentProjRoot = dirname(dirname(__DIR__));
+    $seenPaths = array();
+
+    // 1. Proyecto Completo Actual
+    if (is_dir($currentProjRoot)) {
+        $normRoot = str_replace('\\', '/', $currentProjRoot);
+        $projects[] = array(
+            'path' => $normRoot,
+            'label' => '⭐ ' . basename($currentProjRoot) . ' (Proyecto Completo)',
+            'group' => 'Proyecto Principal'
+        );
+        $seenPaths[strtolower($normRoot)] = true;
+
+        // 2. Modulos Principales (Nivel 1)
+        $items = @scandir($currentProjRoot);
+        if ($items) {
+            foreach ($items as $i) {
+                if ($i === '.' || $i === '..' || in_array(strtolower($i), $skipDirNames)) continue;
+                $full = $currentProjRoot . DIRECTORY_SEPARATOR . $i;
+                if (is_dir($full)) {
+                    $normFull = str_replace('\\', '/', $full);
+                    if (!isset($seenPaths[strtolower($normFull)])) {
+                        $projects[] = array(
+                            'path' => $normFull,
+                            'label' => '📁 ' . $i,
+                            'group' => 'Modulos del Proyecto Actual'
+                        );
+                        $seenPaths[strtolower($normFull)] = true;
+                    }
+
+                    // 3. Submodulos Internos (Nivel 2)
+                    $subItems = @scandir($full);
+                    if ($subItems) {
+                        foreach ($subItems as $sub) {
+                            if ($sub === '.' || $sub === '..' || in_array(strtolower($sub), $skipDirNames)) continue;
+                            $subFull = $full . DIRECTORY_SEPARATOR . $sub;
+                            if (is_dir($subFull)) {
+                                $normSubFull = str_replace('\\', '/', $subFull);
+                                if (!isset($seenPaths[strtolower($normSubFull)])) {
+                                    $projects[] = array(
+                                        'path' => $normSubFull,
+                                        'label' => '📂 ' . $i . '/' . $sub,
+                                        'group' => 'Subcarpetas y Secciones'
+                                    );
+                                    $seenPaths[strtolower($normSubFull)] = true;
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            $full = $root . DIRECTORY_SEPARATOR . $i;
-            if (!is_dir($full)) {
-                continue;
-            }
-            if (in_array($i, $skipDirNames)) {
-                continue;
-            }
-            $projects[] = array(
-                'path' => $full,
-                'label' => $i,
-                'root' => $root
-            );
         }
     }
-    usort($projects, function ($a, $b) {
-        return strcasecmp($a['label'], $b['label']);
-    });
+
+    // 4. Otros Proyectos en el Workspace (Directorio Padre)
+    $parentDir = dirname($currentProjRoot);
+    if ($parentDir && is_dir($parentDir) && $parentDir !== $currentProjRoot) {
+        $parentItems = @scandir($parentDir);
+        if ($parentItems) {
+            foreach ($parentItems as $pItem) {
+                if ($pItem === '.' || $pItem === '..' || in_array(strtolower($pItem), $skipDirNames)) continue;
+                $pFull = $parentDir . DIRECTORY_SEPARATOR . $pItem;
+                if (is_dir($pFull)) {
+                    $normPFull = str_replace('\\', '/', $pFull);
+                    if (!isset($seenPaths[strtolower($normPFull)])) {
+                        $projects[] = array(
+                            'path' => $normPFull,
+                            'label' => '🌐 ' . $pItem,
+                            'group' => 'Otros Proyectos en Workspace'
+                        );
+                        $seenPaths[strtolower($normPFull)] = true;
+                    }
+                }
+            }
+        }
+    }
+
     $restrict = file_exists($allowFile) && count(dashboard_load_scan_roots($allowFile)) > 0;
     echo json_encode(array(
         'success' => true,
@@ -428,7 +479,7 @@ function escanearDirectorio($d, $b, $e, $s, $sf, $r, $m) {
 
             $res[] = array(
                 'name' => $i,
-                'folder' => $rp ? $rp : 'ROOT',
+                'folder' => ($rp !== '') ? str_replace('\\', '/', $rp) : 'ROOT',
                 'type' => $typ,
                 'lines' => $lin,
                 'complexity' => $cmp,
@@ -470,7 +521,7 @@ foreach ($targets as $t) {
 
     foreach ($files as &$f) {
         $f['project'] = $label;
-        $f['projectPath'] = $resolved;
+        $f['projectPath'] = str_replace('\\', '/', $resolved);
         $f['scanMode'] = $mode;
         if ($multi) {
             $rel = ($f['folder'] === 'ROOT' || $f['folder'] === '') ? '' : $f['folder'];

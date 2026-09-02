@@ -54,10 +54,20 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                     La ruta es la que ve <strong>PHP en el servidor</strong>. Ej.: <code>relavera</code> o
                     <code><?php echo $dashboardPathHintEsc; ?></code>.
                 </p>
-                <label for="serverProjectPick" style="font-size:12px;font-weight:600;color:var(--dark);display:block;margin-bottom:6px;">Elegir carpeta detectada en el servidor</label>
-                <select id="serverProjectPick" title="Agrega un proyecto detectado a la cola de escaneo">
-                    <option value="">&mdash; Cargando lista&hellip; &mdash;</option>
-                </select>
+                <div class="server-pick-container">
+                    <div class="server-pick-header">
+                        <label for="serverProjectPick"><i class="fas fa-folder-tree"></i> Elegir carpeta detectada en el servidor</label>
+                        <span class="server-pick-count" id="serverProjectCount"></span>
+                    </div>
+                    <div class="server-search-wrap">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="serverProjectSearch" class="server-search-input" placeholder="Buscar carpeta o módulo... (ej: relavera, FRONT, contabilidad)" oninput="filterServerProjectPick(this.value)" autocomplete="off">
+                        <button type="button" class="btn-clear-search" id="btnClearServerSearch" onclick="clearServerProjectSearch()" style="display:none;" title="Limpiar búsqueda"><i class="fas fa-times"></i></button>
+                    </div>
+                    <select id="serverProjectPick" title="Agrega un proyecto detectado a la cola de escaneo">
+                        <option value="">&mdash; Cargando lista&hellip; &mdash;</option>
+                    </select>
+                </div>
             </div>
             <div class="scan-queue-wrap">
                 <div class="scan-queue-title">
@@ -86,6 +96,9 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                     </button>
                     <button class="btn btn-pdf no-print" onclick="generarPDF()" id="btnPdf" disabled>
                         <i class="fas fa-file-pdf"></i> PDF Gerencial
+                    </button>
+                    <button class="btn btn-pdf-compare no-print" onclick="generarPdfComparativa()" id="btnPdfCompare" disabled title="Exportar reporte PDF exclusivo de la comparativa de cambios y auditoría">
+                        <i class="fas fa-file-contract"></i> PDF Comparativa
                     </button>
                     <button class="btn btn-outline no-print" onclick="exportarJsonComparativa()" id="btnExportBaseline" disabled title="Archivo peque&ntilde;o para comparar despu&eacute;s con un nuevo escaneo o PDF">
                         <i class="fas fa-file-code"></i> JSON comparativa
@@ -144,7 +157,15 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             <div class="analytics-card client-compare-wide" style="margin:0;">
                 <h2><i class="fas fa-balance-scale"></i> Comparativa con informe al cliente</h2>
                 <p class="compare-hint">Sube un <strong>PDF gerencial</strong> generado desde este dashboard (o un <strong>JSON comparativa</strong> exportado aqu&iacute;) para mostrar diferencias frente al escaneo actual cuando el cliente lo pida. Los PDF antiguos sin marca interna se intentan leer por texto; si falla, usa el JSON.</p>
-                <div class="baseline-toolbar">
+                <div class="compare-mode-tabs no-print">
+                    <button type="button" class="compare-tab-btn active" id="tabCompareFile" onclick="setCompareMode('file')">
+                        <i class="fas fa-file-upload"></i> Subir Archivo (JSON / PDF)
+                    </button>
+                    <button type="button" class="compare-tab-btn" id="tabComparePeriod" onclick="setCompareMode('period')">
+                        <i class="fas fa-calendar-alt"></i> Filtro por Per&iacute;odo de D&iacute;as
+                    </button>
+                </div>
+                <div class="baseline-toolbar" id="compareFileToolbar">
                     <input type="file" id="clientBaselineInput" class="no-print" accept=".pdf,.json,application/pdf,application/json">
                     <input type="file" id="baselineFilesInput" class="no-print" accept=".pdf,.json,application/pdf,application/json" style="display:none;">
                     <button type="button" class="btn btn-outline no-print" id="btnEnrichBaselineFiles" onclick="document.getElementById('baselineFilesInput').click()" title="Adjunta un PDF gerencial o JSON con listado para activar el filtro de diffs" style="display:none;">
@@ -154,6 +175,35 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                         <i class="fas fa-history"></i> Usar escaneo anterior
                     </button>
                     <button type="button" class="btn btn-outline no-print" onclick="limpiarReferenciaCliente()"><i class="fas fa-times"></i> Quitar referencia</button>
+                </div>
+                <div class="period-filter-box no-print" id="comparePeriodBox" style="display:none;">
+                    <div style="font-size:12px;font-weight:700;color:var(--dark);margin-bottom:8px;">
+                        <i class="fas fa-clock-rotate-left" style="color:var(--copper);"></i> Seleccionar Per&iacute;odo de An&aacute;lisis:
+                    </div>
+                    <div class="period-presets">
+                        <button type="button" class="period-chip active" onclick="seleccionarPeriodoRapido(7, this)">7 d&iacute;as</button>
+                        <button type="button" class="period-chip" onclick="seleccionarPeriodoRapido(15, this)">15 d&iacute;as</button>
+                        <button type="button" class="period-chip" onclick="seleccionarPeriodoRapido(30, this)">30 d&iacute;as</button>
+                        <button type="button" class="period-chip" onclick="seleccionarPeriodoRapido(60, this)">60 d&iacute;as</button>
+                        <button type="button" class="period-chip" onclick="seleccionarPeriodoRapido('all', this)">Todo el historial</button>
+                    </div>
+                    <div class="period-dates-row">
+                        <label><i class="fas fa-calendar-day"></i> Desde:
+                            <input type="date" id="periodDateFrom" class="period-date-input">
+                        </label>
+                        <label><i class="fas fa-calendar-check"></i> Hasta:
+                            <input type="date" id="periodDateTo" class="period-date-input">
+                        </label>
+                        <label id="snapshotPickerWrap" style="display:none;"><i class="fas fa-camera"></i> Snapshot:
+                            <select id="snapshotPicker" class="period-date-input" style="max-width:240px;"></select>
+                        </label>
+                        <button type="button" class="btn btn-scan btn-sm" onclick="aplicarFiltroPeriodo()" style="padding:6px 14px;font-size:12px;">
+                            <i class="fas fa-magnifying-glass"></i> Comparar Per&iacute;odo
+                        </button>
+                        <button type="button" class="btn btn-pdf-compare btn-sm" onclick="generarPdfComparativa()" id="btnPdfComparePeriod" disabled style="padding:6px 14px;font-size:12px;">
+                            <i class="fas fa-file-pdf"></i> PDF Comparativa
+                        </button>
+                    </div>
                 </div>
                 <p id="clientBaselineStatus" style="font-size:13px;margin:12px 0 0 0;color:var(--dark);min-height:1.2em;"></p>
                 <div id="baselineFilesPreview" class="ref-preview no-print" style="display:none;"></div>
@@ -1233,7 +1283,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 return null;
             }
             const b = o.baseline || o;
-            if (b.totalLines == null && b.totalHours == null) return null;
+            if (b.totalLines == null && b.totalHours == null && !b.files && !b.complexities) return null;
             let files = null;
             if (Array.isArray(b.files) && b.files.length) {
                 files = b.files.map(f => ({
@@ -1244,16 +1294,30 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                     complexity: f.complexity || 'media',
                     hours: f.hours != null ? String(f.hours) : null
                 })).filter(f => f.name);
+            } else if (b.complexities && typeof b.complexities === 'object') {
+                files = Object.keys(b.complexities).map(k => {
+                    const parts = k.replace(/\\/g, '/').split('/');
+                    const name = parts.pop();
+                    const folder = parts.join('/') || 'ROOT';
+                    return {
+                        name: name,
+                        folder: folder,
+                        type: 'php',
+                        lines: 0,
+                        complexity: b.complexities[k] || 'media',
+                        hours: null
+                    };
+                });
             }
             return {
-                totalLines: Number(b.totalLines) || 0,
-                totalHours: Number(b.totalHours) || 0,
+                totalLines: Number(b.totalLines) || (files ? files.reduce((s, f) => s + (Number(f.lines) || 0), 0) : 0),
+                totalHours: Number(b.totalHours) || (files ? files.reduce((s, f) => s + (Number(f.hours) || ((Number(f.lines)||0)/tasaComplejidad(f.complexity||'media'))), 0) : 0),
                 fileCount: Number(b.fileCount) || (files ? files.length : 0),
-                projectName: b.projectName || '',
+                projectName: b.projectName || b.name || '',
                 exportedAt: b.exportedAt || '',
                 sourceDetail: files
                     ? ('JSON con detalle de ' + files.length + ' archivos')
-                    : 'Archivo JSON exportado (solo totales; reexporte para filtrar diffs)',
+                    : 'Archivo JSON exportado (solo totales)',
                 files: files
             };
         }
@@ -1291,10 +1355,22 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             if (!projectPath || !files || !files.length) return;
             const projects = await loadSavedProjects();
             const prev = projects[projectPath] || {};
+            const active = files.filter(f => !isFileExcluded(f));
+            const metrics = computeMetrics(active);
+            const now = new Date();
             const snapshot = {
-                at: new Date().toISOString(),
+                id: 'snap_' + now.getTime(),
+                at: now.toISOString(),
+                dateStr: now.toISOString().split('T')[0],
+                totalLines: metrics.totalLines,
+                totalHours: metrics.totalHours,
+                fileCount: metrics.fileCount,
                 files: serializeFilesForStore(files)
             };
+            const snapshots = Array.isArray(prev.snapshots) ? prev.snapshots.slice() : [];
+            snapshots.push(snapshot);
+            while (snapshots.length > 50) snapshots.shift();
+
             const previousFiles = Array.isArray(prev.lastFiles) && prev.lastFiles.length
                 ? prev.lastFiles
                 : (Array.isArray(prev.previousFiles) ? prev.previousFiles : null);
@@ -1302,7 +1378,8 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 ...prev,
                 previousFiles: previousFiles,
                 lastFiles: snapshot.files,
-                lastFilesAt: snapshot.at
+                lastFilesAt: snapshot.at,
+                snapshots: snapshots
             };
             await saveProjects(projects);
         }
@@ -1347,11 +1424,47 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             let matched = 0;
             if (projectFiles.length) {
                 const idx = buildBaselineFileIndex();
-                projectFiles.forEach(pf => { if (findBaselineFile(pf, idx)) matched++; });
+                projectFiles.forEach(pf => {
+                    const ref = findBaselineFile(pf, idx);
+                    if (ref && ref.complexity) {
+                        pf.complexity = ref.complexity;
+                        pf.hours = horasArchivoStr(pf);
+                        pf.isSaved = true;
+                        matched++;
+                    }
+                });
+            } else if (clientBaseline.files.length) {
+                projectFiles = clientBaseline.files.map(f => ({
+                    name: f.name,
+                    folder: f.folder || "ROOT",
+                    type: f.type || "php",
+                    lines: Number(f.lines) || 0,
+                    complexity: f.complexity || "media",
+                    suggestedComplexity: f.complexity || "media",
+                    hours: f.hours != null ? String(f.hours) : ((Number(f.lines) || 0) / tasaComplejidad(f.complexity || "media")).toFixed(2),
+                    excluded: false,
+                    isSaved: true
+                }));
+                matched = projectFiles.length;
+                const pName = clientBaseline.projectName || (clientBaseline.fileName ? clientBaseline.fileName.replace(/\.json$/i, "") : "Proyecto");
+                const pNameEl = document.getElementById("projectName");
+                if (pNameEl) pNameEl.textContent = "Proyecto " + pName;
+                const pStatEl = document.getElementById("projectStatus");
+                if (pStatEl) pStatEl.textContent = "Importado (" + projectFiles.length + " archivos)";
+                const btnSave = document.getElementById("btnSave");
+                if (btnSave) btnSave.disabled = false;
+                const btnPdf = document.getElementById("btnPdf");
+                if (btnPdf) btnPdf.disabled = false;
+                const btnBl = document.getElementById("btnExportBaseline");
+                if (btnBl) btnBl.disabled = false;
+                const analyticsEl = document.getElementById("analyticsSection");
+                if (analyticsEl) analyticsEl.style.display = "block";
             }
+            renderFolderBreakdown();
+            renderClientBaselineCompare();
             renderTable();
             updateStats();
-            showToast('Listado: ' + clientBaseline.files.length + ' archivos | casados con escaneo: ' + matched + '/' + projectFiles.length);
+            showToast('Listado: ' + clientBaseline.files.length + ' archivos | Casados y complejidades preservadas: ' + matched + '/' + (projectFiles.length || clientBaseline.files.length));
             return true;
         }
 
@@ -1993,6 +2106,10 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             syncDiffFilterControl();
             updateBaselineEnrichButtons();
             renderBaselineFilesPreview();
+            const btnPComp = document.getElementById('btnPdfCompare');
+            const btnPCompPeriod = document.getElementById('btnPdfComparePeriod');
+            if (btnPComp) btnPComp.disabled = !clientBaseline;
+            if (btnPCompPeriod) btnPCompPeriod.disabled = !clientBaseline;
         }
         
         function renderClientBaselineCompare() {
@@ -2346,8 +2463,16 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 }));
 
                 const projects = await loadSavedProjects();
+                const baselineIdx = baselineHasFileDetail() ? buildBaselineFileIndex() : null;
                 projectFiles.forEach(file => {
                     applySavedFileSettings(file, projects, currentProject);
+                    if (baselineIdx) {
+                        const ref = findBaselineFile(file, baselineIdx);
+                        if (ref && ref.complexity) {
+                            file.complexity = ref.complexity;
+                            file.isSaved = true;
+                        }
+                    }
                     file.hours = horasArchivoStr(file);
                 });
 
@@ -2464,6 +2589,8 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         function cambiarComplejidad(index, newComplexity) {
             projectFiles[index].complexity = newComplexity;
             projectFiles[index].hours = horasArchivoStr(projectFiles[index]);
+            renderFolderBreakdown();
+            renderClientBaselineCompare();
             renderTable();
             updateStats();
         }
@@ -3211,35 +3338,96 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             document.getElementById('currentDate').textContent = new Date().toLocaleDateString('es-ES', options);
         }
         
+        let serverProjectsData = [];
+
         async function loadServerProjectPickList() {
             const sel = document.getElementById('serverProjectPick');
             if (!sel) return;
-            sel.innerHTML = '<option value="">&mdash; Cargando&hellip; &mdash;</option>';
+            sel.innerHTML = '<option value="">&mdash; Cargando carpetas&hellip; &mdash;</option>';
             try {
                 const r = await fetch('dashboard_scan.php?action=list_allowed');
                 const j = await r.json();
-                sel.innerHTML = '';
-                const o0 = document.createElement('option');
-                o0.value = '';
-                o0.textContent = '\u2014 Elegir carpeta (se agrega a la lista) \u2014';
-                sel.appendChild(o0);
-                if (j.success && j.projects && j.projects.length) {
-                    j.projects.forEach(function(p) {
-                        const o = document.createElement('option');
-                        o.value = p.path;
-                        o.textContent = p.label + ' \u2014 ' + p.path;
-                        sel.appendChild(o);
-                    });
+                if (j.success && Array.isArray(j.projects)) {
+                    serverProjectsData = j.projects;
+                    renderServerProjectSelect('');
+                } else {
+                    sel.innerHTML = '<option value="">-- No se detectaron carpetas --</option>';
                 }
             } catch (e) {
-                sel.innerHTML = '';
-                const o = document.createElement('option');
-                o.value = '';
-                o.textContent = 'No se pudo cargar la lista; escriba la ruta a mano';
-                sel.appendChild(o);
+                sel.innerHTML = '<option value="">No se pudo cargar la lista; escriba la ruta a mano</option>';
             }
         }
-        
+
+        function filterServerProjectPick(query) {
+            const clearBtn = document.getElementById('btnClearServerSearch');
+            if (clearBtn) clearBtn.style.display = query && query.trim() ? 'block' : 'none';
+            renderServerProjectSelect(query);
+        }
+
+        function clearServerProjectSearch() {
+            const inp = document.getElementById('serverProjectSearch');
+            if (inp) inp.value = '';
+            filterServerProjectPick('');
+            if (inp) inp.focus();
+        }
+
+        function renderServerProjectSelect(filterText) {
+            const sel = document.getElementById('serverProjectPick');
+            const countEl = document.getElementById('serverProjectCount');
+            if (!sel) return;
+
+            const q = (filterText || '').trim().toLowerCase();
+            const filtered = q
+                ? serverProjectsData.filter(p => {
+                    const label = (p.label || '').toLowerCase();
+                    const path = (p.path || '').toLowerCase();
+                    const grp = (p.group || '').toLowerCase();
+                    return label.includes(q) || path.includes(q) || grp.includes(q);
+                })
+                : serverProjectsData;
+
+            if (countEl) {
+                countEl.textContent = q ? ('(' + filtered.length + ' encontradas)') : ('(' + serverProjectsData.length + ' disponibles)');
+            }
+
+            sel.innerHTML = '';
+            const o0 = document.createElement('option');
+            o0.value = '';
+            o0.textContent = q
+                ? ('— ' + filtered.length + ' coincidencia(s) para "' + filterText + '" —')
+                : '— Elegir carpeta (se agrega a la lista) —';
+            sel.appendChild(o0);
+
+            if (!filtered.length) {
+                const oNone = document.createElement('option');
+                oNone.value = '';
+                oNone.textContent = 'Ninguna carpeta coincide con la búsqueda';
+                oNone.disabled = true;
+                sel.appendChild(oNone);
+                return;
+            }
+
+            // Agrupar por categoría / group
+            const groups = {};
+            filtered.forEach(p => {
+                const g = p.group || 'Otras Carpetas';
+                if (!groups[g]) groups[g] = [];
+                groups[g].push(p);
+            });
+
+            Object.keys(groups).forEach(gName => {
+                const optGroup = document.createElement('optgroup');
+                optGroup.label = gName + ' (' + groups[gName].length + ')';
+                groups[gName].forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.path;
+                    opt.textContent = p.label + ' — ' + p.path;
+                    optGroup.appendChild(opt);
+                });
+                sel.appendChild(optGroup);
+            });
+        }
+
         // Init
         setCurrentDate();
         loadDevCount();
@@ -3252,6 +3440,29 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                         document.getElementById('projectPath').value = this.value;
                         agregarCarpetaACola(this.value);
                         this.value = '';
+                        clearServerProjectSearch();
+                    }
+                });
+            }
+            const searchInp = document.getElementById('serverProjectSearch');
+            if (searchInp) {
+                searchInp.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const q = (this.value || '').trim().toLowerCase();
+                        if (!q) return;
+                        const match = serverProjectsData.find(p =>
+                            (p.label || '').toLowerCase().includes(q) ||
+                            (p.path || '').toLowerCase().includes(q)
+                        );
+                        if (match) {
+                            document.getElementById('projectPath').value = match.path;
+                            agregarCarpetaACola(match.path);
+                            this.value = '';
+                            clearServerProjectSearch();
+                        } else {
+                            showToast('No se encontro ninguna carpeta con "' + this.value + '"', 'warning');
+                        }
                     }
                 });
             }
@@ -3290,6 +3501,574 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 });
             }
         })();
-    </script>
+    
+
+        // === GESTION DE COMPARATIVA POR PERIODOS Y PDF COMPARATIVA ===
+        let currentCompareMode = 'file';
+
+        function setCompareMode(mode) {
+            currentCompareMode = mode;
+            const tabFile = document.getElementById('tabCompareFile');
+            const tabPeriod = document.getElementById('tabComparePeriod');
+            const boxFile = document.getElementById('compareFileToolbar');
+            const boxPeriod = document.getElementById('comparePeriodBox');
+
+            if (mode === 'period') {
+                if (tabFile) tabFile.classList.remove('active');
+                if (tabPeriod) tabPeriod.classList.add('active');
+                if (boxFile) boxFile.style.display = 'none';
+                if (boxPeriod) boxPeriod.style.display = 'block';
+                initPeriodDates();
+                populateSnapshotPicker();
+            } else {
+                if (tabFile) tabFile.classList.add('active');
+                if (tabPeriod) tabPeriod.classList.remove('active');
+                if (boxFile) boxFile.style.display = 'flex';
+                if (boxPeriod) boxPeriod.style.display = 'none';
+            }
+        }
+
+        function initPeriodDates() {
+            const toInput = document.getElementById('periodDateTo');
+            const fromInput = document.getElementById('periodDateFrom');
+            const today = new Date();
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(today.getDate() - 7);
+
+            if (toInput && !toInput.value) toInput.value = today.toISOString().split('T')[0];
+            if (fromInput && !fromInput.value) fromInput.value = sevenDaysAgo.toISOString().split('T')[0];
+        }
+
+        function seleccionarPeriodoRapido(dias, btnEl) {
+            document.querySelectorAll('.period-chip').forEach(c => c.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+
+            const toInput = document.getElementById('periodDateTo');
+            const fromInput = document.getElementById('periodDateFrom');
+            const today = new Date();
+            if (toInput) toInput.value = today.toISOString().split('T')[0];
+
+            if (dias === 'all') {
+                if (fromInput) fromInput.value = '2020-01-01';
+            } else {
+                const past = new Date();
+                past.setDate(today.getDate() - Number(dias));
+                if (fromInput) fromInput.value = past.toISOString().split('T')[0];
+            }
+            aplicarFiltroPeriodo();
+        }
+
+        async function populateSnapshotPicker() {
+            const picker = document.getElementById('snapshotPicker');
+            const wrap = document.getElementById('snapshotPickerWrap');
+            if (!picker || !currentProject) return;
+
+            const projects = await loadSavedProjects();
+            const proj = projects[currentProject] || {};
+            const snapshots = Array.isArray(proj.snapshots) ? proj.snapshots : [];
+
+            if (snapshots.length >= 1) {
+                if (wrap) wrap.style.display = 'inline-flex';
+                picker.innerHTML = '<option value="">-- Elige snapshot guardado --</option>' +
+                    snapshots.map(s => {
+                        const d = s.dateStr || (s.at ? s.at.split('T')[0] : '');
+                        const l = s.totalLines ? s.totalLines.toLocaleString() + ' lin.' : '';
+                        const h = s.totalHours ? s.totalHours.toFixed(1) + ' h' : '';
+                        return '<option value="' + s.id + '">' + d + ' (' + l + ' · ' + h + ')</option>';
+                    }).join('');
+            } else {
+                if (wrap) wrap.style.display = 'none';
+            }
+        }
+
+        async function aplicarFiltroPeriodo() {
+            if (!projectFiles || !projectFiles.length) {
+                showToast('Escanea el proyecto primero para comparar periodos', 'warning');
+                return;
+            }
+
+            const fromVal = document.getElementById('periodDateFrom') ? document.getElementById('periodDateFrom').value : '';
+            const toVal = document.getElementById('periodDateTo') ? document.getElementById('periodDateTo').value : '';
+            const snapId = document.getElementById('snapshotPicker') ? document.getElementById('snapshotPicker').value : '';
+
+            const projects = await loadSavedProjects();
+            const proj = projects[currentProject] || {};
+            const snapshots = Array.isArray(proj.snapshots) ? proj.snapshots : [];
+            const prevFiles = Array.isArray(proj.previousFiles) ? proj.previousFiles : (Array.isArray(proj.lastFiles) ? proj.lastFiles : []);
+
+            let selectedSnap = null;
+
+            if (snapId) {
+                selectedSnap = snapshots.find(s => s.id === snapId);
+            } else if (fromVal && snapshots.length) {
+                const fromTs = new Date(fromVal).getTime();
+                const sorted = snapshots.slice().sort((a, b) => {
+                    const diffA = Math.abs(new Date(a.at || a.dateStr).getTime() - fromTs);
+                    const diffB = Math.abs(new Date(b.at || b.dateStr).getTime() - fromTs);
+                    return diffA - diffB;
+                });
+                selectedSnap = sorted[0];
+            }
+
+            let refFilesList = [];
+            let refLabel = '';
+
+            if (selectedSnap && Array.isArray(selectedSnap.files) && selectedSnap.files.length) {
+                refFilesList = selectedSnap.files;
+                refLabel = 'Snapshot del ' + (selectedSnap.dateStr || selectedSnap.at.split('T')[0]);
+            } else if (prevFiles && prevFiles.length) {
+                refFilesList = prevFiles;
+                refLabel = 'Escaneo previo guardado (Periodo: ' + (fromVal || 'inicio') + ' a ' + (toVal || 'hoy') + ')';
+            } else {
+                showToast('No hay historial previo para este periodo. Se usara el estado actual como base.', 'warning');
+                refFilesList = serializeFilesForStore(projectFiles);
+                refLabel = 'Periodo (' + (fromVal || 'inicio') + ' a ' + (toVal || 'hoy') + ')';
+            }
+
+            const m = computeMetrics(refFilesList);
+            clientBaseline = {
+                source: 'period',
+                periodLabel: 'Periodo: ' + (fromVal || 'Inicio') + ' a ' + (toVal || 'Hoy'),
+                fileName: refLabel,
+                listSourceFileName: refLabel,
+                loadedAt: new Date().toISOString(),
+                totalLines: m.totalLines,
+                totalHours: m.totalHours,
+                fileCount: m.fileCount,
+                sourceDetail: 'Periodo de analisis: ' + (fromVal || 'Inicio') + ' a ' + (toVal || 'Hoy') + ' (' + refFilesList.length + ' archivos de referencia)',
+                files: refFilesList
+            };
+
+            persistClientBaseline();
+            renderClientBaselinePanel();
+            renderClientBaselineCompare();
+            syncHoursComparePdfOption();
+            syncDiffFilterControl();
+            updateStats();
+            renderTable();
+
+            const btnPComp = document.getElementById('btnPdfCompare');
+            const btnPCompPeriod = document.getElementById('btnPdfComparePeriod');
+            if (btnPComp) btnPComp.disabled = false;
+            if (btnPCompPeriod) btnPCompPeriod.disabled = false;
+
+            const matches = countBaselineMatches();
+            showToast('Comparando periodo (' + (fromVal || 'Inicio') + ' a ' + (toVal || 'Hoy') + ') | Casados: ' + matches.matched + '/' + projectFiles.length);
+        }
+
+        // === GENERAR PDF DE COMPARATIVA EXCLUSIVO ===
+        function generarPdfComparativa() {
+            if (!clientBaseline) {
+                showToast('Carga un archivo JSON/PDF de referencia o aplica un periodo de comparacion primero', 'warning');
+                return;
+            }
+            if (!projectFiles || !projectFiles.length) {
+                showToast('Escanea el proyecto para generar la comparativa', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('btnPdfCompare') || document.getElementById('btnPdfComparePeriod');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
+            }
+
+            const activeFiles = getActiveFiles();
+            const b = clientBaseline;
+            const idx = buildBaselineFileIndex();
+
+            const added = [];
+            const modified = [];
+            const unchanged = [];
+            const seenInCur = new Set();
+
+            // Desglose por complejidad
+            const compHoursCur = { alta: 0, 'media-alta': 0, media: 0, baja: 0 };
+            const compHoursRef = { alta: 0, 'media-alta': 0, media: 0, baja: 0 };
+
+            // Desglose por carpeta
+            const folderMap = {};
+
+            let totalCurrentHoursCalculated = 0;
+            let totalCurrentLinesCalculated = 0;
+
+            activeFiles.forEach(file => {
+                const ref = findBaselineFile(file, idx);
+                // Si existe en el baseline importado, se mantiene estrictamente la complejidad del JSON importado
+                const effectiveComplexity = (ref && ref.complexity) ? ref.complexity : (file.complexity || 'media');
+                file.complexity = effectiveComplexity;
+
+                const curL = Number(file.lines) || 0;
+                const curH = curL / tasaComplejidad(effectiveComplexity);
+
+                totalCurrentLinesCalculated += curL;
+                totalCurrentHoursCalculated += curH;
+
+                if (compHoursCur[effectiveComplexity] !== undefined) compHoursCur[effectiveComplexity] += curH;
+
+                const folderKey = file.folder || 'ROOT';
+                if (!folderMap[folderKey]) {
+                    folderMap[folderKey] = {
+                        name: folderKey,
+                        refLines: 0, curLines: 0,
+                        refHours: 0, curHours: 0,
+                        refFiles: 0, curFiles: 0
+                    };
+                }
+                folderMap[folderKey].curLines += curL;
+                folderMap[folderKey].curHours += curH;
+                folderMap[folderKey].curFiles += 1;
+
+                if (!ref) {
+                    added.push({
+                        name: file.name,
+                        folder: file.folder,
+                        type: file.type,
+                        curLines: curL,
+                        refLines: 0,
+                        deltaLines: curL,
+                        curHours: curH,
+                        refHours: 0,
+                        deltaHours: curH,
+                        complexity: effectiveComplexity,
+                        status: 'NUEVO'
+                    });
+                } else {
+                    seenInCur.add(fileRefKey(ref.folder, ref.name));
+                    const refL = Number(ref.lines) || 0;
+                    // Horas de referencia calculadas con la complejidad del JSON
+                    const refH = Number(horasDeArchivoNum(ref)) || (refL / tasaComplejidad(effectiveComplexity));
+                    if (compHoursRef[effectiveComplexity] !== undefined) compHoursRef[effectiveComplexity] += refH;
+
+                    folderMap[folderKey].refLines += refL;
+                    folderMap[folderKey].refHours += refH;
+                    folderMap[folderKey].refFiles += 1;
+
+                    const dL = curL - refL;
+                    const dH = curH - refH;
+
+                    if (Math.abs(dL) > 0) {
+                        modified.push({
+                            name: file.name,
+                            folder: file.folder,
+                            type: file.type,
+                            curLines: curL,
+                            refLines: refL,
+                            deltaLines: dL,
+                            curHours: curH,
+                            refHours: refH,
+                            deltaHours: dH,
+                            complexity: effectiveComplexity,
+                            status: dL > 0 ? 'AMPLIADO' : 'REDUCIDO'
+                        });
+                    } else {
+                        unchanged.push({
+                            name: file.name,
+                            folder: file.folder,
+                            type: file.type,
+                            curLines: curL,
+                            refLines: refL,
+                            deltaLines: 0,
+                            curHours: curH,
+                            refHours: refH,
+                            deltaHours: 0,
+                            complexity: effectiveComplexity,
+                            status: 'SIN CAMBIOS'
+                        });
+                    }
+                }
+            });
+
+            const deleted = [];
+            if (Array.isArray(b.files)) {
+                b.files.forEach(rf => {
+                    const k = fileRefKey(rf.folder, rf.name);
+                    const rfL = Number(rf.lines) || 0;
+                    const rfComp = rf.complexity || 'media';
+                    const rfH = Number(horasDeArchivoNum(rf)) || (rfL / tasaComplejidad(rfComp));
+
+                    if (!seenInCur.has(k)) {
+                        if (compHoursRef[rfComp] !== undefined) compHoursRef[rfComp] += rfH;
+
+                        const folderKey = rf.folder || 'ROOT';
+                        if (!folderMap[folderKey]) {
+                            folderMap[folderKey] = {
+                                name: folderKey,
+                                refLines: 0, curLines: 0,
+                                refHours: 0, curHours: 0,
+                                refFiles: 0, curFiles: 0
+                            };
+                        }
+                        folderMap[folderKey].refLines += rfL;
+                        folderMap[folderKey].refHours += rfH;
+                        folderMap[folderKey].refFiles += 1;
+
+                        deleted.push({
+                            name: rf.name,
+                            folder: rf.folder,
+                            type: rf.type || 'php',
+                            curLines: 0,
+                            refLines: rfL,
+                            deltaLines: -rfL,
+                            curHours: 0,
+                            refHours: rfH,
+                            deltaHours: -rfH,
+                            complexity: rfComp,
+                            status: 'ELIMINADO'
+                        });
+                    }
+                });
+            }
+
+            const bLines = Number(b.totalLines) || 0;
+            const bHours = Number(b.totalHours) || 0;
+            const bFiles = Number(b.fileCount) || (b.files ? b.files.length : 0);
+
+            const curTotalLines = totalCurrentLinesCalculated;
+            const curTotalHours = totalCurrentHoursCalculated;
+            const curFileCount = activeFiles.length;
+
+            const dLines = curTotalLines - bLines;
+            const dHours = curTotalHours - bHours;
+            const dFiles = curFileCount - bFiles;
+
+            const projectName = currentScanTargets.length
+                ? currentScanTargets.map(t => t.label || pathBasename(t.path)).join(' + ')
+                : pathBasename(currentProject || 'Proyecto');
+            const dateStr = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const scopeLabel = b.periodLabel || ('Referencia: ' + (b.fileName || 'Informe de referencia'));
+
+            const ink = '#1c1712';
+            const teal = '#1b6b63';
+            const tealDeep = '#134e48';
+            const cream = '#f3ebe0';
+            const paper = '#fbf7f0';
+            const line = '#e4d8c6';
+            const mint = '#e7f3f1';
+            const muted = '#6e655c';
+            const ok = '#166534';
+            const okBg = '#dcfce7';
+            const danger = '#991b1b';
+            const dangerBg = '#fee2e2';
+            const warn = '#92400e';
+            const warnBg = '#fef3c7';
+
+            const th = 'padding:7px 8px;text-align:left;font-size:9px;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;';
+            const td = 'padding:6px 8px;border-bottom:1px solid ' + line + ';';
+            const pdfH3 = function(t, icon) {
+                return '<h3 style="color:' + tealDeep + ';font-size:11px;margin:18px 0 10px 0;letter-spacing:0.12em;text-transform:uppercase;font-family:Georgia,serif;border-bottom:2px solid ' + teal + ';padding-bottom:4px;display:flex;align-items:center;gap:6px;">' + (icon || '■') + ' ' + t + '</h3>';
+            };
+
+            const hoursPerDay = Math.max(1, (devCount || 3) * (HOURS_PER_DAY_3DEVS / 3));
+            const daysRef = bHours > 0 ? (bHours / hoursPerDay).toFixed(1) : '0';
+            const daysCur = (curTotalHours / hoursPerDay).toFixed(1);
+            const daysDelta = (dHours / hoursPerDay).toFixed(1);
+            const growthPct = bHours > 0 ? ((dHours / bHours) * 100).toFixed(1) + '%' : '+100%';
+
+            const addedLinesTot = added.reduce((s,f)=>s+f.curLines,0);
+            const addedHoursTot = added.reduce((s,f)=>s+f.curHours,0);
+            const modDeltaLinesTot = modified.reduce((s,f)=>s+f.deltaLines,0);
+            const modDeltaHoursTot = modified.reduce((s,f)=>s+f.deltaHours,0);
+            const unchangedHoursTot = unchanged.reduce((s,f)=>s+f.curHours,0);
+            const deletedHoursTot = deleted.reduce((s,f)=>s+f.refHours,0);
+            const deletedLinesTot = deleted.reduce((s,f)=>s+f.refLines,0);
+
+            // Tabla de carpetas / módulos
+            const folderRows = Object.values(folderMap).sort((a,b) => b.curLines - a.curLines).map(f => {
+                const dL = f.curLines - f.refLines;
+                const dH = f.curHours - f.refHours;
+                const dF = f.curFiles - f.refFiles;
+                const dHStr = dH > 0 ? '+' + dH.toFixed(2) + ' h' : dH.toFixed(2) + ' h';
+                const dHCol = dH > 0 ? ok : (dH < 0 ? danger : muted);
+                const dLStr = dL > 0 ? '+' + dL.toLocaleString() : dL.toLocaleString();
+                const dLCol = dL > 0 ? ok : (dL < 0 ? danger : muted);
+
+                return '<tr style="background:#ffffff;">' +
+                    '<td style="' + td + 'font-weight:700;color:' + tealDeep + ';">' + escapeHtmlPdf(f.name) + '</td>' +
+                    '<td style="' + td + 'text-align:center;">' + f.refFiles + ' &rarr; <strong>' + f.curFiles + '</strong> (' + (dF >= 0 ? '+' : '') + dF + ')</td>' +
+                    '<td style="' + td + 'text-align:right;">' + f.refLines.toLocaleString() + '</td>' +
+                    '<td style="' + td + 'text-align:right;font-weight:700;">' + f.curLines.toLocaleString() + '</td>' +
+                    '<td style="' + td + 'text-align:right;font-weight:700;color:' + dLCol + ';">' + dLStr + '</td>' +
+                    '<td style="' + td + 'text-align:right;">' + f.refHours.toFixed(2) + ' h</td>' +
+                    '<td style="' + td + 'text-align:right;font-weight:700;">' + f.curHours.toFixed(2) + ' h</td>' +
+                    '<td style="' + td + 'text-align:right;font-weight:800;color:' + dHCol + ';background:' + (dH > 0 ? '#f0fdf4' : (dH < 0 ? '#fef2f2' : '#f9fafb')) + ';">' + dHStr + '</td>' +
+                    '</tr>';
+            }).join('');
+
+            // Tabla de archivos con cambios
+            const allDiffRows = [...added, ...modified, ...deleted];
+            const diffTableRows = allDiffRows.map(r => {
+                const stBg = r.status === 'NUEVO' ? okBg : (r.status === 'ELIMINADO' ? dangerBg : warnBg);
+                const stColor = r.status === 'NUEVO' ? ok : (r.status === 'ELIMINADO' ? danger : warn);
+                const badge = '<span style="background:' + stBg + ';color:' + stColor + ';padding:2px 6px;border-radius:4px;font-size:8px;font-weight:800;border:1px solid ' + stColor + '40;">' + r.status + '</span>';
+                const dLStr = r.deltaLines > 0 ? '+' + r.deltaLines.toLocaleString() : r.deltaLines.toLocaleString();
+                const dHStr = r.deltaHours > 0 ? '+' + r.deltaHours.toFixed(2) + ' h' : r.deltaHours.toFixed(2) + ' h';
+                const dLCol = r.deltaLines > 0 ? ok : (r.deltaLines < 0 ? danger : muted);
+                const dHCol = r.deltaHours > 0 ? ok : (r.deltaHours < 0 ? danger : muted);
+
+                return '<tr style="background:#ffffff;">' +
+                    '<td style="' + td + 'font-weight:600;">' + escapeHtmlPdf(r.name) + '<br><span style="font-size:8px;color:' + muted + ';">' + escapeHtmlPdf(r.folder) + '/</span></td>' +
+                    '<td style="' + td + 'text-align:center;">' + badge + '</td>' +
+                    '<td style="' + td + 'text-align:right;color:' + muted + ';">' + (r.refLines ? r.refLines.toLocaleString() : '—') + '</td>' +
+                    '<td style="' + td + 'text-align:right;font-weight:700;">' + (r.curLines ? r.curLines.toLocaleString() : '—') + '</td>' +
+                    '<td style="' + td + 'text-align:right;font-weight:700;color:' + dLCol + ';">' + dLStr + '</td>' +
+                    '<td style="' + td + 'text-align:right;color:' + muted + ';">' + (r.refHours ? r.refHours.toFixed(2) + ' h' : '—') + '</td>' +
+                    '<td style="' + td + 'text-align:right;font-weight:700;">' + (r.curHours ? r.curHours.toFixed(2) + ' h' : '—') + '</td>' +
+                    '<td style="' + td + 'text-align:right;font-weight:800;color:' + dHCol + ';background:' + (r.deltaHours > 0 ? '#f0fdf4' : (r.deltaHours < 0 ? '#fef2f2' : '#f9fafb')) + ';">' + dHStr + '</td>' +
+                    '<td style="' + td + 'text-align:center;font-size:9px;text-transform:capitalize;font-weight:700;color:' + tealDeep + ';">' + r.complexity + '</td>' +
+                    '</tr>';
+            }).join('');
+
+            const pdfHtml = '' +
+            '<div style="font-family:sans-serif;color:' + ink + ';background:' + paper + ';padding:22px 26px;max-width:794px;margin:0 auto;box-sizing:border-box;font-size:10px;">' +
+                '<!-- Encabezado Corporativo -->' +
+                '<div style="border-bottom:2px solid ' + teal + ';padding-bottom:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end;">' +
+                    '<div>' +
+                        '<div style="font-size:9px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:' + tealDeep + ';">EXA &middot; AUDITOR&Iacute;A DE CONTROL DE CAMBIOS Y ESFUERZO</div>' +
+                        '<h1 style="font-family:Georgia,serif;font-size:19px;margin:3px 0 0 0;color:' + ink + ';font-weight:700;">Informe Ejecutivo de Comparativa de Horas y C&oacute;digo</h1>' +
+                        '<div style="font-size:11px;font-weight:600;color:' + muted + ';margin-top:2px;">Proyecto: <strong>' + escapeHtmlPdf(projectName) + '</strong> &middot; Equipo: ' + (devCount || 3) + ' desarrolladores (' + hoursPerDay.toFixed(0) + 'h/d&iacute;a)</div>' +
+                    '</div>' +
+                    '<div style="text-align:right;">' +
+                        '<div style="font-size:9px;color:' + muted + ';font-weight:600;">' + dateStr + '</div>' +
+                        '<div style="background:' + mint + ';color:' + tealDeep + ';border:1px solid ' + teal + '50;padding:3px 8px;border-radius:6px;font-size:9px;font-weight:700;margin-top:4px;display:inline-block;">' + escapeHtmlPdf(scopeLabel) + '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                '<!-- Cuadro de Mandos: 4 KPIs Principales -->' +
+                '<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;margin-bottom:14px;">' +
+                    '<div style="background:#ffffff;border:1px solid ' + line + ';border-radius:8px;padding:8px 10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.04);">' +
+                        '<div style="font-size:8px;text-transform:uppercase;color:' + muted + ';font-weight:700;letter-spacing:0.05em;">Horas Estimadas</div>' +
+                        '<div style="font-size:17px;font-weight:800;color:' + tealDeep + ';margin:2px 0;">' + curTotalHours.toFixed(2) + ' h</div>' +
+                        '<div style="font-size:9px;font-weight:800;color:' + (dHours >= 0 ? ok : danger) + ';background:' + (dHours >= 0 ? okBg : dangerBg) + ';padding:2px 4px;border-radius:4px;display:inline-block;">' + (dHours >= 0 ? '+' : '') + dHours.toFixed(2) + ' h (' + growthPct + ')</div>' +
+                        '<div style="font-size:8px;color:' + muted + ';margin-top:2px;">Base: ' + bHours.toFixed(2) + ' h</div>' +
+                    '</div>' +
+                    '<div style="background:#ffffff;border:1px solid ' + line + ';border-radius:8px;padding:8px 10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.04);">' +
+                        '<div style="font-size:8px;text-transform:uppercase;color:' + muted + ';font-weight:700;letter-spacing:0.05em;">Tiempo de Entrega</div>' +
+                        '<div style="font-size:17px;font-weight:800;color:' + ink + ';margin:2px 0;">' + daysCur + ' d&iacute;as</div>' +
+                        '<div style="font-size:9px;font-weight:800;color:' + (daysDelta >= 0 ? ok : danger) + ';background:' + (daysDelta >= 0 ? okBg : dangerBg) + ';padding:2px 4px;border-radius:4px;display:inline-block;">' + (daysDelta >= 0 ? '+' : '') + daysDelta + ' d&iacute;as laborales</div>' +
+                        '<div style="font-size:8px;color:' + muted + ';margin-top:2px;">Base: ' + daysRef + ' d&iacute;as</div>' +
+                    '</div>' +
+                    '<div style="background:#ffffff;border:1px solid ' + line + ';border-radius:8px;padding:8px 10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.04);">' +
+                        '<div style="font-size:8px;text-transform:uppercase;color:' + muted + ';font-weight:700;letter-spacing:0.05em;">L&iacute;neas de C&oacute;digo</div>' +
+                        '<div style="font-size:17px;font-weight:800;color:' + ink + ';margin:2px 0;">' + curTotalLines.toLocaleString() + '</div>' +
+                        '<div style="font-size:9px;font-weight:800;color:' + (dLines >= 0 ? ok : danger) + ';background:' + (dLines >= 0 ? okBg : dangerBg) + ';padding:2px 4px;border-radius:4px;display:inline-block;">' + (dLines >= 0 ? '+' : '') + dLines.toLocaleString() + ' l&iacute;n.</div>' +
+                        '<div style="font-size:8px;color:' + muted + ';margin-top:2px;">Base: ' + bLines.toLocaleString() + ' l&iacute;n.</div>' +
+                    '</div>' +
+                    '<div style="background:#ffffff;border:1px solid ' + line + ';border-radius:8px;padding:8px 10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.04);">' +
+                        '<div style="font-size:8px;text-transform:uppercase;color:' + muted + ';font-weight:700;letter-spacing:0.05em;">Total Archivos</div>' +
+                        '<div style="font-size:17px;font-weight:800;color:' + ink + ';margin:2px 0;">' + curFileCount + '</div>' +
+                        '<div style="font-size:9px;font-weight:800;color:' + (dFiles >= 0 ? ok : danger) + ';background:' + (dFiles >= 0 ? okBg : dangerBg) + ';padding:2px 4px;border-radius:4px;display:inline-block;">' + (dFiles >= 0 ? '+' : '') + dFiles + ' arch.</div>' +
+                        '<div style="font-size:8px;color:' + muted + ';margin-top:2px;">Base: ' + bFiles + ' arch.</div>' +
+                    '</div>' +
+                '</div>' +
+
+                '<!-- Resumen de Esfuerzo por Categoría de Cambio -->' +
+                '<div style="background:' + cream + ';border:1px solid ' + line + ';border-radius:8px;padding:10px 12px;margin-bottom:14px;">' +
+                    '<div style="font-size:9px;font-weight:800;text-transform:uppercase;color:' + tealDeep + ';margin-bottom:6px;letter-spacing:0.05em;">Impacto de Esfuerzo por Tipo de Modificaci&oacute;n (Complejidades del JSON Preservadas):</div>' +
+                    '<div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;font-size:9px;">' +
+                        '<div style="background:#ffffff;padding:6px 8px;border-radius:6px;border-left:3px solid ' + ok + ';">' +
+                            '<strong style="color:' + ok + ';">NUEVOS ARCHIVOS</strong><br>' +
+                            '<strong>' + added.length + '</strong> archivos agregados<br>' +
+                            '<span style="font-weight:700;color:' + ok + ';">+' + addedHoursTot.toFixed(2) + ' h</span> (' + addedLinesTot.toLocaleString() + ' l&iacute;n.)' +
+                        '</div>' +
+                        '<div style="background:#ffffff;padding:6px 8px;border-radius:6px;border-left:3px solid ' + warn + ';">' +
+                            '<strong style="color:' + warn + ';">MODIFICADOS</strong><br>' +
+                            '<strong>' + modified.length + '</strong> archivos ajustados<br>' +
+                            '<span style="font-weight:700;color:' + (modDeltaHoursTot >= 0 ? ok : danger) + ';">' + (modDeltaHoursTot >= 0 ? '+' : '') + modDeltaHoursTot.toFixed(2) + ' h</span> (' + (modDeltaLinesTot >= 0 ? '+' : '') + modDeltaLinesTot.toLocaleString() + ' l&iacute;n.)' +
+                        '</div>' +
+                        '<div style="background:#ffffff;padding:6px 8px;border-radius:6px;border-left:3px solid ' + muted + ';">' +
+                            '<strong style="color:' + muted + ';">SIN CAMBIOS</strong><br>' +
+                            '<strong>' + unchanged.length + '</strong> archivos estables<br>' +
+                            '<span style="font-weight:700;color:' + ink + ';">' + unchangedHoursTot.toFixed(2) + ' h</span> consolidadas' +
+                        '</div>' +
+                        '<div style="background:#ffffff;padding:6px 8px;border-radius:6px;border-left:3px solid ' + danger + ';">' +
+                            '<strong style="color:' + danger + ';">ELIMINADOS</strong><br>' +
+                            '<strong>' + deleted.length + '</strong> archivos deducidos<br>' +
+                            '<span style="font-weight:700;color:' + danger + ';">-' + deletedHoursTot.toFixed(2) + ' h</span> (' + deletedLinesTot.toLocaleString() + ' l&iacute;n.)' +
+                        '</div>' +
+                    '</div>' +
+                '</div>' +
+
+                '<!-- Matriz Comparativa por Módulos -->' +
+                pdfH3('Balance y Diferencia de Horas por M&oacute;dulo / Carpeta', '&Delta;') +
+                '<table style="width:100%;border-collapse:collapse;font-size:9px;margin-bottom:14px;border:1px solid ' + line + ';">' +
+                    '<thead>' +
+                        '<tr style="background:' + teal + ';color:#ffffff;">' +
+                            '<th style="' + th + '">M&oacute;dulo / Carpeta</th>' +
+                            '<th style="' + th + 'text-align:center;">Archivos</th>' +
+                            '<th style="' + th + 'text-align:right;">L&iacute;n. Base</th>' +
+                            '<th style="' + th + 'text-align:right;">L&iacute;n. Act.</th>' +
+                            '<th style="' + th + 'text-align:right;">&Delta; L&iacute;neas</th>' +
+                            '<th style="' + th + 'text-align:right;">Horas Base</th>' +
+                            '<th style="' + th + 'text-align:right;">Horas Act.</th>' +
+                            '<th style="' + th + 'text-align:right;background:' + tealDeep + ';">DIF. HORAS</th>' +
+                        '</tr>' +
+                    '</thead>' +
+                    '<tbody>' +
+                        folderRows +
+                    '</tbody>' +
+                '</table>' +
+
+                '<!-- Matriz Detallada de Archivos con Diferencias -->' +
+                pdfH3('Auditor&iacute;a Detallada de Archivos con Cambios (' + allDiffRows.length + ' archivos detectados)', '&#9998;') +
+                (allDiffRows.length === 0 ? '<p style="font-size:10px;color:' + muted + ';padding:12px;text-align:center;background:#ffffff;border:1px solid ' + line + ';border-radius:6px;">No se detectaron diferencias de c&oacute;digo ni variaciones de horas frente a la referencia.</p>' :
+                '<table style="width:100%;border-collapse:collapse;font-size:8.5px;margin-bottom:14px;border:1px solid ' + line + ';">' +
+                    '<thead>' +
+                        '<tr style="background:' + teal + ';color:#ffffff;">' +
+                            '<th style="' + th + '">Archivo / Ruta</th>' +
+                            '<th style="' + th + 'text-align:center;">Estado</th>' +
+                            '<th style="' + th + 'text-align:right;">L&iacute;n. Ant.</th>' +
+                            '<th style="' + th + 'text-align:right;">L&iacute;n. Act.</th>' +
+                            '<th style="' + th + 'text-align:right;">&Delta; L&iacute;n.</th>' +
+                            '<th style="' + th + 'text-align:right;">Horas Ant.</th>' +
+                            '<th style="' + th + 'text-align:right;">Horas Act.</th>' +
+                            '<th style="' + th + 'text-align:right;background:' + tealDeep + ';">DIF. HORAS</th>' +
+                            '<th style="' + th + 'text-align:center;">Compl. (Ref)</th>' +
+                        '</tr>' +
+                    '</thead>' +
+                    '<tbody>' +
+                        diffTableRows +
+                    '</tbody>' +
+                '</table>') +
+
+                '<!-- Pie de Auditoría y Certificación -->' +
+                '<div style="border-top:1px solid ' + line + ';padding-top:8px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;font-size:8.5px;color:' + muted + ';">' +
+                    '<div><strong>EXA Control de Cambios:</strong> Informe certificado de auditor&iacute;a de c&oacute;digo fuente y balance de esfuerzo de desarrollo.</div>' +
+                    '<div>' + dateStr + ' &middot; P&aacute;gina 1 de 1</div>' +
+                '</div>' +
+            '</div>';
+
+            const element = document.getElementById('pdfContent');
+            element.style.cssText = 'display:block;position:relative;margin:0;padding:0;width:794px;max-width:100%;background:#fbf7f0;box-sizing:border-box;overflow:visible;';
+            element.innerHTML = pdfHtml;
+            window.scrollTo(0, 0);
+
+            const opt = {
+                margin: [4, 6, 6, 6],
+                filename: 'Informe_Comparativa_Horas_' + projectName.replace(/[^\w\-]+/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(element).save().then(function() {
+                element.style.cssText = 'display:none;';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-file-contract"></i> PDF Comparativa';
+                }
+                showToast('PDF de Comparativa descargado correctamente');
+            }, function(err) {
+                element.style.cssText = 'display:none;';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-file-contract"></i> PDF Comparativa';
+                }
+                showToast('Error PDF Comparativa: ' + (err && err.message ? err.message : String(err)), 'error');
+            });
+        }
+    
+</script>
 </body>
 </html>
