@@ -7,13 +7,7 @@ function parsePdfFile() {
     toast('Seleccione un archivo PDF, Excel o CSV.', false);
     return;
   }
-  var proy = $('#rub_proy_id').val();
-  var ppe = $('#rub_ppe_id').val();
-  if (!proy || !ppe) {
-    toast('Seleccione proyecto y version antes de analizar el archivo.', false);
-    return;
-  }
-
+  requireProyectoYPpe(function(proy, ppe) {
   var fd = new FormData();
   fd.append('action', 'parse_pdf');
   fd.append('pdf_file', fileInput.files[0]);
@@ -123,6 +117,7 @@ function parsePdfFile() {
       toast(msg, false);
     }
   });
+  }, 'Seleccione un proyecto antes de analizar el archivo.');
 }
 
 function importPdfPayload() {
@@ -134,13 +129,8 @@ function importPdfPayload() {
     toast('Corrija los conflictos de Grupo/Detalle en Admin antes de importar.', false);
     return;
   }
-  var proy = $('#rub_proy_id').val();
-  var ppe = $('#rub_ppe_id').val();
+  requireProyectoYPpe(function(proy, ppe) {
   var ton = $('#pv_toneladas_base_mes').val();
-  if (!proy || !ppe) {
-    toast('Seleccione proyecto y version.', false);
-    return;
-  }
   var cr = window.pdfCatalogoResumen || {};
   var nEx = parseInt(cr.existentes, 10) || 0;
   var nNue = parseInt(cr.nuevas, 10) || 0;
@@ -207,6 +197,7 @@ function importPdfPayload() {
       toast('Error de red al importar el PDF.', false);
     }
   });
+  }, 'Seleccione un proyecto antes de importar.');
 }
 
 if (window.__pptoImportHandlersBound) {
@@ -240,13 +231,7 @@ $('#btnSaveProy').click(function(){
 
 $('#btnSaveTonBase').click(function(){
 
-  var proy = $('#rub_proy_id').val();
-
-  var ppe = $('#rub_ppe_id').val();
-
-  var ton = $('#pv_toneladas_base_mes').val();
-
-  if (!proy || !ppe) { toast('Seleccione proyecto y version.', false); return; }
+  requireProyectoYPpe(function() {
 
   $.post(API, versionTonPayload(0), function(r){
 
@@ -264,18 +249,15 @@ $('#btnSaveTonBase').click(function(){
     }
 
   }, 'json');
+  }, 'Seleccione un proyecto.');
 
 });
 
 $('#btnAplicarTonRubros').click(function(){
 
-  var proy = $('#rub_proy_id').val();
-
-  var ppe = $('#rub_ppe_id').val();
+  requireProyectoYPpe(function() {
 
   var tonCosto = $.trim($('#pv_toneladas_costo_mes').val());
-
-  if (!proy || !ppe) { toast('Seleccione proyecto y version.', false); return; }
 
   if (!tonCosto || parseFloat(tonCosto) <= 0) {
     toast('Ingrese ton costo egreso (mes), ej. 77000.', false);
@@ -303,6 +285,7 @@ $('#btnAplicarTonRubros').click(function(){
     }
 
   }, 'json');
+  }, 'Seleccione un proyecto.');
 
 });
 
@@ -327,12 +310,7 @@ $(document).on('click','.btn-edit-rubro', function(){
 
 $(document).on('click', '.btn-del-rubro', function() {
   var x = JSON.parse($(this).attr('data-json'));
-  var proy = $('#rub_proy_id').val();
-  var ppe = $('#rub_ppe_id').val();
-  if (!proy || !ppe) {
-    toast('Seleccione proyecto y version.', false);
-    return;
-  }
+  requireProyectoYPpe(function(proy, ppe) {
   var etiqueta = (x.Ppa_Cla || '') + ' - ' + (x.Pdp_Rubro || 'rubro');
   if (!confirm('Eliminar el rubro "' + etiqueta + '" de este proyecto?\n\nEsta accion no se puede deshacer.')) {
     return;
@@ -355,6 +333,7 @@ $(document).on('click', '.btn-del-rubro', function() {
   }, 'json').fail(function() {
     toast('Error de red al eliminar el rubro.', false);
   });
+  }, 'Seleccione un proyecto.');
 });
 
 $('#btnNuevaVersion').click(function(){ crearNuevaVersion(); });
@@ -372,12 +351,7 @@ $('#pv_toneladas_costo_mes').on('input change', function() {
 });
 
 $('#btnExportCuadroExcel').click(function() {
-  var proy = $('#rub_proy_id').val();
-  var ppe = $('#rub_ppe_id').val();
-  if (!proy || !ppe) {
-    toast('Seleccione proyecto y version antes de exportar.', false);
-    return;
-  }
+  requireProyectoYPpe(function(proy, ppe) {
   var qs = $.param({
     Pro_Cod: proy,
     Ppe_Cod: ppe,
@@ -387,12 +361,11 @@ $('#btnExportCuadroExcel').click(function() {
     anio_precio: cuadroAnioPrecio || $('#cuadro_anio_precio').val() || ''
   });
   window.open('ppto_proyectos_cuadro_export.php?' + qs, '_blank');
+  }, 'Seleccione un proyecto antes de exportar.');
 });
 
 $('#btnAjGuardarCfg').click(function() {
-  var proy = $('#rub_proy_id').val();
-  var ppe = $('#rub_ppe_id').val();
-  if (!proy || !ppe) { toast('Seleccione proyecto y version.', false); return; }
+  requireProyectoYPpe(function(proy, ppe) {
   $.post(API, {
     action: 'ajuste_cfg_save',
     Pro_Cod: proy,
@@ -409,6 +382,7 @@ $('#btnAjGuardarCfg').click(function() {
       loadRubros();
     }
   }, 'json');
+  }, 'Seleccione un proyecto.');
 });
 
 $('#btnAjSimular').click(function() { simularAjuste(false); });
@@ -425,14 +399,13 @@ $('#aj_activo').on('change', function() {
 /* === CUADRO_PARTIDA_FINAL_UI (reversible) END === */
 
 $('#btnAjPrecios').click(function() {
-  var proy = $('#rub_proy_id').val();
-  var ppe = $('#rub_ppe_id').val();
-  if (!proy || !ppe) { toast('Seleccione proyecto y version.', false); return; }
+  requireProyectoYPpe(function(proy, ppe) {
   $.getJSON(API, { action: 'ajuste_precios_list', Pro_Cod: proy, Ppe_Cod: ppe }, function(r) {
     ajustePreciosCache = (r.status === 'success') ? (r.precios || []) : [];
     renderPreciosRows(ajustePreciosCache);
     $('#modalAjustePrecios').show();
   });
+  }, 'Seleccione un proyecto.');
 });
 
 $('#btnAjAddPrecio').click(function() {
@@ -491,9 +464,7 @@ $('#btnCloseAjustePrecios, #btnCancelAjustePrecios').click(function() {
 });
 
 $('#btnAjHistorial').click(function() {
-  var proy = $('#rub_proy_id').val();
-  var ppe = $('#rub_ppe_id').val();
-  if (!proy || !ppe) { toast('Seleccione proyecto y version.', false); return; }
+  requireProyectoYPpe(function(proy, ppe) {
   $.getJSON(API, { action: 'ajuste_historial', Pro_Cod: proy, Ppe_Cod: ppe }, function(r) {
     var $tb = $('#tblAjusteHistorial tbody').empty();
     if (r.status !== 'success' || !(r.rows || []).length) {
@@ -518,6 +489,7 @@ $('#btnAjHistorial').click(function() {
     }
     $('#modalAjusteHistorial').show();
   });
+  }, 'Seleccione un proyecto.');
 });
 
 $('#btnCloseAjusteHistorial, #btnCancelAjusteHistorial').click(function() {

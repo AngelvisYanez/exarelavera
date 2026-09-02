@@ -27,6 +27,9 @@ if (!isset($Ses_Usu_Cod) && isset($_SESSION['Ses_Usu_Cod'])) {
 
 $obBD = new Class_Log_Conexion_Con($Ses_Dat_Dis);
 $mysqli = $obBD->conexion;
+if (function_exists('ppto_db_set_utf8')) {
+    ppto_db_set_utf8($mysqli);
+}
 ppto_schema_ensure($mysqli);
 ppto_schema_ensure_partida_porcentaje($mysqli);
 ppto_schema_ensure_partida_meses_prorrateo($mysqli);
@@ -559,7 +562,13 @@ if ($action === 'save_rubro') {
     if (!ppto_partida_es_destino_regla($mysqli, $Ppa_Cod, $Emp_Cod)) {
         ppto_json(array('status' => 'error', 'message' => 'Solo partidas Detalle activas pueden tener rubros de proyecto.'));
     }
-    $rubro = $mysqli->real_escape_string(trim(isset($_POST['Pdp_Rubro']) ? $_POST['Pdp_Rubro'] : ''));
+    $rubro_txt = trim(isset($_POST['Pdp_Rubro']) ? $_POST['Pdp_Rubro'] : '');
+    if (function_exists('ppto_pdf_a_utf8')) {
+        $rubro_txt = ppto_pdf_a_utf8($rubro_txt);
+    } elseif (function_exists('ppto_texto_reparar_mojibake')) {
+        $rubro_txt = ppto_texto_reparar_mojibake($rubro_txt);
+    }
+    $rubro = $mysqli->real_escape_string($rubro_txt);
     if ($rubro === '' && $Ppa_Cod > 0) {
         $r_desc = $mysqli->query("SELECT Ppa_Des AS Ppa_Des FROM pre_partidas WHERE Ppa_Cod=$Ppa_Cod AND Emp_Cod=$Emp_Cod LIMIT 1");
         if ($r_desc && ($row_desc = $r_desc->fetch_assoc())) {
@@ -672,8 +681,15 @@ if ($action === 'aplicar_escenario') {
     if (!in_array($escenario, array('esperada', 'proyectada', 'real'), true)) {
         ppto_json(array('status' => 'error', 'message' => 'Escenario invalido.'));
     }
-    if ($proy_id_raw === '' || $Ppe_Cod <= 0) {
-        ppto_json(array('status' => 'error', 'message' => 'Seleccione proyecto y version.'));
+    if ($Ppe_Cod <= 0) {
+        $ens = ppto_proy_version_asegurar($mysqli, $Emp_Cod, (int)$Ses_Usu_Cod, (int)date('Y'));
+        $Ppe_Cod = !empty($ens['ok']) ? (int)$ens['Ppe_Cod'] : 0;
+    }
+    if ($proy_id_raw === '') {
+        ppto_json(array('status' => 'error', 'message' => 'Seleccione un proyecto.'));
+    }
+    if ($Ppe_Cod <= 0) {
+        ppto_json(array('status' => 'error', 'message' => 'No hay cabecera presupuestaria activa.'));
     }
     $anio_esc = (int)date('Y');
     $r_anio = $mysqli->query("SELECT Ppe_Ani AS Ppe_Ani FROM pre_presupuesto WHERE Ppe_Cod=$Ppe_Cod LIMIT 1");
@@ -727,6 +743,9 @@ if ($action === 'list_rubros') {
     require_once __DIR__ . '/ppto_proyectos_cuadro_logica.php';
     $Pro_Cod = isset($_GET['Pro_Cod']) ? trim($_GET['Pro_Cod']) : '';
     $Ppe_Cod = isset($_GET['Ppe_Cod']) ? (int)$_GET['Ppe_Cod'] : 0;
+    if ($Ppe_Cod <= 0) {
+        $Ppe_Cod = ppto_proy_version_buscar_activa($mysqli, $Emp_Cod, (int)date('Y'));
+    }
     $cuadro_vista = isset($_GET['cuadro_vista']) ? $_GET['cuadro_vista'] : 'anual';
     $cuadro_mes = isset($_GET['cuadro_mes']) ? $_GET['cuadro_mes'] : null;
     $anio_precio = isset($_GET['anio_precio']) && $_GET['anio_precio'] !== ''
@@ -866,6 +885,23 @@ if ($action === 'crear_version') {
     ));
 }
 
+if ($action === 'asegurar_version') {
+    $anio = isset($_REQUEST['Ppe_Ani']) ? (int)$_REQUEST['Ppe_Ani'] : (int)date('Y');
+    $res = ppto_proy_version_asegurar($mysqli, $Emp_Cod, (int)$Ses_Usu_Cod, $anio);
+    if (empty($res['ok'])) {
+        ppto_json(array(
+            'status' => 'error',
+            'message' => !empty($res['message']) ? $res['message'] : 'No se pudo resolver la cabecera presupuestaria.',
+        ));
+    }
+    ppto_json(array(
+        'status' => 'success',
+        'Ppe_Cod' => (int)$res['Ppe_Cod'],
+        'created' => !empty($res['created']),
+        'message' => $res['message'],
+    ));
+}
+
 if ($action === 'catalogos') {
     $plantillas = array();
     $partidas = array();
@@ -947,8 +983,14 @@ if ($action === 'save_partida_catalogo') {
 if ($action === 'get_version_config') {
     $Pro_Cod = isset($_GET['Pro_Cod']) ? trim($_GET['Pro_Cod']) : '';
     $Ppe_Cod = isset($_GET['Ppe_Cod']) ? (int)$_GET['Ppe_Cod'] : 0;
-    if ($Pro_Cod === '' || $Ppe_Cod <= 0) {
-        ppto_json(array('status' => 'error', 'message' => 'Proyecto y version requeridos.'));
+    if ($Ppe_Cod <= 0) {
+        $Ppe_Cod = ppto_proy_version_buscar_activa($mysqli, $Emp_Cod, (int)date('Y'));
+    }
+    if ($Pro_Cod === '') {
+        ppto_json(array('status' => 'error', 'message' => 'Seleccione un proyecto.'));
+    }
+    if ($Ppe_Cod <= 0) {
+        ppto_json(array('status' => 'error', 'message' => 'No hay cabecera presupuestaria activa.'));
     }
     $ton = ppto_version_ton_base_sanitize(ppto_proy_version_ton_base($mysqli, $Pro_Cod, $Emp_Cod, $Ppe_Cod));
     $ton_costo = ppto_proy_version_ton_costo($mysqli, $Pro_Cod, $Emp_Cod, $Ppe_Cod);
@@ -972,8 +1014,15 @@ if ($action === 'save_version_ton') {
     $tarifa = isset($_POST['pv_tarifa_ton_iva']) ? (float)$_POST['pv_tarifa_ton_iva'] : 3.0;
     $iva_div = isset($_POST['pv_iva_divisor']) ? (float)$_POST['pv_iva_divisor'] : 1.15;
     $aplicar = !empty($_POST['aplicar_rubros']);
-    if ($Pro_Cod === '' || $Ppe_Cod <= 0) {
-        ppto_json(array('status' => 'error', 'message' => 'Proyecto y version requeridos.'));
+    if ($Ppe_Cod <= 0) {
+        $ens = ppto_proy_version_asegurar($mysqli, $Emp_Cod, (int)$Ses_Usu_Cod, (int)date('Y'));
+        $Ppe_Cod = !empty($ens['ok']) ? (int)$ens['Ppe_Cod'] : 0;
+    }
+    if ($Pro_Cod === '') {
+        ppto_json(array('status' => 'error', 'message' => 'Seleccione un proyecto.'));
+    }
+    if ($Ppe_Cod <= 0) {
+        ppto_json(array('status' => 'error', 'message' => 'No hay cabecera presupuestaria activa.'));
     }
     if ($ton <= 0) {
         ppto_json(array('status' => 'error', 'message' => 'Ingrese ton ingresos (mes) mayores a cero.'));
@@ -1050,6 +1099,13 @@ if ($action === 'parse_pdf') {
     $catalogo = $validacion['catalogo'];
     $proy_parse = isset($_POST['Pro_Cod']) ? trim($_POST['Pro_Cod']) : '';
     $ppe_parse = isset($_POST['Ppe_Cod']) ? (int)$_POST['Ppe_Cod'] : 0;
+    if ($ppe_parse <= 0) {
+        $ppe_parse = ppto_proy_version_buscar_activa($mysqli, $Emp_Cod, (int)date('Y'));
+        if ($ppe_parse <= 0) {
+            $ens = ppto_proy_version_asegurar($mysqli, $Emp_Cod, (int)$Ses_Usu_Cod, (int)date('Y'));
+            $ppe_parse = !empty($ens['ok']) ? (int)$ens['Ppe_Cod'] : 0;
+        }
+    }
     $rubros_proyecto = array();
     if ($proy_parse !== '' && $ppe_parse > 0) {
         $rubros_proyecto = ppto_proy_rubros_map_por_codigo($mysqli, $proy_parse, $Emp_Cod, $ppe_parse);
@@ -1117,8 +1173,15 @@ if ($action === 'import_pdf') {
     $Ppe_Cod = isset($_POST['Ppe_Cod']) ? (int)$_POST['Ppe_Cod'] : 0;
     $ton_override = ppto_version_ton_base_sanitize(isset($_POST['pv_toneladas_base_mes']) ? (float)$_POST['pv_toneladas_base_mes'] : 0);
 
-    if ($Pro_Cod === '' || $Ppe_Cod <= 0) {
-        ppto_json(array('status' => 'error', 'message' => 'Seleccione proyecto y version antes de importar.'));
+    if ($Ppe_Cod <= 0) {
+        $ens = ppto_proy_version_asegurar($mysqli, $Emp_Cod, (int)$Ses_Usu_Cod, (int)date('Y'));
+        $Ppe_Cod = !empty($ens['ok']) ? (int)$ens['Ppe_Cod'] : 0;
+    }
+    if ($Pro_Cod === '') {
+        ppto_json(array('status' => 'error', 'message' => 'Seleccione un proyecto antes de importar.'));
+    }
+    if ($Ppe_Cod <= 0) {
+        ppto_json(array('status' => 'error', 'message' => 'No hay cabecera presupuestaria activa para importar.'));
     }
 
     $parsed = null;
@@ -1169,8 +1232,15 @@ if ($action === 'preview_publicar' || $action === 'publish_aprobado' || $action 
     require_once(__DIR__ . '/ppto_proy_publicar_logica.php');
     $Pro_Cod = isset($_REQUEST['Pro_Cod']) ? trim($_REQUEST['Pro_Cod']) : '';
     $Ppe_Cod = isset($_REQUEST['Ppe_Cod']) ? (int)$_REQUEST['Ppe_Cod'] : 0;
-    if ($Pro_Cod === '' || $Ppe_Cod <= 0) {
-        ppto_json(array('status' => 'error', 'message' => 'Seleccione proyecto y version.'));
+    if ($Ppe_Cod <= 0) {
+        $ens = ppto_proy_version_asegurar($mysqli, $Emp_Cod, (int)$Ses_Usu_Cod, (int)date('Y'));
+        $Ppe_Cod = !empty($ens['ok']) ? (int)$ens['Ppe_Cod'] : 0;
+    }
+    if ($Pro_Cod === '') {
+        ppto_json(array('status' => 'error', 'message' => 'Seleccione un proyecto.'));
+    }
+    if ($Ppe_Cod <= 0) {
+        ppto_json(array('status' => 'error', 'message' => 'No hay cabecera presupuestaria activa.'));
     }
     $anio = isset($_REQUEST['anio']) ? (int)$_REQUEST['anio'] : 0;
     if ($anio <= 0) {
@@ -1223,8 +1293,15 @@ if ($action === 'ajuste_cfg_get' || $action === 'ajuste_cfg_save'
     require_once __DIR__ . '/ppto_proyectos_cuadro_logica.php';
     $Pro_Cod = isset($_REQUEST['Pro_Cod']) ? trim($_REQUEST['Pro_Cod']) : '';
     $Ppe_Cod = isset($_REQUEST['Ppe_Cod']) ? (int)$_REQUEST['Ppe_Cod'] : 0;
-    if ($Pro_Cod === '' || $Ppe_Cod <= 0) {
-        ppto_json(array('status' => 'error', 'message' => 'Seleccione proyecto y version.'));
+    if ($Ppe_Cod <= 0) {
+        $ens = ppto_proy_version_asegurar($mysqli, $Emp_Cod, (int)$Ses_Usu_Cod, (int)date('Y'));
+        $Ppe_Cod = !empty($ens['ok']) ? (int)$ens['Ppe_Cod'] : 0;
+    }
+    if ($Pro_Cod === '') {
+        ppto_json(array('status' => 'error', 'message' => 'Seleccione un proyecto.'));
+    }
+    if ($Ppe_Cod <= 0) {
+        ppto_json(array('status' => 'error', 'message' => 'No hay cabecera presupuestaria activa.'));
     }
 
     if ($action === 'ajuste_cfg_get') {

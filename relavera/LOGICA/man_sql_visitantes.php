@@ -374,6 +374,9 @@ function sentencias_visitantes($Nro_Sql, $Par_Sql)
                                Man_EFef,
                                Man_Ehor,
                                Man_Vig,
+                               IFNULL(Man_Teve, 'DE ASISTENCIA') AS Man_Teve,
+                               IFNULL(Man_Tcrf, '') AS Man_Tcrf,
+                               IFNULL(Man_Wms, '') AS Man_Wms,
                                IFNULL(Man_EEst, 'A') AS Man_EEst,
                                (SELECT COUNT(*) FROM manifiesto_visitante mv
                                  WHERE mv.Man_Eve = manifiesto_evento.Man_Eve
@@ -396,11 +399,11 @@ function sentencias_visitantes($Nro_Sql, $Par_Sql)
                 if ($Par_Sql['op_opciones'] == 'c') {
                     $searchVis .= " AND persona.Prs_Ced LIKE '%$searchTerm%'";
                 } else {
-                    $searchVis .= " AND (CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%' OR persona.Prs_Nom LIKE '%$searchTerm%' OR persona.Prs_Ape LIKE '%$searchTerm%')";
+                    $searchVis .= " AND (CONCAT(IFNULL(persona.Prs_Ape,''), ' ', IFNULL(persona.Prs_Nom,'')) LIKE '%$searchTerm%' OR CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%' OR persona.Prs_Nom LIKE '%$searchTerm%' OR persona.Prs_Ape LIKE '%$searchTerm%')";
                 }
             } elseif (!empty($Par_Sql['search'])) {
                 $searchTerm = addslashes($Par_Sql['search']);
-                $searchVis .= " AND (persona.Prs_Ced LIKE '%$searchTerm%' OR CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%')";
+                $searchVis .= " AND (persona.Prs_Ced LIKE '%$searchTerm%' OR CONCAT(IFNULL(persona.Prs_Ape,''), ' ', IFNULL(persona.Prs_Nom,'')) LIKE '%$searchTerm%' OR CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) LIKE '%$searchTerm%')";
             }
 
             // Filtro por evento: si hay evento seleccionado aplica el filtro, sino muestra todos
@@ -424,8 +427,9 @@ function sentencias_visitantes($Nro_Sql, $Par_Sql)
                        persona.Prs_Cor,
                        persona.Prs_Dir,
                        persona.Prs_Fec,
-                       CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')) as nombre,
-                       IFNULL(me.Man_ENom, 'Sin evento') as Man_ENom
+                       UPPER(TRIM(CONCAT(IFNULL(persona.Prs_Ape,''), ' ', IFNULL(persona.Prs_Nom,'')))) as nombre,
+                       IFNULL(me.Man_ENom, 'Sin evento') as Man_ENom,
+                       IFNULL(mv.MVis_Cer_Env, 'N') as MVis_Cer_Env
                 FROM manifiesto_visitante mv
                 INNER JOIN persona ON persona.Prs_Cod = mv.Prs_Cod
                 LEFT JOIN manifiesto_evento me ON me.Man_Eve = mv.Man_Eve
@@ -435,10 +439,29 @@ function sentencias_visitantes($Nro_Sql, $Par_Sql)
                   $searchVis
             ";
 
+            // Opciones de ordenamiento (por defecto: código interno / No ordenar)
+            $orderBy = "ORDER BY u.MVis_Cod ASC";
+            $orden = !empty($Par_Sql['orden']) ? trim($Par_Sql['orden']) : '';
+            if ($orden === 'cedula' || $orden === 'cedula_asc') {
+                $orderBy = "ORDER BY u.Prs_Ced ASC";
+            } elseif ($orden === 'cedula_desc') {
+                $orderBy = "ORDER BY u.Prs_Ced DESC";
+            } elseif ($orden === 'visitante_asc' || $orden === 'nombre_asc') {
+                $orderBy = "ORDER BY u.nombre ASC";
+            } elseif ($orden === 'visitante_desc' || $orden === 'nombre_desc') {
+                $orderBy = "ORDER BY u.nombre DESC";
+            } elseif ($orden === 'codigo' || $orden === 'defecto' || $orden === 'no_ordenar') {
+                $orderBy = "ORDER BY u.MVis_Cod ASC";
+            } elseif (!empty($Par_Sql['sidx']) && !empty($Par_Sql['sord'])) {
+                $col = addslashes($Par_Sql['sidx']);
+                $dir = (strtoupper($Par_Sql['sord']) === 'DESC') ? 'DESC' : 'ASC';
+                $orderBy = "ORDER BY u.$col $dir";
+            }
+
             if (empty($Par_Sql['limits'])) {
                 $sql = "SELECT COUNT(*) as total FROM ($baseVis) u";
             } else {
-                $sql = "SELECT u.* FROM ($baseVis) u ORDER BY u.nombre ASC " . $Par_Sql['limits'];
+                $sql = "SELECT u.* FROM ($baseVis) u $orderBy " . $Par_Sql['limits'];
             }
             break;
 

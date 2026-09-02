@@ -598,7 +598,7 @@ function initGridVisitantesEvento() {
     colNames: [
       "Código",
       "Cédula",
-      "Nombres y Apellidos",
+      "Apellidos y Nombres",
       "Teléfono",
       "Correo Electrónico",
       "Tipo Sangre",
@@ -609,7 +609,23 @@ function initGridVisitantesEvento() {
     colModel: [
       { name: "MVis_Cod", index: "MVis_Cod", width: 65, align: "center", key: true },
       { name: "Prs_Ced", index: "Prs_Ced", width: 100, align: "center" },
-      { name: "nombre", index: "nombre", width: 220, align: "left" },
+      {
+        name: "nombre",
+        index: "nombre",
+        width: 230,
+        align: "left",
+        formatter: function (cellvalue, options, rowObject) {
+          var ape = (rowObject && rowObject.Prs_Ape) ? $.trim(rowObject.Prs_Ape) : "";
+          var nom = (rowObject && rowObject.Prs_Nom) ? $.trim(rowObject.Prs_Nom) : "";
+          var full = "";
+          if (ape || nom) {
+            full = (ape + " " + nom).trim();
+          } else {
+            full = (cellvalue || "").toString().trim();
+          }
+          return full.toUpperCase();
+        }
+      },
       { name: "Prs_Tel", index: "Prs_Tel", width: 100, align: "center" },
       { name: "Prs_Cor", index: "Prs_Cor", width: 160, align: "left" },
       { name: "MVis_Tsa", index: "MVis_Tsa", width: 80, align: "center" },
@@ -627,13 +643,20 @@ function initGridVisitantesEvento() {
       {
         name: "acciones",
         index: "acciones",
-        width: 170,
+        width: 175,
         align: "center",
         sortable: false,
         formatter: function (cellvalue, options, rowObject) {
+          var manEve = (rowObject && rowObject.Man_Eve) ? rowObject.Man_Eve : ($("#selMan_Eve").val() || "");
+          var yaEnviado = (rowObject && (rowObject.MVis_Cer_Env === 'S' || rowObject.MVis_Cer_Env === 's'));
+          var sendBtnClass = yaEnviado ? 'btn-warning' : 'btn-success';
+          var sendBtnIcon = yaEnviado ? 'glyphicon-repeat' : 'glyphicon-send';
+          var sendBtnText = yaEnviado ? 'Reenviar' : 'Enviar';
+          var sendBtnTitle = yaEnviado ? 'Reenviar Certificado PDF' : 'Enviar Certificado PDF';
+
           var editBtn = '<button type="button" class="btn btn-primary btn-xs" onclick="abrirModalVisitante(' + rowObject.MVis_Cod + ')" title="Editar Visitante"><i class="glyphicon glyphicon-pencil"></i></button> ';
-          var certBtn = '<button type="button" class="btn btn-warning btn-xs" onclick="verCertificadoPdf(\'' + (rowObject.Prs_Nom || '') + '\', \'' + (rowObject.Prs_Ape || '') + '\', \'' + (rowObject.Prs_Ced || '') + '\')" title="Ver Certificado PDF"><i class="glyphicon glyphicon-certificate"></i></button> ';
-          var sendBtn = '<button type="button" class="btn btn-success btn-xs" onclick="enviarCertificadoVisitanteEvento(' + rowObject.MVis_Cod + ', this)" title="Enviar Certificado PDF"><i class="glyphicon glyphicon-send"></i> Enviar</button> ';
+          var certBtn = '<button type="button" class="btn btn-default btn-xs" onclick="verCertificadoPdf(\'' + (rowObject.Prs_Nom || '') + '\', \'' + (rowObject.Prs_Ape || '') + '\', \'' + (rowObject.Prs_Ced || '') + '\', \'' + manEve + '\')" title="Ver Certificado PDF" style="color: #b45309; border-color: #f59e0b;"><i class="glyphicon glyphicon-certificate"></i></button> ';
+          var sendBtn = '<button type="button" class="btn ' + sendBtnClass + ' btn-xs" data-sent="' + (yaEnviado ? '1' : '0') + '" onclick="enviarCertificadoVisitanteEvento(' + rowObject.MVis_Cod + ', this)" title="' + sendBtnTitle + '"><i class="glyphicon ' + sendBtnIcon + '"></i> ' + sendBtnText + '</button> ';
           var deleteBtn = '<button type="button" class="btn btn-danger btn-xs" onclick="anularVisitanteGrid(' + rowObject.MVis_Cod + ')" title="Anular Visitante"><i class="glyphicon glyphicon-trash"></i></button>';
           return editBtn + certBtn + sendBtn + deleteBtn;
         }
@@ -641,11 +664,16 @@ function initGridVisitantesEvento() {
     ],
     rownumbers: true,
     rownumWidth: 40,
+    multiselect: true,
+    multiboxonly: true,
+    multiselectWidth: 30,
     cmTemplate: { sortable: false },
     rowNum: 50,
     rowList: [50, 100, 200, 500, 999999],
+    caption: "Historial de Registro",
+    hidegrid: false,
     pager: "#gridVisitantesEventoPager",
-    sortname: "nombre",
+    sortname: "MVis_Cod",
     sortorder: "asc",
     viewrecords: true,
     autowidth: true,
@@ -655,6 +683,7 @@ function initGridVisitantesEvento() {
       $grid.jqGrid("setLabel", "rn", "#");
       $('.ui-pg-selbox option[value="999999"]').text("Todos");
       verificarVigenciaBotonRegistrar();
+      insertarSelectOrdenVisitantes();
     }
   });
 
@@ -675,6 +704,40 @@ function initGridVisitantesEvento() {
       }
     }
   });
+
+  insertarSelectOrdenVisitantes();
+}
+
+function insertarSelectOrdenVisitantes() {
+  var $titlebar = $("#gview_gridVisitantesEvento .ui-jqgrid-titlebar");
+  if (!$titlebar.length) return;
+  $titlebar.css("position", "relative");
+
+  if ($("#selOrdenVisitantes").length) return;
+
+  var selectHtml =
+    '<div class="vis-grid-sort-wrap" style="position: absolute !important; right: 12px !important; top: 50% !important; transform: translateY(-50%) !important; margin: 0 !important; padding: 0 !important; display: flex !important; align-items: center !important; gap: 8px !important; z-index: 25 !important;">' +
+      '<label id="lblOrdenVisitantes" for="selOrdenVisitantes" style="color: #ffffff !important; font-size: 11px !important; margin: 0 !important; font-weight: 600 !important; text-shadow: none !important; white-space: nowrap !important; text-transform: none !important; letter-spacing: normal !important;">Ordenar por:</label>' +
+      '<select id="selOrdenVisitantes" class="form-control input-xs" style="width: 175px !important; height: 24px !important; line-height: 24px !important; padding: 1px 8px !important; font-size: 11px !important; color: #000000 !important; -webkit-text-fill-color: #000000 !important; background-color: #ffffff !important; border: 1px solid #94a3b8 !important; border-radius: 4px !important; font-weight: normal !important; text-transform: none !important; display: inline-block !important; cursor: pointer !important; text-shadow: none !important;" onchange="cambiarOrdenVisitantesGrid();">' +
+        '<option value="codigo" selected style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; background-color: #ffffff !important;">No Ordenar</option>' +
+        '<option value="cedula" style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; background-color: #ffffff !important;">Cédula</option>' +
+        '<option value="visitante_asc" style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; background-color: #ffffff !important;">Visitante ASC</option>' +
+        '<option value="visitante_desc" style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; background-color: #ffffff !important;">Visitante DESC</option>' +
+      '</select>' +
+    '</div>';
+
+  $titlebar.append(selectHtml);
+}
+
+function cambiarOrdenVisitantesGrid() {
+  var orden = $("#selOrdenVisitantes").val() || "codigo";
+  var $grid = $("#gridVisitantesEvento");
+  var postData = $grid.jqGrid("getGridParam", "postData") || {};
+  postData.orden = orden;
+  $grid.jqGrid("setGridParam", {
+    postData: postData,
+    page: 1
+  }).trigger("reloadGrid");
 }
 
 function actualizarGridVisitantesEvento() {
@@ -688,6 +751,9 @@ function actualizarGridVisitantesEvento() {
 
   if (!postData.Man_Eve) {
     postData.Man_Eve = $("#selMan_Eve").val() || $("#hdn_man_eve_vigente").val() || "";
+  }
+  if (!postData.orden) {
+    postData.orden = $("#selOrdenVisitantes").val() || "codigo";
   }
 
   $("#gridVisitantesEvento")
@@ -895,33 +961,44 @@ function guardarVisitante() {
   );
 }
 
-function verCertificadoPdf(prsNom, prsApe, prsCed) {
-  var url = "?verCertificadoPdfAjax=true&Prs_Nom=" + encodeURIComponent(prsNom) + "&Prs_Ape=" + encodeURIComponent(prsApe) + "&Prs_Ced=" + encodeURIComponent(prsCed) + "&es_visitante=1";
+function verCertificadoPdf(prsNom, prsApe, prsCed, manEve) {
+  var eve = manEve || $("#selMan_Eve").val() || "";
+  var url = "?verCertificadoPdfAjax=true&Prs_Nom=" + encodeURIComponent(prsNom) + "&Prs_Ape=" + encodeURIComponent(prsApe) + "&Prs_Ced=" + encodeURIComponent(prsCed) + "&Man_Eve=" + encodeURIComponent(eve) + "&es_visitante=1";
   window.open(url, "_blank");
 }
 
 function enviarCertificadoVisitanteEvento(MVis_Cod, btnEl) {
   if (!MVis_Cod) return;
+
+  if (window._enviandoCertificadoActivo) {
+    mostrarAlertaUI(
+      "Operación en curso",
+      "Ya hay un envío de certificado en proceso. Por favor espere a que finalice para evitar saturar el servicio.",
+      "warning"
+    );
+    return;
+  }
+
   var $btn = $(btnEl);
-  $btn.prop("disabled", true).html('<i class="glyphicon glyphicon-refresh"></i>');
+  var eraEnviado = ($btn.attr("data-sent") === "1");
+  var labelOriginal = eraEnviado ? 'Reenviar' : 'Enviar';
+  var iconOriginal = eraEnviado ? 'glyphicon-repeat' : 'glyphicon-send';
 
   swal({
-    title: "Enviar Certificado",
-    text: "¿Desea enviar el certificado PDF por WhatsApp y Correo?",
+    title: (eraEnviado ? "Reenviar Certificado" : "Enviar Certificado"),
+    text: "¿Desea generar y enviar el certificado PDF por WhatsApp y Correo?",
     type: "info",
     showCancelButton: true,
-    confirmButtonText: "Enviar",
+    confirmButtonText: (eraEnviado ? "Reenviar" : "Enviar"),
     cancelButtonText: "Cancelar"
   }, function (isConfirm) {
-    if (!isConfirm) {
-      $btn.prop("disabled", false).html('<i class="glyphicon glyphicon-send"></i> Enviar');
-      return;
-    }
+    if (!isConfirm) return;
+
+    window._enviandoCertificadoActivo = true;
+    $btn.prop("disabled", true).html('<i class="glyphicon glyphicon-refresh spin"></i> Enviando...');
 
     var manEve = $("#selMan_Eve").val() || "";
-    var payload = { enviarCertificadoVisitanteEventoAjax: true, MVis_Cod: MVis_Cod, Man_Eve: manEve };
-
-    console.log("[EnviarCertificado] POST payload:", payload);
+    var payload = { enviarCertificadoVisitanteEventoAjax: true, MVis_Cod: MVis_Cod, Man_Eve: manEve, canal: 'ambos' };
 
     $.ajax({
       url: "",
@@ -929,25 +1006,358 @@ function enviarCertificadoVisitanteEvento(MVis_Cod, btnEl) {
       data: payload,
       dataType: "json",
       success: function (r) {
-        console.log("[EnviarCertificado] Respuesta JSON:", r);
         if (r && r.success) {
           mostrarAlertaUI("Éxito", r.message || "Certificado PDF notificado correctamente.", "success");
+          $btn.attr("data-sent", "1")
+              .removeClass("btn-success")
+              .addClass("btn-warning")
+              .attr("title", "Reenviar Certificado PDF")
+              .html('<i class="glyphicon glyphicon-repeat"></i> Reenviar');
         } else {
-          console.warn("[EnviarCertificado] success=false. message:", r && r.message);
-          console.warn("[EnviarCertificado] debug_info:", r && r.debug_info);
           mostrarAlertaUI("Error", (r && r.message) || "No se pudo enviar el certificado.", "error");
         }
       },
       error: function (xhr, status, err) {
-        console.error("[EnviarCertificado] Error AJAX. Status:", status, "| Error:", err);
-        console.error("[EnviarCertificado] responseText:", xhr.responseText);
-        mostrarAlertaUI("Error", "Error de comunicación con el servidor. Ver consola.", "error");
+        mostrarAlertaUI("Error", "Error de comunicación con el servidor al enviar certificado.", "error");
       },
       complete: function () {
-        $btn.prop("disabled", false).html('<i class="glyphicon glyphicon-send"></i> Enviar');
+        window._enviandoCertificadoActivo = false;
+        var isNowSent = ($btn.attr("data-sent") === "1");
+        $btn.prop("disabled", false);
+        if (isNowSent) {
+          $btn.removeClass("btn-success").addClass("btn-warning").attr("title", "Reenviar Certificado PDF").html('<i class="glyphicon glyphicon-repeat"></i> Reenviar');
+        } else {
+          $btn.removeClass("btn-warning").addClass("btn-success").attr("title", "Enviar Certificado PDF").html('<i class="glyphicon glyphicon-send"></i> Enviar');
+        }
       }
     });
   });
+}
+
+// --- COLA DE ENVÍO MASIVO DE WHATSAPP / CORREO CON PROTECCIÓN ANTI-BANEO ---
+window._queueEnvioMasivo = {
+  activo: false,
+  pausado: false,
+  tipoEnvio: 'cert_correo', // 'cert_correo' | 'cert_ambos' | 'mensaje_wa'
+  items: [],
+  indiceActual: 0,
+  delaySegundos: 5,
+  idEvento: null,
+  nombreEvento: '',
+  exitos: 0,
+  fallos: 0,
+  timerId: null,
+  countdownId: null
+};
+
+function abrirModalEnvioMasivo() {
+  var selIds = $("#gridVisitantesEvento").jqGrid('getGridParam', 'selarrrow') || [];
+  var idEvento = $("#selMan_Eve").val() || $("#hdn_man_eve_vigente").val() || "";
+  var postUrl = (window.location.href || '').split('#')[0];
+
+  if (!idEvento) {
+    mostrarAlertaUI("Atención", "Por favor seleccione un evento específico en el filtro superior para realizar el envío masivo.", "warning");
+    return;
+  }
+
+  if (selIds.length === 0) {
+    mostrarAlertaUI("Atención", "Por favor seleccione al menos un visitante marcando las casillas del grid para realizar el envío masivo.", "warning");
+    return;
+  }
+
+  // Consultar configuración del evento para obtener delay y mensaje
+  $.post(postUrl, { getDatosEventoEnvioMasivoAjax: 1, Man_Eve: idEvento }, function (res) {
+    var rawDelay = (res && res.Man_Mdel) ? (parseInt(res.Man_Mdel, 10) || 10) : 10;
+    var delaySecs = rawDelay >= 10 ? rawDelay : 10; // Garantizar piso mínimo de 10s de seguridad
+    var nomEvento = (res && res.Man_ENom) ? res.Man_ENom : 'Evento #' + idEvento;
+
+    var dlgHtml =
+      '<div style="padding: 10px 5px;">' +
+      '  <p style="font-size: 13px; color: #1e293b; margin-bottom: 12px;">' +
+      '    Ha seleccionado <b>' + selIds.length + ' persona(s)</b> del evento <i>"' + nomEvento + '"</i>.<br>' +
+      '    Seleccione la modalidad de envío deseada:' +
+      '  </p>' +
+      '  <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">' +
+      '    <label style="border: 1px solid #93c5fd; background: #eff6ff; padding: 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px;">' +
+      '      <input type="radio" name="optModalidadMasiva" value="cert_correo" checked style="margin-top: 3px;">' +
+      '      <div>' +
+      '        <strong style="color: #1e40af;"><i class="glyphicon glyphicon-envelope"></i> Certificados PDF: Solo por Correo (Recomendado)</strong>' +
+      '        <div style="font-size: 11.5px; color: #475569; margin-top: 2px;">Envío inmediato por correo electrónico. Ideal para entregas masivas rápidas.</div>' +
+      '      </div>' +
+      '    </label>' +
+      '    <label style="border: 1px solid #fed7aa; background: #fff7ed; padding: 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px;">' +
+      '      <input type="radio" name="optModalidadMasiva" value="cert_ambos" style="margin-top: 3px;">' +
+      '      <div>' +
+      '        <strong style="color: #c2410c;"><i class="glyphicon glyphicon-send"></i> Certificados PDF: Correo + WhatsApp</strong>' +
+      '        <div style="font-size: 11.5px; color: #475569; margin-top: 2px;">Envía uno por uno con una pausa de <b>' + delaySecs + ' seg</b> entre cada persona para no saturar WhatsApp.</div>' +
+      '      </div>' +
+      '    </label>' +
+      '    <label style="border: 1px solid #bbf7d0; background: #f0fdf4; padding: 10px; border-radius: 6px; cursor: pointer; display: flex; align-items: flex-start; gap: 8px;">' +
+      '      <input type="radio" name="optModalidadMasiva" value="mensaje_wa" style="margin-top: 3px;">' +
+      '      <div>' +
+      '        <strong style="color: #166534;"><i class="glyphicon glyphicon-bullhorn"></i> Mensaje de Difusión / Recordatorio (WhatsApp)</strong>' +
+      '        <div style="font-size: 11.5px; color: #475569; margin-top: 2px;">Envía el mensaje informativo con una pausa de <b>' + delaySecs + ' seg</b> entre cada persona.</div>' +
+      '      </div>' +
+      '    </label>' +
+      '  </div>' +
+      '</div>';
+
+    var $optDlg = $("#alertCustomDialog");
+    $optDlg.dialog("option", "title", "Opciones de Envío Masivo");
+    $optDlg.html(dlgHtml);
+    $optDlg.dialog("option", "buttons", [
+      {
+        text: "Iniciar Proceso",
+        class: "btn btn-sm btn-primary",
+        click: function () {
+          var modoSeleccionado = $('input[name="optModalidadMasiva"]:checked').val() || 'cert_correo';
+          $(this).dialog("close");
+          iniciarColaEnvioMasivo(selIds, idEvento, nomEvento, delaySecs, modoSeleccionado);
+        }
+      },
+      {
+        text: "Cancelar",
+        class: "btn btn-sm btn-default",
+        click: function () {
+          $(this).dialog("close");
+        }
+      }
+    ]);
+    $optDlg.dialog("open");
+  }, "json").fail(function () {
+    mostrarAlertaUI("Error", "No se pudo consultar la configuración del evento.", "danger");
+  });
+}
+
+function iniciarColaEnvioMasivo(selIds, idEvento, nomEvento, delaySecs, tipoEnvio) {
+  var queueItems = [];
+  $.each(selIds, function (i, id) {
+    var rowData = $("#gridVisitantesEvento").jqGrid('getRowData', id);
+    var mvisCod = parseInt(rowData.MVis_Cod || id, 10);
+    var nombre = rowData.nombre || rowData.Prs_Nom || ('Visitante #' + mvisCod);
+    var cedula = rowData.Prs_Ced || '';
+    var tel = rowData.Prs_Tel || '';
+    var email = rowData.Prs_Cor || '';
+    queueItems.push({
+      MVis_Cod: mvisCod,
+      nombre: nombre,
+      cedula: cedula,
+      telefono: tel,
+      correo: email
+    });
+  });
+
+  window._queueEnvioMasivo = {
+    activo: true,
+    pausado: false,
+    tipoEnvio: tipoEnvio || 'cert_correo',
+    items: queueItems,
+    indiceActual: 0,
+    delaySegundos: (tipoEnvio === 'cert_correo' ? 1 : delaySecs),
+    idEvento: idEvento,
+    nombreEvento: nomEvento,
+    exitos: 0,
+    fallos: 0,
+    timerId: null,
+    countdownId: null
+  };
+
+  actualizarUIProgresoMasivo();
+  $("#boxProgresoMasivoTimer").hide();
+  $("#btnPausarEnvioMasivo").html('<i class="glyphicon glyphicon-pause"></i> Pausar').removeClass('btn-success').addClass('btn-warning');
+
+  $("#progresoEnvioMasivoDialog").dialog({
+    modal: true,
+    width: 480,
+    resizable: false,
+    closeOnEscape: false,
+    dialogClass: "exa-ui-panel exa-ui-dialog",
+    open: function () {
+      $(this).closest('.ui-dialog').find('.ui-dialog-titlebar-close').hide();
+    }
+  });
+
+  procesarSiguienteEnCola();
+}
+
+function actualizarUIProgresoMasivo() {
+  var q = window._queueEnvioMasivo;
+  var total = q.items.length;
+  var actual = q.indiceActual;
+  var pct = total > 0 ? Math.round((actual / total) * 100) : 0;
+  if (pct > 100) pct = 100;
+
+  var titulo = 'Procesando: ';
+  if (q.tipoEnvio === 'cert_correo') titulo = 'Enviando Certificados por Correo: ';
+  else if (q.tipoEnvio === 'cert_ambos') titulo = 'Enviando Certificados (Correo + WA): ';
+  else titulo = 'Enviando Mensajes Difusión WA: ';
+
+  $("#txtProgresoMasivoContador").html('<i class="glyphicon glyphicon-send"></i> ' + titulo + actual + ' de ' + total + ' (' + pct + '%)');
+  $("#txtProgresoMasivoPorcentaje").text(pct + '%');
+  $("#barProgresoMasivo").css('width', pct + '%').text(pct + '%').attr('aria-valuenow', pct);
+
+  $("#cntMasivoExitos").text(q.exitos);
+  $("#cntMasivoFallos").text(q.fallos);
+  $("#cntMasivoPendientes").text(Math.max(0, total - actual));
+}
+
+function procesarSiguienteEnCola() {
+  var q = window._queueEnvioMasivo;
+  if (!q.activo) return;
+
+  if (q.pausado) {
+    $("#txtProgresoMasivoEstado").html('<span style="color: #f59e0b;"><i class="glyphicon glyphicon-pause"></i> Cola en pausa... Presione Reanudar para continuar.</span>');
+    return;
+  }
+
+  if (q.indiceActual >= q.items.length) {
+    finalizarColaEnvioMasivo();
+    return;
+  }
+
+  var item = q.items[q.indiceActual];
+  $("#boxProgresoMasivoTimer").hide();
+  $("#txtProgresoMasivoDestinatario").text(item.nombre + (item.telefono ? ' | Cel: ' + item.telefono : '') + (item.correo ? ' | ' + item.correo : ''));
+  $("#txtProgresoMasivoEstado").html('<span style="color: #2563eb;"><i class="glyphicon glyphicon-refresh spin"></i> Procesando destinatario...</span>');
+
+  var postUrl = (window.location.href || '').split('#')[0];
+  var payload = {};
+
+  if (q.tipoEnvio === 'cert_correo') {
+    payload = { enviarCertificadoVisitanteEventoAjax: true, MVis_Cod: item.MVis_Cod, Man_Eve: q.idEvento, canal: 'correo' };
+  } else if (q.tipoEnvio === 'cert_ambos') {
+    payload = { enviarCertificadoVisitanteEventoAjax: true, MVis_Cod: item.MVis_Cod, Man_Eve: q.idEvento, canal: 'ambos' };
+  } else {
+    payload = { enviarMensajeMasivoVisitanteAjax: 1, MVis_Cod: item.MVis_Cod, Man_Eve: q.idEvento };
+  }
+
+  $.post(postUrl, payload, function (res) {
+    if (res && res.success) {
+      q.exitos++;
+      $("#txtProgresoMasivoEstado").html('<span style="color: #16a34a;"><i class="glyphicon glyphicon-ok"></i> ' + (res.message || 'Enviado con éxito') + '</span>');
+    } else {
+      q.fallos++;
+      var errMsg = (res && res.message) ? res.message : 'Error al procesar';
+      $("#txtProgresoMasivoEstado").html('<span style="color: #dc2626;"><i class="glyphicon glyphicon-remove"></i> Falló: ' + errMsg + '</span>');
+    }
+
+    q.indiceActual++;
+    actualizarUIProgresoMasivo();
+
+    if (q.indiceActual < q.items.length && q.activo && !q.pausado) {
+      iniciarPausaCuentaRegresiva(q.delaySegundos, function () {
+        procesarSiguienteEnCola();
+      });
+    } else if (q.indiceActual >= q.items.length) {
+      finalizarColaEnvioMasivo();
+    }
+  }, "json").fail(function () {
+    q.fallos++;
+    q.indiceActual++;
+    actualizarUIProgresoMasivo();
+    $("#txtProgresoMasivoEstado").html('<span style="color: #dc2626;"><i class="glyphicon glyphicon-remove"></i> Error de conexión con el servidor.</span>');
+
+    if (q.indiceActual < q.items.length && q.activo && !q.pausado) {
+      iniciarPausaCuentaRegresiva(q.delaySegundos, function () {
+        procesarSiguienteEnCola();
+      });
+    } else {
+      finalizarColaEnvioMasivo();
+    }
+  });
+}
+
+function iniciarPausaCuentaRegresiva(segundos, callback) {
+  var remaining = segundos;
+  if (remaining <= 0) {
+    if (typeof callback === 'function') callback();
+    return;
+  }
+
+  $("#boxProgresoMasivoTimer").show();
+  $("#txtProgresoMasivoCountdown").text('Pausa de seguridad: ' + remaining + 's...');
+
+  if (window._queueEnvioMasivo.countdownId) clearInterval(window._queueEnvioMasivo.countdownId);
+
+  window._queueEnvioMasivo.countdownId = setInterval(function () {
+    var q = window._queueEnvioMasivo;
+    if (!q.activo || q.pausado) {
+      clearInterval(q.countdownId);
+      return;
+    }
+
+    remaining--;
+    if (remaining > 0) {
+      $("#txtProgresoMasivoCountdown").text('Próximo envío en ' + remaining + 's...');
+    } else {
+      clearInterval(q.countdownId);
+      $("#boxProgresoMasivoTimer").hide();
+      if (typeof callback === 'function') callback();
+    }
+  }, 1000);
+}
+
+function togglePausarColaEnvioMasivo() {
+  var q = window._queueEnvioMasivo;
+  if (!q.activo) return;
+
+  q.pausado = !q.pausado;
+  if (q.pausado) {
+    if (q.countdownId) clearInterval(q.countdownId);
+    $("#btnPausarEnvioMasivo").html('<i class="glyphicon glyphicon-play"></i> Reanudar').removeClass('btn-warning').addClass('btn-success');
+    $("#txtProgresoMasivoEstado").html('<span style="color: #f59e0b;"><i class="glyphicon glyphicon-pause"></i> Proceso pausado por el usuario.</span>');
+  } else {
+    $("#btnPausarEnvioMasivo").html('<i class="glyphicon glyphicon-pause"></i> Pausar').removeClass('btn-success').addClass('btn-warning');
+    $("#txtProgresoMasivoEstado").html('<span style="color: #2563eb;"><i class="glyphicon glyphicon-refresh spin"></i> Reanudando cola...</span>');
+    procesarSiguienteEnCola();
+  }
+}
+
+function cancelarColaEnvioMasivo() {
+  var q = window._queueEnvioMasivo;
+  if (!q.activo) {
+    $("#progresoEnvioMasivoDialog").dialog('close');
+    return;
+  }
+
+  swal({
+    title: "¿Detener Envío?",
+    text: "¿Desea detener la cola de envío masivo? Los envíos ya realizados no se revertirán.",
+    type: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#dc2626",
+    confirmButtonText: "Sí, Detener",
+    cancelButtonText: "Continuar enviando"
+  }, function (isConfirm) {
+    if (isConfirm) {
+      q.activo = false;
+      if (q.countdownId) clearInterval(q.countdownId);
+      $("#progresoEnvioMasivoDialog").dialog('close');
+      mostrarAlertaUI("Envío Detenido", "La cola de envíos fue detenida por el usuario. Éxitos: " + q.exitos + ", Fallidos: " + q.fallos, "info");
+    }
+  });
+}
+
+function finalizarColaEnvioMasivo() {
+  var q = window._queueEnvioMasivo;
+  q.activo = false;
+  if (q.countdownId) clearInterval(q.countdownId);
+
+  $("#txtProgresoMasivoPorcentaje").text('100%').removeClass('label-primary').addClass('label-success');
+  $("#barProgresoMasivo").css('width', '100%').text('100%').removeClass('progress-bar-striped active').css('background-color', '#16a34a');
+  $("#txtProgresoMasivoDestinatario").text('Todos los registros fueron procesados.');
+  $("#txtProgresoMasivoEstado").html('<span style="color: #16a34a; font-weight: bold;"><i class="glyphicon glyphicon-ok-sign"></i> ¡Proceso finalizado con éxito!</span>');
+  $("#boxProgresoMasivoTimer").hide();
+
+  setTimeout(function () {
+    $("#progresoEnvioMasivoDialog").dialog('close');
+    swal({
+      title: "¡Envío Masivo Finalizado!",
+      text: "Se procesaron todos los registros seleccionados.\n\n✓ Enviados con éxito: " + q.exitos + "\n✗ Fallidos / Omitidos: " + q.fallos,
+      type: (q.fallos === 0 ? "success" : "warning"),
+      confirmButtonText: "Aceptar"
+    });
+  }, 1200);
 }
 
 

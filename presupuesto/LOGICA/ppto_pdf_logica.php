@@ -86,11 +86,27 @@ function ppto_pdf_a_utf8($s) {
     if ($s === '' || $s === null) {
         return '';
     }
+    $s = (string)$s;
+    if (function_exists('ppto_texto_reparar_mojibake')) {
+        $s = ppto_texto_reparar_mojibake($s);
+    } elseif (strpos($s, "\xC3\x83") !== false || strpos($s, "\xC3\x82") !== false) {
+        if (function_exists('utf8_decode')) {
+            $try = utf8_decode($s);
+            if ($try !== false && $try !== ''
+                && (!function_exists('mb_check_encoding') || mb_check_encoding($try, 'UTF-8'))
+            ) {
+                $s = $try;
+            }
+        }
+    }
     if (function_exists('mb_check_encoding') && mb_check_encoding($s, 'UTF-8')) {
         return $s;
     }
     if (function_exists('iconv')) {
-        $conv = @iconv('ISO-8859-1', 'UTF-8//IGNORE', $s);
+        $conv = @iconv('WINDOWS-1252', 'UTF-8//IGNORE', $s);
+        if ($conv === false) {
+            $conv = @iconv('ISO-8859-1', 'UTF-8//IGNORE', $s);
+        }
         if ($conv !== false) {
             return $conv;
         }
@@ -2207,8 +2223,12 @@ function ppto_pdf_payload_slim($parsed) {
  */
 function ppto_pdf_partida_upsert($mysqli, $Emp_Cod, $codigo, $descripcion, $opts) {
     $Emp_Cod = (int)$Emp_Cod;
+    if (function_exists('ppto_db_set_utf8')) {
+        ppto_db_set_utf8($mysqli);
+    }
     $codigo_esc = $mysqli->real_escape_string(trim($codigo));
-    $des_esc = $mysqli->real_escape_string(trim($descripcion));
+    $descripcion = function_exists('ppto_pdf_a_utf8') ? ppto_pdf_a_utf8(trim($descripcion)) : trim($descripcion);
+    $des_esc = $mysqli->real_escape_string($descripcion);
     $tipo = $mysqli->real_escape_string(isset($opts['tipo']) ? $opts['tipo'] : 'G');
     $nat = $mysqli->real_escape_string(isset($opts['naturaleza']) ? $opts['naturaleza'] : 'OPE');
     $clase = $mysqli->real_escape_string(isset($opts['clase']) ? $opts['clase'] : 'G');
@@ -2248,6 +2268,9 @@ function ppto_pdf_partida_upsert($mysqli, $Emp_Cod, $codigo, $descripcion, $opts
  * @return array
  */
 function ppto_pdf_importar_presupuesto($mysqli, $Emp_Cod, $Usu_Cod, $Pro_Cod, $Ppe_Cod, $parsed, $ton_override = 0, $opts = null) {
+    if (function_exists('ppto_db_set_utf8')) {
+        ppto_db_set_utf8($mysqli);
+    }
     ppto_schema_ensure_partida_clase($mysqli);
     if (!is_array($opts)) {
         $opts = array();
@@ -2467,7 +2490,11 @@ function ppto_pdf_importar_presupuesto($mysqli, $Emp_Cod, $Usu_Cod, $Pro_Cod, $P
         }
 
         $factor = (float)$r['factor_anual'];
-        $rubro = $mysqli->real_escape_string($r['descripcion']);
+        $desc_rubro = isset($r['descripcion']) ? $r['descripcion'] : '';
+        if (function_exists('ppto_pdf_a_utf8')) {
+            $desc_rubro = ppto_pdf_a_utf8($desc_rubro);
+        }
+        $rubro = $mysqli->real_escape_string($desc_rubro);
         $presup_pdf = isset($r['presup_anual_pdf']) ? (float)$r['presup_anual_pdf'] : 0;
         $monto_recalc = isset($r['monto_recalc']) ? (float)$r['monto_recalc'] : 0;
         $tn_dia = isset($r['tn_dia']) ? (float)$r['tn_dia'] : 0;
