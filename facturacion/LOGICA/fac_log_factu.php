@@ -11,6 +11,7 @@ $cod_banano = 338; //Codigo de Retencion del Banano
  */
 require_once('../../auditoria/LOGICA/aud_log_auditoria.php');
 require_once("fac_sql_factu.php");
+require_once(__DIR__ . '/../COMPONENTES/fac_presupuesto_asiento.inc.php');
 
 /* Clase para conexion a la capa de acceso a datos */
 class Class_Log_Conexion_Factu extends MysqlConexion {}

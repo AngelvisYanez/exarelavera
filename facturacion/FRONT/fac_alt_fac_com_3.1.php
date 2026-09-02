@@ -7,7 +7,7 @@
  * Fecha de creaci�n  2015-07-22
  */
 require_once('../../administrador/LOGICA/seguridad.php');
-require_once('../LOGICA/fac_log_factu.php');
+require_once('../LOGICA/fac_log_factu1.0.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 
 /* Creacion del Objeto de conexion */
@@ -26,7 +26,7 @@ if (isset($loadElectronico)) {
     $data = $_POST;
     $clave = trim($clave);
     $r = array('success' => true, 'message' => 'Documento Cargado con Exito!', 'data' => array(), 'items' => array());
-    $r['data']['idCargaExitosa'] = $_SESSION['idCargar'];
+    $r['data']['idCargaExitosa'] = isset($_SESSION['idCargar']) ? $_SESSION['idCargar'] : null;
     try {
         $tot = isset($_FILES["file"]) ? count($_FILES["file"]["name"]) : 0;
         if (empty($clave) && ($tot == 0 || empty($_FILES["file"]["name"]))) throw new Exception('Debe Ingresar un <u>XML</u> o una <u>Clave de Acceso</u>!');
@@ -95,6 +95,24 @@ if (isset($loadElectronico)) {
             }
         }
 
+        // Extraer Forma de Pago SRI
+        if (isset($factI->pagos->pago)) {
+            $pagos = $factI->pagos->pago;
+            $formaPagoSri = '';
+            if (isset($pagos[0])) {
+                $formaPagoSri = $pagos[0]->formaPago->text();
+            } else {
+                $formaPagoSri = $pagos->formaPago->text();
+            }
+            if (trim($formaPagoSri) != '') {
+                $sriTpc = mysqli_real_escape_string($obBD_conexion->conexion, trim($formaPagoSri));
+                $resTpc = mysqli_query($obBD_conexion->conexion, "SELECT Tpc_Cod FROM tipopagocom WHERE Tpc_Sri = '$sriTpc' AND Tpc_Est = 'A' LIMIT 1");
+                if ($resTpc && $rowTpc = mysqli_fetch_assoc($resTpc)) {
+                    $r['data']['Tpc_Cod'] = $rowTpc['Tpc_Cod'];
+                }
+            }
+        }
+
         //$agrupa='S';
         if (isset($agrupa) && $agrupa == 'S') {
             $ice = 0;
@@ -158,8 +176,10 @@ if (isset($loadElectronico)) {
                     'Ite_Lar' => $items[$x]->descripcion->text(),
                     'Cop_Dec' => $Cod_Dec,
                     'Cop_Decv' => $Cop_Decv,
-                    'Cop_Pru' => $items[$x]->precioUnitario->text() * 1,
+                    'Cop_Pru' => round(($items[$x]->precioTotalSinImpuesto->text() * 1 + ($items[$x]->descuento->text() * 1 > 0 ? $items[$x]->descuento->text() * 1 : 0)) / ($items[$x]->cantidad->text() * 1), 8),
                     'Cop_Imp' => $items[$x]->precioTotalSinImpuesto->text(),
+                    'Cod_Xml_Principal' => $items[$x]->codigoPrincipal ? $items[$x]->codigoPrincipal->text() : 'S/N',
+                    'Descripcion_Xml' => $items[$x]->descripcion->text()
                 );
 
                 $impuItem = $items[$x]->impuestos->impuesto;
@@ -192,6 +212,14 @@ if (isset($loadElectronico)) {
                 array_push($r['items'], $arrIt);
             }
         }
+        $obsArray = array();
+        for ($x = 0; $x < count($items); $x++) {
+            $obsArray[] = trim($items[$x]->descripcion->text());
+        }
+        $r['data']['Cop_Obs'] = implode(" - ", $obsArray);
+        $r['data']['Cpp_Obs'] = implode(" - ", $obsArray);
+        $r['data']['Com_Con'] = implode(" - ", $obsArray);
+        
         //para abrir crear proveedor
         $pers = $obBD_con1->getArrayConsulta(30, substr($r['data']['Prs_Ced'], 0, 10) . '*' . $Ses_Emp_Cod, $obBD_conexion);
         if (count($pers) > 0) {
@@ -204,6 +232,101 @@ if (isset($loadElectronico)) {
             }
             if (count($per) == 1) $r['data'] = array_merge($r['data'], $per[0]);
         }
+
+        // --- MAPEO DE PRODUCTOS START ---
+        // Fixed condition: ensure mapping runs when cargarMapeo is set to 'S'
+        if (isset($_POST['cargarMapeo']) && $_POST['cargarMapeo'] === 'S') {
+        $Prv_Cod_Map = isset($r['data']['Prv_Cod']) ? intval($r['data']['Prv_Cod']) : 0;
+        error_log("MAPEO DEBUG: Prv_Cod_Map = " . $Prv_Cod_Map . ", items count = " . count($r['items']));
+        $Pec_Cop = array('Pla_Cod' => null);
+        if (!empty($r['data']['Cop_Fec'])) {
+            $Pec_Cop = $obBD_con1->getRowConsulta(9, $Ses_Emp_Cod . '*' . $r['data']['Cop_Fec'], $obBD_conexion);
+        }
+        $configs = $obBD_con1->getRowConsulta(8, $Ses_Emp_Cod, $obBD_conexion);
+        
+        for ($k = 0; $k < count($r['items']); $k++) {
+            if (!empty($r['items'][$k]['Cod_Xml_Principal']) && $r['items'][$k]['Cod_Xml_Principal'] !== 'S/N') {
+                $codXml = $r['items'][$k]['Cod_Xml_Principal'];
+                
+                // Construir query de mapeo: buscar por Cod_Xml
+                $sql_map = "SELECT pxc.Pro_Cod, pxc.Ret_Ren_Cod, pxc.Iva_Ren_Cod, pxc.For_Cod, pxc.Pld_cod, pxc.Pag_Pld, r1.Ren_Sri AS Ret_Ren_Sri, r1.Ren_Por AS Ret_Ren_Por, r1.Ren_Con AS Ret_Ren_Con, r2.Ren_Sri AS Iva_Ren_Sri, r2.Ren_Por AS Iva_Ren_Por, r2.Ren_Con AS Iva_Ren_Con FROM producto_xml_codigo pxc INNER JOIN producto p ON pxc.Pro_Cod = p.Pro_Cod LEFT JOIN renta_iva r1 ON pxc.Ret_Ren_Cod = r1.Ren_Cod LEFT JOIN renta_iva r2 ON pxc.Iva_Ren_Cod = r2.Ren_Cod WHERE (pxc.Cod_Xml = '" . addslashes($codXml) . "' OR TRIM(pxc.Cod_Xml) = '" . addslashes(trim($codXml)) . "')";
+                
+                // Buscar coincidencia ESTRICTA de proveedor (aislamiento de sucursales)
+                if ($Prv_Cod_Map > 0) {
+                    $sql_map .= " AND pxc.Prv_cod = " . $Prv_Cod_Map;
+                } else {
+                    $sql_map .= " AND (pxc.Prv_cod IS NULL OR pxc.Prv_cod = '' OR pxc.Prv_cod = '0')";
+                }
+                $sql_map .= " LIMIT 1";
+                
+                error_log("MAPEO SQL: " . $sql_map);
+                $res_map = @mysqli_query($obBD_conexion->conexion, $sql_map);
+                
+                if ($res_map && mysqli_num_rows($res_map) > 0) {
+                    $row_map = mysqli_fetch_assoc($res_map);
+                    $Pro_Cod_Map = intval($row_map['Pro_Cod']);
+                    $Ret_Ren_Cod_Map = isset($row_map['Ret_Ren_Cod']) ? $row_map['Ret_Ren_Cod'] : null;
+                    $Iva_Ren_Cod_Map = isset($row_map['Iva_Ren_Cod']) ? $row_map['Iva_Ren_Cod'] : null;
+                    $row_map_full = $row_map;
+                    
+                    $sql_prod = "SELECT producto.Pro_Cod, producto.Ite_Cod, producto.Uni_Cod, producto.Adq_Cod, item.Ite_Lar, unidad.Uni_Des, iva.Iva_Cod, iva.Iva_Por, adquisicio.Adq_Cor, adquisicio.Adq_Des FROM producto LEFT JOIN item ON producto.Ite_Cod = item.Ite_Cod LEFT JOIN unidad ON producto.Uni_Cod = unidad.Uni_Cod LEFT JOIN iva ON producto.Iva_Cod = iva.Iva_Cod LEFT JOIN adquisicio ON producto.Adq_Cod = adquisicio.Adq_Cod WHERE producto.Pro_Cod = " . $Pro_Cod_Map . " LIMIT 1";
+                    
+                    $res_prod = @mysqli_query($obBD_conexion->conexion, $sql_prod);
+                    if ($res_prod && mysqli_num_rows($res_prod) > 0) {
+                        $producto = mysqli_fetch_assoc($res_prod);
+                        
+                        $r['items'][$k]['Pro_Cod'] = $producto['Pro_Cod'];
+                        if (!empty($producto['Ite_Lar'])) {
+                            $r['items'][$k]['Ite_Lar'] = $producto['Ite_Lar'];
+                        }
+                        $r['items'][$k]['Uni_Cod'] = $producto['Uni_Cod'];
+                        $r['items'][$k]['Uni_Des'] = $producto['Uni_Des'];
+                        $r['items'][$k]['Adq_Cod'] = empty($producto['Adq_Cod']) ? 0 : $producto['Adq_Cod'];
+                        $r['items'][$k]['Adq_Cor'] = $producto['Adq_Cor'];
+                        $r['items'][$k]['Adq_Des'] = $producto['Adq_Des'];
+                        $r['items'][$k]['Iva_Cod'] = $producto['Iva_Cod'];
+                        $r['items'][$k]['Iva_Por'] = $producto['Iva_Por'];
+                        
+                        if ($configs['Cof_Con'] == 'S' && !empty($Pec_Cop['Pla_Cod'])) {
+                            $cuenta = $obBD_con1->getRowConsulta(16, $Pec_Cop['Pla_Cod'] . '*' . $Pro_Cod_Map . '*' . 'C', $obBD_conexion);
+                            if (!empty($cuenta['Pld_Cod'])) {
+                                $r['items'][$k]['Pld_Cod'] = $cuenta['Pld_Cod'];
+                                $r['items'][$k]['Pld_Cdc'] = isset($cuenta['Pld_Cdc']) ? $cuenta['Pld_Cdc'] : '';
+                                $r['items'][$k]['Pld_Des'] = isset($cuenta['Pld_Des']) ? $cuenta['Pld_Des'] : '';
+                            }
+                        }
+                        
+                        if ($Ret_Ren_Cod_Map !== null) {
+                            $r['items'][$k]['Ret_Ren_Cod'] = $Ret_Ren_Cod_Map;
+                            $r['items'][$k]['Ret_Ren_Por'] = $row_map_full['Ret_Ren_Por'];
+                            $r['items'][$k]['Ret_Ren_Sri'] = $row_map_full['Ret_Ren_Sri'];
+                            $r['items'][$k]['Ret_Ren_Con'] = utf8_encode($row_map_full['Ret_Ren_Con']);
+                        }
+                        if ($Iva_Ren_Cod_Map !== null) {
+                            $r['items'][$k]['Iva_Ren_Cod'] = $Iva_Ren_Cod_Map;
+                            $r['items'][$k]['Iva_Ren_Por'] = $row_map_full['Iva_Ren_Por'];
+                            $r['items'][$k]['Iva_Ren_Sri'] = $row_map_full['Iva_Ren_Sri'];
+                            $r['items'][$k]['Iva_Ren_Con'] = utf8_encode($row_map_full['Iva_Ren_Con']);
+                        }
+                        
+                        if (isset($row_map_full['For_Cod']) && $row_map_full['For_Cod'] > 0) {
+                            $r['data']['For_Cod'] = $row_map_full['For_Cod'];
+                        }
+                        if (isset($row_map_full['Pag_Pld']) && $row_map_full['Pag_Pld'] > 0) {
+                            $r['data']['Pld_Cod'] = $row_map_full['Pag_Pld'];
+                        }
+                        
+                        error_log("MAPEO APLICADO: XML='" . $codXml . "' => Pro_Cod=" . $Pro_Cod_Map . ", Ite_Lar=" . $producto['Ite_Lar'] . ", Uni_Des=" . $producto['Uni_Des'] . ", Iva_Por=" . $producto['Iva_Por']);
+                        @mysqli_free_result($res_prod);
+                    }
+                    @mysqli_free_result($res_map);
+                } else {
+                    error_log("MAPEO NO ENCONTRADO: XML='" . $codXml . "', Prv_Cod=" . $Prv_Cod_Map);
+                }
+            }
+        }
+        }
+        // --- MAPEO DE PRODUCTOS END ---
 
         // Sumamos y consolidamos el total No Objeto IVA y Tarifa 0
         $r['data']['t_noiva'] = 0;
@@ -221,6 +344,8 @@ if (isset($loadElectronico)) {
         $r['success'] = false;
         $r['message'] = '<span class="red">ERROR:</span> ' . $e->getMessage();
     }
+    if (ob_get_length()) ob_clean();
+    error_log("Devolviendo JSON en load XML. For_Cod en data: " . (isset($r['data']['For_Cod']) ? $r['data']['For_Cod'] : 'NO_SET') . ", Tpc_Cod: " . (isset($r['data']['Tpc_Cod']) ? $r['data']['Tpc_Cod'] : 'NO_SET'));
     $obBD_con1->echoJson($r);
 }
 /* Consulta del tipo de proveedores */
@@ -251,6 +376,7 @@ if ($rs_infoEmpresa["Cof_NegCam"] == 'S') {
 
 /* Búsqueda de rubros presupuestarios (pre_partidas clase D) */
 require_once('../COMPONENTES/fac_presupuesto_rubros_ajax.inc.php');
+
 
 /* ver si exite un proveedor */
 if (isset($provAjax2)) {
@@ -363,6 +489,130 @@ if (isset($proAjax)) {
     }
     $obBD_con1->echoJson($responce);
 }
+
+/* Buscar asociación de producto por código XML */
+if (isset($buscarAsociacionXmlAjax) || (isset($action) && $action === 'buscarAsociacionXmlAjax')) {
+    $responce = array('success' => false, 'asociacion' => null);
+    try {
+        $codigoXml = isset($_POST['Cod_Xml']) ? trim($_POST['Cod_Xml']) : (isset($_POST['Cod_Xml_Principal']) ? trim($_POST['Cod_Xml_Principal']) : '');
+        $Cop_Fec = isset($_POST['Cop_Fec']) ? trim($_POST['Cop_Fec']) : '';
+        $Prv_Cod = isset($_POST['Prv_Cod']) ? intval($_POST['Prv_Cod']) : null;
+        
+        if (!empty($codigoXml) && !empty($Ses_Emp_Cod)) {
+            // Buscar asociación en la tabla producto_xml_codigo
+            $sql = "SELECT pxc.Pro_Cod, pxc.Ret_Ren_Cod, pxc.Iva_Ren_Cod, pxc.For_Cod, pxc.Pld_cod, pxc.Pag_Pld, r1.Ren_Sri AS Ret_Ren_Sri, r1.Ren_Por AS Ret_Ren_Por, r1.Ren_Con AS Ret_Ren_Con, r2.Ren_Sri AS Iva_Ren_Sri, r2.Ren_Por AS Iva_Ren_Por, r2.Ren_Con AS Iva_Ren_Con FROM producto_xml_codigo pxc INNER JOIN producto p ON pxc.Pro_Cod = p.Pro_Cod LEFT JOIN renta_iva r1 ON pxc.Ret_Ren_Cod = r1.Ren_Cod LEFT JOIN renta_iva r2 ON pxc.Iva_Ren_Cod = r2.Ren_Cod WHERE (pxc.Cod_Xml = '" . addslashes($codigoXml) . "' OR TRIM(pxc.Cod_Xml) = '" . addslashes($codigoXml) . "')";
+            if (!empty($Prv_Cod)) {
+                $sql .= " AND pxc.Prv_cod = " . intval($Prv_Cod);
+            } else {
+                $sql .= " AND (pxc.Prv_cod IS NULL OR pxc.Prv_cod = '' OR pxc.Prv_cod = '0')";
+            }
+            $sql .= " LIMIT 1";
+            error_log("buscarAsociacionXmlAjax SQL: $sql");
+            $asociacion = null;
+            
+            if (method_exists($obBD_con1, 'getRowConsultaSql')) {
+                $asociacion = $obBD_con1->getRowConsultaSql($sql, $obBD_conexion);
+            } else {
+                // Fallback: usar mysqli directamente
+                $result = @mysqli_query($obBD_conexion->conexion, $sql);
+                if ($result) {
+                    $asociacion = mysqli_fetch_assoc($result);
+                    mysqli_free_result($result);
+                }
+            }
+            
+            if (!empty($asociacion) && isset($asociacion['Pro_Cod']) && $asociacion['Pro_Cod'] > 0) {
+                // Ensure proper encoding for JSON response
+                if (isset($asociacion['Ret_Ren_Con'])) $asociacion['Ret_Ren_Con'] = utf8_encode($asociacion['Ret_Ren_Con']);
+                if (isset($asociacion['Iva_Ren_Con'])) $asociacion['Iva_Ren_Con'] = utf8_encode($asociacion['Iva_Ren_Con']);
+                
+                error_log("buscarAsociacionXmlAjax ENCONTRADO: Cod_Xml=$codigoXml, Pro_Cod=" . $asociacion['Pro_Cod']);
+                $Pro_Cod = intval($asociacion['Pro_Cod']);
+                
+                // Obtener período contable
+                $Pec_Cop = array('Pla_Cod' => null);
+                if (!empty($Cop_Fec)) {
+                    $Pec_Cop = $obBD_con1->getRowConsulta(9, $Ses_Emp_Cod . '*' . $Cop_Fec, $obBD_conexion);
+                }
+                
+                // Obtener producto con TODOS sus datos usando consulta SQL completa
+                $sql_producto = "SELECT producto.*, 
+                                        producto.Ite_Cod,
+                                        producto.Uni_Cod,
+                                        producto.Adq_Cod,
+                                        item.Ite_Lar,
+                                        unidad.Uni_Des, 
+                                        iva.Iva_Cod, 
+                                        iva.Iva_Por,
+                                        adquisicio.Adq_Cor,
+                                        adquisicio.Adq_Des
+                                 FROM producto 
+                                 LEFT JOIN item ON producto.Ite_Cod = item.Ite_Cod
+                                 LEFT JOIN unidad ON producto.Uni_Cod = unidad.Uni_Cod
+                                 LEFT JOIN iva ON producto.Iva_Cod = iva.Iva_Cod
+                                 LEFT JOIN adquisicio ON producto.Adq_Cod = adquisicio.Adq_Cod
+                                 WHERE producto.Pro_Cod = " . intval($Pro_Cod) . " LIMIT 1";
+                
+                $result_producto = @mysqli_query($obBD_conexion->conexion, $sql_producto);
+                $producto = null;
+                
+                if ($result_producto && mysqli_num_rows($result_producto) > 0) {
+                    $producto = mysqli_fetch_assoc($result_producto);
+                    
+                    // Obtener Ite_Lar de la tabla item usando Ite_Cod
+                    if (!empty($producto['Ite_Cod']) && $producto['Ite_Cod'] > 0) {
+                        $sql_item = "SELECT Ite_Lar FROM item WHERE Ite_Cod = " . intval($producto['Ite_Cod']) . " LIMIT 1";
+                        $result_item = @mysqli_query($obBD_conexion->conexion, $sql_item);
+                        if ($result_item && mysqli_num_rows($result_item) > 0) {
+                            $item_row = mysqli_fetch_assoc($result_item);
+                            if (!empty($item_row['Ite_Lar'])) {
+                                $producto['Ite_Lar'] = $item_row['Ite_Lar'];
+                            }
+                            @mysqli_free_result($result_item);
+                        }
+                    }
+                    
+                    @mysqli_free_result($result_producto);
+                } else {
+                    // Si falla SQL directa, usar getPageGrid como fallback
+                    $productoData = $obBD_con1->getPageGrid(1, '' . '*' . $Ses_Emp_Cod . '*' . '' . "* AND producto.Pro_Cod=" . $Pro_Cod, $obBD_conexion, 1, 1);
+                    if (!empty($productoData['rows']) && count($productoData['rows']) > 0) {
+                        $producto = $productoData['rows'][0];
+                    }
+                }
+                
+                if (!empty($producto)) {
+                    // Obtener cuenta contable si existe período (OBLIGATORIO para guardar)
+                    if ($configs['Cof_Con'] == 'S' && !empty($Pec_Cop['Pla_Cod'])) {
+                        $cuenta = $obBD_con1->getRowConsulta(16, $Pec_Cop['Pla_Cod'] . '*' . $Pro_Cod . '*' . 'C', $obBD_conexion);
+                        if (!empty($cuenta['Pld_Cod'])) {
+                            $producto['Pld_Cod'] = $cuenta['Pld_Cod'];
+                            $producto['Pld_Cdc'] = isset($cuenta['Pld_Cdc']) ? $cuenta['Pld_Cdc'] : '';
+                            $producto['Pld_Des'] = isset($cuenta['Pld_Des']) ? $cuenta['Pld_Des'] : '';
+                        }
+                    }
+                    
+                    // Asegurar que Adq_Cod tenga un valor válido (0 si es null o vacío)
+                    if (empty($producto['Adq_Cod']) || $producto['Adq_Cod'] === null) {
+                        $producto['Adq_Cod'] = 0;
+                    }
+                    
+                    // Incluir valores de retención del mapeo XML
+                    if (isset($asociacion['Ret_Ren_Cod'])) $producto['Ret_Ren_Cod'] = $asociacion['Ret_Ren_Cod'];
+                    if (isset($asociacion['Iva_Ren_Cod'])) $producto['Iva_Ren_Cod'] = $asociacion['Iva_Ren_Cod'];
+                    if (isset($asociacion['For_Cod'])) $producto['For_Cod'] = $asociacion['For_Cod'];
+                    if (isset($asociacion['Pag_Pld'])) $producto['Pld_Cod'] = $asociacion['Pag_Pld'];
+                    
+                    $responce['success'] = true;
+                    $responce['asociacion'] = $producto;
+                }
+            }
+        }
+    } catch (Exception $e) {
+        $responce['message'] = $e->getMessage();
+    }
+    $obBD_con1->echoJson($responce);
+}
 /* Consulta del codigo retencion */
 if (isset($codiAjax)) {
     $data = $_GET;
@@ -387,6 +637,7 @@ if (isset($codiAjax)) {
 /* reviso las cuentas pago */
 if (isset($cuentasPago)) {
     $responce['cuentas'] = '';
+    $cuentas = array();
     $Pec_Cod = $obBD_con1->getRowConsulta(9, $Ses_Emp_Cod . '*' . $Cop_Fec, $obBD_conexion);
     if ($For_Cod * 1 == 2)
         $cuentas = $obBD_con1->getArrayConsulta(23, $Pec_Cod['Pla_Cod'] . '*' . $For_Cod, $obBD_conexion);
@@ -395,13 +646,19 @@ if (isset($cuentasPago)) {
     if ($For_Cod * 1 == 3)
         $cuentas = $obBD_con1->getArrayConsulta(28, $Pec_Cod['Pla_Cod'] . '*' . 'RC', $obBD_conexion);
 
-    $responce['total'] = count($cuentas);
-    foreach ($cuentas as $row)
-        $responce['cuentas'] = $responce['cuentas'] . '<option value="' . $row['Pld_Cod'] . '" data-extra="' . (isset($row['extra']) ? $row['extra'] : '') . '" ' . (isset($Pld_Cod) && $row['Pld_Cod'] == $Pld_Cod ? 'selected="selected"' : '') . '>' . $row['Pld_Des'] . '</option>';
+    $responce['total'] = is_array($cuentas) ? count($cuentas) : 0;
+    if (is_array($cuentas)) {
+        foreach ($cuentas as $row) {
+            $isSelected = (isset($Pld_Cod) && $row['Pld_Cod'] == $Pld_Cod) ? 'selected="selected"' : '';
+            $extra = isset($row['extra']) ? $row['extra'] : '';
+            $responce['cuentas'] = $responce['cuentas'] . '<option value="' . $row['Pld_Cod'] . '" data-extra="' . $extra . '" ' . $isSelected . '>' . $row['Pld_Des'] . '</option>';
+        }
+    }
     if ($responce['total'] > 1)
         $responce['cuentas'] = "<option value=''>Seleccione...</option>" . $responce['cuentas'];
     $responce['success'] = true;
     $obBD_con1->echoJson($responce);
+    exit;
 }
 /* reviso los ivas */
 if (isset($Check_Iva)) {
@@ -440,17 +697,6 @@ if (isset($saveDocument)) {
     }
     $Vnd_Cod = $vendedor['Vnd_Cod'];
     $For_Cod = $For_Cod * 1;
-    /* Liquidación: armar 001-002- + secuencial de 9 dígitos (el prefijo viene en Pun_Sri) */
-    if ($Tic_Cod == 3 && !empty($Aut_Codliq)) {
-        $partesNum = explode('-', (string)$Cop_Num);
-        $secLiq = preg_replace('/\D+/', '', end($partesNum));
-        if ($secLiq !== '') {
-            $secLiq = str_pad($secLiq, 9, '0', STR_PAD_LEFT);
-            if (!empty($Pun_Sri)) {
-                $Cop_Num = $Pun_Sri . $secLiq;
-            }
-        }
-    }
     /* valida que no exista el documento */
     if ($Tic_Sri * 1 != 17) { // Condicion agregada xq se repite el numero de DAE
         $row_rs_CodDoc = $obBD_con1->getRowConsulta(7, $Prv_Cod . '*' . $Tic_Cod . '*' . $Cop_Num, $obBD_conexion);
@@ -538,6 +784,7 @@ if (isset($saveDocument)) {
             $Cop_Aut =  $obBD_con1->getLiquidacionClaveAcceso($Aut_Codliq,  $Cop_Fec, $Cop_Num, $obBD_conexion);
 
             $claveAccesoliq = $Cop_Aut;
+            $Cop_Num =  $Pun_Sri . $Cop_Num;
         }
 
         /* Cabecera de la factura de compra */
@@ -609,6 +856,7 @@ if (isset($saveDocument)) {
                 $item['Cop_Imp'] = $item['Cop_Dec'] > 0 ? $item['Cop_Can'] * $item['Cop_Pru'] : $item['Cop_Imp'];
                 $obBD_ins1->operacionobBD(17, array($Com_Cod, 'D', ($item['Cop_Imp'] + $addIva), $cuenta['Pld_Des'], $item['Ite_Lar'], $item['Pld_Cod']), $obBD_conexionIns);  // inserta asiento // Item
                 $Asi_Cod = $obBD_ins1->insercionid($obBD_conexionIns);
+                $item['Asi_Cod'] = $Asi_Cod;
                 fac_ppa_vincular_asiento_item($obBD_conexionIns->conexion, $item, $pdpGeneral, $Asi_Cod, $ppaGeneral, array(
                     'Emp_Cod' => isset($Ses_Emp_Cod) ? $Ses_Emp_Cod : 0,
                     'Suc_Cod' => isset($Ses_Suc_Cod) ? $Ses_Suc_Cod : null,
@@ -622,6 +870,61 @@ if (isset($saveDocument)) {
                 // Guardar los códigos Asi_Cod en un array temporal para registrar luego en det_compra
                 if (!isset($array_asi_cod)) $array_asi_cod = array();
                 $array_asi_cod[] = array('Asi_Cod' => $Asi_Cod, 'Pro_Cod' => $item['Pro_Cod'],   'Cop_Cod' => $Cop_Cod, 'Pld_Cod' => $cuenta['Pld_Cod']);
+
+                // Guardar mapeo si viene de XML
+                if (!empty($item['Cod_Xml_Principal']) && $item['Cod_Xml_Principal'] !== 'S/N') {
+                    $codXml = mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Cod_Xml_Principal']);
+                    $descXml = mysqli_real_escape_string($obBD_conexionIns->conexion, isset($item['Descripcion_Xml']) ? $item['Descripcion_Xml'] : $item['Ite_Lar']);
+                    $proCod = mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Pro_Cod']);
+                    $pldCod = mysqli_real_escape_string($obBD_conexionIns->conexion, $cuenta['Pld_Cod']);
+                    $prvCodSql = mysqli_real_escape_string($obBD_conexionIns->conexion, $Prv_Cod);
+                    $fechaMap = date("Y-m-d H:i:s");
+
+                    $retRenCod = "NULL";
+                    if (isset($item['Ret_Ren_Cod']) && $item['Ret_Ren_Cod'] !== '') {
+                        $retRenCod = "'" . mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Ret_Ren_Cod']) . "'";
+                    } else if (isset($item['Ret_Ren_Sri']) && $item['Ret_Ren_Sri'] !== '') {
+                        $sri = mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Ret_Ren_Sri']);
+                        $resSri = mysqli_query($obBD_conexionIns->conexion, "SELECT Ren_Cod FROM renta_iva WHERE Ren_Sri = '$sri' LIMIT 1");
+                        if ($resSri && $rowSri = mysqli_fetch_assoc($resSri)) {
+                            $retRenCod = "'" . $rowSri['Ren_Cod'] . "'";
+                        }
+                    }
+
+                    $ivaRenCod = "NULL";
+                    if (isset($item['Iva_Ren_Cod']) && $item['Iva_Ren_Cod'] !== '') {
+                        $ivaRenCod = "'" . mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Iva_Ren_Cod']) . "'";
+                    } else if (isset($item['Iva_Ren_Sri']) && $item['Iva_Ren_Sri'] !== '') {
+                        $sriIva = mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Iva_Ren_Sri']);
+                        $resSriIva = mysqli_query($obBD_conexionIns->conexion, "SELECT Ren_Cod FROM renta_iva WHERE Ren_Sri = '$sriIva' LIMIT 1");
+                        if ($resSriIva && $rowSriIva = mysqli_fetch_assoc($resSriIva)) {
+                            $ivaRenCod = "'" . $rowSriIva['Ren_Cod'] . "'";
+                        }
+                    }
+
+                    $sqlChkMap = "SELECT Pxc_Cod FROM producto_xml_codigo WHERE Cod_Xml = '$codXml' AND Prv_cod = '$prvCodSql' LIMIT 1";
+                    $resChkMap = mysqli_query($obBD_conexionIns->conexion, $sqlChkMap);
+                    
+                    $forCodSqlMap = isset($For_Cod) && $For_Cod !== '' ? intval($For_Cod) : 'NULL';
+                    $pagPldSqlMap = isset($Pag_Pld) && $Pag_Pld !== '' ? intval($Pag_Pld) : 'NULL';
+                    $pldCodForDb = isset($Pag_Pld) && $Pag_Pld !== '' ? intval($Pag_Pld) : 0;
+                    if (!$resChkMap || mysqli_num_rows($resChkMap) == 0) {
+                        $sqlInsMap = "INSERT INTO producto_xml_codigo (Cod_Xml, Des_Xml, Pro_Cod, Pxc_Fec, Prv_cod, Pld_cod, Ret_Ren_Cod, Iva_Ren_Cod, For_Cod, Pag_Pld) 
+                                   VALUES ('$codXml', '$descXml', '$proCod', '$fechaMap', '$prvCodSql', $pldCodForDb, $retRenCod, $ivaRenCod, $forCodSqlMap, $pagPldSqlMap)";
+                        if (mysqli_query($obBD_conexionIns->conexion, $sqlInsMap)) {
+                            $mapeos_guardados = isset($mapeos_guardados) ? $mapeos_guardados + 1 : 1;
+                        } else {
+                            $mapeos_errores = (isset($mapeos_errores) ? $mapeos_errores : "") . " " . mysqli_error($obBD_conexionIns->conexion);
+                        }
+                    } else {
+                        $sqlUpdMap = "UPDATE producto_xml_codigo SET Pro_Cod = '$proCod', Pld_cod = $pldCodForDb, Ret_Ren_Cod = $retRenCod, Iva_Ren_Cod = $ivaRenCod, For_Cod = $forCodSqlMap, Pag_Pld = $pagPldSqlMap WHERE Cod_Xml = '$codXml' AND Prv_cod = '$prvCodSql'";
+                        if (mysqli_query($obBD_conexionIns->conexion, $sqlUpdMap)) {
+                            $mapeos_guardados = isset($mapeos_guardados) ? $mapeos_guardados + 1 : 1;
+                        } else {
+                            $mapeos_errores = (isset($mapeos_errores) ? $mapeos_errores : "") . " " . mysqli_error($obBD_conexionIns->conexion);
+                        }
+                    }
+                }
             }
             unset($item);
             /* CCPP Cuentas por pagar */
@@ -644,6 +947,11 @@ if (isset($saveDocument)) {
                     $obBD_ins1->operacionobBD(14, $Pec_Cod . '*' . $Prv_Cod . '*' . $Com_Num_Ret . '*' . $Ret_Fec . '*' . trim($Com_Con_Ret) . '*' . $Tia_Asi_Ret['Tia_Cod'] . '*' . $Ren_Tot . '*' . 'RETENCION' . '*' . $campo, $obBD_conexionIns);
                     $Com_Cod_Ret = $obBD_ins1->insercionid($obBD_conexionIns);
 
+                    if (!empty($Ret_Cod) && !empty($Com_Cod_Ret)) {
+                        $sqlUpdRet = "UPDATE retencion SET Com_Cod = " . intval($Com_Cod_Ret) . " WHERE Ret_Cod = " . intval($Ret_Cod);
+                        mysqli_query($obBD_conexionIns->conexion, $sqlUpdRet);
+                    }
+
                     foreach ($rets as $ret) {
                         if (("0" . $ret['Ren_Val']) * 1 > 0) {
                             $cuenta = $obBD_con1->getRowConsulta(52, $Pec_Cop['Pla_Cod'] . '*' . $ret['Ren_Cod'] . '*' . 'C', $obBD_conexion);
@@ -661,6 +969,10 @@ if (isset($saveDocument)) {
                 $obBD_ins1->operacionobBD(17, $Com_Cod . '*' . ('H') . '*' . $totalReal . '*' . '' . '*' . ('Doc.' . $Cop_Num) . '*' . $Pag_Pld, $obBD_conexionIns);
             } else {
                 if ($Retencion && $Ret_Num > 0) {
+                    if (!empty($Ret_Cod) && !empty($Com_Cod)) {
+                        $sqlUpdRet = "UPDATE retencion SET Com_Cod = " . intval($Com_Cod) . " WHERE Ret_Cod = " . intval($Ret_Cod);
+                        mysqli_query($obBD_conexionIns->conexion, $sqlUpdRet);
+                    }
                     foreach ($rets as $ret) {
                         if (("0" . $ret['Ren_Val']) * 1 > 0) {
                             $cuenta = $obBD_con1->getRowConsulta(52, $Pec_Cop['Pla_Cod'] . '*' . $ret['Ren_Cod'] . '*' . 'C', $obBD_conexion);
@@ -830,7 +1142,7 @@ if (isset($saveDocument)) {
         /* registro de kardex y stocks */
         foreach ($array_kardex as $i => $k) {
             $k['Kar_Int'] = $i + 1;
-            $obBD_ins1->updateStockProd($Ses_Suc_Cod, $k, true, $obBD_conexion, $obBD_conexionIns, $Bod_Cod);
+            $obBD_ins1->updateStockProd($Ses_Suc_Cod, $k, true, $obBD_conexion, $obBD_conexionIns, isset($Bod_Cod) ? $Bod_Cod : null);
         }
         if (isset($reembolsos) && is_array($reembolsos) && count($reembolsos > 0)) {
             $Rem_Int = 0;
@@ -840,6 +1152,27 @@ if (isset($saveDocument)) {
                 $obBD_ins1->operacionobBD('compra_reembolsos.insert', $rem, $obBD_conexionIns);
             }
         }
+        
+        // Guardar defaults de Forma de Pago y Documento en provee_aut
+        $forCodSql = isset($For_Cod) && $For_Cod !== '' ? intval($For_Cod) : 'NULL';
+        $pldCodSql = isset($Pag_Pld) && $Pag_Pld !== '' ? intval($Pag_Pld) : 'NULL';
+        $venDiasSql = 'NULL';
+        if ($For_Cod == 2 && !empty($Cpp_Ven) && !empty($Cop_Fec)) {
+            $venDiasSql = "DATEDIFF('" . mysqli_real_escape_string($obBD_conexionIns->conexion, $Cpp_Ven) . "', '" . mysqli_real_escape_string($obBD_conexionIns->conexion, $Cop_Fec) . "')";
+        }
+        $renAsuSql = (isset($Ret_Asu) && $Ret_Asu == 'S') ? "'S'" : "'N'";
+        $prvCodSql = mysqli_real_escape_string($obBD_conexionIns->conexion, $Prv_Cod);
+        
+        $resChkProv = mysqli_query($obBD_conexionIns->conexion, "SELECT Prd_Cod FROM provee_aut WHERE Prv_Cod = '$prvCodSql' LIMIT 1");
+        if (!$resChkProv || mysqli_num_rows($resChkProv) == 0) {
+            $sqlDefProv = "INSERT INTO provee_aut (Prv_Cod, For_Cod, Pld_Cod, Ven_Dias, Ren_Asu) 
+                           VALUES ('$prvCodSql', $forCodSql, $pldCodSql, $venDiasSql, $renAsuSql)";
+            mysqli_query($obBD_conexionIns->conexion, $sqlDefProv);
+        } else {
+            $sqlDefProv = "UPDATE provee_aut SET For_Cod = $forCodSql, Pld_Cod = $pldCodSql, Ven_Dias = $venDiasSql, Ren_Asu = $renAsuSql WHERE Prv_Cod = '$prvCodSql'";
+            mysqli_query($obBD_conexionIns->conexion, $sqlDefProv);
+        }
+
     } catch (Exception $e) {
         $obBD_ins1->rollBack_nomsn($obBD_conexionIns);
         $responce['message'] = $e->getMessage();
@@ -849,6 +1182,15 @@ if (isset($saveDocument)) {
     $obBD_ins1->fin_transaccion_nomsn($obBD_conexionIns);
     if ($obBD_ins1->Error == 0) {
         $responce = array('success' => true, 'Cop_Cod' => $Cop_Cod, 'Cop_Sec' => $Cop_Sec, 'Com_Cod' => isset($Com_Cod) ? $Com_Cod : NULL, 'Ret_Cod' => isset($Ret_Cod) ? $Ret_Cod : NULL, 'Tic_Des' => $Tic_Des, 'Mes' => mes($meseCop[1], 1) . "/$meseCop[0]");
+
+        // Retornar información del mapeo si ocurrió
+        if (isset($mapeos_guardados) && $mapeos_guardados > 0) {
+            $responce['mapeos_guardados'] = $mapeos_guardados;
+        }
+        if (isset($mapeos_errores) && !empty($mapeos_errores)) {
+            $responce['mapeos_errores'] = $mapeos_errores;
+        }
+        
         $reportes = $obBD_con1->reportes($_SERVER['PHP_SELF'], $Ses_Emp_Cod, $obBD_conexion);
         // detalle del documento
         if (!empty($Cop_Cod)) {
@@ -966,17 +1308,6 @@ $Pec_Cop = $obBD_con1->getRowConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
 if (!empty($Pec_Cop['Pec_Fei'])) $hoy = substr($Pec_Cop['Pec_Fei'], 0, 4) . substr($hoy, 4, 10);
 $insert = true;
 $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('clean' => true, 'where' => array('Tic_Est' => 'A')), $obBD_conexion);
-$row_rs_RetPld = $obBD_con1->getArrayConsulta(67, $Ses_Emp_Cod . '*' . 'RA', $obBD_conexion);
-$listaActividad = $obBD_con1->getArrayConsulta('proveedore.selectWhere', array(
-    'clean' => true,
-    'unsetColsInit' => true,
-    'setWhere' => array('listaTacDistinctPorEmpresa'),
-    'where' => array(
-        'proveedore.Emp_Cod' => $Ses_Emp_Cod,
-        'proveedore.Prv_Est' => 'A',
-    ),
-    'order' => 'Prv_Tac ASC',
-), $obBD_conexion);
 
 //Obtener datos de CCxPP 08/10/2025
 if (isset($saldoCCxPP)) {
@@ -1028,12 +1359,12 @@ if (isset($saldoCCxPP)) {
             edit_doc = 0,
             Vet_Index = 1,
             Vet_Selected, index;
-        <?php $array_documentos = $obBD_con1->getArrayConsulta(1003, $vendedor['Pun_Cod'], $obBD_conexion);  ?>;
+        <?php $pun_cod = isset($vendedor['Pun_Cod']) ? $vendedor['Pun_Cod'] : 0; $array_documentos = $obBD_con1->getArrayConsulta(1003, $pun_cod, $obBD_conexion);  ?>;
         var array_documentos = <?php echo json_encode($array_documentos); ?>;
     </script>
 
     <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/fac_val_factu.js?gh=1016"></script>
+    <script type="text/javascript" src="../VALIDACIONES/fac_val_factu1.0.js?gh=1016"></script>
     <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
 </HEAD>
 
@@ -1219,7 +1550,16 @@ if (isset($saldoCCxPP)) {
         <table id="containerNegoci"></table>
     </div>
     <script>
-        function selectProvee(provee) {
+        function sumarDias(fecha, dias) {
+            var parts = fecha.split('-');
+            var d = new Date(parts[0], parts[1] - 1, parts[2]);
+            d.setDate(d.getDate() + parseInt(dias));
+            var m = d.getMonth() + 1;
+            var day = d.getDate();
+            return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+        }
+
+        function selectProvee(provee, preserveForCod) {
             var reset = ($('#reset').val() !== '0');
             $('#provFormTemp').setData($.extend(provee, {
                 op_opciones: 'c'
@@ -1273,8 +1613,6 @@ if (isset($saldoCCxPP)) {
                 if (provee.Prs_Ced.length == 13) $('#op_ide1').prop('checked', true).trigger('change');
                 if (provee.Prs_Ced.length == 10) $('#op_ide2').prop('checked', true).trigger('change');
             }
-            // Refrescar tipos: dividendos solo con cédula
-            tipoComprobanteHide($("#Tri_Cod option:selected").attr('data-ticsri'));
             $.getDataJson('', {
                 'cargarDefault': true,
                 'Prv_Cod': provee['Prv_Cod']
@@ -1298,18 +1636,44 @@ if (isset($saldoCCxPP)) {
                     if (res['rows']['Prd_Cad'] != null) {
                         $("#Cop_Cad").val(res['rows']['Prd_Cad']);
                     }
+                    if (res['rows']['For_Cod'] != null && !preserveForCod) {
+                        $('#For_Cod').val(res['rows']['For_Cod']).trigger('change');
+                    }
+                    if (res['rows']['Pld_Cod'] != null) {
+                        $('#Pag_Pld').val(res['rows']['Pld_Cod']);
+                    }
+                    if (res['rows']['Ven_Dias'] != null) {
+                        $('#Cpp_Ven').val(sumarDias($('#Cop_Fec').val(), res['rows']['Ven_Dias']));
+                    }
+                    if (res['rows']['Ren_Asu'] === 'S') {
+                        $('#asumirRet').prop('checked', true).trigger('change');
+                    }
                 }
-                var triSri = $("#Tri_Cod option:selected").attr('data-ticsri') || '02';
-                tipoComprobanteHide(triSri, (res && res['rows'] && res['rows']['Tic_Cod']) ? res['rows']['Tic_Cod'] : null);
+
             }, function(err) {
                 console.log(err['message']);
             });
 
             $('#Ciu_Cod').trigger('chosen:updated');
             //$('.validate:not(.ret_num)').find('i').removeAttr('class');
-            $('#For_Cod').val(1).removeAttr('disabled').trigger('change');
-            $('.pagoCredito').hide();
-            $('#Cpp_Ven').removeAttr('required');
+            if (!preserveForCod) {
+                $('#For_Cod').val(1).removeAttr('disabled').trigger('change');
+                $('.pagoCredito').hide();
+                $('#Cpp_Ven').removeAttr('required');
+            } else {
+                $('#For_Cod').removeAttr('disabled');
+                var currentForCod = $('#For_Cod').val();
+                $('.pagoCredito')[currentForCod * 1 === 2 ? 'show' : 'hide']();
+                $('.Caj_Ven_Div')[currentForCod * 1 === 1 ? 'show' : 'hide']();
+                if (currentForCod * 1 === 2) {
+                    $('#Cpp_Ven').attr('required', 'required');
+                    if ($('#Cop_Fec').val() && typeof actualizarCppVenDesdeCompra === 'function') {
+                        actualizarCppVenDesdeCompra($('#Cop_Fec').val());
+                    }
+                } else {
+                    $('#Cpp_Ven').removeAttr('required');
+                }
+            }
             $('#Pag_Pld').removeAttr('disabled');
             validaCopNum();
             checkLiquidacion();
@@ -1446,24 +1810,6 @@ if (isset($saldoCCxPP)) {
                     <label class="col-xs-3 control-label label-xs">Nomb.Comerc.:</label>
                     <div class="col-xs-5"><input name="Prv_Com" type="text" class="form-control input-xs" /></div>
                 </div>
-                <div class="form-group natural">
-                    <label class="col-xs-3 control-label label-xs">Tipo Actividad:</label>
-                    <div class="col-xs-5">
-                        <div class="input-group input-group-xs">
-                            <select name="Prv_Tac" id="Prv_Tac" class="form-control input-xs">
-                                <option value="">— Seleccionar —</option>
-                                <?php foreach ($listaActividad as $row) {
-                                    $tac = isset($row['Prv_Tac']) ? $row['Prv_Tac'] : '';
-                                    $tacEsc = htmlspecialchars((string) $tac, ENT_QUOTES, 'UTF-8');
-                                    echo '<option value="' . $tacEsc . '">' . $tacEsc . '</option>';
-                                } ?>
-                            </select>
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-info btn-xs" title="Agregar actividad" onclick="abrirDialogoPrvTacFact(); return false;" tabindex="-1"><i class="glyphicon glyphicon-plus"></i></button>
-                            </span>
-                        </div>
-                    </div>
-                </div>
             </fieldset>
             <fieldset class="exa-fieldset">
                 <legend class="Titulos2">Datos de Ubicación</legend>
@@ -1501,23 +1847,14 @@ if (isset($saldoCCxPP)) {
 
     </div>
     <!-- FIN DEL DIALOGO PROVEEDOR-->
-    <div id="provTacCreateDialogFact" style="display:none;" title="Nueva actividad económica">
-        <div style="padding:10px 6px 4px;border-radius:10px;background:linear-gradient(180deg,#fafbfd 0%,#ffffff 55%);border:1px solid rgba(0,0,0,.06);box-shadow:0 4px 18px rgba(15,23,42,.06);">
-            <p style="margin:0 0 14px;font-size:13px;line-height:1.45;color:#64748b;">Describe la actividad en pocas palabras. El texto se guardará tal cual en el proveedor.</p>
-            <div class="form-group" id="prvTacDescGroupFact" style="margin-bottom:0;">
-                <label for="prvTacDescInputFact" style="font-size:12px;font-weight:600;color:#334155;margin-bottom:6px;display:block;">Actividad <span class="text-danger">*</span></label>
-                <input type="text" id="prvTacDescInputFact" class="form-control input-xs" maxlength="20" autocomplete="off" placeholder="Ej. Comercio al por menor" />
-                <div id="prvTacDescMeterFact" style="margin-top:6px;font-size:11px;color:#94a3b8;text-align:right;"><span id="prvTacDescCountFact">0</span> / 20 caracteres</div>
-                <span id="prvTacDescErrFact" class="help-block text-danger" style="display:none;margin-top:8px;font-size:12px;"></span>
-            </div>
-        </div>
-    </div>
     <?php include("../COMPONENTES/facComReembolsos.php"); ?>
 
     <div id="loadXml" title="Cargar Documento Electronico">
         <form id="formElectronico" class="form-horizontal normal">
             <div class="form-group">
-                <label class="col-xs-12 control-label label-sm">Agrupar Detalle: <input type="checkbox" id="agrupa" value="S" class="check-big" /></label>
+                <div class="col-xs-6"></div>
+                <label class="col-xs-6 control-label label-sm">Agrupar Detalle: <input type="checkbox" id="agrupa" value="S" class="check-big" /></label>
+                <label class="col-xs-6 control-label label-sm" id="cargarMapeoContainer" style="display: none !important;">Cargar Mapeo: <input type="checkbox" id="cargarMapeo" name="cargarMapeo" value="S" class="check-big" checked="checked" /></label>
             </div>
 
             <div id='fileXML'>
@@ -1551,7 +1888,7 @@ if (isset($saldoCCxPP)) {
             </fieldset>
         </form>
         <div class="alert alert-danger" style="display:none; margin-bottom: 0;">Error: <span id="alertXml"></span></div>
-    </div>
+    <img src="/IMAGENESPRUEBA/masierr.png" id="demoImage" style="display:none; max-width:100%; margin-top:10px;" alt="Demo Image"/>
     <script>
         function validaRetFec() {
             if (typeof window.validarRetFecCompraYClave === 'function') {
@@ -1570,69 +1907,25 @@ if (isset($saldoCCxPP)) {
                 }
             }
         }
-        function actualizarContadorPrvTacFact(maxLen) {
-            var n = $('#prvTacDescInputFact').val().length;
-            $('#prvTacDescCountFact').text(n);
-            var $m = $('#prvTacDescMeterFact');
-            if (n >= maxLen) {
-                $m.css({ color: '#dc2626', fontWeight: 600 });
-            } else {
-                $m.css({ color: '#94a3b8', fontWeight: '' });
-            }
-        }
-        function abrirDialogoPrvTacFact() {
-            $('#provTacCreateDialogFact').dialog('open');
-        }
-        function aplicarNuevaPrvTacFact() {
-            var maxLen = 20;
-            var $inp = $('#prvTacDescInputFact');
-            var desc = $.trim($inp.val()).toLocaleUpperCase('es');
-            var $grp = $('#prvTacDescGroupFact');
-            var $err = $('#prvTacDescErrFact');
-            $err.hide().text('');
-            $grp.removeClass('has-error');
-            if (!desc.length) {
-                $err.text('Ingrese una descripción.').show();
-                $grp.addClass('has-error');
-                $inp.trigger('focus');
-                return false;
-            }
-            if (desc.length > maxLen) {
-                $err.text('La actividad no puede superar ' + maxLen + ' caracteres.').show();
-                $grp.addClass('has-error');
-                return false;
-            }
-            var $sel = $('#provCreateForm #Prv_Tac');
-            var $matchOpt = null;
-            $sel.find('option').each(function() {
-                var v = $(this).val();
-                if (v === '') return true;
-                if ($.trim(v).toLocaleUpperCase('es') === desc) {
-                    $matchOpt = $(this);
-                    return false;
-                }
-            });
-            if ($matchOpt && $matchOpt.length) {
-                if ($matchOpt.val() !== desc) $matchOpt.attr('value', desc).text(desc);
-            } else {
-                $sel.append($('<option></option>').attr('value', desc).text(desc));
-            }
-            $sel.val(desc).trigger('chosen:updated');
-            return true;
-        }
         $('#loadXml').createDialog({
             width: 500,
             height: 250,
-            icon: 'fa fa-globe'
+            icon: 'fa fa-globe',
+            open: function() {
+                $('#cargarMapeo').prop('checked', true);
+            }
         });
         $('#negDialog').dialog({
             autoOpen: false
         });
 
         function loadElectronico() {
+            console.log("loadElectronico started");
             var formData = new FormData(document.getElementById("formElectronico"));
             formData.append("loadElectronico", true);
             formData.append("agrupa", $('#agrupa').is(':checked') ? 'S' : 'N');
+            formData.append("cargarMapeo", $('#cargarMapeo').is(':checked') ? 'S' : 'N');
+            console.log("FormData prepared, showing loader and calling $.ajax");
             $("#loader").show();
             $.ajax({
                 url: "<?Php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>",
@@ -1651,15 +1944,43 @@ if (isset($saldoCCxPP)) {
                         $('#Cop_Irb').val(re.data['Cop_Irb']);
                         $('#Cop_Des').val('0.00');
                         $('#t_descuento').val('0.00');
+                        $('[name="Cop_Obs"]').val(re.data['Cop_Obs']);
                         $('#ch_prop').prop('checked', (re.data['propina'] && parseFloat(re.data['propina']) != 0) ? true : false); //nuevo campo
                         $('#t_prop').val(re.data['propina'] ? re.data['propina'] : '0.00'); // nuevo campo
                         // nuevo campo t_noiva (ojo: usamos t_noiva y no noiva)
                         $('#t_noiva').val(re.data['t_noiva'] ? re.data['t_noiva'] : '0.00'); // total No Objeto IVA
+                        
+                        // Actualizar Pago SRI desde el XML
+                        if (re.data['Tpc_Cod']) {
+                            $('#Tpc_Cod').val(re.data['Tpc_Cod']).trigger('change');
+                        }
+
+                        // Actualizar Forma de Pago si el mapeo la definió
+                        if (re.data['For_Cod'] && re.data['For_Cod'] != 0) {
+                            $('#For_Cod').val(re.data['For_Cod']); // No trigger('change') here to avoid race condition
+                            $('.pagoCredito')[re.data['For_Cod'] * 1 === 2 ? 'show' : 'hide']();
+                            $('.Caj_Ven_Div')[re.data['For_Cod'] * 1 === 1 ? 'show' : 'hide']();
+                            if (re.data['For_Cod'] * 1 === 2) {
+                                $('#Cpp_Ven').attr('required', 'required');
+                                if ($('#Cop_Fec').val() && typeof actualizarCppVenDesdeCompra === 'function') {
+                                    actualizarCppVenDesdeCompra($('#Cop_Fec').val());
+                                }
+                            } else {
+                                $('#Cpp_Ven').removeAttr('required');
+                            }
+                            if (re.data['Pld_Cod'] && re.data['Pld_Cod'] != 0) {
+                                checkCuentaPago(re.data['Pld_Cod']);
+                            } else {
+                                checkCuentaPago();
+                            }
+                        } else if (re.data['Pld_Cod'] && re.data['Pld_Cod'] != 0) {
+                            $('#Pag_Pld').val(re.data['Pld_Cod']).trigger('change');
+                        }
+                        
                         $('#idCargaExitosa').val(re.data['idCargaExitosa']);
                         $('#reset').val(0);
                         if (!$.varValid(re.data['Prv_Cod']) || re.data['Prv_Cod'] === '') {
                             $('#provCreateForm').setData(re.data);
-                            $('#provCreateForm #Prv_Tac').trigger('chosen:updated');
                             $('#Ide_Cod').val(re.data['Prs_Ced'].length === 10 ? 2 : 1);
                             $('#Prv_Tic').val(ValidacionCedulaRucService.esIdentificacionValida(re.data['Prs_Ced'])['tipo_abrev'] === 'NA' ? 'N' : 'J').trigger('change');
                             if ($.varValid(re.data['Prs_Cod']) && re.data['Prs_Cod'] !== '') $('#Prs_Ced').trigger('change');
@@ -1673,7 +1994,7 @@ if (isset($saldoCCxPP)) {
 
                             $('#provCreateDialog').dialog('open');
                         } else {
-                            selectProvee(re.data);
+                            selectProvee(re.data, (re.data['For_Cod'] && re.data['For_Cod'] != 0) ? true : false);
                         }
                         $.jgrid.inlineEdit = {
                             focusField: false
@@ -1681,6 +2002,7 @@ if (isset($saldoCCxPP)) {
                         $.each(re.items, function(i, v) {
                             var lastId = gridFact.jqGrid('getCol', 'index', false, 'max');
                             gridFact.jqGrid('saveRow', lastId, false, 'clientArray');
+                            v.Ite_Lar = v.Ite_Lar || v.Descripcion_Xml;
                             gridFact.changeRow(lastId, $.extend(v, v['Iva_Por'] * 1 > 0 ? {
                                 Iva_Cod: v['Iva_Cod'],
                                 Iva_Por: v['Iva_Por'],
@@ -1695,18 +2017,60 @@ if (isset($saldoCCxPP)) {
                                 Cop_Ice: null
                             }), {}, true);
                             gridFact.jqGrid('editRow', lastId);
+                            
+                            var cargarMapeoChecked = $('#cargarMapeo').is(':checked');
+                            
+                            // Si PHP ya resolvió el mapeo, aplicar datos al DOM
+                            if (cargarMapeoChecked && v.Pro_Cod && v.Pro_Cod !== '' && v.Pro_Cod != 0) {
+                                (function(rowId, d) {
+                                    // Primer intento: inmediato después de editRow
+                                    setTimeout(function () {
+                                        // Usar changeRowData para disparar los formatters y regenerar botones (ej: Retenciones)
+                                        gridFact.changeRowData(rowId, d);
+                                        gridFact.highlightRow(rowId);
+                                        gridFact.jqGrid('editRow', rowId);
+                                        
+                                        console.log('Mapeo aplicado en fila ' + rowId + ': Pro_Cod=' + d.Pro_Cod + ', Ite_Lar=' + d.Ite_Lar);
+                                    }, 500);
+                                })(lastId, v);
+                            }
+                            // Si PHP no resolvió el mapeo, intentar vía AJAX como fallback
+                            else if (cargarMapeoChecked && v.Cod_Xml_Principal && v.Cod_Xml_Principal !== 'S/N' && typeof buscarAsociacionXml === 'function') {
+                                buscarAsociacionXml(v.Cod_Xml_Principal, lastId);
+                            }
+                            
                             addItem({});
+                            // Verificar si hay productos sin mapear y ocultar el contenedor si no los hay
+                            var anyUnmapped = false;
+                            $.each(re.items, function(i, v) {
+                                if (!v.Pro_Cod || v.Pro_Cod === '' || v.Pro_Cod == 0) {
+                                    anyUnmapped = true;
+                                    return false; // salir del bucle
+                                }
+                            });
+                            if (!anyUnmapped) {
+                                $('#cargarMapeoContainer').hide();
+                            } else {
+                                $('#cargarMapeoContainer').show();
+                            }
                         });
                         //gridFact.find('tr#'+gridFact.jqGrid('getCol','index',false,'max')).hide();
                         $('#formElectronico').setData({});
-                        $('#loadXml').dialog('close');
+                        $('#cargarMapeo').prop('checked', true);
+                                            $('#loadXml').dialog('close');
+                    $('#demoImage').show();
                         $('#Tic_Cod').trigger('change');
                     } else {
                         $.alert(re.message);
                     }
                 },
-                error: function() {
-                    $.alert();
+                error: function(xhr, status, error) {
+                    $("#loader").hide();
+                    console.error("AJAX ERROR in loadElectronico:");
+                    console.error("Status:", status);
+                    console.error("Error:", error);
+                    console.error("Response Text:", xhr.responseText);
+                    alert("ERROR RAW:\n" + xhr.responseText);
                 },
                 complete: function() {
                     $("#loader").fadeOut("slow");
@@ -1742,6 +2106,62 @@ if (isset($saldoCCxPP)) {
             $('#clave').val("<?php echo $claveCarga; ?>");
             $('#clave').prop('readonly', 'true');
             //loadElectronico();
+
+function buscarAsociacionXml(codXml, rowId) {
+    // Petición AJAX para obtener el mapeo del producto
+    // CORREGIDO: enviar buscarAsociacionXmlAjax como clave POST (no como valor de action)
+    // para que register_globals.php cree $buscarAsociacionXmlAjax
+    // CORREGIDO: enviar Cod_Xml (lo que PHP espera) en vez de Cod_Xml_Principal
+    // CORREGIDO: enviar Prv_Cod y Cop_Fec para filtrar correctamente
+    var prvCod = $('#Prv_Cod').val() || '';
+    var copFec = $('#Cop_Fec').val() || '';
+    $.ajax({
+        url: 'fac_alt_fac_com_3.1.php',
+        type: 'POST',
+        data: { buscarAsociacionXmlAjax: true, Cod_Xml: codXml, Prv_Cod: prvCod, Cop_Fec: copFec },
+        dataType: 'json',
+        success: function (res) {
+            // CORREGIDO: PHP retorna res.asociacion, no res.mapping
+            if (res && res.success && res.asociacion) {
+                var map = res.asociacion; // { Pro_Cod, Ite_Lar, Uni_Des, Adq_Cor, Pld_Cdc, Iva_Por, For_Cod }
+                // usar changeRowData para regenerar los controles correctamente
+                gridFact.changeRowData(rowId, map);
+                gridFact.highlightRow(rowId);
+                gridFact.jqGrid('editRow', rowId);
+                
+                // Actualizar la Forma de Pago de la factura si el producto tiene una asignada
+                if (map.For_Cod && map.For_Cod != 0) {
+                    $('#For_Cod').val(map.For_Cod); // No trigger('change')
+                    $('.pagoCredito')[map.For_Cod * 1 === 2 ? 'show' : 'hide']();
+                    $('.Caj_Ven_Div')[map.For_Cod * 1 === 1 ? 'show' : 'hide']();
+                    if (map.For_Cod * 1 === 2) {
+                        $('#Cpp_Ven').attr('required', 'required');
+                        if ($('#Cop_Fec').val() && typeof actualizarCppVenDesdeCompra === 'function') {
+                            actualizarCppVenDesdeCompra($('#Cop_Fec').val());
+                        }
+                    } else {
+                        $('#Cpp_Ven').removeAttr('required');
+                    }
+                    if (map.Pld_Cod && map.Pld_Cod != 0) {
+                        checkCuentaPago(map.Pld_Cod);
+                    } else {
+                        checkCuentaPago();
+                    }
+                } else if (map.Pld_Cod && map.Pld_Cod != 0) {
+                    $('#Pag_Pld').val(map.Pld_Cod).trigger('change');
+                }
+                
+                console.log('Mapeo aplicado (AJAX) en fila ' + rowId);
+            } else {
+                console.warn('No se encontró mapeo para', codXml);
+            }
+        },
+        error: function () {
+            console.error('Error al obtener el mapeo para', codXml);
+        }
+    });
+}
+
             $('#Cop_Num').prop('disabled', 'true');
             $('#Cop_Aut').prop('disabled', 'true');
         <?php
@@ -1756,41 +2176,6 @@ if (isset($saldoCCxPP)) {
         //Ver negociaciones
         var containerNegoci = $("#containerNegoci");
         $(function() {
-            $('#provCreateForm #Prv_Tac').createChosen('input-xs', {
-                width: '100%',
-                placeholder_text_single: '— Seleccionar —',
-                search_contains: true
-            });
-            var PRV_TAC_MAX_FACT = 20;
-            $('#provTacCreateDialogFact').createDialog({
-                title: 'Nueva actividad económica',
-                width: 440,
-                height: 260,
-                noTitleStuff: false,
-                icon: 'plus-sign',
-                buttons: [{
-                    text: 'Agregar',
-                    icons: { primary: 'ui-icon-check' },
-                    click: function() {
-                        if (aplicarNuevaPrvTacFact()) $(this).dialog('close');
-                    }
-                }, {
-                    text: 'Cancelar',
-                    icons: { primary: 'ui-icon-closethick' },
-                    click: function() { $(this).dialog('close'); }
-                }],
-                afterOpen: function() {
-                    var $inp = $('#prvTacDescInputFact');
-                    $inp.val('');
-                    $('#prvTacDescGroupFact').removeClass('has-error');
-                    $('#prvTacDescErrFact').hide().text('');
-                    actualizarContadorPrvTacFact(PRV_TAC_MAX_FACT);
-                    setTimeout(function() { $inp.trigger('focus'); }, 80);
-                }
-            });
-            $(document).on('input', '#prvTacDescInputFact', function() {
-                actualizarContadorPrvTacFact(PRV_TAC_MAX_FACT);
-            });
             armargrid();
         });
 
@@ -1835,7 +2220,50 @@ if (isset($saldoCCxPP)) {
             $('#negDialog').dialog('close');
         }
     </script>
-
+    <script>
+    $(document).ajaxSuccess(function(event, xhr, settings) {
+        if (settings.url === window.location.href || settings.url === "" || settings.url === window.location.pathname) {
+            try {
+                var res = JSON.parse(xhr.responseText);
+                if (res && res.success) {
+                    if (res.mapeos_guardados) {
+                        $.alert('¡Mapeo exitoso! Se han guardado ' + res.mapeos_guardados + ' asociación(es) de productos automáticamente.', 'Mapeo Exitoso', 'ok');
+                    }
+                    if (res.mapeos_errores) {
+                        $.alert('Atención, hubo errores guardando mapeos: ' + res.mapeos_errores, 'Error de Mapeo', 'remove');
+                    }
+                }
+            } catch(e) {}
+        }
+    });
+    </script>
+    <script>
+    var is_auto_guardar = <?php echo isset($_GET['auto_guardar']) ? 'true' : 'false'; ?>;
+    $(window).on('load', function() {
+        if (typeof is_auto_guardar !== 'undefined' && is_auto_guardar) {
+            setTimeout(function() {
+                var allMapped = true;
+                var rows = gridFact.jqGrid('getRowData');
+                for (var i = 0; i < rows.length; i++) {
+                    if (rows[i]['Pro_Cod'] === '' || rows[i]['Pro_Cod'] === '0') {
+                        allMapped = false;
+                        break;
+                    }
+                }
+                if (allMapped && $('#Prv_Cod').val() !== '') {
+                    window.auto_save_in_progress = true;
+                    validaDocument();
+                } else {
+                    if ($('#Prv_Cod').val() === '') {
+                        $.alert('Falta seleccionar el proveedor. Por favor complételo y guarde manualmente.');
+                    } else {
+                        $.alert('Faltan productos por mapear. Por favor mapee los productos y guarde manualmente.');
+                    }
+                }
+            }, 1500); // Wait for grids to fully load and validations
+        }
+    });
+    </script>
 </BODY>
 
 </HTML>

@@ -16,10 +16,9 @@ function delFila(row) {
 
 /* OBJETOS JQUERY */
 $(function () {
-    if ($('#searchGrid').length > 0) {
+    if ($('#searchGrid').length > 0)
         $('#searchGrid').createGrid({
-            caption: 'Resultado de la B&uacute;squeda <div class="pull-right" style="margin-top: -2px;"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy" class="form-control input-xs" style="display:inline-block;width:auto;min-width:140px;vertical-align:middle;height:22px;padding:1px 5px;color:#333;font-weight:normal;"><option value="" selected="selected">No Ordenar</option><option value="prov_asc">Proveedor ASC</option><option value="prov_desc">Proveedor DESC</option><option value="fec_asc">Fecha ASC</option><option value="fec_desc">Fecha DESC</option><option value="doc_asc">No. Documento ASC</option><option value="doc_desc">No. Documento DESC</option><option value="ret_asc">No. Retenci&oacute;n ASC</option><option value="ret_desc">No. Retenci&oacute;n DESC</option></select>&nbsp;</div>',
-            height: 270, datatype: "local",
+            caption: 'Resultado de la B&uacute;squeda', height: 270, datatype: "local",
             colModel: [
                 { label: 'C&oacute;d.Int.', name: 'Cop_Cod', width: 30, align: "center", key: true },
                 { label: 'Alerta', name: 'Alerta', width: 15, align: "center", formatter: 'truefalse', formatoptions: { yesMsg: ' ', noMsg: function (o) { return (o['Com_Mes'] === 'N' ? '<u class="red">Comprobante</u> no se Encuentra en el mismo <u class="red">Mes</u>' : '') + (o['Com_Mes'] === 'N' && o['Com_Est'] === 'I' && o['Cop_Est'] === 'A' ? '<br/>' : '') + (o['Com_Est'] === 'I' && o['Cop_Est'] === 'A' ? 'Comprobante <u class="red">Inactivo</u>, Compra <u class="green">Activa</u>' : ''); }, noIcon: function (o) { return (o['Com_Mes'] === 'N' || (o['Com_Est'] === 'I' && o['Cop_Est'] === 'A')) ? 'fa-exclamation-triangle orange' : ''; }, noText: true }, title: false },
@@ -53,12 +52,6 @@ $(function () {
                     }
             }
         }, false, '#searchGridPager', { refresh: true });
-
-        $(document).on('change', '#OrderBy', function () {
-            $('#serachDocDorm input[name="order"]').val($(this).val());
-            $('#searchGrid').Search('#serachDocDorm', 'searchDocument');
-        });
-    }
     gridFact = $("#documento");
     if (gridFact.length === 1) {
         gridFact.createGrid({
@@ -67,11 +60,15 @@ $(function () {
             colModel: [
                 { name: 'select', label: '<i class="glyphicon glyphicon-check"></i>', width: 30, align: 'center', viewable: false, formatter: 'gridButton', formatoptions: { action: 'openItemSelector', icon: 'check', title: 'Seleccionar Item', data: function (o) { return o.index; } }, resizable: false },
                 { name: 'index', label: 'Index', width: 20, sorttype: "int", align: 'center', key: true, hidden: true },
-                { name: 'Pro_Cod', label: 'C&oacute;d.Int.', width: 20, sorttype: "int", align: 'center', hidden: true },
+                { name: 'Pro_Cod', label: 'C&oacute;d. Producto', width: 20, hidden: true, sorttype: "int", align: 'center', title: false },
                 { name: 'Pro_Bar', label: 'bar', width: 20, sorttype: "int", align: 'center', hidden: true },
+                { name: 'Cod_Xml_Principal', label: 'C&oacute;d. XML', width: 20, hidden: true, align: 'center', title: false },
+                { name: 'Cod_Xml_Auxiliar', label: 'Cod_Xml_Auxiliar', width: 20, hidden: true },
                 { name: 'Cop_Can', label: 'Cant.', labelLong: 'Cantidad', width: 40, align: "right", title: false/*, editable:true, editoptions:{dataInit:styleCant}*/, formatter: 'textboxExa', formatoptions: { type: 'decimal', decimals: 2, attr: { type: 'number', min: '0', step: 2 }, dataEvents: { keyup: 'updateRowItem(this.dataset);' } } },
                 { name: 'Uni_Des', label: 'Uni.', labelLong: 'Unidad', width: 25, resizable: false },
                 { name: 'Ite_Lar', label: 'Descripci&oacute;n', width: 140 },
+                { name: 'Descripcion_Xml', label: 'Desc. XML', labelLong: 'Descripción del XML', width: 120, title: false, hidden: true },
+                { name: 'Descripcion_Producto', label: 'Desc. Producto', labelLong: 'Descripción del Producto', width: 120, title: false, hidden: true },
                 { name: 'selectCta', label: '<i class="glyphicon glyphicon-check"></i>', width: 30, align: 'center', viewable: false, formatter: 'gridButton', formatoptions: { action: 'openCtaSelector', icon: 'check', type: 'brown', title: 'Cambiar Cuenta', data: function (o) { return o.index; }, conditional: function (o) { return !$.isEmpty(o.Pro_Cod); } }, resizable: false },
                 { name: 'Pld_Cod', label: 'Pld_Cod', width: 20, hidden: true },
                 { name: 'Pld_Cdc', label: 'Cuenta', width: 40, align: "center", formatter: 'title', formatoptions: { title: function (o) { return o['Pld_Cdc'] + ' - ' + o['Pld_Des']; } }, title: false },
@@ -105,7 +102,7 @@ $(function () {
                 { name: 'Ppa_Des', label: 'Ppa_Des', width: 20, hidden: true },
                 { name: 'Ppa_Label', label: 'Ppa_Label', width: 20, hidden: true },
                 { name: 'Ppa_Ruta', label: 'Ppa_Ruta', width: 20, hidden: true },
-                { name: 'selectPpa', label: '<i class="glyphicon glyphicon-stats" title="Presupuesto"></i>', labelLong: 'Rubro presupuesto', width: 10, align: 'center', viewable: false, resizable: false, hidden: (typeof Cof_Mpe === 'undefined' || Cof_Mpe !== 'S'), formatter: 'ppaRubroBtn' },
+                { name: 'selectPpa', label: '<i class="glyphicon glyphicon-stats" title="Presupuesto"></i>', labelLong: 'Rubro presupuesto', width: 15, align: 'center', viewable: false, resizable: false, hidden: (typeof Cof_Mpe === 'undefined' || Cof_Mpe !== 'S'), formatter: 'ppaRubroBtn' },
                 { name: 'delete', label: '<i class="glyphicon glyphicon-remove"></i>', width: 30, align: 'center', viewable: false, formatter: 'gridButton', formatoptions: { action: deleteItem, icon: 'remove', title: 'Eliminar Item', type: 'danger', data: function (o) { return o.index; }, attr: { 'tabindex': '-1' }, conditional: function (o) { return !(!$.varValid(o['Pro_Cod']) || o['Pro_Cod'] === ''); } }, resizable: false }
             ]
         }, true, 'documentoPager', { view: false }).gridButtonsAdd([
@@ -192,7 +189,6 @@ $(function () {
     // Activar edición de fecha de retención al hacer clic en el checkbox
     $("#Ret_Fec").prop("readonly", true).datepicker("option", "beforeShow", function (input, inst) { return $(input).prop("readonly") ? false : {}; });
     $('#edit_fec_ret').on('click', function () {
-        validarFechaRetencion();
         if ($(this).prop('checked')) {
             $.createDialogConfirm('<img src="../../mascaras/model1/imagenes/32x32/advertencia.png" height="20" width="20" style="" alt=""> La fecha de retención debe ser como máximo 5 días después de la compra y en el mismo mes para que sea válida.', null, function () {
                 $("#Ret_Fec").prop("readonly", false);
@@ -205,153 +201,22 @@ $(function () {
     });
 
 
-    /* if ($('#Cop_Fec').length === 1) {
-         $('#Cop_Fec').on('change', function () {
-             $('#Cop_Imf').datepicker("option", "maxDate", this.value); 
-             $('#Cop_Cad').datepicker("option", "minDate", this.value); 
-             $('#Ret_Fec').val(this.value).datepicker("option", "minDate", this.value); 
-             var d = new Date(this.value); 
-             d.setDate(d.getDate() + 15); 
-             $('#Cpp_Ven').datepicker("setDate", d).datepicker("option", "minDate", this.value);
-             if (this.value.length > 0) {
-                 var fec_cop = this.value.split("-"), anio = fec_cop[0], mes = fec_cop[1];
-                 if ($(this).data('mes') !== mes) checkFechaIva(this.value);
-                 if ($(this).data('anio') !== anio) {
-                     if (Cof_Con === 'S') { checkCuentaPago(); $.Search('pro'); }
-                 } $(this).data('anio', anio); $(this).data('mes', mes);
-             }
-             if ($('#Rem_Fec').length === 1)
-                 $('#Rem_Fec').datepicker("option", "maxDate", this.value);
-         });
-         $('#Cop_Fec').data('anio', $('#Cop_Fec').val().substring(0, 4)).data('mes', $('#Cop_Fec').val().substring(5, 7));
-     }*/
     if ($('#Cop_Fec').length === 1) {
-
         $('#Cop_Fec').on('change', function () {
-            /* $('#Cop_Imf').datepicker("option", "maxDate", this.value);
-             $('#Cop_Cad').datepicker("option", "minDate", this.value);
-             $('#Ret_Fec').val(this.value).datepicker("option", "minDate", this.value);
-             var d = new Date(this.value);
-             d.setDate(d.getDate() + 15);
-             $('#Cpp_Ven').datepicker("setDate", d).datepicker("option", "minDate", this.value);
-             if (this.value.length > 0) {
-                 var fec_cop = this.value.split("-"), anio = fec_cop[0], mes = fec_cop[1];
-                 if ($(this).data('mes') !== mes) checkFechaIva(this.value);
-                 if ($(this).data('anio') !== anio) {
-                     if (Cof_Con === 'S') { checkCuentaPago(); $.Search('pro'); }
-                 } $(this).data('anio', anio); $(this).data('mes', mes);
-             }
-             if ($('#Ret_Fec').length === 1) {
-                 // Permite seleccionar sólo fechas dentro de los 5 días posteriores a la compra.
-                 var minDate = this.value; var maxDate = "";
-                 if (this.value) {
-                     var d = new Date(this.value);
-                     //d.setDate(d.getDate() + 4);
-                      d.setDate(d.getDate() + 9);
-                     maxDate = d.toISOString().split('T')[0];
-                 }
-                 $('#Ret_Fec').datepicker("option", { "minDate": minDate, "maxDate": maxDate });
-             }*/
-            validarFechaRetencion();
+            $('#Cop_Imf').datepicker("option", "maxDate", this.value); $('#Cop_Cad').datepicker("option", "minDate", this.value); $('#Ret_Fec').val(this.value).datepicker("option", "minDate", this.value); var d = new Date(this.value); d.setDate(d.getDate() + 15); $('#Cpp_Ven').datepicker("setDate", d).datepicker("option", "minDate", this.value);
+            if (this.value.length > 0) {
+                var fec_cop = this.value.split("-"), anio = fec_cop[0], mes = fec_cop[1];
+                if ($(this).data('mes') !== mes) checkFechaIva(this.value);
+                if ($(this).data('anio') !== anio) {
+                    if (Cof_Con === 'S') { checkCuentaPago(); $.Search('pro'); }
+                } $(this).data('anio', anio); $(this).data('mes', mes);
+            }
+            if ($('#Rem_Fec').length === 1)
+                $('#Rem_Fec').datepicker("option", "maxDate", this.value);
         });
         $('#Cop_Fec').data('anio', $('#Cop_Fec').val().substring(0, 4)).data('mes', $('#Cop_Fec').val().substring(5, 7));
     }
-
-    /** Vencimiento compra a crédito: Cpp_Ven = Cop_Fec + días elegidos en #Cpp_Ven_plazo (30/60); si plazo vacío, +15 como antes. */
-    var _cppVenProgramatico = false;
-    function actualizarCppVenDesdeCompra(copFecValue) {
-        if (!$('#Cpp_Ven').length || !copFecValue) {
-            return;
-        }
-        var partes = copFecValue.split('-');
-        if (partes.length !== 3) {
-            return;
-        }
-        var y = parseInt(partes[0], 10), m = parseInt(partes[1], 10) - 1, dia = parseInt(partes[2], 10);
-        if (isNaN(y) || isNaN(m) || isNaN(dia)) {
-            return;
-        }
-        var base = new Date(y, m, dia);
-        var plazoSel = $('#Cpp_Ven_plazo').length ? String($('#Cpp_Ven_plazo').val() || '') : '';
-        var diasPlazo = parseInt(plazoSel, 10);
-        var dias = (plazoSel !== '' && !isNaN(diasPlazo) && diasPlazo > 0) ? diasPlazo : 15;
-        var ven = new Date(base.getTime());
-        ven.setDate(ven.getDate() + dias);
-        _cppVenProgramatico = true;
-        $('#Cpp_Ven').datepicker('option', 'minDate', copFecValue);
-        $('#Cpp_Ven').datepicker('setDate', ven);
-        // El datepicker puede disparar change en el siguiente tick; mantener el flag para no vaciar #Cpp_Ven_plazo.
-        setTimeout(function () { _cppVenProgramatico = false; }, 0);
-    }
-
-    function validarFechaRetencion() {
-        // Obtener el valor del campo Cop_Fec directamente
-        var copFecValue = $('#Cop_Fec').val();
-        if (!copFecValue) {
-            return; // Si no hay valor, salir de la función
-        }
-        $('#Cop_Imf').datepicker("option", "maxDate", copFecValue);
-        $('#Cop_Cad').datepicker("option", "minDate", copFecValue);
-        // Establecer Ret_Fec con la fecha del servidor solo si no existe fecha de retención
-        var retFecValue = $('#Ret_Fec').val();
-        var fechaActual = (typeof window.fecRetencionServidor === 'function' ? window.fecRetencionServidor() : '');
-        if (!fechaActual) {
-            var hoy = new Date();
-            var mes = (hoy.getMonth() + 1);
-            var dia = hoy.getDate();
-            fechaActual = hoy.getFullYear() + '-' + (mes < 10 ? '0' : '') + mes + '-' + (dia < 10 ? '0' : '') + dia;
-        }
-        if (!retFecValue || retFecValue === '' || retFecValue === copFecValue) {
-            $('#Ret_Fec').val(fechaActual);
-        }
-        $('#Ret_Fec').datepicker("option", "minDate", copFecValue);
-        actualizarCppVenDesdeCompra(copFecValue);
-        if (copFecValue.length > 0) {
-            var fec_cop = copFecValue.split("-"), anio = fec_cop[0], mes = fec_cop[1];
-            if ($('#Cop_Fec').data('mes') !== mes) checkFechaIva(copFecValue);
-            if ($('#Cop_Fec').data('anio') !== anio) {
-                if (Cof_Con === 'S') { checkCuentaPago(); $.Search('pro'); }
-            }
-            $('#Cop_Fec').data('anio', anio).data('mes', mes);
-        }
-        if ($('#Ret_Fec').length === 1) {
-            // Permite seleccionar sólo fechas dentro de los 5 días posteriores a la compra.
-            var minDate = copFecValue;
-            var maxDate = "";
-            if (copFecValue) {
-                var d = new Date(copFecValue);
-                //d.setDate(d.getDate() + 4);
-                d.setDate(d.getDate() + 8);
-                maxDate = d.toISOString().split('T')[0];
-            }
-            $('#Ret_Fec').datepicker("option", { "minDate": minDate, "maxDate": maxDate });
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    $('#For_Cod').on('change', function () { $('.pagoCredito')[this.value * 1 === 2 ? 'show' : 'hide'](); $('.Caj_Ven_Div')[this.value * 1 === 1 ? 'show' : 'hide'](); (('0' + this.value) * 1 === 2 ? $('#Cpp_Ven').attr('required', 'required') : $('#Cpp_Ven').removeAttr('required')); if (this.value * 1 === 2 && $('#Cop_Fec').val()) { actualizarCppVenDesdeCompra($('#Cop_Fec').val()); } });
-    if ($('#Cpp_Ven_plazo').length) {
-        $('#Cpp_Ven_plazo').on('change', function () {
-            var cf = $('#Cop_Fec').val();
-            if (cf) { actualizarCppVenDesdeCompra(cf); }
-        });
-        $('#Cpp_Ven').on('change', function () {
-            if (_cppVenProgramatico) { return; }
-            $('#Cpp_Ven_plazo').val('');
-        });
-    }
+    $('#For_Cod').on('change', function () { $('.pagoCredito')[this.value * 1 === 2 ? 'show' : 'hide'](); (('0' + this.value) * 1 === 2 ? $('#Cpp_Ven').attr('required', 'required') : $('#Cpp_Ven').removeAttr('required')); });
     $('#For_Cod2').on('change', function () { $('.pagoCredito2')[this.value * 1 === 2 ? 'show' : 'hide'](); (('0' + this.value) * 1 === 2 ? $('#Cpp_Ven2').attr('required', 'required') : $('#Cpp_Ven2').removeAttr('required')); });
     $('#Ret_Asu').on('change', function () { calculaRetencion(); });
     if (flyout) {
@@ -364,46 +229,28 @@ $(function () {
     if ($('#provCreateDialog').length > 0) $('#provCreateDialog').createDialog({ icon: 'plus', width: 500, height: 430 });
 
     $('#Tic_Cod').on('change', function () {
-        var val = this.value !== '' ? this.value * 1 : '', sel = $(this).find('option:selected'), sri = sel.data('ticsri') * 1 || sel.attr('data-ticsri') * 1, des = this.value !== '' ? sel.text() : '';
+        var val = this.value !== '' ? this.value * 1 : '', sel = $(this).find('option:selected'), sri = sel.data('ticsri'), des = this.value !== '' ? sel.text() : '';
         $("#Cop_Num").prop("readonly", false);
         $("#Pun_Sri").hide();
         $("#Cop_Aut").prop("disabled", false);
         $("#Aut_Codliq").val("").prop("disabled", false);
 
-        var esLiq = (sri === 3 || val === 3);
-        $('#Cop_Num').removeData('liq_sec');
-        if (esLiq && (typeof array_documentos !== 'undefined' && array_documentos && array_documentos.length > 0)) { //valor de liquidacion de compras
+        if (val == 3 && (array_documentos.length > 0)) { //valor de liquidacion de compras
             $("#Pun_Sri").show();
             $("#Cop_Num").prop("readonly", true);
-            aplicarMascaraCopNum(3);
 
             //bloquear el campo para ingresar autorizacion
-            var isMod = (typeof edit_doc !== 'undefined' && edit_doc === 'S') || (typeof editDoc !== 'undefined' && editDoc === true);
-            if (!isMod) {
-                $("#Cop_Aut").prop("disabled", true).removeAttr("required").val("9".repeat(49));
-            }
+            $("#Cop_Aut").prop("disabled", true).removeAttr("required").val("9".repeat(49));
+            console.log(array_documentos.length);
             var Suc_Sri = null;
-            var tic_cod = null, aut_sri = null, pun_sri = null, aut_cod = null;
-            var documento_sel = $('#Tic_Cod').find('option:selected').text().split('-')[1] || 'LIQUIDACIÓN';
+            var documento_sel = $('#Tic_Cod').find('option:selected').text().split('-')[1];
             $.each(array_documentos, function (i, v) {
-                if (v['Tic_Sri'] == '3' || v['Tic_Sri'] == '03' || v['Tic_Cod'] == val) {
-                    tic_cod = v['Tic_Cod'];
-                    aut_sri = v['Aut_Sri'];
-                    pun_sri = v['Pun_Sri'];
-                    aut_cod = v['Aut_Cod'];
-                    Suc_Sri = v['Suc_Sri'];
-                }
+                tic_cod = v['Tic_Cod'];
+                aut_sri = v['Aut_Sri'];
+                pun_sri = v['Pun_Sri'];
+                aut_cod = v['Aut_Cod'];
+                Suc_Sri = v['Suc_Sri'];
             });
-            if (!aut_cod && array_documentos.length > 0) {
-                tic_cod = array_documentos[0]['Tic_Cod'];
-                aut_sri = array_documentos[0]['Aut_Sri'];
-                pun_sri = array_documentos[0]['Pun_Sri'];
-                aut_cod = array_documentos[0]['Aut_Cod'];
-                Suc_Sri = array_documentos[0]['Suc_Sri'];
-            }
-
-            if (isMod) { $('#Aut_Codliq').val(aut_cod); }
-
             $.post('', {
                 'Tic_Cod': tic_cod,
                 'Aut_Sri': aut_sri,
@@ -411,21 +258,16 @@ $(function () {
                 'Aut_Cod': aut_cod,
                 'numeroSec': true
             }, function (response) {
-                var prefijo = Suc_Sri ? (Suc_Sri + '-' + ((response && response['Pun_Sri']) || pun_sri || '') + '-') : (((response && response['Pun_Sri']) || pun_sri || '') + '-');
-                var vnum = secuencialLiquidacion((isMod && $('#Cop_Num').data('old_num')) ? $('#Cop_Num').data('old_num') : '');
-                if (!vnum) vnum = secuencialLiquidacion(response && response['Cop_Num']);
-                aplicarMascaraCopNum(3);
-                $('#formDocumento').setData({ 'Pun_Sri': prefijo, 'Cop_Num': vnum, 'Aut_Codliq': (response && response['Aut_Cod']) ? response['Aut_Cod'] : aut_cod }, false);
-                $('#Cop_Num').data('liq_sec', vnum);
-                if (response && response['Cop_Num']) {
-                    var doc_disponibles = (response['Aut_Fin'] * 1 - response['Aut_Ini'] * 1) - (response['contador'] * 1 || 0);
-                    if (doc_disponibles <= (response['Aut_Ads'] * 1 || 0) && (typeof Nota_CreDeb !== 'undefined' && Nota_CreDeb === false))
-                        alertaAuto(`Quedan <b>${doc_disponibles} ${documento_sel}S</b> disponibles`, '#Vet_Num', 'right');
-                    num_old = response.Cop_Sec;
-                }
-            }, 'json').fail(function () { $.alert('Error al consultar la secuencia del documento.'); });
-        } else if (esLiq && (!array_documentos || array_documentos.length === 0)) {
-            $.alert('No se encontró una autorización activa para <u>Liquidación de Compras</u> en este punto de emisión.');
+                console.log(response);
+                var vnum = ((editDoc) ? (!$.vv(response['Aut_Cod']) || AutCod * 1 === response['Aut_Cod'] * 1 ? vet_num_ant : response['Cop_Num']) : response['Cop_Num']);
+                console.log(vnum);
+                $('#formDocumento').setData({ 'Pun_Sri': Suc_Sri + '-' + response['Pun_Sri'] + '-', 'Cop_Num': vnum, 'Aut_Codliq': response['Aut_Cod'] /*, 'Cop_Aut': ""*/ }, false);
+                var doc_disponibles = (response['Aut_Fin'] * 1 - response['Aut_Ini'] * 1) - response['contador'];
+                if (doc_disponibles <= response['Aut_Ads'] * 1 && Nota_CreDeb === false)
+                    alertaAuto(`Quedan <b>${doc_disponibles} ${documento_sel}S</b> disponibles`, '#Vet_Num', 'right');
+                // validarTic_Cod(true);
+                num_old = response.Cop_Sec;
+            }, 'json').fail(function () { $.alert(); });
         }
 
         $('#asumirRet')[(sri === 1 || sri === 3) && Cof_Con === 'S' ? 'show' : 'hide']();
@@ -446,52 +288,37 @@ $(function () {
 
 function cambioTipoDoc(i = null) {
     if ($('input[name="Prs_Ced"]').val() !== '') {
-        var ticSri = $("#Tic_Cod option:selected").attr('data-ticsri');
-        var triSri = $("#Tri_Cod option:selected").attr('data-ticsri');
-        var ticVal = (i !== null && i !== undefined && i !== '') ? String(i) : String($("#Tic_Cod").val() || '');
-        // Sustento 10 + documento dividendos (Tic_Cod 18 / Tic_Sri 19): mantener cédula, no activar RUC
-        var esDividendos = (String(triSri) === '10' || String(ticSri) === '19' || ticVal === '18');
-        if (esDividendos) {
-            $('#op_ide2').prop('checked', true).trigger('change');
-            var ced = $('input[name="Prs_Ced"]').val();
-            if (ced.length > 10) {
-                $('input[name="Prs_Ced"]').val(ced.substring(0, 10));
-            }
-            return;
-        }
-
+        //var op= $.isEmpty(i)?$('input:radio[name=Cop_Ide]:checked').val():i;            
         if (!$.isEmpty(i)) {
-            var esLiquidacion = (i == '3' || i == '03' || ticSri == '3' || ticSri == '03');
-            var ideNum = esLiquidacion ? '2' : '1';
-            $('#op_ide' + ideNum).prop('checked', true).trigger('change');
-            var op = ideNum;
+            i = i == '3' ? '2' : '1';
+            $('#op_ide' + i).prop('checked', true).trigger('change');
+            var op = i;
         } else {
             var op = $('input:radio[name=Cop_Ide]:checked').val();
         }
 
-        if (op == '1') {
+        if (op == '1' || i !== '3') {
             if ($('input[name="Prs_Ced"]').val().length < 13) $('input[name="Prs_Ced"]').val($('input[name="Prs_Ced"]').val() + '001');
-            if ($.isEmpty(i)) {
-                var $facOpt = $("#Tic_Cod option[data-ticsri='1'], #Tic_Cod option[data-ticsri='01']");
-                var facVal = $facOpt.length ? $facOpt.val() : 1;
-                $('#Tic_Cod').val(facVal).trigger('change');
-            }
-        } else if (op == '2') {
-            if ($('input[name="Prs_Ced"]').val().length > 10) $('input[name="Prs_Ced"]').val($('input[name="Prs_Ced"]').val().substring(0, 10));
-            if ($.isEmpty(i)) {
-                var $liqOpt = $("#Tic_Cod option[data-ticsri='3'], #Tic_Cod option[data-ticsri='03']");
-                if ($liqOpt.length) $('#Tic_Cod').val($liqOpt.val()).trigger('change');
-            }
+            if ($.isEmpty(i)) $('#Tic_Cod').val(1);
         }
+        if (op == '2' || i == '3') {
+            if ($('input[name="Prs_Ced"]').val().length > 10) $('input[name="Prs_Ced"]').val($('input[name="Prs_Ced"]').val().substring(0, 10));
+            if ($.isEmpty(i)) $('#Tic_Cod').val(3);
+        }
+        /* if(op =='3'){
+             if($('input[name="Prs_Ced"]').val().length>10) $('input[name="Prs_Ced"]').val($('input[name="Prs_Ced"]').val().substring(0,10));
+             //if($.isEmpty(i))$('#Tic_Cod').val(3);
+         }*/
+
     }
 }
 function tipoComprobanteHide(i, y = null) {
     var x = [
-        { s: 1, c: [1, 3, 4, 5, 11, 12, 21, 41, 42, 43, 47, 48, 374, 0] },
-        { s: 2, c: [1, 2, 3, 4, 5, 9, 11, 12, 19, 20, 21, 41, 42, 43, 47, 48, 364, 374, 0] },
-        { s: 3, c: [1, 4, 3, 5, 41, 42, 47, 48, 374, 0] },
-        { s: 4, c: [1, 2, 3, 4, 5, 41, 42, 47, 48, 374, 0] },
-        { s: 5, c: [1, 2, 3, 4, 5, 11, 41, 42, 374, 0] },
+        { s: 1, c: [1, 3, 4, 5, 11, 12, 21, 41, 43, 47, 48, 374, 0] },
+        { s: 2, c: [1, 2, 3, 4, 5, 9, 11, 12, 19, 20, 21, 41, 43, 47, 48, 364, 374, 0] },
+        { s: 3, c: [1, 4, 3, 5, 41, 47, 48, 374, 0] },
+        { s: 4, c: [1, 2, 3, 4, 5, 41, 47, 48, 374, 0] },
+        { s: 5, c: [1, 2, 3, 4, 5, 11, 41, 374, 0] },
         { s: 6, c: [1, 3, 4, 5, 41, 43, 47, 48, 374, 0] },
         { s: 7, c: [1, 2, 3, 4, 5, 41, 43, 47, 48, 364, 374, 0] },
         { s: 8, c: [1, 2, 3, 4, 5, 21, 0] },
@@ -502,102 +329,18 @@ function tipoComprobanteHide(i, y = null) {
         { s: 13, c: [19, 0] },
         { s: 14, c: [1, 2, 4, 5, 0] },
         { s: 15, c: [1, 2, 4, 5, 12, 0] }
-    ];
-    var ide = $('input:radio[name=Cop_Ide]:checked').val();
-    // Sustento dividendos (Tri_Sri 10 / 13): solo con cédula
-    var esCedula = (ide == 2);
-    $("#Tri_Cod option[data-ticsri='10'], #Tri_Cod option[data-ticsri='13']").each(function () {
-        if (esCedula) {
-            $(this).show();
-        } else {
-            $(this).hide();
-        }
-    });
-    if (!esCedula) {
-        var triSriSel = $("#Tri_Cod option:selected").attr('data-ticsri');
-        if (triSriSel == '10' || triSriSel == '13') {
-            var $def = $("#Tri_Cod option[data-ticsri='2']");
-            if (!$def.length) {
-                $def = $("#Tri_Cod option:not([data-ticsri='10']):not([data-ticsri='13']):first");
-            }
-            if ($def.length) {
-                $("#Tri_Cod").val($def.val());
-                i = $def.attr('data-ticsri');
-            }
-        }
-    }
-
-    $('#Tic_Cod option').hide();
-    $("#Tic_Cod option[value='']").show();
-    var r = x.find(function (item) { return item.s === i * 1; });
-    if (!r) {
-        if (y !== null && y !== undefined) $('#Tic_Cod').val(y);
-        return;
-    }
+    ]
+    $(document).ready(function () { $('#Tic_Cod option').hide(); }); //Pone a visible los option del select Tic_Cod
+    var r = x.find(x => x.s === i * 1)
     $.each(r.c, function (index, v) {
-        var selector = "#Tic_Cod option[data-ticsri='" + v + "'], #Tic_Cod option[data-ticsri='" + (v < 10 ? '0' + v : v) + "'], #Tic_Cod option[data-ticsri='" + (v * 1) + "']";
-        // Comprobante de dividendos (19): solo activo con cédula
-        if (v * 1 === 19) {
-            if (esCedula) {
-                $(selector).show();
-            }
-            return;
-        }
-        if (ide == 1 && v !== 3) {
-            $(selector).show();
-        }
-        if (ide == 2 && (v == 3 || v == 0)) {
-            $(selector).show();
-        }
-        if (ide == 3 && v !== 1) {
-            $(selector).show();
-        }
+        if ($('input:radio[name=Cop_Ide]:checked').val() == 1 && v !== 3)
+            $("#Tic_Cod option[data-ticsri='" + v + "']").show(); // Ocultamos los option segun id de sustento
+        if ($('input:radio[name=Cop_Ide]:checked').val() == 2 && (v == 3 || v == 0))
+            $("#Tic_Cod option[data-ticsri='" + v + "']").show(); // Ocultamos los option segun id de sustento
+        if ($('input:radio[name=Cop_Ide]:checked').val() == 3 && v !== 1)
+            $("#Tic_Cod option[data-ticsri='" + v + "']").show(); // Ocultamos los option segun id de sustento
     });
-
-    if (y !== null && y !== undefined && y !== '') {
-        $('#Tic_Cod').val(y).trigger('change');
-    } else if (ide == 2) {
-        // Auto-seleccionar Liquidación de compras para Cédula
-        var $liqOpt = $("#Tic_Cod option[data-ticsri='3'], #Tic_Cod option[data-ticsri='03']");
-        var curSri = $("#Tic_Cod option:selected").attr('data-ticsri');
-        if ($liqOpt.length && (curSri != '3' && curSri != '03' && curSri != '19')) {
-            $('#Tic_Cod').val($liqOpt.val()).trigger('change');
-        } else {
-            $('#Tic_Cod').trigger('change');
-        }
-    } else if (ide == 1) {
-        // Auto-seleccionar Factura para RUC
-        var $facOpt = $("#Tic_Cod option[data-ticsri='1'], #Tic_Cod option[data-ticsri='01']");
-        var curSri = $("#Tic_Cod option:selected").attr('data-ticsri');
-        if ($facOpt.length && (!curSri || curSri === '' || curSri == '3' || curSri == '03' || curSri == '19')) {
-            $('#Tic_Cod').val($facOpt.val()).trigger('change');
-        } else {
-            $('#Tic_Cod').trigger('change');
-        }
-    } else {
-        // Si la opción seleccionada quedó oculta, resetear o seleccionar la primera visible
-        var $selOpt = $("#Tic_Cod option:selected");
-        if ($selOpt.length && $selOpt.is(':hidden')) {
-            var $firstVis = $("#Tic_Cod option:visible:not([value='']):first");
-            $('#Tic_Cod').val($firstVis.length ? $firstVis.val() : '').trigger('change');
-        } else {
-            $('#Tic_Cod').trigger('change');
-        }
-    }
-}
-
-function imprimirRetencion(retCod) {
-    if (retCod && retCod !== '') {
-        var codigo = retCod;
-        if (retCod.indexOf('Ret_Cod=') !== -1) {
-            codigo = retCod.split('Ret_Cod=')[1];
-            if (codigo.indexOf('&') !== -1) { codigo = codigo.split('&')[0]; }
-        }
-        var url = '../COMPONENTES/tesPdfElectronicos.php?type=RETENC&Doc_Cod=' + codigo;
-        window.open(url, '_blank');
-    } else {
-        $.alert('No hay código de retención disponible para imprimir.');
-    }
+    $('#Tic_Cod').val(y);
 }
 
 function viewPdf(doc) {
@@ -635,15 +378,193 @@ function descargarLiq(data) {
 
 /* BUSQUEDAS */
 function setOpt(val) { if (val === 'd' || val === 'r') $('.search_pec').attr('disabled', 'disabled'); else $('.search_pec').removeAttr('disabled'); }
+// Buscar asociación automática por código XML
+function buscarAsociacionXml(codigoXml, rowId, callback) {
+    if (!codigoXml || codigoXml === '') {
+        if (callback) callback(null);
+        return;
+    }
+
+    $.ajax({
+        url: '',
+        type: 'POST',
+        dataType: 'json',
+        data: {
+            buscarAsociacionXmlAjax: true,
+            Cod_Xml: codigoXml,
+            Cop_Fec: $('#Cop_Fec').val() || '',
+            Prv_Cod: $('#Prv_Cod').val() || ''
+        },
+        success: function (response) {
+            if (response.success && response.asociacion) {
+                // Llenar automáticamente los campos del producto
+                var asociacion = response.asociacion;
+                var rowData = gridFact.jqGrid('getRowData', rowId);
+
+                // Preservar valores del XML (cantidad, precio, etc.)
+                var datosPreservar = {
+                    Cop_Can: rowData['Cop_Can'] || '',
+                    Cop_Pru: rowData['Cop_Pru'] || '',
+                    Cop_Imp: rowData['Cop_Imp'] || '',
+                    Cop_Dec: rowData['Cop_Dec'] || '',
+                    Cod_Xml_Principal: rowData['Cod_Xml_Principal'] || codigoXml,
+                    Cod_Xml_Auxiliar: rowData['Cod_Xml_Auxiliar'] || ''
+                };
+
+                // Combinar datos de la asociación con los preservados
+                // IMPORTANTE: Aplicar TODOS los datos del producto asociado automáticamente
+                var datosCompletos = $.extend({}, asociacion, datosPreservar, {
+                    Pro_Cod: asociacion['Pro_Cod'],
+                    // Descripción del sistema (prioridad sobre XML)
+                    Ite_Lar: asociacion['Ite_Lar'] || asociacion['Pro_Des'] || asociacion['Item_Ite_Lar'] || rowData['Ite_Lar'],
+                    // Unidad del producto
+                    Uni_Des: asociacion['Uni_Des'] || rowData['Uni_Des'],
+                    // IVA del producto
+                    Iva_Cod: asociacion['Iva_Cod'] || rowData['Iva_Cod'] || '',
+                    Iva_Por: asociacion['Iva_Por'] || rowData['Iva_Por'] || 0,
+                    // Cuenta contable (OBLIGATORIA para guardar)
+                    Pld_Cod: asociacion['Pld_Cod'] || rowData['Pld_Cod'] || '',
+                    Pld_Cdc: asociacion['Pld_Cdc'] || rowData['Pld_Cdc'] || '',
+                    Pld_Des: asociacion['Pld_Des'] || rowData['Pld_Des'] || '',
+                    // Adquisición (validar que sea válido, si no usar 0)
+                    Adq_Cod: (asociacion['Adq_Cod'] && asociacion['Adq_Cod'] !== '' && asociacion['Adq_Cod'] !== null && asociacion['Adq_Cod'] !== '0') ? asociacion['Adq_Cod'] : (rowData['Adq_Cod'] && rowData['Adq_Cod'] !== '' && rowData['Adq_Cod'] !== null && rowData['Adq_Cod'] !== '0' ? rowData['Adq_Cod'] : 0),
+                    Adq_Cor: asociacion['Adq_Cor'] || rowData['Adq_Cor'] || '',
+                    Adq_Des: asociacion['Adq_Des'] || rowData['Adq_Des'] || '',
+                    // Asignar campos de retenciones desde la asociacin si existen
+                    Ret_Ren_Cod: asociacion['Ret_Ren_Cod'] || '', Ret_Ren_Con: asociacion['Ret_Ren_Con'] || '', Ret_Ren_Por: asociacion['Ret_Ren_Por'] || '', Ret_Ren_Sri: asociacion['Ret_Ren_Sri'] || '',
+                    Iva_Ren_Cod: asociacion['Iva_Ren_Cod'] || '', Iva_Ren_Con: asociacion['Iva_Ren_Con'] || '', Iva_Ren_Por: asociacion['Iva_Ren_Por'] || '', Iva_Ren_Sri: asociacion['Iva_Ren_Sri'] || '',
+                    // IVA al costo
+                    Iva_Cos: asociacion['Iva_Cos'] || 'N',
+                    selectCta: ''
+                });
+
+                // Aplicar datos al grid
+                gridFact.changeRowData(rowId, datosCompletos);
+                gridFact.highlightRow(rowId);
+
+                // Actualizar campos visuales específicos para asegurar que se muestren
+                setTimeout(function () {
+                    // Solo actualizar si hay asociación (Pro_Cod existe)
+                    if (datosCompletos['Ite_Lar']) gridFact.setCell(rowId, 'Ite_Lar', datosCompletos['Ite_Lar']);
+                    if (datosCompletos['Uni_Des']) gridFact.setCell(rowId, 'Uni_Des', datosCompletos['Uni_Des']);
+                    if (datosCompletos['Adq_Cor']) gridFact.setCell(rowId, 'Adq_Cor', datosCompletos['Adq_Cor']);
+                    if (datosCompletos['Pld_Cdc']) gridFact.setCell(rowId, 'Pld_Cdc', datosCompletos['Pld_Cdc']);
+                    if (datosCompletos['Iva_Por']) gridFact.setCell(rowId, 'Iva_Por', datosCompletos['Iva_Por']);
+
+                    var tr = gridFact.find("tr#" + rowId);
+                    if (tr.attr("editable") === "1") {
+                        if (datosCompletos['Pro_Cod']) tr.find("input[name='Pro_Cod']").val(datosCompletos['Pro_Cod']);
+                        if (datosCompletos['Ite_Lar']) tr.find("input[name='Ite_Lar']").val(datosCompletos['Ite_Lar']);
+                        if (datosCompletos['Uni_Des']) tr.find("input[name='Uni_Des']").val(datosCompletos['Uni_Des']);
+                        if (datosCompletos['Adq_Cor']) tr.find("input[name='Adq_Cor']").val(datosCompletos['Adq_Cor']);
+                        if (datosCompletos['Pld_Cdc']) tr.find("input[name='Pld_Cdc']").val(datosCompletos['Pld_Cdc']);
+                        if (datosCompletos['Iva_Por']) tr.find("input[name='Iva_Por']").val(datosCompletos['Iva_Por']);
+                    }
+
+                    // Actualizar Adq_Des para el tooltip
+                    if (datosCompletos['Adq_Des']) {
+                        var rowData = gridFact.jqGrid('getRowData', rowId);
+                        if (rowData) {
+                            rowData['Adq_Des'] = datosCompletos['Adq_Des'];
+                            gridFact.jqGrid('setRowData', rowId, rowData);
+                        }
+                    }
+
+                    updateRowItem({ rowId: rowId });
+                    updateDocument();
+                }, 100);
+
+                if (callback) callback(asociacion);
+            } else {
+                if (callback) callback(null);
+            }
+        },
+        error: function () {
+            if (callback) callback(null);
+        }
+    });
+}
+
+// Guardar nueva asociación producto XML (Desactivado temporalmente ya que ahora se guarda al registrar la compra)
+function guardarAsociacionXml(codigoXml, proCod, callback) {
+    if (callback) callback(true);
+}
+
+// Buscar asociación cuando se ingresa o cambia un código XML
+function buscarAsociacionPorCodigoXml(dataset) {
+    var rowId = dataset.rowId || dataset.index;
+    if (!rowId) return;
+
+    var rowData = gridFact.jqGrid('getRowData', rowId);
+    var codigoXml = rowData['Cod_Xml_Principal'] || '';
+
+    // Solo buscar si hay código XML y no hay producto asociado
+    if (codigoXml && codigoXml !== '' && (!rowData['Pro_Cod'] || rowData['Pro_Cod'] === '' || rowData['Pro_Cod'] === '0')) {
+        buscarAsociacionXml(codigoXml, rowId, function (asociacion) {
+            if (asociacion) {
+                // Asociación encontrada y campos llenados automáticamente
+                console.log('Asociación encontrada automáticamente para código XML: ' + codigoXml);
+            }
+        });
+    }
+}
+
 // Selecciona Producto
 function selectItem(item) {
     var lastId = gridFact.jqGrid('getCol', 'index', false, 'max'), close = true;
     if (index === 0) { index = lastId; close = false; }
+    // Preservar códigos XML si existen en la fila actual
+    var currentRow = gridFact.jqGrid('getRowData', index);
+    var codXmlPrincipal = currentRow['Cod_Xml_Principal'] || '';
+    var codXmlAuxiliar = currentRow['Cod_Xml_Auxiliar'] || '';
+
+    // Obtener código XML para buscar o guardar asociación
+    var codigoXmlParaBuscar = codXmlPrincipal || codXmlAuxiliar;
+
+    // Verificar si hay Pro_Cod en la fila actual (antes de seleccionar)
+    var tieneProCodEnFila = currentRow['Pro_Cod'] && currentRow['Pro_Cod'] !== '' && currentRow['Pro_Cod'] !== '0';
+
+    // Verificar si el item seleccionado tiene Pro_Cod (producto seleccionado manualmente)
+    var tieneProCodEnItem = item['Pro_Cod'] && item['Pro_Cod'] !== '' && item['Pro_Cod'] !== '0';
+
+    // Si hay código XML en la fila y NO hay Pro_Cod en la fila, buscar asociación automática
+    if (codigoXmlParaBuscar && !tieneProCodEnFila) {
+        // Buscar asociación automática antes de seleccionar el producto
+        buscarAsociacionXml(codigoXmlParaBuscar, index, function (asociacion) {
+            // Si no se encontró asociación automática Y el usuario seleccionó manualmente un producto
+            // GUARDAR AUTOMÁTICAMENTE la relación sin preguntar al usuario
+            if (!asociacion && tieneProCodEnItem && codigoXmlParaBuscar) {
+                console.log('DEBUG selectItem - Guardando automáticamente asociación (no se encontró automática): Cod_Xml=' + codigoXmlParaBuscar + ', Pro_Cod=' + item['Pro_Cod']);
+                guardarAsociacionXml(codigoXmlParaBuscar, item['Pro_Cod'], function (success) {
+                    if (success) {
+                        console.log('DEBUG selectItem - Asociación guardada automáticamente para futuras importaciones');
+                    } else {
+                        console.warn('DEBUG selectItem - No se pudo guardar la asociación automáticamente');
+                    }
+                });
+            }
+        });
+    } else if (codigoXmlParaBuscar && tieneProCodEnItem) {
+        // Hay código XML en la fila y el usuario seleccionó manualmente un producto
+        // GUARDAR AUTOMÁTICAMENTE la relación sin preguntar al usuario
+        console.log('DEBUG selectItem - Guardando automáticamente asociación (selección manual): Cod_Xml=' + codigoXmlParaBuscar + ', Pro_Cod=' + item['Pro_Cod']);
+        guardarAsociacionXml(codigoXmlParaBuscar, item['Pro_Cod'], function (success) {
+            if (success) {
+                console.log('DEBUG selectItem - Asociación guardada automáticamente para futuras importaciones');
+            } else {
+                console.warn('DEBUG selectItem - No se pudo guardar la asociación automáticamente');
+            }
+        });
+    }
+
     delete (item['Cop_Ice']); delete (item['Ice_Por']);
     item['selectCta'] = '';
     gridFact.changeRowData(index, $.extend($.extend(item, {
         Ret_Ren_Cod: '', Ret_Ren_Con: '', Ret_Ren_Por: '', Ret_Ren_Sri: '', Iva_Cos: '',
-        Ppa_Cod: '', Pdp_Cod: '', Ppa_Cla: '', Ppa_Des: '', Ppa_Label: '', Ppa_Ruta: '', selectPpa: ''
+        Ppa_Cod: '', Pdp_Cod: '', Ppa_Cla: '', Ppa_Des: '', Ppa_Label: '', Ppa_Ruta: '', selectPpa: '',
+        // Preservar códigos XML si existen
+        Cod_Xml_Principal: codXmlPrincipal,
+        Cod_Xml_Auxiliar: codXmlAuxiliar
     }),
 
         item['Iva_Por'] * 1 > 0 ? {
@@ -741,8 +662,7 @@ function validaIngresoAut() {
     // $("#Cop_Aut").prop("disabled",false);
     $("#Cop_Aut").val("").prop("disabled", false);
     $("#Aut_Codliq").val("").prop("disabled", false);
-    $("#Cop_Num").val("").prop("disabled", false).removeData('liq_sec');
-    aplicarMascaraCopNum(1);
+    $("#Cop_Num").val("").prop("disabled", false);
 }
 
 // Valida q no existe la retencion
@@ -949,6 +869,131 @@ function clearPpaRow(id) {
         Ppa_Cod: '', Pdp_Cod: '', Ppa_Cla: '', Ppa_Des: '', Ppa_Label: '', Ppa_Ruta: '', selectPpa: ''
     });
 }
+
+// Carga automáticamente el detalle del producto asociado (cuando hay Pro_Cod desde XML)
+function loadProductoAsociado(id) {
+    var rowData = gridFact.jqGrid('getRowData', id);
+    if (!rowData || !rowData['Pro_Cod'] || rowData['Pro_Cod'] === '' || rowData['Pro_Cod'] === '0') {
+        $.alert('No hay un producto asociado para cargar.');
+        return;
+    }
+
+    // Mostrar indicador de carga
+    var $btn = $('#' + id + '_loadProducto');
+    var originalHtml = $btn.length > 0 ? $btn.html() : '';
+    if ($btn.length > 0) {
+        $btn.html('<i class="fa fa-spinner fa-spin"></i>').prop('disabled', true);
+    }
+
+    // Obtener los datos completos del producto usando el mismo método que el diálogo
+    var Cop_Fec = $('#Cop_Fec').val() || '';
+    var op_opciones = ''; // Opciones de búsqueda
+
+    $.ajax({
+        url: window.location.href,
+        type: "post",
+        dataType: "json",
+        data: {
+            proAjax: true,
+            search: rowData['Pro_Cod'],
+            page: 1,
+            rows: 1,
+            op_opciones: op_opciones,
+            Cop_Fec: Cop_Fec
+        },
+        success: function (prodResponse) {
+            try {
+                if (prodResponse && prodResponse.rows && prodResponse.rows.length > 0) {
+                    var productoCompleto = prodResponse.rows[0];
+
+                    // Preservar los datos del XML (cantidad, precio, códigos XML, etc.)
+                    var itemData = $.extend({}, rowData, {
+                        // Datos del producto obtenidos
+                        Pro_Cod: productoCompleto['Pro_Cod'] || rowData['Pro_Cod'],
+                        Ite_Lar: productoCompleto['Ite_Lar'] || rowData['Ite_Lar'],
+                        Uni_Des: productoCompleto['Uni_Des'] || rowData['Uni_Des'],
+                        Iva_Cod: productoCompleto['Iva_Cod'] || rowData['Iva_Cod'],
+                        Iva_Por: productoCompleto['Iva_Por'] || rowData['Iva_Por'],
+                        // CRÍTICO: Incluir adquisición del producto
+                        Adq_Cod: productoCompleto['Adq_Cod'] || rowData['Adq_Cod'] || null,
+                        Adq_Cor: productoCompleto['Adq_Cor'] || rowData['Adq_Cor'] || null,
+                        Adq_Des: productoCompleto['Adq_Des'] || rowData['Adq_Des'] || null,
+                        // Preservar códigos XML
+                        Cod_Xml_Principal: rowData['Cod_Xml_Principal'] || '',
+                        Cod_Xml_Auxiliar: rowData['Cod_Xml_Auxiliar'] || '',
+                        // Preservar cuenta contable si existe
+                        Pld_Cod: productoCompleto['Pld_Cod'] || rowData['Pld_Cod'] || null,
+                        Pld_Cdc: productoCompleto['Pld_Cdc'] || rowData['Pld_Cdc'] || '',
+                        Pld_Des: productoCompleto['Pld_Des'] || rowData['Pld_Des'] || ''
+                    });
+
+                    // Usar la misma lógica que selectItem
+                    delete itemData['Cop_Ice'];
+                    delete itemData['Ice_Por'];
+                    itemData['selectCta'] = '';
+                    itemData['Ret_Ren_Cod'] = '';
+                    itemData['Ret_Ren_Con'] = '';
+                    itemData['Ret_Ren_Por'] = '';
+                    itemData['Ret_Ren_Sri'] = '';
+                    itemData['Iva_Cos'] = '';
+
+                    // Aplicar lógica de IVA igual que selectItem
+                    if (itemData['Iva_Por'] * 1 > 0) {
+                        itemData = $.extend(itemData, {
+                            Iva_Cod: itemData['Iva_Cod'],
+                            Iva_Por: itemData['Iva_Por'],
+                            Cop_Ice: null,
+                            Iva_Ren_Cod: '',
+                            Iva_Ren_Con: '',
+                            Iva_Ren_Por: '',
+                            Iva_Ren_Sri: ''
+                        });
+                    } else {
+                        itemData = $.extend(itemData, {
+                            Iva_Ren_Cod: '',
+                            Iva_Ren_Con: '',
+                            Iva_Ren_Por: '',
+                            Iva_Ren_Sri: '',
+                            Cop_Ice: null
+                        });
+                    }
+
+                    console.log('=== CARGANDO PRODUCTO ASOCIADO ===');
+                    console.log('Pro_Cod:', itemData['Pro_Cod']);
+                    console.log('Adq_Cod:', itemData['Adq_Cod']);
+                    console.log('Adq_Cor:', itemData['Adq_Cor']);
+                    console.log('Adq_Des:', itemData['Adq_Des']);
+
+                    // Usar changeRowData igual que selectItem
+                    gridFact.changeRowData(id, itemData);
+                    gridFact.highlightRow(id);
+                    gridFact.jqGrid('editRow', id);
+
+                    updateDocument();
+
+                    $.alert('Detalle del producto cargado correctamente.');
+                } else {
+                    $.alert('No se encontraron datos del producto en la respuesta.');
+                }
+            } catch (e) {
+                console.error('Error procesando respuesta:', e);
+                $.alert('Error al procesar los datos del producto.');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error AJAX al cargar producto:', error);
+            console.error('Status:', status);
+            console.error('Response:', xhr.responseText);
+            $.alert('Error al cargar los datos del producto. Ver consola para más detalles.');
+        },
+        complete: function () {
+            // Restaurar botón
+            if ($btn && $btn.length > 0 && originalHtml) {
+                $btn.html(originalHtml).prop('disabled', false);
+            }
+        }
+    });
+}
 // Elimina item
 function deleteItem(index) { var data = gridFact.jqGrid('getRowData', index); if (data['Pro_Cod'] !== '') { gridFact.jqGrid('delRowData', index); updateDocument(); resize(); } }
 function resize() { if (gridFact.width() !== $('#documentoMain').width()) gridFact.jqGrid("resizeGrid"); }
@@ -1089,21 +1134,10 @@ function validaDocument() {
         if (data['items'][i]['Pro_Cod'] === '') { $.alert('Seleccione producto en la fila ' + (i + 1) + '!', null, 'remove'); return; }
         if (data['items'][i]['Cop_Imp'] * 1 <= 0) { $.alert('El producto <u>' + data['items'][i]['Ite_Lar'] + '</u> no puede tener <i>Importe cero</i>!', null, 'remove'); return; }
     }
-    if ((data['Tic_Sri'] * 1 !== 1 && data['Tic_Sri'] * 1 !== 2 && data['Tic_Sri'] * 1 !== 3 && data['Tic_Sri'] * 1 !== 42 && data['Tic_Sri'] * 1 !== 19) && data['rets'].length > 0) { $.alert('El <u>Comprobante de Retención</u> solo se aplica a <i>Facturas/Liquidaciones</i>!', null, 'remove'); return; }
-    if (data['Tic_Sri'] * 1 === 19 && $('input:radio[name=Cop_Ide]:checked').val() != 2) {
-        $.alert('El comprobante de <u>Dividendos</u> solo se permite con proveedor identificado por <i>C&eacute;dula</i>.', null, 'remove');
-        return;
-    }
+    if ((data['Tic_Sri'] * 1 !== 1 && data['Tic_Sri'] * 1 !== 2 && data['Tic_Sri'] * 1 !== 3) && data['rets'].length > 0) { $.alert('El <u>Comprobante de Retención</u> solo se aplica a <i>Facturas/Liquidaciones</i>!', null, 'remove'); return; }
     $.arraySpliceFields(data['items'], ['index', 'delete', 'select', 'Uni_Des', 'Pld_Cdc', 'Pld_Des', 'selectPpa', 'Ppa_Label', 'Ppa_Ruta', 'Ppa_Cla', 'Ppa_Des']);
     if (data['Tic_Sri'] * 1 === 3) { //liquidacion compras
         if (($('#t_rubros').val() * 1 + ('0' + $('#infoLiquida').data('actual')) * 1) > 13000) { $.alert('Las <u>liquidaciones en Compras</u> de este Proveedor exceden el limite!', null, 'remove'); return; }
-        if (data['Aut_Codliq']) {
-            var punSri = ($('input[name="Pun_Sri"]').val() || '').trim();
-            var secLiq = secuencialLiquidacion($('#Cop_Num').val() || $('#Cop_Num').data('liq_sec'));
-            if (!secLiq) { $.alert('No se pudo obtener el número de secuencia de la liquidación.', null, 'remove'); return; }
-            data['Pun_Sri'] = punSri;
-            data['Cop_Num'] = secLiq;
-        }
     }
     if (!$('#pagoFormTemp').valid()) { setTimeout(function () { $('#pagoFormTemp').formSubmit(); }, 0); return; };
     if ($('#Ren_Tot').val() * 1 > 0) {
@@ -1114,9 +1148,9 @@ function validaDocument() {
         var Ret_Fec = $('#Ret_Fec').val(), Aut_Cad = $('#Ret_Fec').data('Aut_Cad');
         if ($.vv(Aut_Cad) && Aut_Cad.length > 0) {
             if (Ret_Fec > Aut_Cad) {
-                //$('#Ret_Fec').createFlyout('No puede ser mayor a <u class="orange">' + Aut_Cad + '</u> !', { icon: 'exclamation', placement: 'right_bottom' });
-                // $('#Ret_Fec').val('').flyout('show');
-                // return;
+                $('#Ret_Fec').createFlyout('No puede ser mayor a <u class="orange">' + Aut_Cad + '</u> !', { icon: 'exclamation', placement: 'right_bottom' });
+                $('#Ret_Fec').val('').flyout('show');
+                return;
             }
         }
     }
@@ -1134,25 +1168,12 @@ function validaDocument() {
         if (datosReem.length === 0)
             return $.alert("Debe ingresar las facturas a reembolsar!", null, "alert");
     }
-    /* if (data['rets'].length > 0) {
-         var fecha_actual = new Date();
-         var fecha_retencion = $('#Ret_Fec').val();
-         if (fecha_retencion) {
-             var parts = fecha_retencion.split("-");
-             if (parts.length === 3) {
-                 var fecha_ret = new Date(parts[0], parts[1] - 1, parts[2]);
-                 // Solo comparar fechas (ignorar horas)
-                 fecha_actual.setHours(0, 0, 0, 0);
-                 fecha_ret.setHours(0, 0, 0, 0);
-                 if (fecha_ret < fecha_actual) {
-                     $('#Ret_Fec').createFlyout('La fecha de retención no puede ser menor a la fecha actual!', { icon: 'exclamation', placement: 'right_bottom' });
-                     $('#Ret_Fec').val('').flyout('show');
-                     return;
-                 }
-             }
-         }
-     }*/
-    $.createDialogConfirm('¿Est&aacute; seguro de guardar el documento?', data, saveDocument);
+    //console.log(data);
+    if (window.auto_save_in_progress) {
+        saveDocument(data);
+    } else {
+        $.createDialogConfirm('¿Est&aacute; seguro de guardar el documento?', data, saveDocument);
+    }
 }
 // Guardar documento
 function saveDocument(data) { //console.log(data); console.log(data['rets']);
@@ -1163,6 +1184,14 @@ function saveDocument(data) { //console.log(data); console.log(data['rets']);
     $.saveDataJson('', data,
         function (resp) {
             $('#resultContent').setData(resp);
+            
+            if (resp.mapeos_guardados && resp.mapeos_guardados > 0) {
+                $.alert('Su producto se mapeo correctamente.', null, 'ok green');
+            }
+            if (resp.mapeos_errores) {
+                $.alert('Error al mapear: ' + resp.mapeos_errores, null, 'remove');
+            }
+
             $('#copForm').setData(resp['Cop_Data']);
             $('#copresult').setRows(resp['Cop_Rows']);
             $('#btnCopPrint').data('url', resp['Cop_Link']);
@@ -1189,25 +1218,23 @@ function saveDocument(data) { //console.log(data); console.log(data['rets']);
                 var ret = $('#reteFormTemp').getData();
                 if (('0' + ret['Ren_Tot']) * 1 === 0) ret['Ret_Num'] = 'Ninguno';
                 $('#retForm').setData(ret); $('#reteresult').setRows($('#retencion').getGridBatch()); $('#btnRetPrint').data('url', resp['Ret_Link']);
-
-                // Establecer URL para imprimir PDF de retención
-                var retPrintUrl = resp['Ret_Link'];
-                // Si no hay Ret_Link o está vacío, usar tesPdfElectronicos.php como alternativa
-                if (!$.varValid(retPrintUrl) || retPrintUrl === '') {
-                    retPrintUrl = '../COMPONENTES/tesPdfElectronicos.php?type=RETENC&Doc_Cod=' + resp['Ret_Cod'];
-                }
-                $('#btnRetPrint').data('url', retPrintUrl).show();
                 if ($.varValid(resp['mail'])) {
                     if (resp['mail'] === false) $.alert('Surgio un problema al enviar el mail <u>Comprobante Electronico</u> al <i>Proveedor</i>!');
                     if (resp['mail'] === true) $.alert('El mail del <u>Comprobante Electronico</u> al <i>Proveedor</i> se envio correctamente!', null, 'ok green');
                 }
                 $('#btnRetXml')[$.varValid(resp['Ret_Xmls']) ? 'show' : 'hide']().data('url', resp['Ret_Xmls']);
                 $('#retForm').show();
-            } else {
-                $('#retForm').hide();
-                $('#btnRetPrint').hide();//Este es nuevo
+            } else { $('#retForm').hide(); }
+            $('#documentoMain').moveComp('#documentoResult').updateGridsSizes(); 
+            
+            if (window.auto_save_in_progress) {
+                if (window.opener && !window.opener.closed && window.opener.fetchData) {
+                    window.opener.fetchData();
+                }
+                window.close();
             }
-            $('#documentoMain').moveComp('#documentoResult').updateGridsSizes(); return false;
+            
+            return false;
         });
 }
 function viewInfo(doc) {
@@ -1273,22 +1300,9 @@ function guardaProvee() {
     $.saveDataJson("", $('#provCreateForm').getData('guardaProvAjax'), function (resp) { selectProvee(resp['prov']); $('#provCreateDialog').dialog('close'); return false; });
 }
 
-function secuencialLiquidacion(num) {
-    if (num == null || num === '') return '';
-    var parts = String(num).trim().split('-');
-    var sec = (parts.length >= 3 ? parts[parts.length - 1] : parts[0]).replace(/\D/g, '');
-    if (!sec) return '';
-    return ('000000000' + sec).slice(-9);
-}
-function aplicarMascaraCopNum(Tic_Sri) {
-    if (!$.mask) return;
-    var sri = Tic_Sri * 1;
-    $('#Cop_Num').unmask();
-    if (sri === 3) $('#Cop_Num').mask('999999999', { placeholder: '_' });
-    else $('#Cop_Num').mask(sri === 17 ? '999-9999-99-99999999' : '999-999-999999999', { placeholder: '_' });
-}
 function checkImportacion(Tic_Sri) {
-    aplicarMascaraCopNum(Tic_Sri);
+    var Importa = Tic_Sri * 1 === 17;
+    if ($.mask) $('#Cop_Num').unmask().mask(Importa ? "999-9999-99-99999999" : "999-999-999999999", { placeholder: "_" });
 }
 function checkLiquidacion() {
     if (typeof window.toggleBtnIngresoAutLiq === 'function') window.toggleBtnIngresoAutLiq();
@@ -1358,7 +1372,7 @@ function agregaRetencion(data) {
             gridFact.changeRowData(ids[i], ret);
     }
     calculaRetencion();
-    // if ($.isset('validaRetFec')) validaRetFec();
+    if ($.isset('validaRetFec')) validaRetFec();
     $('#codiDialog').dialog('close');
 }
 
@@ -1468,9 +1482,14 @@ $(function () {
         caption: 'Detalle Compra <button id="btnCopPrint" onclick="$.imprimirUrl($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir</button> ',
         colModel: [
             { label: 'C&oacute;d.Int.', name: 'Cop_Int', key: true, width: 15, align: "center", hidden: true },
+            { label: 'Pro_Cod', name: 'Pro_Cod', hidden: true },
+            { label: 'Cod_Xml_Principal', name: 'Cod_Xml_Principal', hidden: true },
+            { label: 'Cod_Xml_Auxiliar', name: 'Cod_Xml_Auxiliar', hidden: true },
+            { label: 'Adq_Cod', name: 'Adq_Cod', hidden: true },
+            { label: 'Pld_Cod', name: 'Pld_Cod', hidden: true },
             { label: 'Cantidad ', name: 'Cop_Can', width: 45, align: 'right' },
             { label: 'Item', name: 'Ite_Lar', width: 130 },
-            { label: 'Desc(%)', name: 'Cop_Dec', width: 65, align: 'right' },
+            { label: 'Desc.', name: 'Cop_Dec', width: 65, align: 'right' },
             { label: 'P. Unit.', name: 'Cop_Pru', width: 65, align: 'right' },
             { label: 'Importe', name: 'Cop_Imp', width: 65, align: 'right', formatter: 'currency', formatoptions: { prefix: '', thousandsSeparator: ',', decimalSeparator: '.', decimalPlaces: dynamicFormatter, defaultValue: '0.00' }, summaryType: "sum" }
         ]
@@ -1502,11 +1521,8 @@ $(function () {
     if ($('#retencionFull').length > 0) {
         $('#retencionFull').createGrid($.extend(opts, { height: 150, caption: 'Detalle Retenci&oacute;n' }), true).clearFootRow(['Ren_Val']);
     }
-    /*if ($('#reteresult').length > 0)
-        $('#reteresult').createGrid($.extend(opts, { caption: 'Detalle Retenci&oacute;n <button id="btnRetPrint" onclick="$.imprimirUrl($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir</button><button id="btnRetXml" onclick="window.open($(this).data(\'url\'));" class="btn btn-success btn-xs pull-right" style="margin-top: -2px; display:none; margin-right:2px; "><i class="glyphicon glyphicon-download-alt"></i> Descargar XML</button>' }), true).clearFootRow(['Ren_Val']);
-    */
     if ($('#reteresult').length > 0)
-        $('#reteresult').createGrid($.extend(opts, { caption: 'Detalle Retenci&oacute;n <button id="btnRetPrint" onclick="imprimirRetencion($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir Ret.</button><button id="btnRetXml" onclick="window.open($(this).data(\'url\'));" class="btn btn-success btn-xs pull-right" style="margin-top: -2px; display:none; margin-right:2px; "><i class="glyphicon glyphicon-download-alt"></i> Descargar XML</button>' }), true).clearFootRow(['Ren_Val']);
+        $('#reteresult').createGrid($.extend(opts, { caption: 'Detalle Retenci&oacute;n <button id="btnRetPrint" onclick="$.imprimirUrl($(this).data(\'url\'))" class="btn btn-success btn-xs pull-right" style="margin-top: -2px;"><i class="glyphicon glyphicon-print"></i> Imprimir</button><button id="btnRetXml" onclick="window.open($(this).data(\'url\'));" class="btn btn-success btn-xs pull-right" style="margin-top: -2px; display:none; margin-right:2px; "><i class="glyphicon glyphicon-download-alt"></i> Descargar XML</button>' }), true).clearFootRow(['Ren_Val']);
     if ($('#retencion').length > 0)
         $('#retencion').createGrid($.extend(opts, { height: 219, width: 593, responsive: false, caption: 'Detalle Retención <button type="button" role="button" tabindex="-1" class="ui-button ui-widget ui-state-default ui-corner-all pull-right" title="Cerrar Ventana" onclick="$(\'#retDetaDialog\').dialog(\'close\')"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span></button>' }), true).clearFootRow(['Ren_Val']);
     if ($('#detaRete').length > 0)
@@ -1629,36 +1645,24 @@ function ImpCom(rowCompra) {
     // Se consulta si la empresa tiene un reporte asignado en la base de datos
     $.getDataJson('', { 'cargarReportes': true }, function (res) {
         var reportes = res['reportes'];
-        var reportPath = null;
-        
-        if ($.varValid(reportes)) {
-            // Obtenemos el primer reporte asociado dinámicamente sin importar su clave (ID)
-            for (var key in reportes) {
-                if (reportes.hasOwnProperty(key) && $.varValid(reportes[key])) {
-                    reportPath = reportes[key];
-                    break;
-                }
-            }
-        }
-        
         var urlReporte = '';
-        if (reportPath) {
-            // Si la empresa TIENE un reporte configurado en el sistema, lo usamos.
-            // Pasamos ambos parámetros por si es el reporte unificado nuevo.
-            var separador = reportPath.indexOf('?') !== -1 ? '&' : '?';
-            urlReporte = reportPath + separador + 'codigo=' + rowCompra.Com_Cod + '&com_codigo=' + rowCompra.Cop_Cod;
+        
+        if ($.varValid(reportes) && $.varValid(reportes[1])) {
+            // Si tiene reporte asignado (como el nuevo alldocument_1.0), le pasamos AMBOS parámetros
+            urlReporte = reportes[1] + '?codigo=' + rowCompra.Com_Cod + '&com_codigo=' + rowCompra.Cop_Cod;
         } else {
-            // Si NO tiene reporte configurado, evitamos el error y usamos el reporte por defecto.
+            // FALLBACK SILENCIOSO: Si no tiene reporte, usamos el viejo por defecto, sin alertas
             urlReporte = '/contabilidad/FRONT/con_pri_compr_2.1.php?codigo=' + rowCompra.Com_Cod;
         }
         
         $.imprimirUrl(urlReporte);
         
     }, function (err) {
-        // En caso de que la consulta falle, aseguramos que siempre imprima el por defecto
+        // En caso de error de red, también usamos el salvavidas
         $.imprimirUrl('/contabilidad/FRONT/con_pri_compr_2.1.php?codigo=' + rowCompra.Com_Cod);
     });
 }
+
 /**/
 $.fn.fmatter.ice = function (cv, opts, cObjt) { var ice_por = cObjt['Cop_Ice'] || cObjt['Ice_Por']; if ($.varValid(ice_por) && ice_por !== '' && !isNaN(ice_por) && ice_por * 1 > 0) return ice_por + ' %'; else return ''; };
 $.fn.fmatter.ice.unformat = function (cv, opts, cObjt) { return cv.replace(' %', ''); };

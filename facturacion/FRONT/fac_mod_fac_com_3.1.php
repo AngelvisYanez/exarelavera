@@ -7,7 +7,7 @@
  * Fecha de creación  2015-07-22
  */
 require_once('../../administrador/LOGICA/seguridad.php');
-require_once('../LOGICA/fac_log_factu.php');
+require_once('../LOGICA/fac_log_factu1.0.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 
 
@@ -69,18 +69,6 @@ if (isset($ajaxCopNum)) {
     } else $resp['success'] = '';
     $obBD_con1->echoJson($resp);
 }
-
-//Sección para obtener el número de secuencia de Liquidación de compras
-if (isset($numeroSec)) {
-    $response = $obBD_con1->getRowConsulta(1004, $Ses_Prs_Cod . '*' . $Ses_Suc_Cod . '*' . $Tic_Cod . '*' . $Aut_Cod, $obBD_conexion);
-    if (isset($Aut_Sri)) $response['Aut_Sri'] = $Aut_Sri;
-    $siguiente = $obBD_con1->getRowConsulta(1005, $response['Aut_Ini'] . '*' . $response['Aut_Fin'] . '*' . $response['Aut_Sri'] . '*' . $Tic_Cod . '*' . $Ses_Suc_Cod . '*' . $Pun_Sri, $obBD_conexion);
-    $response['Cop_Num'] =  str_pad($siguiente['siguiente'], 9, '0', STR_PAD_LEFT);
-    $response['contador'] = $siguiente['contador'];
-    echo json_encode($response);
-    exit();
-}
-
 /** Valida liquidaciones **/
 if (isset($liquida)) {
     /* Valida que los Periodos Existan */
@@ -95,10 +83,10 @@ if (isset($liquida)) {
     $obBD_con1->echoJson($responce);
 }
 
+$tipo_compr = 6; //Tipo de comprobante de la retencion
 /* Configuraciones de la Empresa */
 $configs = $obBD_con1->getRowConsulta(8, $Ses_Emp_Cod, $obBD_conexion);
-$vendedor = $obBD_con1->getRowConsulta(10, $Ses_Suc_Cod . '*' . $Ses_Prs_Cod . '*' . '' /*$tipo_compr*/, $obBD_conexion);
-
+$vendedor = $obBD_con1->getRowConsulta(10, $Ses_Suc_Cod . '*' . $Ses_Prs_Cod . '*' . $tipo_compr, $obBD_conexion);
 /* buscar autorizaciones retencion */
 if (isset($autorizaAjax)) {
     $obBD_con1->getPageGridJson(79, $vendedor['Pun_Cod'] . '*' . $tipo_compr . '*' . $Ret_Fec, $obBD_conexion, $page, $rows);
@@ -218,6 +206,251 @@ if (isset($proAjax)) {
     }
     $obBD_con1->echoJson($responce);
 }
+
+/* Buscar asociación de producto por código XML */
+if (isset($buscarAsociacionXmlAjax)) {
+    $responce = array('success' => false, 'asociacion' => null);
+    try {
+        $codigoXml = isset($_POST['Cod_Xml']) ? trim($_POST['Cod_Xml']) : '';
+        $Cop_Fec = isset($_POST['Cop_Fec']) ? trim($_POST['Cop_Fec']) : '';
+        $Prv_Cod = isset($_POST['Prv_Cod']) ? intval($_POST['Prv_Cod']) : null;
+        
+        if (!empty($codigoXml) && !empty($Ses_Emp_Cod)) {
+            // Buscar asociación en la tabla producto_xml_codigo (considerando proveedor si está disponible)
+            $sql = "SELECT pxc.Pro_Cod, pxc.Ret_Ren_Cod, pxc.Iva_Ren_Cod, r1.Ren_Sri AS Ret_Ren_Sri, r1.Ren_Por AS Ret_Ren_Por, r1.Ren_Con AS Ret_Ren_Con, r2.Ren_Sri AS Iva_Ren_Sri, r2.Ren_Por AS Iva_Ren_Por, r2.Ren_Con AS Iva_Ren_Con FROM producto_xml_codigo pxc LEFT JOIN renta_iva r1 ON pxc.Ret_Ren_Cod = r1.Ren_Cod LEFT JOIN renta_iva r2 ON pxc.Iva_Ren_Cod = r2.Ren_Cod WHERE (pxc.Cod_Xml = '" . addslashes($codigoXml) . "' OR TRIM(pxc.Cod_Xml) = '" . addslashes(trim($codigoXml)) . "')";
+            if (!empty($Prv_Cod)) {
+                $sql .= " AND pxc.Prv_cod = " . intval($Prv_Cod);
+            }
+            $sql .= " LIMIT 1";
+            $asociacion = null;
+            
+            if (method_exists($obBD_con1, 'getRowConsultaSql')) {
+                $asociacion = $obBD_con1->getRowConsultaSql($sql, $obBD_conexion);
+            } else {
+                // Fallback: usar mysqli directamente
+                $result = @mysqli_query($obBD_conexion->conexion, $sql);
+                if ($result) {
+                    $asociacion = mysqli_fetch_assoc($result);
+                    mysqli_free_result($result);
+                }
+            }
+            
+            if (!empty($asociacion) && isset($asociacion['Pro_Cod']) && $asociacion['Pro_Cod'] > 0) {
+                // Ensure proper encoding for JSON response
+                if (isset($asociacion['Ret_Ren_Con'])) $asociacion['Ret_Ren_Con'] = utf8_encode($asociacion['Ret_Ren_Con']);
+                if (isset($asociacion['Iva_Ren_Con'])) $asociacion['Iva_Ren_Con'] = utf8_encode($asociacion['Iva_Ren_Con']);
+                
+                $Pro_Cod = intval($asociacion['Pro_Cod']);
+                
+                // Obtener período contable
+                $Pec_Cop = array('Pla_Cod' => null);
+                if (!empty($Cop_Fec)) {
+                    $Pec_Cop = $obBD_con1->getRowConsulta(9, $Ses_Emp_Cod . '*' . $Cop_Fec, $obBD_conexion);
+                }
+                
+                // Obtener producto con TODOS sus datos usando consulta SQL completa
+                // Esto asegura que obtenemos: descripción, unidad, IVA, adquisición, etc.
+                $sql_producto = "SELECT producto.*, 
+                                        producto.Ite_Cod,
+                                        producto.Uni_Cod,
+                                        producto.Adq_Cod,
+                                        item.Ite_Lar,
+                                        unidad.Uni_Des, 
+                                        iva.Iva_Cod, 
+                                        iva.Iva_Por,
+                                        adquisicio.Adq_Cor,
+                                        adquisicio.Adq_Des
+                                 FROM producto 
+                                 LEFT JOIN item ON producto.Ite_Cod = item.Ite_Cod
+                                 LEFT JOIN unidad ON producto.Uni_Cod = unidad.Uni_Cod
+                                 LEFT JOIN iva ON producto.Iva_Cod = iva.Iva_Cod
+                                 LEFT JOIN adquisicio ON producto.Adq_Cod = adquisicio.Adq_Cod
+                                 WHERE producto.Pro_Cod = " . intval($Pro_Cod) . " AND producto.Emp_Cod = " . intval($Ses_Emp_Cod) . " LIMIT 1";
+                
+                $result_producto = @mysqli_query($obBD_conexion->conexion, $sql_producto);
+                $producto = null;
+                
+                if ($result_producto && mysqli_num_rows($result_producto) > 0) {
+                    $producto = mysqli_fetch_assoc($result_producto);
+                    
+                    // Obtener Ite_Lar de la tabla item usando Ite_Cod
+                    if (!empty($producto['Ite_Cod']) && $producto['Ite_Cod'] > 0) {
+                        $sql_item = "SELECT Ite_Lar FROM item WHERE Ite_Cod = " . intval($producto['Ite_Cod']) . " LIMIT 1";
+                        $result_item = @mysqli_query($obBD_conexion->conexion, $sql_item);
+                        if ($result_item && mysqli_num_rows($result_item) > 0) {
+                            $item_row = mysqli_fetch_assoc($result_item);
+                            if (!empty($item_row['Ite_Lar'])) {
+                                $producto['Ite_Lar'] = $item_row['Ite_Lar'];
+                            }
+                            @mysqli_free_result($result_item);
+                        }
+                    }
+                    
+                    @mysqli_free_result($result_producto);
+                } else {
+                    // Si falla SQL directa, usar getPageGrid como fallback
+                    $productoData = $obBD_con1->getPageGrid(1, '' . '*' . $Ses_Emp_Cod . '*' . '' . "* AND producto.Pro_Cod=" . $Pro_Cod, $obBD_conexion, 1, 1);
+                    if (!empty($productoData['rows']) && count($productoData['rows']) > 0) {
+                        $producto = $productoData['rows'][0];
+                    }
+                }
+                
+                if (!empty($producto)) {
+                    // Obtener cuenta contable si existe período (OBLIGATORIO para guardar)
+                    if ($configs['Cof_Con'] == 'S' && !empty($Pec_Cop['Pla_Cod'])) {
+                        $cuenta = $obBD_con1->getRowConsulta(16, $Pec_Cop['Pla_Cod'] . '*' . $Pro_Cod . '*' . 'C', $obBD_conexion);
+                        if (!empty($cuenta['Pld_Cod'])) {
+                            $producto['Pld_Cod'] = $cuenta['Pld_Cod'];
+                            $producto['Pld_Cdc'] = isset($cuenta['Pld_Cdc']) ? $cuenta['Pld_Cdc'] : '';
+                            $producto['Pld_Des'] = isset($cuenta['Pld_Des']) ? $cuenta['Pld_Des'] : '';
+                        }
+                    }
+                    
+                    // Asegurar que Adq_Cod tenga un valor válido (0 si es null o vacío)
+                    if (empty($producto['Adq_Cod']) || $producto['Adq_Cod'] === null) {
+                        $producto['Adq_Cod'] = 0;
+                    }
+                    
+                    $responce['success'] = true;
+                    $responce['asociacion'] = $producto;
+                }
+            }
+        }
+    } catch (Exception $e) {
+        $responce['message'] = $e->getMessage();
+    }
+    $obBD_con1->echoJson($responce);
+}
+
+/* Guardar nueva asociación producto XML */
+if (isset($guardarAsociacionXmlAjax)) {
+    $responce = array('success' => false);
+    try {
+        $codigoXml = isset($_POST['Cod_Xml']) ? trim($_POST['Cod_Xml']) : '';
+        $Pro_Cod = isset($_POST['Pro_Cod']) ? intval($_POST['Pro_Cod']) : 0;
+        $Prv_Cod = isset($_POST['Prv_Cod']) ? intval($_POST['Prv_Cod']) : null;
+        
+        // Debug: Log de datos recibidos
+        error_log("DEBUG guardarAsociacionXmlAjax - Cod_Xml: " . $codigoXml . " | Pro_Cod: " . $Pro_Cod . " | Prv_Cod: " . var_export($Prv_Cod, true) . " | Emp_Cod: " . $Ses_Emp_Cod);
+        
+        if (!empty($codigoXml) && $Pro_Cod > 0 && !empty($Ses_Emp_Cod)) {
+            // Desactivar autocommit para manejar transacciones manualmente
+            $autocommit_original = mysqli_autocommit($obBD_conexion->conexion, false);
+            
+            try {
+                // Verificar si ya existe la asociación (considerando proveedor)
+                $sql_check = "SELECT Pxc_Cod FROM producto_xml_codigo WHERE Cod_Xml = '" . addslashes($codigoXml) . "' AND Emp_Cod = " . intval($Ses_Emp_Cod);
+                if (!empty($Prv_Cod)) {
+                    $sql_check .= " AND Prv_cod = " . intval($Prv_Cod);
+                } else {
+                    $sql_check .= " AND (Prv_cod IS NULL OR Prv_cod = 0)";
+                }
+                $sql_check .= " LIMIT 1";
+                $existe = null;
+                
+                $result_check = @mysqli_query($obBD_conexion->conexion, $sql_check);
+                if ($result_check) {
+                    $existe = mysqli_fetch_assoc($result_check);
+                    mysqli_free_result($result_check);
+                }
+                
+                error_log("DEBUG SQL CHECK: " . $sql_check);
+                error_log("DEBUG Existe: " . var_export($existe, true));
+                
+                if (empty($existe)) {
+                    // Insertar nueva asociación
+                    $campos = array('Cod_Xml', 'Pro_Cod', 'Emp_Cod');
+                    $valores = array("'" . addslashes($codigoXml) . "'", $Pro_Cod, intval($Ses_Emp_Cod));
+                    
+                    if (!empty($Prv_Cod)) {
+                        $campos[] = 'Prv_cod';
+                        $valores[] = intval($Prv_Cod);
+                    }
+                    
+                    $sql_insert = "INSERT INTO producto_xml_codigo (" . implode(',', $campos) . ") VALUES (" . implode(',', $valores) . ")";
+                    
+                    // Debug: Log de SQL
+                    error_log("DEBUG SQL INSERT: " . $sql_insert);
+                    error_log("DEBUG Datos - Cod_Xml: " . $codigoXml . " | Pro_Cod: " . $Pro_Cod . " | Emp_Cod: " . $Ses_Emp_Cod);
+                    
+                    $result = @mysqli_query($obBD_conexion->conexion, $sql_insert);
+                    
+                    if ($result) {
+                        // Verificar que realmente se insertó
+                        $insert_id = mysqli_insert_id($obBD_conexion->conexion);
+                        error_log("DEBUG: INSERT exitoso, ID insertado: " . $insert_id);
+                        
+                        // Confirmar transacción
+                        if (mysqli_commit($obBD_conexion->conexion)) {
+                            $responce['success'] = true;
+                            $responce['message'] = 'Asociación guardada correctamente';
+                            $responce['insert_id'] = $insert_id;
+                            error_log("DEBUG: Asociación INSERTADA y COMMIT correctamente con ID: " . $insert_id);
+                        } else {
+                            $responce['message'] = 'Error al confirmar la transacción: ' . mysqli_error($obBD_conexion->conexion);
+                            error_log("DEBUG ERROR COMMIT: " . mysqli_error($obBD_conexion->conexion));
+                        }
+                    } else {
+                        // Revertir transacción
+                        mysqli_rollback($obBD_conexion->conexion);
+                        $error_msg = mysqli_error($obBD_conexion->conexion);
+                        $error_num = mysqli_errno($obBD_conexion->conexion);
+                        $responce['message'] = 'Error al guardar la asociación: ' . $error_msg . ' (Error #' . $error_num . ')';
+                        error_log("DEBUG ERROR INSERT: " . $error_msg . " (Error #" . $error_num . ")");
+                    }
+                } else {
+                    // Actualizar asociación existente
+                    $sql_update = "UPDATE producto_xml_codigo SET Pro_Cod = " . $Pro_Cod . " WHERE Cod_Xml = '" . addslashes($codigoXml) . "' AND Emp_Cod = " . intval($Ses_Emp_Cod);
+                    if (!empty($Prv_Cod)) {
+                        $sql_update .= " AND Prv_cod = " . intval($Prv_Cod);
+                    } else {
+                        $sql_update .= " AND (Prv_cod IS NULL OR Prv_cod = 0)";
+                    }
+                    
+                    // Debug: Log de SQL
+                    error_log("DEBUG SQL UPDATE: " . $sql_update);
+                    
+                    $result = @mysqli_query($obBD_conexion->conexion, $sql_update);
+                    
+                    if ($result) {
+                        // Confirmar transacción
+                        if (mysqli_commit($obBD_conexion->conexion)) {
+                            $responce['success'] = true;
+                            $responce['message'] = 'Asociación actualizada correctamente';
+                            error_log("DEBUG: Asociación ACTUALIZADA y COMMIT correctamente");
+                        } else {
+                            $responce['message'] = 'Error al confirmar la transacción: ' . mysqli_error($obBD_conexion->conexion);
+                            error_log("DEBUG ERROR COMMIT: " . mysqli_error($obBD_conexion->conexion));
+                        }
+                    } else {
+                        // Revertir transacción
+                        mysqli_rollback($obBD_conexion->conexion);
+                        $error_msg = mysqli_error($obBD_conexion->conexion);
+                        $responce['message'] = 'Error al actualizar la asociación: ' . $error_msg;
+                        error_log("DEBUG ERROR UPDATE: " . $error_msg);
+                    }
+                }
+            } catch (Exception $e) {
+                // Revertir transacción en caso de error
+                mysqli_rollback($obBD_conexion->conexion);
+                $responce['message'] = 'Error en transacción: ' . $e->getMessage();
+                error_log("DEBUG ERROR EXCEPTION: " . $e->getMessage());
+            }
+            // Restaurar autocommit original
+            if ($autocommit_original !== null) {
+                mysqli_autocommit($obBD_conexion->conexion, $autocommit_original);
+            }
+        } else {
+            $responce['message'] = 'Datos incompletos: Cod_Xml=' . $codigoXml . ', Pro_Cod=' . $Pro_Cod . ', Emp_Cod=' . $Ses_Emp_Cod;
+            error_log("DEBUG ERROR: Datos incompletos");
+        }
+    } catch (Exception $e) {
+        $responce['message'] = 'Error general: ' . $e->getMessage();
+        error_log("DEBUG ERROR GENERAL: " . $e->getMessage());
+    }
+    $obBD_con1->echoJson($responce);
+}
+
 /* Consulta del codigo retencion */
 if (isset($codiAjax)) {
     $data = $_GET;
@@ -241,58 +474,119 @@ if (isset($codiAjax)) {
 
 /* busqueda de documentos */
 if (isset($searchDocument)) {
-    $data = $_GET;
-    $data['Emp_Cod'] = $Ses_Emp_Cod;
-    $data['search_compras'] = "C";
-    $responce = $obBD_con1->getPageGrid(34, $data, $obBD_conexion);
-    if ($responce['records'] > 0) {
-        foreach ($responce['rows'] as &$row) {
-
-            $row['Cpp_Edit'] = 'S';
-            $row['Cpp_Min'] = 0;
-            $row['Bod_Cod'] = $obBD_con1->getRowConsulta(969, $row['Cop_Cod'], $obBD_conexion);
-            if (!empty($row['Cpp_Cod'])) {
-                $Pagos1 = $obBD_con1->getRowConsulta(57, $row['Cpp_Cod'] . '*' . 'A', $obBD_conexion);
-                if ($Pagos1['total'] * 1 > 0) {
-                    $row['onlyRetencion'] = false;
-                    //COMPROBAR SI SOLO TIENE EL PAGO DE RETENCION
-                    $retencionValue = $obBD_con1->getRowConsulta(577, $row['Cpp_Cod'] . '*' . 'A', $obBD_conexion);
-                    if (round($Pagos1['total'] * 1, 2) == round($retencionValue['total'] * 1, 2)) {
-                        $row['onlyRetencion'] = true;
-                        $row['Cpp_Det'] = 'N';
-                        $row['Cpp_Edit'] = 'S'; //tiene pagos activos
-                    } else {
-                        $row['Cpp_Det'] = 'S';
-                        $row['Cpp_Edit'] = 'N'; //tiene pagos activos
-                    }
-                    $Pagos1 = $obBD_con1->getRowConsulta(57, $row['Cpp_Cod'] . '*' . 'A' . '*' . 'SUM', $obBD_conexion);
-                    $row['Cpp_Min'] = round($Pagos1['total'] * 1, 2);
-                }
-                /*  $Pagos2=$obBD_con1->getRowConsulta(57, $row['Cpp_Cod'], $obBD_conexion);
-                if($Pagos2['total']*1>0) $row['Cpp_Edit']='N'; //tiene algun pago vinculado*/
-            } else { // Caja Chica
-                $caja = $obBD_con1->getRowConsulta(58, $row['Cop_Cod'], $obBD_conexion);
-                if ($caja['total'] * 1 > 0) $row['Rcc_Det'] = 'S';
-                $caja_pend = $obBD_con1->getRowConsulta(58, $row['Cop_Cod'] . '*' . 'P', $obBD_conexion);
-                if ($caja_pend['total'] * 1 > 0) $row['Rcc_Pen'] = 'S';
-            }
-            if ($configs['Cof_Con'] == 'S' && !empty($row['Com_Cod'])) {
-                $cuentas = $obBD_con1->getRowConsulta((!empty($row['Cpp_Cod']) ? (!empty($row['Rcc_Pen']) ? 70 : 37) : 39), $row['Com_Cod'], $obBD_conexion);
-                $row['Pld_Cod_Pag'] = $cuentas['Pld_Cod'];
-                $otras_comp = $obBD_con1->getRowConsulta(65, $row['Com_Cod'], $obBD_conexion);
-                if ($otras_comp['total'] * 1 > 1) $row['Com_Edit'] = 'N';
-                //CARGAR NEGOCIACIONES DE CAMARONERA
-                $row['Num_Neg'] =  $row['Cod_Nd'] = "";
-                if (!empty($row['Cod_Neg'])) {
-                    $doc_camaronera = $obBD_con1->getRowConsulta(1008, $Ses_Emp_Cod . '*' . $row['Cop_Cod'], $obBD_conexion);
-                    $row['Num_Neg'] = $doc_camaronera['Num_Neg'];
-                    $row['Cod_Neg'] = $doc_camaronera['Cod_Neg'];
-                    $row['Cod_Nd'] = $doc_camaronera['Cod_Nd'];
-                }
-            }
+    session_write_close();
+    try {
+        // Extraer variables de paginación
+        $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+        $rows = isset($_GET['rows']) ? intval($_GET['rows']) : 20;
+        
+        $data = $_GET;
+        $data['Emp_Cod'] = $Ses_Emp_Cod;
+        $data['search_compras'] = "C";
+        
+        // Inicializar respuesta por defecto
+        $responce = array('page' => $page, 'total' => 0, 'records' => 0, 'rows' => array());
+        
+        // Validar que existan las variables necesarias
+        if (empty($Ses_Emp_Cod)) {
+            throw new Exception('No se ha definido el código de empresa');
         }
-        unset($row);
+        
+        $responce = $obBD_con1->getPageGrid(34, $data, $obBD_conexion, $page, $rows);
+        
+        // Asegurar que la respuesta tenga la estructura correcta
+        if (!isset($responce) || !is_array($responce)) {
+            $responce = array('page' => $page, 'total' => 0, 'records' => 0, 'rows' => array());
+        }
+        
+        if (!isset($responce['records'])) {
+            $responce['records'] = 0;
+        }
+        if (!isset($responce['rows'])) {
+            $responce['rows'] = array();
+        }
+        if (!isset($responce['page'])) {
+            $responce['page'] = $page;
+        }
+        if (!isset($responce['total'])) {
+            $responce['total'] = 0;
+        }
+        
+        if ($responce['records'] > 0 && is_array($responce['rows'])) {
+            foreach ($responce['rows'] as &$row) {
+                if (!is_array($row)) continue;
+                
+                $row['Cpp_Edit'] = 'S';
+                $row['Cpp_Min'] = 0;
+                
+                if (!empty($row['Cop_Cod'])) {
+                    $row['Bod_Cod'] = $obBD_con1->getRowConsulta(969, $row['Cop_Cod'], $obBD_conexion);
+                }
+                
+                if (!empty($row['Cpp_Cod'])) {
+                    $Pagos1 = $obBD_con1->getRowConsulta(57, $row['Cpp_Cod'] . '*' . 'A', $obBD_conexion);
+                    if (isset($Pagos1['total']) && $Pagos1['total'] * 1 > 0) {
+                        $row['onlyRetencion'] = false;
+                        //COMPROBAR SI SOLO TIENE EL PAGO DE RETENCION
+                        $retencionValue = $obBD_con1->getRowConsulta(577, $row['Cpp_Cod'] . '*' . 'A', $obBD_conexion);
+                        if (isset($retencionValue['total']) && round($Pagos1['total'] * 1, 2) == round($retencionValue['total'] * 1, 2)) {
+                            $row['onlyRetencion'] = true;
+                            $row['Cpp_Det'] = 'N';
+                            $row['Cpp_Edit'] = 'S'; //tiene pagos activos
+                        } else {
+                            $row['Cpp_Det'] = 'S';
+                            $row['Cpp_Edit'] = 'N'; //tiene pagos activos
+                        }
+                        $Pagos1 = $obBD_con1->getRowConsulta(57, $row['Cpp_Cod'] . '*' . 'A' . '*' . 'SUM', $obBD_conexion);
+                        if (isset($Pagos1['total'])) {
+                            $row['Cpp_Min'] = round($Pagos1['total'] * 1, 2);
+                        }
+                    }
+                } else { // Caja Chica
+                    if (!empty($row['Cop_Cod'])) {
+                        $caja = $obBD_con1->getRowConsulta(58, $row['Cop_Cod'], $obBD_conexion);
+                        if (isset($caja['total']) && $caja['total'] * 1 > 0) $row['Rcc_Det'] = 'S';
+                        $caja_pend = $obBD_con1->getRowConsulta(58, $row['Cop_Cod'] . '*' . 'P', $obBD_conexion);
+                        if (isset($caja_pend['total']) && $caja_pend['total'] * 1 > 0) $row['Rcc_Pen'] = 'S';
+                    }
+                }
+                
+                if ($configs['Cof_Con'] == 'S' && !empty($row['Com_Cod'])) {
+                    $cuentas = $obBD_con1->getRowConsulta((!empty($row['Cpp_Cod']) ? (!empty($row['Rcc_Pen']) ? 70 : 37) : 39), $row['Com_Cod'], $obBD_conexion);
+                    if (isset($cuentas['Pld_Cod'])) {
+                        $row['Pld_Cod_Pag'] = $cuentas['Pld_Cod'];
+                    }
+                    $otras_comp = $obBD_con1->getRowConsulta(65, $row['Com_Cod'], $obBD_conexion);
+                    if (isset($otras_comp['total']) && $otras_comp['total'] * 1 > 1) $row['Com_Edit'] = 'N';
+                    //CARGAR NEGOCIACIONES DE CAMARONERA
+                    $row['Num_Neg'] =  $row['Cod_Nd'] = "";
+                    if (!empty($row['Cod_Neg'])) {
+                        $doc_camaronera = $obBD_con1->getRowConsulta(1008, $Ses_Emp_Cod . '*' . $row['Cop_Cod'], $obBD_conexion);
+                        if (isset($doc_camaronera['Num_Neg'])) {
+                            $row['Num_Neg'] = $doc_camaronera['Num_Neg'];
+                        }
+                        if (isset($doc_camaronera['Cod_Neg'])) {
+                            $row['Cod_Neg'] = $doc_camaronera['Cod_Neg'];
+                        }
+                        if (isset($doc_camaronera['Cod_Nd'])) {
+                            $row['Cod_Nd'] = $doc_camaronera['Cod_Nd'];
+                        }
+                    }
+                }
+            }
+            unset($row);
+        }
+    } catch (Exception $e) {
+        $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+        $responce = array(
+            'page' => $page,
+            'total' => 0,
+            'records' => 0,
+            'rows' => array(),
+            'error' => $e->getMessage()
+        );
     }
+    
     // tipo_compr.Tic_Cod!=4
     $obBD_con1->echoJson($responce);
 }
@@ -300,6 +594,7 @@ if (isset($searchDocument)) {
 /* reviso las cuentas pago */
 if (isset($cuentasPago)) {
     $responce['cuentas'] = '';
+    $cuentas = array();
     $Pec_Cod = $obBD_con1->getRowConsulta(9, $Ses_Emp_Cod . '*' . $Cop_Fec, $obBD_conexion);
     if ($For_Cod * 1 == 2)
         $cuentas = $obBD_con1->getArrayConsulta(23, $Pec_Cod['Pla_Cod'] . '*' . $For_Cod, $obBD_conexion);
@@ -308,14 +603,22 @@ if (isset($cuentasPago)) {
     if ($For_Cod * 1 == 3)
         $cuentas = $obBD_con1->getArrayConsulta(28, $Pec_Cod['Pla_Cod'] . '*' . 'RC', $obBD_conexion);
 
-    $responce['total'] = count($cuentas);
-    foreach ($cuentas as $row)
-        $responce['cuentas'] = $responce['cuentas'] . '<option value="' . $row['Pld_Cod'] . '" data-extra="' . (isset($row['extra']) ? $row['extra'] : '') . '" ' . ($row['Pld_Cod'] == $Pld_Cod ? 'selected="selected"' : '') . '>' . $row['Pld_Des'] . '</option>';
+    error_log("DEBUG cuentasPago: For_Cod=" . $For_Cod . ", cuentas=" . (is_array($cuentas) ? count($cuentas) : 'non-array'));
+
+    $responce['total'] = is_array($cuentas) ? count($cuentas) : 0;
+    if (is_array($cuentas)) {
+        foreach ($cuentas as $row) {
+            $isSelected = (isset($Pld_Cod) && $row['Pld_Cod'] == $Pld_Cod) ? 'selected="selected"' : '';
+            $extra = isset($row['extra']) ? $row['extra'] : '';
+            $responce['cuentas'] = $responce['cuentas'] . '<option value="' . $row['Pld_Cod'] . '" data-extra="' . $extra . '" ' . $isSelected . '>' . $row['Pld_Des'] . '</option>';
+        }
+    }
     if ($responce['total'] > 1)
         $responce['cuentas'] = "<option value=''>Seleccione...</option>" . $responce['cuentas'];
     //if(!empty($Pld_Cod)) $responce['Pld_Cod']=$Pld_Cod;
     $responce['success'] = true;
     $obBD_con1->echoJson($responce);
+    exit;
 }
 /* reviso los ivas */
 if (isset($Check_Iva)) {
@@ -343,6 +646,7 @@ if (isset($Check_Iva)) {
 
 /* Consulta el detalle del documento */
 if (isset($docDetalle)) {
+    session_write_close();
     $resp = array('success' => true, 'Cop_Cod' => $Cop_Cod, 'Cop_Fec' => $Cop_Fec, 'Ret_Cod' => $Ret_Cod, 'rows' => array());
     if (!empty($Cop_Cod)) {
         $resp['items'] = $obBD_con1->getArrayConsulta(35, $Cop_Cod, $obBD_conexion);
@@ -360,9 +664,6 @@ if (isset($docDetalle)) {
                     foreach ($retencion as $r) if ($it['Cop_Int'] == $r['Ret_Int']) foreach ($r as $k => $v) $it[($r['Ren_Ret'] == 'R' ? 'Ret_' : 'Iva_') . $k] = $v;
                 }
                 unset($it);
-                // Agregar Ret_Link para el botón de impresión
-                $reportes = $obBD_con1->reportes($_SERVER['PHP_SELF'], $Ses_Emp_Cod, $obBD_conexion);
-                $resp['Ret_Link'] = "" . (isset($reportes[2]) ? $reportes[2] : '') . "?Ret_Cod=$Ret_Cod";
             }
             if ($configs['Cof_Con'] == 'S' && !empty($Com_Cod)) {
                 $iva = $obBD_con1->getRowConsulta(36, $Com_Cod, $obBD_conexion);
@@ -388,17 +689,6 @@ if (isset($saveDocument)) {
     }
     $Vnd_Cod = $vendedor['Vnd_Cod'];
     $For_Cod = $For_Cod * 1;
-    /* Liquidación: armar 001-002- + secuencial de 9 dígitos (el prefijo viene en Pun_Sri) */
-    if ($Tic_Cod == 3 && !empty($Aut_Codliq)) {
-        $partesNum = explode('-', (string)$Cop_Num);
-        $secLiq = preg_replace('/\D+/', '', end($partesNum));
-        if ($secLiq !== '') {
-            $secLiq = str_pad($secLiq, 9, '0', STR_PAD_LEFT);
-            if (!empty($Pun_Sri)) {
-                $Cop_Num = $Pun_Sri . $secLiq;
-            }
-        }
-    }
     /* valida que no exista el documento */
     if ($Tic_Sri * 1 != 17) { // Condicion agregada xq se repite el numero de DAE
         $row_rs_CodDoc = $obBD_con1->getRowConsulta(7, $Prv_Cod . '*' . $Tic_Cod . '*' . $Cop_Num . '*' . $Cop_Cod, $obBD_conexion);
@@ -488,6 +778,7 @@ if (isset($saveDocument)) {
             // $Cop_Aut =  $obBD_con1->getLiquidacionClaveAcceso($Ses_Emp_Cod, $Ses_Suc_Cod, $Aut_Cod,  $Cop_Fec, $Cop_Num, $obBD_conexion);
             $Cop_Aut =  $obBD_con1->getLiquidacionClaveAcceso($Aut_Codliq,  $Cop_Fec, $Cop_Num, $obBD_conexion);
             $claveAccesoliq = $Cop_Aut;
+            // $Cop_Num =  $Pun_Sri . $Cop_Num;
         }
         // //ChromePhp::log(":::::::::::::::::".empty($Aut_Codliq));
         /* Cabecera de la factura de compra */
@@ -502,7 +793,7 @@ if (isset($saveDocument)) {
         $obBD_ins1->operacionobBD(11, $Tic_Cod . '*' . $Prv_Cod . '*' . $Ciu_Cod . '*' . trim($Cop_Num) . '*' . trim($Cop_Aut) . '*'
             . $Cop_Fec . '*' . $hoy . '*' . trim($Cop_Obs) . '*' . $Cop_Cad . '*' . $Cop_Imf . '*' . $Tri_Cod . '*' . $Cop_Des . '*'
             . $Pec_Cod . '*' . $Tpc_Cod . '*' . (isset($Cop_Ntd) ? $Cop_Ntd : '') . '*' . (isset($Cop_Nns) ? $Cop_Nns : '') . '*'
-            . (isset($Cop_Nna) ? $Cop_Nna : '') . '*' . $Vnd_Cod . '*' . $Cop_Sec . '*' . $Con_Cod . '*' . $Cop_Irb . '*'
+            . (isset($Cop_Nna) ? $Cop_Nna : '') . '*' . $Vnd_Cod . '*' . $Cop_Sec . '*' . (isset($Con_Cod) ? $Con_Cod : '') . '*' . $Cop_Irb . '*'
             . (!empty($Aut_Codliq) ? $Aut_Codliq : 'E') . '*'  . $t_iva_pres . '*'  .  $t_imp_combustible  . '*' . $t_prop . '*' . $t_adic . '*' . $Cop_Cod . '*', $obBD_conexionIns);
 
 
@@ -557,16 +848,27 @@ if (isset($saveDocument)) {
                 $Com_Cod = $obBD_ins1->insercionid($obBD_conexionIns);
                 $obBD_ins1->operacionobBD(15, $Com_Cod . '*' . $Cop_Cod, $obBD_conexionIns); // relacion compra comprobante
             } else {
-                //Cambiar el codigo del Asiento a NULL
-                $obBD_ins1->operacionobBD(1015, $Cop_Cod, $obBD_conexionIns);
-                //Eliminar los asientos del comprobante
                 fac_ppa_desvincular_asientos_comprobante($obBD_conexionIns->conexion, $Com_Cod, $Cop_Cod);
-                $obBD_ins1->operacionobBD(41, $Com_Cod, $obBD_conexionIns);
-            } // Elimina el asiento anterior
+                $obBD_ins1->operacionobBD(41, $Com_Cod, $obBD_conexionIns); // Elimina el asiento anterior
+            }
+
 
             //ELIMINA EL ABONO DE LA RETENCION ANTERIOR CON EL COMPROBANTE CREADO 
+            $Com_Cod_Ret_Ant = "";
+            $Com_Num_Ret_Old = "";
+            $Com_Fec_Ret_Old = "";
             if (!empty($Cpp_Cod)) {
-                $obBD_ins1->operacionobBD(966, $Cpp_Cod, $obBD_conexionIns);
+                $sqlAntRet = "SELECT det_ccpp_p.Com_Cod, comprobantes.Com_Num, comprobantes.Com_Fec FROM det_ccpp_p INNER JOIN tipos_pago ON det_ccpp_p.Pag_Cod = tipos_pago.Pag_Cod INNER JOIN comprobantes ON comprobantes.Com_Cod = det_ccpp_p.Com_Cod WHERE det_ccpp_p.Cpp_Cod = " . intval($Cpp_Cod) . " AND tipos_pago.Pag_Abr = 'RET' AND det_ccpp_p.Pag_Est = 'A' LIMIT 1";
+                $resAntRet = @mysqli_query($obBD_conexionIns->conexion, $sqlAntRet);
+                if ($resAntRet && mysqli_num_rows($resAntRet) > 0) {
+                    $rowAntRet = mysqli_fetch_assoc($resAntRet);
+                    $Com_Cod_Ret_Ant = $rowAntRet['Com_Cod'];
+                    $Com_Num_Ret_Old = $rowAntRet['Com_Num'];
+                    $Com_Fec_Ret_Old = $rowAntRet['Com_Fec'];
+                }
+                // Inactivar únicamente el abono de retención (evita múltiples comprobantes muertos)
+                $sqlDeletePagoRet = "UPDATE det_ccpp_p INNER JOIN tipos_pago ON det_ccpp_p.Pag_Cod = tipos_pago.Pag_Cod SET det_ccpp_p.Pag_Est = 'I' WHERE det_ccpp_p.Cpp_Cod = " . intval($Cpp_Cod) . " AND tipos_pago.Pag_Abr = 'RET'";
+                mysqli_query($obBD_conexionIns->conexion, $sqlDeletePagoRet);
             }
             /* CCPP Cuentas por pagar */
             if ($For_Cod * 1 == 2) {
@@ -592,6 +894,7 @@ if (isset($saveDocument)) {
                 $item['Cop_Imp'] = ($item['Cop_Dec'] > 0) ? $item['Cop_Can'] * $item['Cop_Pru'] : $item['Cop_Imp']; //si es verdadero registrar valor completo sin descuento.
                 $obBD_ins1->operacionobBD(17, $Com_Cod . '*' . 'D' . '*' . ($item['Cop_Imp'] + $addIva) . '*' . (isset($item['Pld_Des']) ? $item['Pld_Des'] : '') . '*' . $item['Ite_Lar'] . '*' . $item['Pld_Cod'], $obBD_conexionIns);  // inserta asiento // Item
                 $Asi_Cod = $obBD_ins1->insercionid($obBD_conexionIns);
+                $item['Asi_Cod'] = $Asi_Cod;
                 fac_ppa_vincular_asiento_item($obBD_conexionIns->conexion, $item, $pdpGeneral, $Asi_Cod, $ppaGeneral, array(
                     'Emp_Cod' => isset($Ses_Emp_Cod) ? $Ses_Emp_Cod : 0,
                     'Suc_Cod' => isset($Ses_Suc_Cod) ? $Ses_Suc_Cod : null,
@@ -602,9 +905,8 @@ if (isset($saveDocument)) {
                     'monto' => isset($item['Cop_Imp']) ? ($item['Cop_Imp'] + $addIva) : 0,
                     'Pej_Fase' => 'E'
                 ));
-                // Guardar los códigos Asi_Cod en un array temporal para registrar luego en det_compra
                 if (!isset($array_asi_cod)) $array_asi_cod = array();
-                $array_asi_cod[] = array('Asi_Cod' => $Asi_Cod, 'Pro_Cod' => $item['Pro_Cod'],   'Cop_Cod' => $Cop_Cod, 'Pld_Cod' => $cuenta['Pld_Cod']);
+                $array_asi_cod[] = array('Asi_Cod' => $Asi_Cod, 'Pro_Cod' => $item['Pro_Cod'],   'Cop_Cod' => $Cop_Cod, 'Pld_Cod' => (isset($cuenta['Pld_Cod']) ? $cuenta['Pld_Cod'] : $item['Pld_Cod']));
             }
             unset($item);
 
@@ -616,11 +918,31 @@ if (isset($saveDocument)) {
                     $Com_Con_Ret = "RETENCION DE LA COMPRA NUMERO " . $Cop_Num;
                     $Tia_Asi_Ret = $obBD_con1->getRowConsulta(133, 15, $obBD_conexion);
                     $meseCom = explode('-', $Com_Fec);
-                    $Com_Num_Ret = $obBD_con1->getComNumPecAuto($Tia_Asi_Ret['Tia_Cod'], $Pec_Cod, $Com_Fec, $obBD_conexion);
+                    if (!empty($Com_Cod_Ret_Ant)) {
+                        $Com_Num_Ret = $Com_Num_Ret_Old;
+                        $Com_Cod_Ret = $Com_Cod_Ret_Ant;
+                        if (substr($Ret_Fec, 0, 7) !== substr($Com_Fec_Ret_Old, 0, 7)) {
+                            $Com_Num_Ret = $obBD_con1->getComNumPecAuto($Tia_Asi_Ret['Tia_Cod'], $Pec_Cod, $Ret_Fec, $obBD_conexion);
+                        }
+                        fac_ppa_desvincular_asientos_comprobante($obBD_conexionIns->conexion, $Com_Cod_Ret);
+                        $obBD_ins1->operacionobBD(41, $Com_Cod_Ret, $obBD_conexionIns);
+                        $Com_Cod_Ret_Ant = ""; // Limpiar para evitar inactivarlo
+                    } else {
+                        $Com_Num_Ret = $obBD_con1->getComNumPecAuto($Tia_Asi_Ret['Tia_Cod'], $Pec_Cod, $Com_Fec, $obBD_conexion);
+                        $Com_Cod_Ret = "";
+                    }
                     $campo = 'Prv_Cod';
+
                     /* Cabecera del Comprobante */
-                    $obBD_ins1->operacionobBD(14, $Pec_Cod . '*' . $Prv_Cod . '*' . $Com_Num_Ret . '*' . $Ret_Fec . '*' . trim($Com_Con_Ret) . '*' . $Tia_Asi_Ret['Tia_Cod'] . '*' . $Ren_Tot . '*' . 'RETENCION' . '*' . $campo, $obBD_conexionIns);
-                    $Com_Cod_Ret = $obBD_ins1->insercionid($obBD_conexionIns);
+                    $obBD_ins1->operacionobBD(14, $Pec_Cod . '*' . $Prv_Cod . '*' . $Com_Num_Ret . '*' . $Ret_Fec . '*' . trim($Com_Con_Ret) . '*' . $Tia_Asi_Ret['Tia_Cod'] . '*' . $Ren_Tot . '*' . 'RETENCION' . '*' . $campo . '*' . $Com_Cod_Ret, $obBD_conexionIns);
+                    if (empty($Com_Cod_Ret)) {
+                        $Com_Cod_Ret = $obBD_ins1->insercionid($obBD_conexionIns);
+                    }
+
+                    if (!empty($Ret_Cod) && !empty($Com_Cod_Ret)) {
+                        $sqlUpdRet = "UPDATE retencion SET Com_Cod = " . intval($Com_Cod_Ret) . " WHERE Ret_Cod = " . intval($Ret_Cod);
+                        mysqli_query($obBD_conexionIns->conexion, $sqlUpdRet);
+                    }
 
                     foreach ($rets as $ret) {
                         if (("0" . $ret['Ren_Val']) * 1 > 0) {
@@ -632,12 +954,17 @@ if (isset($saveDocument)) {
                     //Asiento de proveedores varios para el comprobante de retencion
                     $obBD_ins1->operacionobBD(17, $Com_Cod_Ret . '*' . ('D') . '*' . $Ren_Tot . '*' . '' . '*' . ('Doc.' . $Cop_Num) . '*' . $Pag_Pld, $obBD_conexionIns);
                     $Asi_Cod_Ret = $obBD_ins1->insercionid($obBD_conexionIns);
+
                     //Crear abono para la CUENTA X PAGAR 
                     $obBD_ins1->operacionobBD(255, array('Com_Cod' => $Com_Cod_Ret, 'Pag_Cod' => 50, 'Pag_Fec' => $Ret_Fec, 'Pag_Val' => $Ren_Tot, 'Pag_Obs' => "ABONO POR RETENCION", 'Cpp_Cod' => $Cpp_Cod, 'Asi_Cod' => $Asi_Cod_Ret), $obBD_conexionIns);
                 }
                 $obBD_ins1->operacionobBD(17, $Com_Cod . '*' . ('H') . '*' . $totalReal . '*' . '' . '*' . ('Doc.' . $Cop_Num) . '*' . $Pag_Pld, $obBD_conexionIns);
             } else {
                 if ($Retencion && $Ret_Num > 0) {
+                    if (!empty($Ret_Cod) && !empty($Com_Cod)) {
+                        $sqlUpdRet = "UPDATE retencion SET Com_Cod = " . intval($Com_Cod) . " WHERE Ret_Cod = " . intval($Ret_Cod);
+                        mysqli_query($obBD_conexionIns->conexion, $sqlUpdRet);
+                    }
                     foreach ($rets as $ret) {
                         if (("0" . $ret['Ren_Val']) * 1 > 0) {
                             $cuenta = $obBD_con1->getRowConsulta(52, $Pec_Cop['Pla_Cod'] . '*' . $ret['Ren_Cod'] . '*' . 'C', $obBD_conexion);
@@ -652,6 +979,11 @@ if (isset($saveDocument)) {
                     }
                 }
                 $obBD_ins1->operacionobBD(17, $Com_Cod . '*' . ('H') . '*' . $Val_Pcc . '*' . '' . '*' . ('Doc.' . $Cop_Num) . '*' . $Pag_Pld, $obBD_conexionIns);
+            }
+            // Inactivar comprobante anterior si no fue reciclado
+            if (!empty($Com_Cod_Ret_Ant)) {
+                $sqlInactivaViejo = "UPDATE comprobantes SET Com_Est = 'I' WHERE Com_Cod = " . intval($Com_Cod_Ret_Ant);
+                mysqli_query($obBD_conexionIns->conexion, $sqlInactivaViejo);
             }
 
             /* IVA */
@@ -742,25 +1074,106 @@ if (isset($saveDocument)) {
             $item['Cop_Cod'] = $Cop_Cod;
             $item['Cop_Int'] = $i + 1;
             if ($rise) $item['Iva_Cod'] = $iva_cero['Iva_Cod'];
-            // Asegurarse de que el 'Asi_Cod' correspondiente al item esté presente en el array antes de guardar
             if ($configs['Cof_Con'] == 'S' && isset($array_asi_cod[$i]['Asi_Cod'])) {
                 $item['Asi_Cod'] = $array_asi_cod[$i]['Asi_Cod'];
             } else {
                 unset($item['Asi_Cod']);
             }
+            
+            // Validar y asegurar Adq_Cod antes de guardar
+            // Si Adq_Cod está vacío, null o no existe en la tabla adquisicio, establecerlo como 0
+            if (empty($item['Adq_Cod']) || $item['Adq_Cod'] === null || $item['Adq_Cod'] === '' || $item['Adq_Cod'] === '0') {
+                $item['Adq_Cod'] = 0;
+            } else {
+                // Verificar que el Adq_Cod existe en la tabla adquisicio usando consulta SQL directa
+                $adq_cod_int = intval($item['Adq_Cod']);
+                if ($adq_cod_int > 0) {
+                    $sql_adq_check = "SELECT Adq_Cod FROM adquisicio WHERE Adq_Cod = " . $adq_cod_int . " LIMIT 1";
+                    $result_adq_check = @mysqli_query($obBD_conexion->conexion, $sql_adq_check);
+                    if ($result_adq_check && mysqli_num_rows($result_adq_check) > 0) {
+                        // Existe, usar el valor validado
+                        $item['Adq_Cod'] = $adq_cod_int;
+                        mysqli_free_result($result_adq_check);
+                    } else {
+                        // No existe, establecer como 0
+                        $item['Adq_Cod'] = 0;
+                        if ($result_adq_check) mysqli_free_result($result_adq_check);
+                    }
+                } else {
+                    // Valor inválido, establecer como 0
+                    $item['Adq_Cod'] = 0;
+                }
+            }
+            
+            // Guardar mapeo si viene de XML
+            if (!empty($item['Cod_Xml_Principal']) && $item['Cod_Xml_Principal'] !== 'S/N') {
+                $codXml = mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Cod_Xml_Principal']);
+                $descXml = mysqli_real_escape_string($obBD_conexionIns->conexion, isset($item['Descripcion_Xml']) ? $item['Descripcion_Xml'] : $item['Ite_Lar']);
+                $proCod = mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Pro_Cod']);
+                $pldCod = isset($cuenta['Pld_Cod']) ? mysqli_real_escape_string($obBD_conexionIns->conexion, $cuenta['Pld_Cod']) : (isset($item['Pld_Cod']) ? mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Pld_Cod']) : '0');
+                $prvCodSql = mysqli_real_escape_string($obBD_conexionIns->conexion, $Prv_Cod);
+                $fechaMap = date("Y-m-d H:i:s");
+
+                $retRenCod = "NULL";
+                if (isset($item['Ret_Ren_Cod']) && $item['Ret_Ren_Cod'] !== '') {
+                    $retRenCod = "'" . mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Ret_Ren_Cod']) . "'";
+                } else if (isset($item['Ret_Ren_Sri']) && $item['Ret_Ren_Sri'] !== '') {
+                    $sri = mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Ret_Ren_Sri']);
+                    $resSri = mysqli_query($obBD_conexionIns->conexion, "SELECT Ren_Cod FROM renta_iva WHERE Ren_Sri = '$sri' LIMIT 1");
+                    if ($resSri && $rowSri = mysqli_fetch_assoc($resSri)) {
+                        $retRenCod = "'" . $rowSri['Ren_Cod'] . "'";
+                    }
+                }
+
+                $ivaRenCod = "NULL";
+                if (isset($item['Iva_Ren_Cod']) && $item['Iva_Ren_Cod'] !== '') {
+                    $ivaRenCod = "'" . mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Iva_Ren_Cod']) . "'";
+                } else if (isset($item['Iva_Ren_Sri']) && $item['Iva_Ren_Sri'] !== '') {
+                    $sriIva = mysqli_real_escape_string($obBD_conexionIns->conexion, $item['Iva_Ren_Sri']);
+                    $resSriIva = mysqli_query($obBD_conexionIns->conexion, "SELECT Ren_Cod FROM renta_iva WHERE Ren_Sri = '$sriIva' LIMIT 1");
+                    if ($resSriIva && $rowSriIva = mysqli_fetch_assoc($resSriIva)) {
+                        $ivaRenCod = "'" . $rowSriIva['Ren_Cod'] . "'";
+                    }
+                }
+
+                $forCodSqlMap = isset($For_Cod) && $For_Cod !== '' ? intval($For_Cod) : 'NULL';
+                $pagPldSqlMap = isset($Pag_Pld) && $Pag_Pld !== '' ? intval($Pag_Pld) : 'NULL';
+                $pldCodForDb = isset($Pag_Pld) && $Pag_Pld !== '' ? intval($Pag_Pld) : 0;
+                
+                $sqlChkMap = "SELECT Pxc_Cod FROM producto_xml_codigo WHERE Cod_Xml = '$codXml' AND Prv_cod = '$prvCodSql' LIMIT 1";
+                $resChkMap = mysqli_query($obBD_conexionIns->conexion, $sqlChkMap);
+                
+                if (!$resChkMap || mysqli_num_rows($resChkMap) == 0) {
+                    $sqlInsMap = "INSERT INTO producto_xml_codigo (Cod_Xml, Des_Xml, Pro_Cod, Pxc_Fec, Prv_cod, Pld_cod, Ret_Ren_Cod, Iva_Ren_Cod, For_Cod, Pag_Pld) 
+                               VALUES ('$codXml', '$descXml', '$proCod', '$fechaMap', '$prvCodSql', $pldCodForDb, $retRenCod, $ivaRenCod, $forCodSqlMap, $pagPldSqlMap)";
+                    if (mysqli_query($obBD_conexionIns->conexion, $sqlInsMap)) {
+                        $mapeos_guardados = isset($mapeos_guardados) ? $mapeos_guardados + 1 : 1;
+                    } else {
+                        $mapeos_errores = (isset($mapeos_errores) ? $mapeos_errores : "") . " " . mysqli_error($obBD_conexionIns->conexion);
+                    }
+                } else {
+                    $sqlUpdMap = "UPDATE producto_xml_codigo SET Pro_Cod = '$proCod', Pld_cod = $pldCodForDb, Ret_Ren_Cod = $retRenCod, Iva_Ren_Cod = $ivaRenCod, For_Cod = $forCodSqlMap, Pag_Pld = $pagPldSqlMap WHERE Cod_Xml = '$codXml' AND Prv_cod = '$prvCodSql'";
+                    if (mysqli_query($obBD_conexionIns->conexion, $sqlUpdMap)) {
+                        $mapeos_guardados = isset($mapeos_guardados) ? $mapeos_guardados + 1 : 1;
+                    } else {
+                        $mapeos_errores = (isset($mapeos_errores) ? $mapeos_errores : "") . " " . mysqli_error($obBD_conexionIns->conexion);
+                    }
+                }
+            }
+
             /* Item Documento */
             $obBD_ins1->operacionobBD(12, $item, $obBD_conexionIns);
             // //ChromePhp::log();
             /* Control de Inventarios */
             if (($Tic_Sri * 1 != 0 || (isset($configs['Cof_Stk']) && $configs['Cof_Stk'] == 'S')) && ($item['Adq_Cor'] == 'B' || $item['Adq_Cor'] == 'SM')) {
                 $s_add = true;
-                //  $imp = ((1) * $item['Cop_Imp'] - ($Cop_Des > 0 ? $item['Cop_Imp'] * $Cop_Des / 100 : 0));
-                if ($t_pdescuento > 0) {
+              //  $imp = ((1) * $item['Cop_Imp'] - ($Cop_Des > 0 ? $item['Cop_Imp'] * $Cop_Des / 100 : 0));
+                 if ($t_pdescuento > 0) {
                     $imp = ((1) * $item['Cop_Imp'] - ($item['Cop_Decv']  > 0 ? $item['Cop_Decv']  : 0));
                 } else {
                     $imp = ((1) * $item['Cop_Imp'] - ($Cop_Des > 0 ? $item['Cop_Imp'] * $Cop_Des / 100 : 0));
                 }
-
+                
                 foreach ($array_kardex as &$k) {
                     if ($item['Pro_Cod'] == $k['Pro_Cod']) {
                         $k['Kar_Can'] += (1) * $item['Cop_Can'];
@@ -794,14 +1207,15 @@ if (isset($saveDocument)) {
                     $obBD_ins1->operacionobBD(54, $Ret_Cod . '*' . ($item['Cop_Imp'] * 1 - $des_indivi) . '*' . $item['Ret_Ren_Cod'] . '*' . 'R' . '*' . $item['Cop_Int'] . '*' . $item['Adq_Cod'], $obBD_conexionIns);
                 if (!empty($item['Iva_Ren_Cod']) && $item['Iva_Por'] * 1 > 0) {
                     $Imp = $item['Cop_Pru'] * $item['Cop_Can'];
-                    // $Dec = ($item['Cop_Dec'] * 1 > 0 ? ($Imp * $item['Cop_Dec']) / 100 : 0);
-                    $ImpDes = $Imp /*- $Dec*/ - $des_indivi;
+                    $Dec = ($item['Cop_Dec'] * 1 > 0 ? ($Imp * $item['Cop_Dec']) / 100 : 0);
+                    $ImpDes = $Imp - $Dec - $des_indivi;
                     $Ice = ($item['Cop_Ice'] * 1 > 0 ? ($ImpDes * $item['Cop_Ice']) / 100 : 0);
-                    $obBD_ins1->operacionobBD(54, $Ret_Cod . '*' . ("" .  formato_numero(($ImpDes + $Ice) * ($item['Iva_Por'] / 100), 4, 1)) . '*' . $item['Iva_Ren_Cod'] . '*' . 'I' . '*' . $item['Cop_Int'] . '*' . $item['Adq_Cod'], $obBD_conexionIns);
+                    $obBD_ins1->operacionobBD(54, $Ret_Cod . '*' . ("" .  formato_numero(($ImpDes + $Ice) * ($item['Iva_Por'] / 100), 2, 1)) . '*' . $item['Iva_Ren_Cod'] . '*' . 'I' . '*' . $item['Cop_Int'] . '*' . $item['Adq_Cod'], $obBD_conexionIns);
                 }
             }
         }
         /* registro de kardex y stocks */
+        $Bod_Cod = empty($Bod_Cod) ? null : $Bod_Cod;
         foreach ($array_kardex as $i => $k) {
             $k['Kar_Int'] = $i + 1;
             $obBD_ins1->updateStockProd($Ses_Suc_Cod, $k, true, $obBD_conexion, $obBD_conexionIns, $Bod_Cod);
@@ -825,6 +1239,33 @@ if (isset($saveDocument)) {
     $obBD_ins1->fin_transaccion_nomsn($obBD_conexionIns);
     if ($obBD_ins1->Error == 0) {
         $responce = array('success' => true, 'Cop_Cod' => $Cop_Cod, 'Cop_Sec' => $Cop_Sec, 'Com_Cod' => $Com_Cod, 'Ret_Cod' => $Ret_Cod, 'Tic_Des' => $Tic_Des, 'Mes' => mes($meseCop[1], 1) . "/$meseCop[0]");
+        
+        // Guardar defaults de Forma de Pago y Documento en provee_aut
+        $forCodSql = isset($For_Cod) && $For_Cod !== '' ? intval($For_Cod) : 'NULL';
+        $pldCodSql = isset($Pag_Pld) && $Pag_Pld !== '' ? intval($Pag_Pld) : 'NULL';
+        $venDiasSql = 'NULL';
+        if ($For_Cod == 2 && !empty($Cpp_Ven) && !empty($Cop_Fec)) {
+            $venDiasSql = "DATEDIFF('" . mysqli_real_escape_string($obBD_conexionIns->conexion, $Cpp_Ven) . "', '" . mysqli_real_escape_string($obBD_conexionIns->conexion, $Cop_Fec) . "')";
+        }
+        $renAsuSql = (isset($Ret_Asu) && $Ret_Asu == 'S') ? "'S'" : "'N'";
+        $prvCodSql = mysqli_real_escape_string($obBD_conexionIns->conexion, $Prv_Cod);
+        
+        $resChkProv = mysqli_query($obBD_conexionIns->conexion, "SELECT Prd_Cod FROM provee_aut WHERE Prv_Cod = '$prvCodSql' LIMIT 1");
+        if (!$resChkProv || mysqli_num_rows($resChkProv) == 0) {
+            $sqlDefProv = "INSERT INTO provee_aut (Prv_Cod, For_Cod, Pld_Cod, Ven_Dias, Ren_Asu) 
+                           VALUES ('$prvCodSql', $forCodSql, $pldCodSql, $venDiasSql, $renAsuSql)";
+            mysqli_query($obBD_conexionIns->conexion, $sqlDefProv);
+        } else {
+            $sqlDefProv = "UPDATE provee_aut SET For_Cod = $forCodSql, Pld_Cod = $pldCodSql, Ven_Dias = $venDiasSql, Ren_Asu = $renAsuSql WHERE Prv_Cod = '$prvCodSql'";
+            mysqli_query($obBD_conexionIns->conexion, $sqlDefProv);
+        }
+
+        // Retornar información del mapeo si ocurrió
+        if (isset($mapeos_guardados) && $mapeos_guardados > 0) {
+            $responce['mapeos_guardados'] = $mapeos_guardados;
+            if (isset($mapeos_errores)) $responce['mapeos_errores'] = $mapeos_errores;
+        }
+
         $reportes = $obBD_con1->reportes($_SERVER['PHP_SELF'], $Ses_Emp_Cod, $obBD_conexion);
         // detalle del documento
         if (!empty($Cop_Cod)) {
@@ -945,7 +1386,36 @@ if (isset($saveDocument)) {
 
 if (isset($cargarReportes)) {
     try {
-        $response['reportes'] = $obBD_con1->reportes($_SERVER['PHP_SELF'], $Ses_Emp_Cod, $obBD_conexion);
+        $pag = explode("/", $_SERVER['PHP_SELF']);
+        $Pcs_Nom_Exact = $pag[count($pag)-1]; // ej. fac_mod_fac_com_3.1.php
+        $Pcs_Nom_Like = 'fac_mod_fac_com_%';
+        
+        // Buscamos primero el exacto, si no, el aproximado
+        $row_rs_proceso = $obBD_con1->getRowConsultaSql("SELECT Pcs_Cod, Pcs_Nom FROM procesos WHERE Pcs_Nom = '$Pcs_Nom_Exact';", $obBD_conexion);
+        if (!$row_rs_proceso) {
+            $row_rs_proceso = $obBD_con1->getRowConsultaSql("SELECT Pcs_Cod, Pcs_Nom FROM procesos WHERE Pcs_Nom LIKE '$Pcs_Nom_Like' ORDER BY Pcs_Nom DESC LIMIT 1;", $obBD_conexion);
+        }
+        
+        $reportes = array();
+        if ($row_rs_proceso && isset($row_rs_proceso['Pcs_Cod'])) {
+            $sql = "SELECT reportes.Rep_Cod, procesos.Pcs_Nom, reportes.Rep_Ord, rutas.Rut_Des 
+                    FROM procesos
+                    INNER JOIN reportes ON (procesos.Pcs_Cod = reportes.Rep_Req)
+                    INNER JOIN rutas ON (procesos.Rut_Cod = rutas.Rut_Cod) 
+                    WHERE reportes.Pcs_Cod = " . $row_rs_proceso['Pcs_Cod'] . " 
+                    AND reportes.Emp_Cod = $Ses_Emp_Cod 
+                    ORDER BY reportes.Rep_Ord";
+            
+            $row_rs_reporte = $obBD_con1->getArrayConsultaSql($sql, $obBD_conexion);
+            $i = 0;
+            if (is_array($row_rs_reporte)) {
+                foreach ($row_rs_reporte as $row) {
+                    $i++;
+                    $reportes[$i] = $row['Rut_Des'] . $row['Pcs_Nom'];
+                }
+            }
+        }
+        $response['reportes'] = $reportes;
         $response['success'] = true;
     } catch (Exception $ex) {
         $response['message'] = $ex->getMessage();
@@ -1002,7 +1472,6 @@ if (isset($cuenAjax)) {
     $responce = $obBD_con1->getPageGridJson('det_plan.selectWhere', array_merge($_GET, array('where' => array('det_plan.Pla_Cod' => $Pec_Cop['Pla_Cod']), 'setWhere' => array('isActive', 'isDetalle'))), $obBD_conexion);
 }
 $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('clean' => true, 'where' => array('Tic_Est' => 'A')), $obBD_conexion);
-$row_rs_RetPld = $obBD_con1->getArrayConsulta(67, $Ses_Emp_Cod . '*' . 'RA', $obBD_conexion);
 $rs_periodo = $obBD_con1->getArrayConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
 
 // BUSCAR NEGOCIACIONES
@@ -1032,6 +1501,7 @@ require_once('../COMPONENTES/fac_presupuesto_rubros_ajax.inc.php');
 
 //Obtener datos de CCxPP 08/10/2025
 if (isset($saldoCCxPP)) {
+    session_write_close();
     // Obtencion de valores
     $Cop_Fec = isset($_POST['Cop_Fec']) && !empty($_POST['Cop_Fec']) ? $_POST['Cop_Fec'] : $hoy;
     $Pec_Cop = $obBD_con1->getRowConsulta(9, $Ses_Emp_Cod . '*' . $Cop_Fec, $obBD_conexion);
@@ -1064,7 +1534,7 @@ if (isset($saldoCCxPP)) {
 <HTML lang="es">
 
 <head>
-    <!--TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE-->
+    <!--TITLE><?Php /* echo $Ses_Sys_Nom; */ ?></TITLE-->
     <TITLE><?Php echo "Compras Modificar [EXA]"; ?></TITLE>
     <meta charset="utf-8">
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
@@ -1073,16 +1543,15 @@ if (isset($saldoCCxPP)) {
             Cof_Mpe = '<?php echo isset($configs['Cof_Mpe']) ? $configs['Cof_Mpe'] : 'N'; ?>',
             cod_banano = <?php echo $cod_banano; ?>;
     </script>
-    <script>
-        <?php $array_documentos = $obBD_con1->getArrayConsulta(1003, $vendedor['Pun_Cod'], $obBD_conexion);  ?>
-        var array_documentos = <?php echo json_encode($array_documentos);  ?>;
-        var edit_doc = <?php echo json_encode('S'); ?>;
-    </script>
-
     <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/fac_val_factu.js?gh=1016"></script>
+    <script type="text/javascript" src="../VALIDACIONES/fac_val_factu1.0.js?gh=1016"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
-
+    <script>
+        <?php $pun_cod = isset($vendedor['Pun_Cod']) ? $vendedor['Pun_Cod'] : 0; $array_documentos = $obBD_con1->getArrayConsulta(1003, $pun_cod, $obBD_conexion);  ?>
+        var array_documentos = [];
+        <?php //echo json_encode($array_documentos); 
+        ?>
+    </script>
 </head>
 
 <body>
@@ -1176,18 +1645,9 @@ if (isset($saldoCCxPP)) {
                         }
                         $('.formDatos').setData(doc, false);
                         $('.Cop_Fec').val(doc['Cop_Fec']);
-                        // Establecer Ret_Fec con la fecha actual solo si no existe fecha de retención
-                        if (!$.varValid(doc['Ret_Fec']) || doc['Ret_Fec'] === '' || doc['Ret_Fec'] === doc['Cop_Fec']) {
-                            var fechaActual = (typeof window.fecRetencionServidor === 'function' ? window.fecRetencionServidor() : '') || '<?php echo $hoy; ?>';
-                            $('#Ret_Fec').val(fechaActual);
-                            $('#autorizaForm').setData({
-                                Ret_Fec: fechaActual
-                            });
-                        } else {
-                            $('#autorizaForm').setData({
-                                Ret_Fec: doc['Ret_Fec']
-                            });
-                        }
+                        $('#autorizaForm').setData({
+                            Ret_Fec: doc['Ret_Fec']
+                        });
 
                         $.Search('autoriza');
                         $('#Cop_Num').data('old_num', doc['Cop_Num']);
@@ -1264,10 +1724,8 @@ if (isset($saldoCCxPP)) {
                             checkbox.checked = false;
                         }
                         var ch_prop = document.getElementById('ch_prop');
-                        var tprop = document.getElementById('t_prop');
                         if (doc.Cop_Prop && doc.Cop_Prop != "0.00") {
                             ch_prop.checked = true;
-                            $('#t_prop').val(doc.Cop_Prop);
                         } else { //Caso contrario lo desactiva
                             ch_prop.checked = false;
                         }
@@ -1477,15 +1935,20 @@ if (isset($saldoCCxPP)) {
                 });
             }
 
-            if (provee.op_ide === '01') $('#op_ide1').prop('checked', true).trigger('change');
-            if (provee.op_ide === '02') $('#op_ide2').prop('checked', true).trigger('change');
-            if (provee.op_ide === '03') $('#op_ide3').prop('checked', true).trigger('change');
-            if ($.isEmpty(provee.op_ide)) {
-                if (provee.Prs_Ced && provee.Prs_Ced.length == 13) $('#op_ide1').prop('checked', true).trigger('change');
-                if (provee.Prs_Ced && provee.Prs_Ced.length == 10) $('#op_ide2').prop('checked', true).trigger('change');
+            if (provee.op_ide === '01') {
+                $('#op_ide1').prop('checked', true).trigger('change');
+                $('#op_ide1').val(1)
             }
-            tipoComprobanteHide($("#Tri_Cod option:selected").attr('data-ticsri') || 1, provee.Tic_Cod);
+            if (provee.op_ide === '02') {
+                $('#op_ide2').prop('checked', true).trigger('change');
+                $('#op_ide1').val(2)
+            }
+            if (provee.op_ide === '03') {
+                $('#op_ide3').prop('checked', true).trigger('change');
+                $('#op_ide1').val(3)
+            }
             checkLiquidacion();
+            tipoComprobanteHide(1);
             validaCopNum();
         }
 
@@ -1500,8 +1963,6 @@ if (isset($saldoCCxPP)) {
                 Cop_Fec: '<?php echo $hoy; ?>',
                 Com_Fec: '<?php echo $hoy; ?>'
             }).find(':input').attr('readonly');
-            // Establecer Ret_Fec con la fecha actual al limpiar el documento
-            $('#Ret_Fec').val('<?php echo $hoy; ?>');
             $('#Cop_Fec').trigger('change');
             $('#Ciu_Cod').trigger('chosen:updated');
             $('.validate').find('i').removeAttr('class');
@@ -1701,7 +2162,7 @@ if (isset($saldoCCxPP)) {
                 <div class="form-group">
                     <label class="col-xs-2 control-label label-xs required">Forma:</label>
                     <div class="col-xs-3">
-                        <select id="For_Cod2" name="For_Cod" class="form-control input-xs readOnly" data-trigger="" onchange="checkCuentaPago2();" required="">
+                        <select id="For_Cod2" name="For_Cod" class="form-control input-xs" data-trigger="" onchange="checkCuentaPago2();" required="">
                             <?php foreach ($rs_forma as $row) {
                                 echo "<option value='$row[For_Cod]' " . ($row['For_Des'] == 'Contado' ? "selected=''" : '') . ">$row[For_Des]</option>";
                             } ?>
@@ -1710,7 +2171,7 @@ if (isset($saldoCCxPP)) {
                     <?php if ($configs['Cof_Con'] == 'S') { ?>
                         <label class="col-xs-2 control-label label-xs required">Cuenta:</label>
                         <div class="col-xs-5">
-                            <select id="Pag_Pld2" name="Pag_Pld" class="form-control input-xs readOnly" required=""></select>
+                            <select id="Pag_Pld2" name="Pag_Pld" class="form-control input-xs" required=""></select>
                         </div>
                     <?php } ?>
                 </div>
@@ -1764,14 +2225,14 @@ if (isset($saldoCCxPP)) {
             var Ret_Fec = $('#Ret_Fec').val(),
                 Aut_Cad = $('#Ret_Fec').data('Aut_Cad');
             if ($.varValid(Aut_Cad) && Aut_Cad.length > 0) {
-                /*if (Ret_Fec > Aut_Cad) {
+                if (Ret_Fec > Aut_Cad) {
                     $('#Ret_Fec').createFlyout('No puede ser mayor a <u class="orange">' + Aut_Cad + '</u> !', {
                         icon: 'exclamation',
                         placement: 'right_bottom'
                     });
-                    $('#Ret_Fec').val($('#Cop_Fec').val()).flyout('show');
+                    $('#Ret_Fec').val('').flyout('show');
                     Ret_Fec = Aut_Cad;
-                }*/
+                }
             }
             $('#autorizaForm').setData({
                 Ret_Fec: Ret_Fec
