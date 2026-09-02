@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $dashboardPathHint = '';
 $allowPath = __DIR__ . DIRECTORY_SEPARATOR . 'dashboard_scan_allow.json';
 if (file_exists($allowPath)) {
@@ -21,11 +21,986 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Proyectos</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="dashboard_proyecto.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --border: #e2e8f0;
+            --alta: #ef4444;
+            --media-alta: #f97316;
+            --media: #eab308;
+            --baja: #22c55e;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        
+        .header h1 { color: var(--dark); font-size: 28px; font-weight: 700; }
+        .header h1 i { color: var(--primary); margin-right: 12px; }
+        
+        .header-info { text-align: right; color: var(--gray); }
+        .header-info .date { font-size: 14px; }
+        
+        .header-actions { display: flex; gap: 12px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+        
+        .btn {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn-pdf {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        
+        .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4); }
+        
+        .btn-scan {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+        
+        .btn-scan:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4); }
+        
+        .btn-config {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-config:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4); }
+        
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        
+        .header-info .version {
+            font-size: 12px;
+            background: var(--success);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        /* Selector de proyecto */
+        .project-selector {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .project-selector label {
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .project-selector label i { color: var(--primary); }
+        
+        .project-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .project-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .project-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .project-selector-extra {
+            width: 100%;
+            flex-basis: 100%;
+            margin-top: 4px;
+        }
+        .project-path-hint {
+            font-size: 12px;
+            color: var(--gray);
+            line-height: 1.5;
+            margin: 0 0 10px 0;
+            padding: 10px 12px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        .project-path-hint code {
+            font-size: 11px;
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        #serverProjectPick {
+            width: 100%;
+            max-width: 640px;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .scan-queue-wrap {
+            width: 100%;
+            flex-basis: 100%;
+            margin-top: 8px;
+        }
+        .scan-queue-wrap > .scan-queue-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .scan-queue {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .scan-queue-empty {
+            font-size: 12px;
+            color: var(--gray);
+            padding: 12px 14px;
+            background: #f8fafc;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+        }
+        .scan-queue-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 10px 12px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+        .scan-queue-item .sq-label {
+            flex: 1;
+            min-width: 160px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        .scan-queue-item .sq-path {
+            display: block;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--gray);
+            word-break: break-all;
+            margin-top: 2px;
+        }
+        .scan-queue-item .sq-mode {
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 12px;
+            color: #64748b;
+            background: white;
+            min-width: 200px;
+        }
+        .scan-queue-item .sq-remove {
+            border: none;
+            background: #fee2e2;
+            color: #b91c1c;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .scan-queue-item .sq-remove:hover { background: #fecaca; }
+        .btn-add-folder {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        }
+        .btn-add-folder:hover { transform: translateY(-2px); }
+        .btn-clear-queue {
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--gray);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-clear-queue:hover { color: var(--danger); border-color: #fecaca; background: #fff1f2; }
+        
+        .project-chip {
+            padding: 8px 16px;
+            background: var(--light);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .project-chip:hover, .project-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .project-view-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .project-view-bar.show { display: flex; }
+        .project-view-bar .pv-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 4px;
+        }
+        .project-view-bar .pv-label i { color: var(--primary); }
+        .project-view-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .project-view-tab {
+            border: 2px solid var(--border);
+            background: var(--light);
+            color: var(--gray);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .project-view-tab:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .project-view-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px;
+            height: 100%;
+        }
+        
+        .stat-card.total::before { background: var(--primary); }
+        .stat-card.php::before { background: #777BB4; }
+        .stat-card.js::before { background: #F7DF1E; }
+        .stat-card.html::before { background: #E34F26; }
+        .stat-card.horas::before { background: var(--info); }
+        .stat-card.completado::before { background: var(--success); }
+        
+        .stat-card .icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-card.total .icon { background: #eef2ff; color: var(--primary); }
+        .stat-card.php .icon { background: #f3f0ff; color: #777BB4; }
+        .stat-card.js .icon { background: #fef9c3; color: #ca8a04; }
+        .stat-card.html .icon { background: #fee2e2; color: #E34F26; }
+        .stat-card.horas .icon { background: #dbeafe; color: var(--info); }
+        .stat-card.completado .icon { background: #dcfce7; color: var(--success); }
+        
+        .stat-card .label {
+            font-size: 13px;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-card .value { font-size: 28px; font-weight: 700; color: var(--dark); }
+        .stat-card .sub { font-size: 12px; color: var(--gray); margin-top: 4px; }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 24px;
+        }
+        
+        @media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        /* Tabla de archivos: el tooltip de ajuste no debe recortarse */
+        .main-grid > .card:first-of-type {
+            overflow: visible;
+        }
+        
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h2 { font-size: 18px; font-weight: 600; color: var(--dark); }
+        .card-header h2 i { margin-right: 10px; color: var(--primary); }
+        .card-body { padding: 24px; }
+        
+        .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--light);
+            color: var(--gray);
+        }
+        
+        .filter-btn:hover, .filter-btn.active { background: var(--primary); color: white; }
+        
+        .files-table { width: 100%; border-collapse: collapse; }
+        
+        
+        /* .files-table th moved to sticky definition above */
+        
+        .files-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+        
+        .files-table tr:hover { background: var(--light); }
+        
+        .file-name { display: flex; align-items: center; gap: 10px; }
+        
+        .file-icon {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .file-icon.php { background: #f3f0ff; color: #777BB4; }
+        .file-icon.js { background: #fef9c3; color: #ca8a04; }
+        .file-icon.html { background: #fee2e2; color: #E34F26; }
+        .file-icon.css { background: #dbeafe; color: #2563eb; }
+        
+        .complexity-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .complexity-badge:hover { transform: scale(1.05); }
+        
+        .complexity-badge.alta { background: #fef2f2; color: var(--alta); }
+        .complexity-badge.media-alta { background: #fff7ed; color: var(--media-alta); }
+        .complexity-badge.media { background: #fefce8; color: #a16207; }
+        .complexity-badge.baja { background: #f0fdf4; color: var(--baja); }
+        
+        .complexity-select {
+            padding: 4px 8px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+        }
+        
+        .sidebar-card { margin-bottom: 24px; }
+        
+        /* Comparación horas elegidas vs sugeridas: solo dashboard (clase no-print) */
+        .hours-delta-card .card-body { padding: 16px 20px; }
+        .hours-delta-rows { display: flex; flex-direction: column; gap: 10px; }
+        .hours-delta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+            font-size: 13px;
+        }
+        .hours-delta-row .lbl { color: var(--gray); }
+        .hours-delta-row .val { font-weight: 600; color: var(--dark); }
+        .hours-delta-sep {
+            height: 1px;
+            background: var(--border);
+            margin: 2px 0;
+        }
+        .hours-delta-diff {
+            margin-top: 4px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .hours-delta-diff.zero { background: #f1f5f9; color: #64748b; }
+        .hours-delta-diff.positive { background: #fff7ed; color: #c2410c; }
+        .hours-delta-diff.negative { background: #f0fdf4; color: #15803d; }
+        .hours-delta-hint {
+            font-size: 11px;
+            color: var(--gray);
+            margin: 8px 0 0 0;
+            line-height: 1.35;
+        }
+        
+        .progress-ring-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .progress-ring { position: relative; width: 180px; height: 180px; }
+        .progress-ring svg { transform: rotate(-90deg); }
+        .progress-ring circle { fill: none; stroke-width: 12; }
+        .progress-ring .bg { stroke: var(--border); }
+        .progress-ring .progress { stroke: var(--success); stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+        
+        .progress-ring .percentage {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .progress-ring .percentage .value { font-size: 42px; font-weight: 700; color: var(--success); }
+        .progress-ring .percentage .label { font-size: 14px; color: var(--gray); }
+        
+        .complexity-list { display: flex; flex-direction: column; gap: 12px; }
+        
+        .complexity-item { display: flex; align-items: center; gap: 12px; }
+        .complexity-item .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .complexity-item .dot.alta { background: var(--alta); }
+        .complexity-item .dot.media-alta { background: var(--media-alta); }
+        .complexity-item .dot.media { background: var(--media); }
+        .complexity-item .dot.baja { background: var(--baja); }
+        .complexity-item .info { flex: 1; }
+        .complexity-item .name { font-size: 14px; font-weight: 500; color: var(--dark); }
+        
+        .complexity-item .bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        
+        .complexity-item .bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+        .complexity-item .bar-fill.alta { background: var(--alta); }
+        .complexity-item .bar-fill.media-alta { background: var(--media-alta); }
+        .complexity-item .bar-fill.media { background: var(--media); }
+        .complexity-item .bar-fill.baja { background: var(--baja); }
+        
+        .complexity-item .stats { text-align: right; font-size: 13px; }
+        .complexity-item .stats .hours { font-weight: 600; color: var(--dark); }
+        .complexity-item .stats .files { color: var(--gray); }
+        
+        .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        
+        .time-item {
+            background: var(--light);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .time-item .value { font-size: 24px; font-weight: 700; color: var(--primary); }
+        .time-item .label { font-size: 12px; color: var(--gray); margin-top: 4px; }
+        
+        /* ~15 filas visibles antes del scroll (~52px/fila + cabecera ~52px); en pantallas bajas se adapta */
+        .table-container { 
+            height: min(1040px, calc(100vh - 160px));
+            min-height: 880px;
+            overflow-x: auto;
+            overflow-y: auto; 
+            border-bottom: 1px solid var(--border);
+        }
+        .table-container::-webkit-scrollbar { width: 8px; }
+        .table-container::-webkit-scrollbar-track { background: var(--light); border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: var(--gray); }
+
+        .files-table th {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        
+        .work-summary {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .work-summary h3 { color: var(--success); font-size: 16px; margin-bottom: 8px; }
+        .work-summary p { color: #166534; font-size: 13px; }
+        
+        /* Loading */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading.show { display: flex; }
+        
+        .loading-content {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        
+        .loading-content i { font-size: 48px; color: var(--primary); margin-bottom: 16px; }
+        .loading-content p { color: var(--dark); font-size: 16px; }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px; right: 24px;
+            background: var(--dark);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast i { margin-right: 10px; color: var(--success); }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-state i { font-size: 64px; margin-bottom: 20px; color: var(--border); }
+        .empty-state h3 { color: var(--dark); margin-bottom: 10px; }
+        
+        .analytics-section {
+            margin-bottom: 24px;
+        }
+        .analytics-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        .analytics-card h2 {
+            font-size: 16px;
+            color: var(--dark);
+            margin: 0 0 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .analytics-card h2 i { color: var(--primary); }
+        .delta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 20px;
+            font-size: 14px;
+            color: var(--dark);
+        }
+        .delta-pill {
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: var(--light);
+            border: 1px solid var(--border);
+        }
+        .delta-pill.positive { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+        .delta-pill.negative { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+        .delta-pill.neutral { color: var(--gray); }
+        .folder-breakdown { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .folder-breakdown th {
+            text-align: left;
+            padding: 8px 10px;
+            background: var(--light);
+            color: var(--gray);
+            font-size: 11px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--border);
+        }
+        .folder-breakdown td { padding: 10px; border-bottom: 1px solid var(--border); }
+        .folder-bar-cell { min-width: 120px; }
+        .folder-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            overflow: hidden;
+        }
+        .folder-bar > div {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+        }
+        /* Detalle sugerida vs elegida: solo al pasar el raton; no va al PDF ni a impresion */
+        .adjust-hint-wrap {
+            position: relative;
+            display: inline-block;
+            margin-top: 4px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+        .adjust-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid #fde68a;
+            background: #fffbeb;
+            color: #b45309;
+            font-size: 10px;
+            cursor: help;
+            line-height: 1;
+        }
+        .adjust-trigger i { font-size: 9px; }
+        .adjust-popover {
+            display: none;
+            position: fixed;
+            z-index: 10050;
+            min-width: 240px;
+            max-width: min(300px, calc(100vw - 20px));
+            padding: 8px 10px;
+            font-size: 10px;
+            color: #92400e;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+            line-height: 1.35;
+            flex-direction: column;
+            gap: 4px;
+            word-wrap: break-word;
+        }
+        .adjust-popover.is-open {
+            display: flex;
+        }
+        .adjust-popover strong {
+            font-size: 11px;
+            color: #b45309;
+        }
+        .adjust-popover .adjust-delta {
+            font-size: 10px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .client-compare-wide {
+            grid-column: 1 / -1;
+        }
+        .baseline-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .baseline-toolbar input[type="file"] {
+            font-size: 13px;
+            max-width: 100%;
+        }
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            box-shadow: none;
+        }
+        .btn-outline:hover {
+            background: var(--light);
+        }
+        .compare-hint {
+            font-size: 12px;
+            color: var(--gray);
+            margin: 0 0 8px 0;
+            line-height: 1.45;
+        }
+        .compare-inner { display: flex; flex-direction: column; gap: 14px; }
+        .compare-hours-hero {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            gap: 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .compare-hours-hero.positive { border-color: #a7f3d0; box-shadow: 0 0 0 1px rgba(167, 243, 208, 0.5); }
+        .compare-hours-hero.negative { border-color: #fecaca; box-shadow: 0 0 0 1px rgba(254, 202, 202, 0.5); }
+        .compare-hours-hero.neutral { border-color: #e2e8f0; }
+        .compare-hero-item {
+            flex: 1 1 140px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            justify-content: center;
+        }
+        .compare-hero-sep {
+            width: 1px;
+            background: var(--border);
+            align-self: stretch;
+            min-height: 56px;
+        }
+        @media (max-width: 640px) {
+            .compare-hero-sep { display: none; }
+            .compare-hero-item { border-bottom: 1px solid var(--border); }
+            .compare-hero-item:last-child { border-bottom: none; }
+        }
+        .compare-hero-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .compare-hero-val { font-size: 20px; color: var(--dark); font-weight: 700; }
+        .compare-hero-val.muted { color: #64748b; font-size: 18px; }
+        .compare-hero-delta { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+        .compare-hours-hero.positive .compare-hero-delta { color: #047857; }
+        .compare-hours-hero.negative .compare-hero-delta { color: #b91c1c; }
+        .compare-hours-hero.neutral .compare-hero-delta { color: #64748b; }
+        .compare-hero-pct {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+        .compare-metrics-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .compare-metrics-table th,
+        .compare-metrics-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            text-align: right;
+        }
+        .compare-metrics-table th:first-child,
+        .compare-metrics-table td:first-child { text-align: left; }
+        .compare-metrics-table thead th {
+            background: var(--light);
+            color: var(--gray);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .compare-td-positive { color: #047857; font-weight: 600; }
+        .compare-td-negative { color: #b91c1c; font-weight: 600; }
+        .compare-td-neutral { color: var(--gray); font-weight: 600; }
+        .complexity-label-short {
+            font-size: 10px;
+            color: var(--gray);
+            text-transform: capitalize;
+        }
+        .diff-badge {
+            display: inline-block;
+            margin-top: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            text-transform: uppercase;
+        }
+        .diff-badge-nuevo { background: #dbeafe; color: #1d4ed8; }
+        .diff-badge-modificado { background: #ffedd5; color: #c2410c; }
+        .diff-badge-aumentado { background: #dcfce7; color: #15803d; }
+        .diff-badge-igual { background: #f1f5f9; color: #64748b; }
+        .diff-lines-delta {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .diff-lines-delta.up { color: #15803d; }
+        .diff-lines-delta.down { color: #b91c1c; }
+        .diff-lines-delta.same { color: #64748b; }
+        .file-row-excluded { opacity: 0.72; background: #f8fafc; }
+        .file-row-excluded:hover { background: #f1f5f9; }
+        .excluded-badge { background: #fee2e2; color: #b91c1c; }
+        .excluded-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #fee2e2;
+            color: #b91c1c;
+            white-space: nowrap;
+        }
+        .btn-file-toggle {
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            border-radius: 8px;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .btn-file-toggle:hover { background: #f1f5f9; color: #0f172a; }
+        .btn-file-toggle.exclude:hover { border-color: #fecaca; color: #b91c1c; background: #fef2f2; }
+        .btn-file-toggle.include:hover { border-color: #bbf7d0; color: #15803d; background: #f0fdf4; }
+        
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; }
+            .header-info { text-align: center; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .files-table { display: block; overflow-x: auto; }
+        }
+        
+        @media print {
+            .no-print { display: none !important; }
+            .adjust-hint-wrap { display: none !important; }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -40,7 +1015,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 <option value="no_comments">Sin Comentarios</option>
             </select>
 
-            <button class="btn btn-add-folder" type="button" onclick="agregarCarpetaACola()" title="A&ntilde;adir a la lista con el tipo de conteo elegido">
+            <button class="btn btn-add-folder" type="button" onclick="agregarCarpetaACola()" title="Añadir a la lista con el tipo de conteo elegido">
                 <i class="fas fa-plus"></i> Agregar
             </button>
             <button class="btn btn-scan" type="button" onclick="escanearProyecto()">
@@ -73,10 +1048,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         
         <!-- Header -->
         <div class="header">
-            <div>
-                <p class="header-kicker">An&aacute;lisis de c&oacute;digo &middot; EXA</p>
-                <h1><i class="fas fa-layer-group"></i><span id="projectName">Selecciona un Proyecto</span></h1>
-            </div>
+            <h1><i class="fas fa-layer-group"></i><span id="projectName">Selecciona un Proyecto</span></h1>
             <div class="header-info">
                 <div class="date" id="currentDate"></div>
                 <div class="header-actions">
@@ -156,7 +1128,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                     <button type="button" class="btn btn-outline no-print" onclick="limpiarReferenciaCliente()"><i class="fas fa-times"></i> Quitar referencia</button>
                 </div>
                 <p id="clientBaselineStatus" style="font-size:13px;margin:12px 0 0 0;color:var(--dark);min-height:1.2em;"></p>
-                <div id="baselineFilesPreview" class="ref-preview no-print" style="display:none;"></div>
+                <div id="baselineFilesPreview" class="no-print" style="display:none;margin-top:12px;padding:12px;background:#f8fafc;border:1px solid var(--border);border-radius:10px;"></div>
                 <div id="clientBaselineCompare" style="margin-top:14px;"></div>
                 <div class="compare-pdf-option no-print" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
                     <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--dark);margin:0;">
@@ -170,11 +1142,8 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         
         <!-- Datos y analisis (desglose por carpeta; la comparativa con cliente va arriba) -->
         <div class="analytics-section no-print" id="analyticsSection" style="display: none;">
-            <div class="analytics-card folder-analytics">
-                <div class="folder-analytics-head">
-                    <h2><i class="fas fa-folder-tree"></i>Por carpeta / m&oacute;dulo</h2>
-                    <p class="analytics-hint">Agrupado por <strong>proyecto</strong> (carpeta global). Pulse un m&oacute;dulo para filtrar la tabla de archivos.</p>
-                </div>
+            <div class="analytics-card">
+                <h2><i class="fas fa-folder-tree"></i>Por carpeta / m&oacute;dulo</h2>
                 <table class="folder-breakdown">
                     <thead>
                         <tr>
@@ -182,7 +1151,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                             <th style="text-align:center;">Arch.</th>
                             <th style="text-align:right;">L&iacute;neas</th>
                             <th style="text-align:right;">Horas</th>
-                            <th class="hours-delta-col" style="display:none;text-align:right;" title="Horas del escaneo menos horas del comparativo (JSON/PDF)">Dif. horas</th>
                             <th style="text-align:right;">% l&iacute;neas</th>
                             <th class="folder-bar-cell"></th>
                         </tr>
@@ -198,22 +1166,22 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             <div class="card">
                 <div class="card-header">
                     <h2><i class="fas fa-folder-open"></i>Archivos del Proyecto</h2>
-                    <div class="filters no-print">
+                    <div class="filters no-print" style="align-items: center;">
                         <div class="type-filters">
                             <button class="filter-btn active" onclick="setFilter('type', 'all', this)">Todos</button>
                             <button class="filter-btn" onclick="setFilter('type', 'php', this)">PHP</button>
                             <button class="filter-btn" onclick="setFilter('type', 'js', this)">JS</button>
                             <button class="filter-btn" onclick="setFilter('type', 'html', this)">HTML</button>
                         </div>
-                        <span class="filter-sep"></span>
+                        <div style="width: 1px; height: 24px; background: #e2e8f0; margin: 0 10px;"></div>
                         <div class="folder-filters">
-                            <select id="folderFilter" class="dash-select" title="Filtrar por m&oacute;dulo (flujo, relavera...) o por subcarpeta (FRONT, LOGICA...)" onchange="setFilter('folder', this.value)" style="min-width: 200px; max-width: 360px;">
+                            <select id="folderFilter" title="Filtrar por carpeta (FRONT, VALIDACIONES, etc.)" onchange="setFilter('folder', this.value)" style="padding: 8px 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; color: #64748b; outline: none; cursor: pointer; min-width: 180px; max-width: 260px;">
                                 <option value="all">Todas las carpetas</option>
                             </select>
                         </div>
-                        <span class="filter-sep"></span>
+                        <div style="width: 1px; height: 24px; background: #e2e8f0; margin: 0 10px;"></div>
                         <div class="complexity-filters">
-                            <select id="complexityFilter" class="dash-select" onchange="setFilter('complexity', this.value)">
+                            <select id="complexityFilter" onchange="setFilter('complexity', this.value)" style="padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; color: #64748b; outline: none; cursor: pointer;">
                                 <option value="all">Todas las complejidades</option>
                                 <option value="alta">Alta</option>
                                 <option value="media-alta">Media-Alta</option>
@@ -221,9 +1189,9 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                                 <option value="baja">Baja</option>
                             </select>
                         </div>
-                        <span class="filter-sep"></span>
+                        <div style="width: 1px; height: 24px; background: #e2e8f0; margin: 0 10px;"></div>
                         <div class="diff-filters">
-                            <select id="diffFilter" class="dash-select" title="Requiere referencia con detalle de archivos (JSON nuevo o PDF)" onchange="setFilter('diff', this.value)" style="min-width: 200px; max-width: 280px;" disabled>
+                            <select id="diffFilter" title="Requiere referencia con detalle de archivos (JSON nuevo o PDF)" onchange="setFilter('diff', this.value)" style="padding: 8px 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; color: #64748b; outline: none; cursor: pointer; min-width: 200px; max-width: 280px;" disabled>
                                 <option value="all">Todos (sin filtro diff)</option>
                                 <option value="changed">Solo nuevos / modificados</option>
                                 <option value="added">Solo nuevos</option>
@@ -231,9 +1199,9 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                                 <option value="increased">Solo con m&aacute;s l&iacute;neas</option>
                             </select>
                         </div>
-                        <span class="filter-sep"></span>
+                        <div style="width: 1px; height: 24px; background: #e2e8f0; margin: 0 10px;"></div>
                         <div class="inclusion-filters" style="display:flex;align-items:center;gap:8px;">
-                            <select id="inclusionFilter" class="dash-select" title="Archivos excluidos no entran en totales ni en el PDF" onchange="setFilter('inclusion', this.value)" style="min-width: 170px;">
+                            <select id="inclusionFilter" title="Archivos excluidos no entran en totales ni en el PDF" onchange="setFilter('inclusion', this.value)" style="padding: 8px 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px; color: #64748b; outline: none; cursor: pointer; min-width: 170px;">
                                 <option value="active">En el conteo</option>
                                 <option value="excluded">Solo excluidos</option>
                                 <option value="all">Todos</option>
@@ -249,7 +1217,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                                 <th>Archivo</th>
                                 <th>L&iacute;neas</th>
                                 <th>Horas</th>
-                                <th class="hours-delta-col" style="display:none;" title="Horas del escaneo menos horas del comparativo">Dif. horas</th>
                                 <th>Sugerida</th>
                                 <th>Complejidad</th>
                                 <th class="no-print" style="width:52px;">Acc.</th>
@@ -371,15 +1338,10 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 </div>
                 
                 <div class="card sidebar-card">
-                    <div class="card-header time-card-header">
-                        <h2><i class="fas fa-calendar-check"></i>Tiempo</h2>
-                        <label class="dev-count-wrap" title="Horas efectivas: 16 h/d&iacute;a con 3 personas (escala lineal)">
-                            <span>Devs</span>
-                            <input type="number" id="devCountInput" class="dev-count-input" min="1" max="30" step="1" value="3" onchange="cambiarNumeroDevs(this.value)" oninput="cambiarNumeroDevs(this.value)">
-                        </label>
+                    <div class="card-header">
+                        <h2><i class="fas fa-calendar-check"></i>Tiempo (3 devs)</h2>
                     </div>
                     <div class="card-body">
-                        <p class="dev-count-hint" id="devCountHint">3 desarrolladores &middot; 16.0 h efectivas / d&iacute;a</p>
                         <div class="time-grid">
                             <div class="time-item">
                                 <div class="value" id="timeDays">0</div>
@@ -435,10 +1397,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         let currentInclusionFilter = 'active'; // active | excluded | all
         let clientBaseline = null;
         let clientBaselineLoadError = null;
-        let folderBreakdownOpen = {};
-        let devCount = 3;
-        const DEV_COUNT_KEY = 'dashboard_dev_count';
-        const HOURS_PER_DAY_3DEVS = 16;
         const STORAGE_KEY = 'dashboard_projects';
         const MAX_HISTORY_POINTS = 20;
         const BASELINE_SESSION_KEY = 'dashboard_client_baseline_v1';
@@ -567,7 +1525,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                     return false;
                 });
             }
-            return list.filter(fileHasLines);
+            return list;
         }
 
         /** Archivos que entran en metricas / PDF / horas (no excluidos). */
@@ -764,7 +1722,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 const modeHint = modeLabel(t.mode);
                 html += '<button type="button" class="project-view-tab' + active +
                     '" onclick="setProjectView(\'' + pathEsc + '\')" title="' +
-                    String(t.path).replace(/"/g, '&quot;') + ' Â· ' + modeHint + '">' + label + '</button>';
+                    String(t.path).replace(/"/g, '&quot;') + ' · ' + modeHint + '">' + label + '</button>';
             });
             tabs.innerHTML = html;
         }
@@ -796,61 +1754,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         function horasArchivoStr(file) {
             return (file.lines / tasaComplejidad(file.complexity)).toFixed(2);
         }
-
-        function horasDeArchivoNum(file) {
-            const stored = Number(file && file.hours);
-            if (file && file.hours != null && file.hours !== '' && !isNaN(stored) && stored >= 0) {
-                const fromLines = (Number(file.lines) || 0) / tasaComplejidad((file && file.complexity) || 'media');
-                if (stored > 0 || fromLines === 0) return stored;
-            }
-            return (Number(file && file.lines) || 0) / tasaComplejidad((file && file.complexity) || 'media');
-        }
-
-        function formatHoursDeltaHtml(delta) {
-            if (delta == null || Number.isNaN(Number(delta))) {
-                return '<span class="hours-delta-cell delta-na">\u2014</span>';
-            }
-            const d = Number(delta);
-            if (Math.abs(d) < 0.005) {
-                return '<span class="hours-delta-cell delta-zero">0.00 h</span>';
-            }
-            const cls = d > 0 ? 'delta-up' : 'delta-down';
-            return '<span class="hours-delta-cell ' + cls + '">' + (d > 0 ? '+' : '') + d.toFixed(2) + ' h</span>';
-        }
-
-        function hasHoursCompare() {
-            return baselineHasFileDetail();
-        }
-
-        function syncHoursDeltaColumns() {
-            const show = hasHoursCompare();
-            document.querySelectorAll('.hours-delta-col').forEach(el => {
-                el.style.display = show ? '' : 'none';
-            });
-            return show;
-        }
-
-        function aggregateBaselineHours() {
-            const exact = {};
-            const global = {};
-            if (!baselineHasFileDetail()) return { exact: exact, global: global };
-            clientBaseline.files.forEach(f => {
-                if (!fileHasLines(f)) return;
-                const h = horasDeArchivoNum(f);
-                const folder = f.folder || 'ROOT';
-                exact[folder] = (exact[folder] || 0) + h;
-                const g = globalFolderOf(folder);
-                global[g] = (global[g] || 0) + h;
-            });
-            return { exact: exact, global: global };
-        }
-
-        function hoursScanForRefParts(canon, scanByBase) {
-            const list = scanByBase[canon.base] || [];
-            if (!list.length) return null;
-            const same = list.find(pf => canonicalFileParts(pf.folder, pf.name).folder === canon.folder);
-            return horasDeArchivoNum(same || list[0]);
-        }
         
         function etiquetaComplejidad(key) {
             const m = { alta: 'Alta', 'media-alta': 'M.-Alta', media: 'Media', baja: 'Baja' };
@@ -869,7 +1772,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         function aggregateByFolder(files) {
             const map = {};
             files.forEach(f => {
-                if (!fileHasLines(f)) return;
                 const k = f.folder || 'ROOT';
                 if (!map[k]) map[k] = { lines: 0, files: 0, hours: 0 };
                 map[k].lines += f.lines;
@@ -884,39 +1786,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 hours: map[folder].hours,
                 pct: totalLines ? (map[folder].lines / totalLines * 100) : 0
             })).sort((a, b) => b.lines - a.lines);
-        }
-
-        function globalFolderOf(folder) {
-            const parts = normalizeFolderParts(folder);
-            return parts.length ? parts[0] : 'ROOT';
-        }
-
-        function subfolderLabel(folder, globalKey) {
-            const f = String(folder || 'ROOT');
-            if (f === globalKey || f === 'ROOT') return '(ra\u00edz del m\u00f3dulo)';
-            if (globalKey && f.indexOf(globalKey + '/') === 0) return f.slice(globalKey.length + 1);
-            return f;
-        }
-
-        function groupRowsByGlobal(rows) {
-            const groups = {};
-            (rows || []).forEach(r => {
-                const g = globalFolderOf(r.folder);
-                if (!groups[g]) {
-                    groups[g] = { global: g, lines: 0, files: 0, hours: 0, pct: 0, children: [] };
-                }
-                groups[g].children.push(r);
-                groups[g].lines += r.lines;
-                groups[g].files += r.files;
-                groups[g].hours += r.hours;
-                groups[g].pct += r.pct;
-            });
-            return Object.keys(groups)
-                .sort((a, b) => groups[b].lines - groups[a].lines || a.localeCompare(b, 'es'))
-                .map(k => {
-                    groups[k].children.sort((a, b) => b.lines - a.lines || a.folder.localeCompare(b.folder, 'es'));
-                    return groups[k];
-                });
         }
         
         function formatDeltaNum(n, decimals, suffix) {
@@ -1273,10 +2142,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             return !!(clientBaseline && Array.isArray(clientBaseline.files) && clientBaseline.files.length);
         }
 
-        function fileHasLines(file) {
-            return (Number(file && file.lines) || 0) > 0;
-        }
-
         function countBaselineMatches() {
             if (!baselineHasFileDetail() || !projectFiles.length) {
                 return { matched: 0, total: projectFiles.length, refCount: baselineHasFileDetail() ? clientBaseline.files.length : 0 };
@@ -1418,7 +2283,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
 
         function normalizeFolderParts(folder) {
             return String(folder == null || folder === '' ? 'ROOT' : folder)
-                .replace(/[\\ï¼âˆ•]/g, '/')
+                .replace(/[\\／∕]/g, '/')
                 .replace(/\s*\/\s*/g, '/')
                 .replace(/^\/+|\/+$/g, '')
                 .split('/')
@@ -1426,36 +2291,10 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 .filter(p => p && p.toUpperCase() !== 'ROOT');
         }
 
-        /** Coincide carpeta exacta o cualquier descendiente (flujo incluye flujo/FRONT). */
-        function folderMatchesFilter(folder, filter) {
-            if (!filter || filter === 'all') return true;
-            const f = String(folder == null || folder === '' ? 'ROOT' : folder).replace(/\\/g, '/');
-            if (filter === 'ROOT') return f === 'ROOT';
-            return f === filter || f.indexOf(filter + '/') === 0;
-        }
-
-        /** Carpetas hoja + ancestros (relavera, relavera/FRONT, ...). */
-        function collectFolderFilterKeys(files) {
-            const folders = {};
-            (files || []).forEach(f => {
-                const parts = normalizeFolderParts(f.folder);
-                if (!parts.length) {
-                    folders.ROOT = true;
-                    return;
-                }
-                let acc = '';
-                parts.forEach(p => {
-                    acc = acc ? acc + '/' + p : p;
-                    folders[acc] = true;
-                });
-            });
-            return folders;
-        }
-
         function normalizeFileName(name) {
             return String(name || '')
                 .replace(/[\u200b-\u200d\ufeff]/g, '')
-                .replace(/[\\ï¼âˆ•]/g, '/')
+                .replace(/[\\／∕]/g, '/')
                 .trim();
         }
 
@@ -1587,110 +2426,70 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             return null;
         }
 
-        let refPreviewGlobalFilter = 'all';
-
-        function setRefPreviewGlobalFilter(value) {
-            refPreviewGlobalFilter = value || 'all';
-            renderBaselineFilesPreview();
-        }
-
         function renderBaselineFilesPreview() {
             const box = document.getElementById('baselineFilesPreview');
             if (!box) return;
             if (!clientBaseline) {
                 box.style.display = 'none';
                 box.innerHTML = '';
-                refPreviewGlobalFilter = 'all';
                 return;
             }
-            const esc = (s) => String(s == null ? '' : s).replace(/</g, '&lt;');
             const totalsName = clientBaseline.fileName || '(sin nombre)';
             const listName = clientBaseline.listSourceFileName || clientBaseline.fileName || '';
             const src = (clientBaseline.source === 'pdf') ? 'PDF' : 'JSON';
-            let html = '<div class="ref-preview-meta">' +
-                '<div class="ref-preview-file"><i class="fas fa-file-code"></i> <strong>Referencia</strong> ' +
-                '<code>' + esc(totalsName) + '</code> <span class="ref-src">' + src + '</span></div>';
+            let html = '<div style="font-size:13px;margin-bottom:8px;">' +
+                '<strong style="color:var(--dark);"><i class="fas fa-file"></i> Archivo de referencia cargado:</strong> ' +
+                '<code style="background:#e2e8f0;padding:2px 8px;border-radius:6px;">' + String(totalsName).replace(/</g, '&lt;') + '</code>' +
+                ' <span style="color:var(--gray);">(' + src + ')</span>';
             if (clientBaseline.listSourceFileName && clientBaseline.listSourceFileName !== totalsName) {
-                html += '<div class="ref-preview-file"><i class="fas fa-list"></i> <strong>Listado</strong> <code>' + esc(listName) + '</code></div>';
+                html += '<br><strong style="color:var(--dark);"><i class="fas fa-list"></i> Listado de archivos desde:</strong> ' +
+                    '<code style="background:#e2e8f0;padding:2px 8px;border-radius:6px;">' + String(listName).replace(/</g, '&lt;') + '</code>';
             }
             html += '</div>';
 
             if (!baselineHasFileDetail()) {
-                html += '<div class="ref-preview-warn">Este archivo no trae listado archivo-por-archivo. Use &laquo;A&ntilde;adir listado&raquo; con el PDF gerencial.</div>';
+                html += '<div style="font-size:12px;color:#b45309;">Este archivo no trae listado archivo-por-archivo. Use &laquo;A&ntilde;adir listado&raquo; con el PDF gerencial.</div>';
                 box.innerHTML = html;
                 box.style.display = 'block';
                 return;
             }
 
-            const groups = {};
-            let listedRef = 0;
-            let hoursRefTotal = 0;
-            let linesRefTotal = 0;
-            clientBaseline.files.forEach(f => {
-                if (!fileHasLines(f)) return;
-                listedRef++;
-                const c = canonicalFileParts(f.folder, f.name);
-                const g = globalFolderOf(c.folder);
-                if (!groups[g]) groups[g] = { files: [], lines: 0, hoursRef: 0 };
-                const hoursRef = horasDeArchivoNum(f);
-                const lines = Number(f.lines) || 0;
-                groups[g].files.push({ c: c, lines: lines, hoursRef: hoursRef });
-                groups[g].lines += lines;
-                groups[g].hoursRef += hoursRef;
-                linesRefTotal += lines;
-                hoursRefTotal += hoursRef;
-            });
-            Object.keys(groups).forEach(g => {
-                groups[g].files.sort((a, b) =>
-                    a.c.folder.localeCompare(b.c.folder, 'es') || a.c.name.localeCompare(b.c.name, 'es')
-                );
-            });
-            const globals = Object.keys(groups).sort((a, b) => groups[b].lines - groups[a].lines || a.localeCompare(b, 'es'));
-            if (refPreviewGlobalFilter !== 'all' && !groups[refPreviewGlobalFilter]) {
-                refPreviewGlobalFilter = 'all';
-            }
-            const visible = refPreviewGlobalFilter === 'all' ? globals : [refPreviewGlobalFilter];
-
-            html += '<div class="ref-preview-stats ok">' +
-                '<i class="fas fa-file-alt"></i> Resumen del comparativo: <strong>' + listedRef + '</strong> archivos' +
-                ' &middot; <strong>' + linesRefTotal.toLocaleString() + '</strong> l&iacute;neas' +
-                ' &middot; <strong>' + hoursRefTotal.toFixed(2) + ' h</strong>' +
+            const mc = countBaselineMatches();
+            const files = clientBaseline.files.slice().sort((a, b) =>
+                String(a.folder + '/' + a.name).localeCompare(String(b.folder + '/' + b.name), 'es')
+            );
+            html += '<div style="font-size:12px;margin-bottom:8px;color:' + (mc.matched ? '#166534' : '#b45309') + ';">' +
+                'Listado en memoria: <strong>' + files.length + '</strong> archivos &middot; ' +
+                'Casados con escaneo actual: <strong>' + mc.matched + '/' + mc.total + '</strong>' +
                 '</div>';
-            html += '<div class="ref-preview-chips">';
-            html += '<button type="button" class="ref-chip' + (refPreviewGlobalFilter === 'all' ? ' active' : '') + '" onclick="setRefPreviewGlobalFilter(\'all\')">Todos</button>';
-            globals.forEach(g => {
-                const n = groups[g].files.length;
-                html += '<button type="button" class="ref-chip' + (refPreviewGlobalFilter === g ? ' active' : '') + '" onclick="setRefPreviewGlobalFilter(' + JSON.stringify(g) + ')">' +
-                    esc(g) + ' <span>' + n + '</span></button>';
-            });
-            html += '</div>';
+            html += '<details open>' +
+                '<summary style="cursor:pointer;font-weight:600;font-size:13px;color:var(--dark);">Ver archivos le&iacute;dos de la referencia (PDF/JSON)</summary>' +
+                '<div style="max-height:220px;overflow:auto;margin-top:8px;">' +
+                '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+                '<thead><tr style="background:#e2e8f0;text-align:left;">' +
+                '<th style="padding:6px;">Carpeta</th><th style="padding:6px;">Archivo</th>' +
+                '<th style="padding:6px;text-align:right;">L&iacute;neas</th><th style="padding:6px;">En escaneo</th></tr></thead><tbody>';
 
-            html += '<div class="ref-preview-groups">';
-            visible.forEach(g => {
-                const grp = groups[g];
-                html += '<details class="ref-group">' +
-                    '<summary>' +
-                    '<span class="ref-group-name"><i class="fas fa-folder"></i> ' + esc(g) + '</span>' +
-                    '<span class="ref-group-meta">' + grp.files.length + ' arch. &middot; ' +
-                    grp.lines.toLocaleString() + ' l&iacute;n. &middot; ' + grp.hoursRef.toFixed(2) + ' h</span>' +
-                    '<span class="ref-group-toggle" aria-hidden="true">' +
-                    '<span class="ref-toggle-closed"><i class="fas fa-chevron-down"></i> Mostrar</span>' +
-                    '<span class="ref-toggle-open"><i class="fas fa-chevron-up"></i> Ocultar</span>' +
-                    '</span></summary>' +
-                    '<div class="ref-group-table-wrap"><table class="ref-files-table"><thead><tr>' +
-                    '<th>Subcarpeta</th><th>Archivo</th><th class="num">L&iacute;neas</th><th class="num">Horas</th>' +
-                    '</tr></thead><tbody>';
-                grp.files.forEach(item => {
-                    html += '<tr>' +
-                        '<td class="ref-sub">' + esc(subfolderLabel(item.c.folder, g)) + '</td>' +
-                        '<td><strong>' + esc(item.c.name) + '</strong></td>' +
-                        '<td class="num">' + item.lines.toLocaleString() + '</td>' +
-                        '<td class="num">' + item.hoursRef.toFixed(2) + '</td></tr>';
-                });
-                html += '</tbody></table></div></details>';
+            const scanByBase = {};
+            projectFiles.forEach(pf => {
+                const c = canonicalFileParts(pf.folder, pf.name);
+                if (!scanByBase[c.base]) scanByBase[c.base] = [];
+                scanByBase[c.base].push(pf);
             });
-            html += '</div>';
-            html += '<p class="ref-preview-foot">Inventario del JSON/PDF de referencia. La diferencia de horas vs el escaneo actual se muestra en &laquo;Por carpeta / m&oacute;dulo&raquo; y en la tabla de archivos.</p>';
+
+            files.forEach(f => {
+                const c = canonicalFileParts(f.folder, f.name);
+                const inScan = !!(scanByBase[c.base] && scanByBase[c.base].length);
+                html += '<tr style="border-top:1px solid #e2e8f0;">' +
+                    '<td style="padding:5px 6px;color:#64748b;">' + String(c.folder).replace(/</g, '&lt;') + '</td>' +
+                    '<td style="padding:5px 6px;"><strong>' + String(c.name).replace(/</g, '&lt;') + '</strong></td>' +
+                    '<td style="padding:5px 6px;text-align:right;">' + Number(f.lines).toLocaleString() + '</td>' +
+                    '<td style="padding:5px 6px;">' + (inScan
+                        ? '<span style="color:#166534;font-weight:600;">S&iacute;</span>'
+                        : '<span style="color:#b45309;">No</span>') + '</td></tr>';
+            });
+            html += '</tbody></table></div></details>';
+            html += '<p style="font-size:11px;color:#64748b;margin:8px 0 0 0;">Si un archivo del PDF dice &laquo;S&iacute;&raquo; aqu&iacute; pero en la tabla aparece como Nuevo, recargue con Ctrl+F5. Si dice &laquo;No&raquo;, no se extrajo bien el nombre desde el PDF o no est&aacute; en el escaneo.</p>';
             box.innerHTML = html;
             box.style.display = 'block';
         }
@@ -1719,7 +2518,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             const hasScan = projectFiles.length > 0;
             const hasRef = !!clientBaseline;
             const hasFiles = baselineHasFileDetail();
-            // Habilitado si hay escaneo + referencia; si faltan archivos, al elegir filtro pedir&aacute; listado
+            // Habilitado si hay escaneo + referencia; si faltan archivos, al elegir filtro pedirá listado
             sel.disabled = !(hasScan && hasRef);
             if (!hasRef || !hasScan) {
                 currentDiffFilter = 'all';
@@ -2080,69 +2879,16 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 return;
             }
             const rows = aggregateByFolder(files);
-            const groups = groupRowsByGlobal(rows);
-            const esc = (s) => String(s == null ? '' : s).replace(/</g, '&lt;');
-            const showDelta = syncHoursDeltaColumns();
-            const refHours = showDelta ? aggregateBaselineHours() : { exact: {}, global: {} };
-            const deltaCell = (curH, refH) => showDelta
-                ? '<td class="hours-delta-col" style="text-align:right;">' + formatHoursDeltaHtml(curH - (Number(refH) || 0)) + '</td>'
-                : '';
-            tbody.innerHTML = groups.map(g => {
-                const gid = String(g.global);
-                const isOpen = !!folderBreakdownOpen[gid];
-                const head = '<tr class="folder-group-head' + (isOpen ? ' is-open' : '') + '" data-group="' + gid.replace(/"/g, '&quot;') + '" data-folder="' + gid.replace(/"/g, '&quot;') + '" onclick="setFilter(\'folder\', this.dataset.folder)" title="Filtrar archivos de este m&oacute;dulo">' +
-                    '<td><span class="folder-global-name"><i class="fas fa-layer-group"></i> ' + esc(g.global) + '</span>' +
-                    '<button type="button" class="folder-group-toggle" onclick="toggleFolderGroup(event, this.closest(\'tr\').dataset.group)" title="Mostrar u ocultar subcarpetas">' +
-                    (isOpen
-                        ? '<i class="fas fa-chevron-up"></i> Ocultar'
-                        : '<i class="fas fa-chevron-down"></i> Mostrar') +
-                    '</button></td>' +
-                    '<td style="text-align:center;">' + g.files + '</td>' +
-                    '<td style="text-align:right;">' + g.lines.toLocaleString() + '</td>' +
-                    '<td style="text-align:right;">' + g.hours.toFixed(2) + ' h</td>' +
-                    deltaCell(g.hours, refHours.global[g.global]) +
-                    '<td style="text-align:right;">' + g.pct.toFixed(1) + '%</td>' +
-                    '<td class="folder-bar-cell"><div class="folder-bar"><div style="width:' + Math.min(100, g.pct).toFixed(1) + '%"></div></div></td>' +
-                    '</tr>';
-                const kids = g.children.map(r =>
-                    '<tr class="folder-sub-row' + (isOpen ? ' is-open' : '') + '" data-parent="' + gid.replace(/"/g, '&quot;') + '" data-folder="' + String(r.folder).replace(/"/g, '&quot;') + '" onclick="setFilter(\'folder\', this.dataset.folder)" title="Filtrar esta subcarpeta">' +
-                    '<td><span class="folder-sub-name">' + esc(subfolderLabel(r.folder, g.global)) + '</span></td>' +
-                    '<td style="text-align:center;">' + r.files + '</td>' +
-                    '<td style="text-align:right;">' + r.lines.toLocaleString() + '</td>' +
-                    '<td style="text-align:right;">' + r.hours.toFixed(2) + ' h</td>' +
-                    deltaCell(r.hours, refHours.exact[r.folder]) +
-                    '<td style="text-align:right;">' + r.pct.toFixed(1) + '%</td>' +
-                    '<td class="folder-bar-cell"><div class="folder-bar folder-bar-sub"><div style="width:' + Math.min(100, r.pct).toFixed(1) + '%"></div></div></td>' +
-                    '</tr>'
-                ).join('');
-                return head + kids;
-            }).join('');
-        }
-
-        function toggleFolderGroup(event, key) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            if (!key) return;
-            folderBreakdownOpen[key] = !folderBreakdownOpen[key];
-            const open = !!folderBreakdownOpen[key];
-            const tbody = document.getElementById('folderBreakdownBody');
-            if (!tbody) return;
-            tbody.querySelectorAll('.folder-group-head').forEach(tr => {
-                if (tr.getAttribute('data-group') !== key) return;
-                tr.classList.toggle('is-open', open);
-                const btn = tr.querySelector('.folder-group-toggle');
-                if (btn) {
-                    btn.innerHTML = open
-                        ? '<i class="fas fa-chevron-up"></i> Ocultar'
-                        : '<i class="fas fa-chevron-down"></i> Mostrar';
-                }
-            });
-            tbody.querySelectorAll('.folder-sub-row').forEach(tr => {
-                if (tr.getAttribute('data-parent') !== key) return;
-                tr.classList.toggle('is-open', open);
-            });
+            tbody.innerHTML = rows.map(r => `
+                <tr>
+                    <td><strong>${r.folder}</strong></td>
+                    <td style="text-align:center;">${r.files}</td>
+                    <td style="text-align:right;">${r.lines.toLocaleString()}</td>
+                    <td style="text-align:right;">${r.hours.toFixed(2)} h</td>
+                    <td style="text-align:right;">${r.pct.toFixed(1)}%</td>
+                    <td class="folder-bar-cell"><div class="folder-bar"><div style="width:${Math.min(100, r.pct).toFixed(1)}%"></div></div></td>
+                </tr>
+            `).join('');
         }
         
         function updateAdjustmentSummary() {
@@ -2374,7 +3120,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 updateStats();
                 const modeNote = resolvedTargets.map(t =>
                     (t.label || pathBasename(t.path)) + ': ' + modeLabel(t.mode)
-                ).join(' Â· ');
+                ).join(' · ');
                 showToast('Escaneado: ' + data.files.length + ' archivos (' + modeNote + ')');
             })
             .catch(error => {
@@ -2383,7 +3129,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             });
         }
 
-        // Cargar proyecto guardado (anade a la cola y escanea)
+        // Cargar proyecto guardado (añade a la cola y escanea)
         function cargarProyecto(path) {
             scanQueue = [{ path: path, mode: document.getElementById('scanMode').value || 'normal' }];
             renderScanQueue();
@@ -2507,40 +3253,25 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 currentFolderFilter = 'all';
                 return;
             }
-            const folders = collectFolderFilterKeys(getVisibleFiles());
+            const folders = {};
+            getVisibleFiles().forEach(f => { folders[f.folder || 'ROOT'] = true; });
             const list = Object.keys(folders).sort((a, b) => {
                 if (a === 'ROOT') return 1;
                 if (b === 'ROOT') return -1;
                 return a.localeCompare(b, 'es', { sensitivity: 'base' });
             });
-            const globales = list.filter(f => f !== 'ROOT' && f.indexOf('/') < 0);
-            const subcarpetas = list.filter(f => f === 'ROOT' || f.indexOf('/') >= 0);
             const prev = currentFolderFilter;
             sel.innerHTML = '';
             const oAll = document.createElement('option');
             oAll.value = 'all';
             oAll.textContent = 'Todas las carpetas';
             sel.appendChild(oAll);
-            function appendFolderOption(parent, folder) {
+            list.forEach(folder => {
                 const o = document.createElement('option');
                 o.value = folder;
-                o.textContent = folder === 'ROOT'
-                    ? 'ROOT'
-                    : (folder.indexOf('/') < 0 ? folder + ' (todo el m\u00f3dulo)' : folder);
-                parent.appendChild(o);
-            }
-            if (globales.length) {
-                const og = document.createElement('optgroup');
-                og.label = 'M\u00f3dulos (carpeta global)';
-                globales.forEach(folder => appendFolderOption(og, folder));
-                sel.appendChild(og);
-            }
-            if (subcarpetas.length) {
-                const os = document.createElement('optgroup');
-                os.label = 'Subcarpetas';
-                subcarpetas.forEach(folder => appendFolderOption(os, folder));
-                sel.appendChild(os);
-            }
+                o.textContent = folder;
+                sel.appendChild(o);
+            });
             if (prev !== 'all' && folders[prev]) {
                 sel.value = prev;
                 currentFolderFilter = prev;
@@ -2604,12 +3335,9 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             syncDiffFilterControl();
             updateExcludedCountBadge();
 
-            const showHoursDelta = syncHoursDeltaColumns();
-            const colCount = showHoursDelta ? 7 : 6;
-
             if (projectFiles.length === 0) {
                 tbody.innerHTML = `
-                    <tr><td colspan="${colCount}">
+                    <tr><td colspan="6">
                         <div class="empty-state">
                             <i class="fas fa-folder-open"></i>
                             <h3>Sin proyecto seleccionado</h3>
@@ -2622,7 +3350,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             const baselineIndex = baselineHasFileDetail() ? buildBaselineFileIndex() : null;
             const rows = [];
             projectFiles.forEach((file, index) => {
-                if (!fileHasLines(file)) return;
                 if (currentProjectView !== 'all') {
                     const key = normalizePathKey(currentProjectView);
                     const matchPath = file.projectPath && normalizePathKey(file.projectPath) === key;
@@ -2634,7 +3361,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 if (currentTypeFilter !== 'all' && file.type !== currentTypeFilter) return;
                 if (currentComplexityFilter !== 'all' && file.complexity !== currentComplexityFilter) return;
                 const folder = file.folder || 'ROOT';
-                if (currentFolderFilter !== 'all' && !folderMatchesFilter(folder, currentFolderFilter)) return;
+                if (currentFolderFilter !== 'all' && folder !== currentFolderFilter) return;
                 if (!fileMatchesDiffFilter(file, baselineIndex)) return;
                 rows.push({ file: file, index: index });
             });
@@ -2709,14 +3436,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                     ? '<button type="button" class="btn-file-toggle include no-print" onclick="incluirArchivo(' + index + ')" title="Volver al conteo"><i class="fas fa-eye"></i></button>'
                     : '<button type="button" class="btn-file-toggle exclude no-print" onclick="excluirArchivo(' + index + ')" title="Excluir del conteo"><i class="fas fa-eye-slash"></i></button>';
 
-                let hoursDeltaTd = '';
-                if (showHoursDelta) {
-                    const refFile = baselineIndex ? findBaselineFile(file, baselineIndex) : null;
-                    const curH = file.lines / tasaComplejidad(file.complexity);
-                    const refH = refFile ? horasDeArchivoNum(refFile) : 0;
-                    hoursDeltaTd = '<td class="hours-delta-col">' + formatHoursDeltaHtml(curH - refH) + '</td>';
-                }
-
                 html += `
                     <tr class="${isFileExcluded(file) ? 'file-row-excluded' : ''}">
                         <td>
@@ -2733,7 +3452,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                         </td>
                         <td><strong>${file.lines.toLocaleString()}</strong>${linesDeltaHtml}</td>
                         <td><strong>${horasArchivoStr(file)} h</strong></td>
-                        ${hoursDeltaTd}
                         <td><span class="complexity-label-short">${etiquetaComplejidad(sug)}</span></td>
                         <td>
                             <select class="complexity-select" onchange="cambiarComplejidad(${index}, this.value)">
@@ -2755,7 +3473,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             } else if (currentDiffFilter !== 'all') {
                 emptyMsg = 'No hay archivos nuevos o modificados con este filtro';
             }
-            tbody.innerHTML = html || '<tr><td colspan="' + colCount + '" style="text-align:center;padding:20px;">' + emptyMsg + '</td></tr>';
+            tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:20px;">' + emptyMsg + '</td></tr>';
             bindAdjustPopovers(tbody);
         }
         
@@ -2844,18 +3562,12 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             document.getElementById('filesBaja').textContent = complexity.baja.files + ' archivos';
             document.getElementById('barBaja').style.width = (complexity.baja.hours / maxHours * 100) + '%';
 
-            // Tiempo: 3 devs = 16 h efectivas/d&iacute;a; el resto escala en l&iacute;nea
-            const nDevs = Math.max(1, Math.min(30, parseInt(devCount, 10) || 3));
-            const hoursPerDay = HOURS_PER_DAY_3DEVS * (nDevs / 3);
+            // Tiempo
+            const hoursPerDay = 16; // 3 devs x 8h / dia = 24h, pero usamos 16h efectivas
             document.getElementById('timeHours').textContent = totalHours.toFixed(2);
-            document.getElementById('timeDays').textContent = hoursPerDay ? (totalHours / hoursPerDay).toFixed(1) : '0';
-            document.getElementById('timeWeeks').textContent = hoursPerDay ? (totalHours / (hoursPerDay * 5)).toFixed(2) : '0';
-            document.getElementById('timeMonths').textContent = hoursPerDay ? (totalHours / (hoursPerDay * 20)).toFixed(2) : '0';
-            const hint = document.getElementById('devCountHint');
-            if (hint) {
-                hint.textContent = nDevs + ' desarrollador' + (nDevs === 1 ? '' : 'es') +
-                    ' \u00b7 ' + hoursPerDay.toFixed(1) + ' h efectivas / d\u00eda';
-            }
+            document.getElementById('timeDays').textContent = (totalHours / hoursPerDay).toFixed(1);
+            document.getElementById('timeWeeks').textContent = (totalHours / (hoursPerDay * 5)).toFixed(2);
+            document.getElementById('timeMonths').textContent = (totalHours / (hoursPerDay * 20)).toFixed(2);
 
             const analyticsEl = document.getElementById('analyticsSection');
             if (analyticsEl) analyticsEl.style.display = projectFiles.length ? 'block' : 'none';
@@ -2903,51 +3615,9 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             complexity.baja.hours = complexity.baja.lines / RATES.baja;
             totalHours = pdfFiles.reduce((s, f) => s + (f.lines / tasaComplejidad(f.complexity)), 0);
             
-            const ink = '#1c1712';
-            const teal = '#1b6b63';
-            const tealDeep = '#134e48';
-            const cream = '#f3ebe0';
-            const paper = '#fbf7f0';
-            const line = '#e4d8c6';
-            const mint = '#e7f3f1';
-            const muted = '#6e655c';
-            const ok = '#2f6b4f';
-            const danger = '#b42318';
-            const th = 'padding:7px 8px;text-align:left;font-size:9px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;';
-            const td = 'padding:6px 8px;border-bottom:1px solid ' + line + ';';
-            const pdfH3 = (t) => '<h3 style="color:' + tealDeep + ';font-size:11px;margin:0 0 10px 0;letter-spacing:0.16em;text-transform:uppercase;font-family:Georgia,\'Times New Roman\',serif;border-bottom:1px solid ' + line + ';padding-bottom:7px;page-break-inside:avoid;page-break-after:avoid;">' + t + '</h3>';
-            const pdfDeltaTxt = (cur, refH) => {
-                const d = cur - (Number(refH) || 0);
-                if (Math.abs(d) < 0.005) return '<span style="color:' + muted + ';font-weight:600;">0.00 h</span>';
-                const col = d > 0 ? ok : danger;
-                return '<span style="color:' + col + ';font-weight:700;">' + (d > 0 ? '+' : '') + d.toFixed(2) + ' h</span>';
-            };
-            const showDeltaPdf = hasHoursCompare();
-            const refHoursPdf = showDeltaPdf ? aggregateBaselineHours() : { exact: {}, global: {} };
-            const folderRowsPdf = groupRowsByGlobal(aggregateByFolder(pdfFiles)).map(g => {
-                const head = '<tr style="background:' + mint + ';">' +
-                    '<td style="' + td + 'font-weight:700;font-family:Georgia,serif;color:' + tealDeep + ';font-size:12px;">' + escapeHtmlPdf(g.global) + '</td>' +
-                    '<td style="' + td + 'text-align:center;">' + g.files + '</td>' +
-                    '<td style="' + td + 'text-align:right;">' + g.lines.toLocaleString() + '</td>' +
-                    '<td style="' + td + 'text-align:right;">' + g.hours.toFixed(2) + ' h</td>' +
-                    (showDeltaPdf ? '<td style="' + td + 'text-align:right;">' + pdfDeltaTxt(g.hours, refHoursPdf.global[g.global]) + '</td>' : '') +
-                    '<td style="' + td + 'text-align:right;">' + g.pct.toFixed(1) + '%</td></tr>';
-                const kids = g.children.map(r =>
-                    '<tr style="background:' + paper + ';">' +
-                    '<td style="' + td + 'padding-left:18px;color:' + muted + ';">' + escapeHtmlPdf(subfolderLabel(r.folder, g.global)) + '</td>' +
-                    '<td style="' + td + 'text-align:center;">' + r.files + '</td>' +
-                    '<td style="' + td + 'text-align:right;">' + r.lines.toLocaleString() + '</td>' +
-                    '<td style="' + td + 'text-align:right;">' + r.hours.toFixed(2) + ' h</td>' +
-                    (showDeltaPdf ? '<td style="' + td + 'text-align:right;">' + pdfDeltaTxt(r.hours, refHoursPdf.exact[r.folder]) + '</td>' : '') +
-                    '<td style="' + td + 'text-align:right;">' + r.pct.toFixed(1) + '%</td></tr>'
-                ).join('');
-                return head + kids;
-            }).join('');
-            const folderHeadPdf = '<tr style="background:' + teal + ';color:#f3fffc;">' +
-                '<th style="' + th + '">Carpeta</th><th style="' + th + 'text-align:center;">Arch.</th>' +
-                '<th style="' + th + 'text-align:right;">Lineas</th><th style="' + th + 'text-align:right;">Horas</th>' +
-                (showDeltaPdf ? '<th style="' + th + 'text-align:right;">Dif. horas</th>' : '') +
-                '<th style="' + th + 'text-align:right;">% lineas</th></tr>';
+            const folderRowsPdf = aggregateByFolder(pdfFiles).map(r =>
+                `<tr style="background:#f8fafc;"><td style="padding:5px;border:1px solid #e2e8f0;font-weight:600;">${r.folder}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${r.files}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${r.lines.toLocaleString()}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${r.hours.toFixed(2)} h</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${r.pct.toFixed(1)}%</td></tr>`
+            ).join('');
             
             const projectName = currentScanTargets.length
                 ? currentScanTargets.map(t => t.label || pathBasename(t.path)).join(' + ')
@@ -2964,7 +3634,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 
                 // Por tipo de archivo
                 if (type === 'html') return 'Plantilla de visualizacion e impresion';
-                if (type === 'css') return 'Estilos y diseno visual';
+                if (type === 'css') return 'Estilos y diseño visual';
                 
                 // Por patron de nombre
                 if (name.includes('sql_') || name.includes('_sql')) desc = 'Consultas y operaciones de base de datos';
@@ -3001,30 +3671,25 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             const complexityOrder = { 'alta': 0, 'media-alta': 1, 'media': 2, 'baja': 3 };
             const filesForPdf = [...pdfFiles].sort((a, b) => complexityOrder[a.complexity] - complexityOrder[b.complexity]);
             filesForPdf.forEach((file, i) => {
-                const bg = i % 2 === 0 ? cream : paper;
+                const bg = i % 2 === 0 ? '#f8fafc' : 'white';
                 const compColor = colors[file.complexity];
                 const sug = file.suggestedComplexity != null ? file.suggestedComplexity : file.complexity;
-                filesRows += '<tr style="background:' + bg + ';page-break-inside:avoid;">' +
-                    '<td style="' + td + '">' + escapeHtmlPdf(file.folder + '/' + file.name) + '</td>' +
-                    '<td style="' + td + 'text-align:center;font-weight:600;">' + file.lines.toLocaleString() + '</td>' +
-                    '<td style="' + td + 'text-align:center;">' + horasArchivoStr(file) + ' h</td>' +
-                    '<td style="' + td + 'text-align:center;font-size:9px;">' + etiquetaComplejidad(sug) + '</td>' +
-                    '<td style="' + td + 'text-align:center;color:' + compColor + ';font-weight:700;">' + file.complexity.toUpperCase() + '</td></tr>';
+                filesRows += `<tr style="background:${bg};page-break-inside:avoid;"><td style="padding:8px;border:1px solid #e2e8f0;">${file.folder}/${file.name}</td><td style="padding:8px;border:1px solid #e2e8f0;text-align:center;font-weight:600;">${file.lines.toLocaleString()}</td><td style="padding:8px;border:1px solid #e2e8f0;text-align:center;">${horasArchivoStr(file)} h</td><td style="padding:8px;border:1px solid #e2e8f0;text-align:center;font-size:9px;">${etiquetaComplejidad(sug)}</td><td style="padding:8px;border:1px solid #e2e8f0;text-align:center;color:${compColor};font-weight:600;">${file.complexity.toUpperCase()}</td></tr>`;
             });
             
             // Agrupar funcionalidades por modulo
             let funcionalidades = {};
             pdfFiles.forEach(file => {
-                const folder = globalFolderOf(file.folder || 'ROOT');
+                const folder = file.folder || 'ROOT';
                 if (!funcionalidades[folder]) funcionalidades[folder] = [];
                 const desc = getFileDescription(file.name, file.folder, file.type);
                 if (!funcionalidades[folder].includes(desc)) funcionalidades[folder].push(desc);
             });
             
             let funcRows = '';
-            Object.keys(funcionalidades).sort((a, b) => a.localeCompare(b, 'es')).forEach((folder, i) => {
-                const bg = i % 2 === 0 ? cream : paper;
-                funcRows += '<tr style="background:' + bg + ';"><td style="' + td + 'font-weight:700;color:' + tealDeep + ';">' + escapeHtmlPdf(folder) + '</td><td style="' + td + 'color:' + ink + ';">' + escapeHtmlPdf(funcionalidades[folder].join(', ')) + '</td></tr>';
+            Object.keys(funcionalidades).forEach((folder, i) => {
+                const bg = i % 2 === 0 ? '#f8fafc' : 'white';
+                funcRows += `<tr style="background:${bg};"><td style="padding:5px;border:1px solid #e2e8f0;font-weight:600;color:#6366f1;">${folder}</td><td style="padding:5px;border:1px solid #e2e8f0;">${funcionalidades[folder].join(', ')}</td></tr>`;
             });
             
             let pdfCompareBlock = '';
@@ -3044,106 +3709,94 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 const refNm = escapeHtmlPdf(br.fileName || 'Referencia');
                 const srcLbl = br.source === 'pdf' ? 'PDF' : 'JSON';
                 pdfCompareBlock =
-                    '<div style="margin-bottom:20px;padding:14px 16px;background:' + mint + ';border:1px solid ' + line + ';border-radius:10px;page-break-inside:avoid;break-inside:avoid;">' +
-                    pdfH3('Comparativa vs informe de referencia') +
-                    '<p style="font-size:9px;color:' + muted + ';margin:0 0 10px 0;">Archivo: <strong style="color:' + ink + ';">' + refNm + '</strong> (' + srcLbl + ').</p>' +
+                    '<div style="margin-bottom:22px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;page-break-inside:avoid;break-inside:avoid;">' +
+                    '<h3 style="color:#1e293b;font-size:12px;margin:0 0 6px 0;border-left:3px solid #6366f1;padding-left:8px;page-break-inside:avoid;page-break-after:avoid;break-inside:avoid;">COMPARATIVA VS INFORME DE REFERENCIA</h3>' +
+                    '<p style="font-size:9px;color:#64748b;margin:0 0 10px 0;">Archivo: <strong>' + refNm + '</strong> (' + srcLbl + ').</p>' +
                     '<table style="width:100%;border-collapse:collapse;font-size:10px;">' +
-                    '<tr style="background:' + teal + ';color:#f3fffc;"><th style="' + th + '">Metrica</th><th style="' + th + 'text-align:right;">Actual</th><th style="' + th + 'text-align:right;">Referencia</th><th style="' + th + 'text-align:right;">Diferencia</th></tr>' +
-                    '<tr style="background:' + paper + ';"><td style="' + td + 'font-weight:700;">Horas</td><td style="' + td + 'text-align:right;">' + curM.totalHours.toFixed(2) + ' h</td><td style="' + td + 'text-align:right;">' + bH.toFixed(2) + ' h</td><td style="' + td + 'text-align:right;">' + pdfDeltaTxt(curM.totalHours, bH) + pctNote + '</td></tr>' +
-                    '<tr style="background:' + cream + ';"><td style="' + td + '">Lineas</td><td style="' + td + 'text-align:right;">' + curM.totalLines.toLocaleString() + '</td><td style="' + td + 'text-align:right;">' + bL.toLocaleString() + '</td><td style="' + td + 'text-align:right;">' + formatDeltaNum(dLi, 0, '') + '</td></tr>' +
-                    '<tr style="background:' + paper + ';"><td style="' + td + '">Archivos</td><td style="' + td + 'text-align:right;">' + curM.fileCount + '</td><td style="' + td + 'text-align:right;">' + bFi + '</td><td style="' + td + 'text-align:right;">' + formatDeltaNum(dFi, 0, '') + '</td></tr>' +
+                    '<tr style="background:#6366f1;color:white;"><th style="padding:5px;text-align:left;">Metrica</th><th style="padding:5px;text-align:right;">Actual</th><th style="padding:5px;text-align:right;">Referencia</th><th style="padding:5px;text-align:right;">Diferencia</th></tr>' +
+                    '<tr style="background:#eff6ff;"><td style="padding:5px;border:1px solid #e2e8f0;font-weight:700;">Horas</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:right;">' + curM.totalHours.toFixed(2) + ' h</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:right;">' + bH.toFixed(2) + ' h</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:right;font-weight:600;">' + formatDeltaNum(dHi, 2, ' h') + pctNote + '</td></tr>' +
+                    '<tr style="background:white;"><td style="padding:5px;border:1px solid #e2e8f0;">Lineas</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:right;">' + curM.totalLines.toLocaleString() + '</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:right;">' + bL.toLocaleString() + '</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:right;">' + formatDeltaNum(dLi, 0, '') + '</td></tr>' +
+                    '<tr style="background:#f8fafc;"><td style="padding:5px;border:1px solid #e2e8f0;">Archivos</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:right;">' + curM.fileCount + '</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:right;">' + bFi + '</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:right;">' + formatDeltaNum(dFi, 0, '') + '</td></tr>' +
                     '</table>' +
                     '</div>';
             }
             
             const pdfHtml = `
-            <div style="font-family:Helvetica,Arial,sans-serif;padding:10px 18px 18px;max-width:800px;margin:0 auto;font-size:11px;line-height:1.35;background:${paper};color:${ink};">
-                <div style="text-align:center;margin-bottom:18px;padding:16px 12px 14px;background:${cream};border-radius:12px;border:1px solid ${line};page-break-inside:avoid;">
-                    <p style="margin:0 0 6px 0;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:#c45c26;font-weight:700;">Analisis de codigo &middot; EXA</p>
-                    <h1 style="color:${ink};font-size:24px;margin:0 0 6px 0;line-height:1.15;font-family:Georgia,'Times New Roman',serif;font-weight:600;letter-spacing:-0.02em;">Informe gerencial</h1>
-                    <h2 style="color:${tealDeep};font-size:15px;margin:0 0 8px 0;line-height:1.3;font-family:Georgia,'Times New Roman',serif;font-weight:600;">${escapeHtmlPdf(projectName)}</h2>
-                    <p style="color:${muted};font-size:10px;margin:0 0 6px 0;">${dateStr}</p>
-                    ${modesPdfNote ? '<p style="color:' + muted + ';font-size:9px;margin:0 0 10px 0;">Conteo: ' + modesPdfNote + '</p>' : ''}
-                    <span style="display:inline-block;background:${teal};color:#f3fffc;padding:5px 14px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:0.08em;">PROYECTO COMPLETADO</span>
+            <div style="font-family:'Helvetica',sans-serif;padding:6px 16px 16px 16px;max-width:800px;margin:0 auto;font-size:11px;line-height:1.3;">
+                <div style="text-align:center;margin-bottom:12px;border-bottom:2px solid #6366f1;padding-bottom:10px;page-break-inside:avoid;break-inside:avoid;">
+                    <h1 style="color:#1e293b;font-size:22px;margin:0 0 6px 0;line-height:1.15;page-break-inside:avoid;">INFORME GERENCIAL</h1>
+                    <h2 style="color:#6366f1;font-size:17px;margin:0 0 6px 0;line-height:1.2;">Proyecto ${escapeHtmlPdf(projectName)}</h2>
+                    <p style="color:#64748b;font-size:11px;margin:0 0 8px 0;">Fecha: ${dateStr}</p>
+                    ${modesPdfNote ? '<p style="color:#64748b;font-size:9px;margin:0 0 8px 0;">Conteo: ' + modesPdfNote + '</p>' : ''}
+                    <span style="background:#22c55e;color:white;padding:4px 12px;border-radius:12px;font-size:10px;font-weight:600;">PROYECTO COMPLETADO</span>
                 </div>
                 
-                <div style="margin-bottom:20px;page-break-inside:avoid;">
-                    ${pdfH3('Metricas principales')}
-                    <table style="width:100%;border-collapse:separate;border-spacing:8px 0;font-size:10px;">
-                        <tr>
-                            <td style="width:33%;background:${cream};border:1px solid ${line};border-radius:10px;padding:12px 10px;text-align:center;">
-                                <div style="font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:${muted};font-weight:700;">Lineas</div>
-                                <div style="font-family:Georgia,serif;font-size:20px;color:${ink};font-weight:700;margin-top:4px;">${totalLines.toLocaleString()}</div>
-                            </td>
-                            <td style="width:33%;background:${cream};border:1px solid ${line};border-radius:10px;padding:12px 10px;text-align:center;">
-                                <div style="font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:${muted};font-weight:700;">Archivos</div>
-                                <div style="font-family:Georgia,serif;font-size:20px;color:${ink};font-weight:700;margin-top:4px;">${pdfFiles.length}</div>
-                            </td>
-                            <td style="width:33%;background:${mint};border:1px solid ${line};border-radius:10px;padding:12px 10px;text-align:center;">
-                                <div style="font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:${tealDeep};font-weight:700;">Horas</div>
-                                <div style="font-family:Georgia,serif;font-size:20px;color:${tealDeep};font-weight:700;margin-top:4px;">${totalHours.toFixed(2)} h</div>
-                            </td>
-                        </tr>
+                <div style="margin-bottom:22px;page-break-inside:avoid;break-inside:avoid;">
+                    <h3 style="color:#1e293b;font-size:12px;margin:0 0 8px 0;border-left:3px solid #6366f1;padding-left:8px;page-break-inside:avoid;page-break-after:avoid;break-inside:avoid;">METRICAS PRINCIPALES</h3>
+                    <table style="width:100%;border-collapse:collapse;font-size:10px;">
+                        <tr style="background:#f8fafc;"><td style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:600;">Total Lineas</td><td style="padding:5px 8px;border:1px solid #e2e8f0;color:#6366f1;font-weight:700;">${totalLines.toLocaleString()}</td></tr>
+                        <tr><td style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:600;">Archivos</td><td style="padding:5px 8px;border:1px solid #e2e8f0;">${pdfFiles.length}</td></tr>
+                        <tr style="background:#f8fafc;"><td style="padding:5px 8px;border:1px solid #e2e8f0;font-weight:600;">Total Horas</td><td style="padding:5px 8px;border:1px solid #e2e8f0;color:#3b82f6;font-weight:700;">${totalHours.toFixed(2)} h</td></tr>
                     </table>
                 </div>
                 
                 ${pdfCompareBlock}
                 
-                <div style="margin-bottom:20px;page-break-inside:avoid;">
-                    ${pdfH3('Por carpeta / modulo')}
+                <div style="margin-bottom:22px;page-break-inside:avoid;break-inside:avoid;">
+                    <h3 style="color:#1e293b;font-size:12px;margin:0 0 8px 0;border-left:3px solid #6366f1;padding-left:8px;page-break-inside:avoid;page-break-after:avoid;break-inside:avoid;">POR CARPETA / MODULO</h3>
                     <table style="width:100%;border-collapse:collapse;font-size:10px;">
-                        ${folderHeadPdf}
+                        <tr style="background:#6366f1;color:white;"><th style="padding:5px;text-align:left;">Carpeta</th><th style="padding:5px;text-align:center;">Arch.</th><th style="padding:5px;text-align:center;">Lineas</th><th style="padding:5px;text-align:center;">Horas</th><th style="padding:5px;text-align:center;">% Lineas</th></tr>
                         ${folderRowsPdf}
                     </table>
                 </div>
                 
-                <div style="margin-bottom:20px;page-break-inside:avoid;">
-                    ${pdfH3('Por tecnologia')}
+                <div style="margin-bottom:22px;page-break-inside:avoid;break-inside:avoid;">
+                    <h3 style="color:#1e293b;font-size:12px;margin:0 0 8px 0;border-left:3px solid #6366f1;padding-left:8px;page-break-inside:avoid;page-break-after:avoid;break-inside:avoid;">POR TECNOLOGIA</h3>
                     <table style="width:100%;border-collapse:collapse;font-size:10px;">
-                        <tr style="background:${teal};color:#f3fffc;"><th style="${th}">Tipo</th><th style="${th}text-align:center;">Archivos</th><th style="${th}text-align:right;">Lineas</th></tr>
-                        <tr style="background:${paper};"><td style="${td}">PHP</td><td style="${td}text-align:center;">${php.files}</td><td style="${td}text-align:right;">${php.lines.toLocaleString()}</td></tr>
-                        <tr style="background:${cream};"><td style="${td}">JavaScript</td><td style="${td}text-align:center;">${js.files}</td><td style="${td}text-align:right;">${js.lines.toLocaleString()}</td></tr>
-                        <tr style="background:${paper};"><td style="${td}">HTML</td><td style="${td}text-align:center;">${html.files}</td><td style="${td}text-align:right;">${html.lines.toLocaleString()}</td></tr>
-                        <tr style="background:${tealDeep};color:#fbf7f0;"><td style="padding:7px 8px;font-weight:700;">TOTAL</td><td style="padding:7px 8px;text-align:center;font-weight:700;">${pdfFiles.length}</td><td style="padding:7px 8px;text-align:right;font-weight:700;">${totalLines.toLocaleString()}</td></tr>
+                        <tr style="background:#6366f1;color:white;"><th style="padding:5px;text-align:left;">Tipo</th><th style="padding:5px;text-align:center;">Archivos</th><th style="padding:5px;text-align:center;">Lineas</th></tr>
+                        <tr style="background:#f8fafc;"><td style="padding:5px;border:1px solid #e2e8f0;">PHP</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${php.files}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${php.lines.toLocaleString()}</td></tr>
+                        <tr><td style="padding:5px;border:1px solid #e2e8f0;">JavaScript</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${js.files}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${js.lines.toLocaleString()}</td></tr>
+                        <tr style="background:#f8fafc;"><td style="padding:5px;border:1px solid #e2e8f0;">HTML</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${html.files}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${html.lines.toLocaleString()}</td></tr>
+                        <tr style="background:#1e293b;color:white;"><td style="padding:5px;font-weight:700;">TOTAL</td><td style="padding:5px;text-align:center;font-weight:700;">${pdfFiles.length}</td><td style="padding:5px;text-align:center;font-weight:700;">${totalLines.toLocaleString()}</td></tr>
                     </table>
                 </div>
                 
-                <div style="margin-bottom:20px;page-break-inside:avoid;">
-                    ${pdfH3('Por complejidad')}
+                <div style="margin-bottom:22px;page-break-inside:avoid;break-inside:avoid;">
+                    <h3 style="color:#1e293b;font-size:12px;margin:0 0 8px 0;border-left:3px solid #6366f1;padding-left:8px;page-break-inside:avoid;page-break-after:avoid;break-inside:avoid;">POR COMPLEJIDAD</h3>
                     <table style="width:100%;border-collapse:collapse;font-size:10px;">
-                        <tr style="background:${teal};color:#f3fffc;"><th style="${th}">Nivel</th><th style="${th}text-align:center;">Arch.</th><th style="${th}text-align:right;">Lineas</th><th style="${th}text-align:right;">Horas</th></tr>
-                        <tr style="background:#f8e4de;"><td style="${td}color:#b42318;font-weight:700;">ALTA</td><td style="${td}text-align:center;">${complexity.alta.files}</td><td style="${td}text-align:right;">${complexity.alta.lines.toLocaleString()}</td><td style="${td}text-align:right;">${complexity.alta.hours.toFixed(2)} h</td></tr>
-                        <tr style="background:#f6e6d8;"><td style="${td}color:#c45c26;font-weight:700;">MEDIA-ALTA</td><td style="${td}text-align:center;">${complexity['media-alta'].files}</td><td style="${td}text-align:right;">${complexity['media-alta'].lines.toLocaleString()}</td><td style="${td}text-align:right;">${complexity['media-alta'].hours.toFixed(2)} h</td></tr>
-                        <tr style="background:#f6efd4;"><td style="${td}color:#8a7318;font-weight:700;">MEDIA</td><td style="${td}text-align:center;">${complexity.media.files}</td><td style="${td}text-align:right;">${complexity.media.lines.toLocaleString()}</td><td style="${td}text-align:right;">${complexity.media.hours.toFixed(2)} h</td></tr>
-                        <tr style="background:#e4f0e8;"><td style="${td}color:#2f6b4f;font-weight:700;">BAJA</td><td style="${td}text-align:center;">${complexity.baja.files}</td><td style="${td}text-align:right;">${complexity.baja.lines.toLocaleString()}</td><td style="${td}text-align:right;">${complexity.baja.hours.toFixed(2)} h</td></tr>
-                        <tr style="background:${tealDeep};color:#fbf7f0;"><td style="padding:7px 8px;font-weight:700;">TOTAL</td><td style="padding:7px 8px;text-align:center;font-weight:700;">${pdfFiles.length}</td><td style="padding:7px 8px;text-align:right;font-weight:700;">${totalLines.toLocaleString()}</td><td style="padding:7px 8px;text-align:right;font-weight:700;">${totalHours.toFixed(2)} h</td></tr>
+                        <tr style="background:#6366f1;color:white;"><th style="padding:5px;text-align:left;">Nivel</th><th style="padding:5px;text-align:center;">Arch.</th><th style="padding:5px;text-align:center;">Lineas</th><th style="padding:5px;text-align:center;">Horas</th></tr>
+                        <tr style="background:#fef2f2;"><td style="padding:5px;border:1px solid #e2e8f0;color:#ef4444;font-weight:600;">ALTA</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity.alta.files}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity.alta.lines.toLocaleString()}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity.alta.hours.toFixed(2)} h</td></tr>
+                        <tr style="background:#fff7ed;"><td style="padding:5px;border:1px solid #e2e8f0;color:#f97316;font-weight:600;">MEDIA-ALTA</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity['media-alta'].files}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity['media-alta'].lines.toLocaleString()}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity['media-alta'].hours.toFixed(2)} h</td></tr>
+                        <tr style="background:#fefce8;"><td style="padding:5px;border:1px solid #e2e8f0;color:#ca8a04;font-weight:600;">MEDIA</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity.media.files}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity.media.lines.toLocaleString()}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity.media.hours.toFixed(2)} h</td></tr>
+                        <tr style="background:#f0fdf4;"><td style="padding:5px;border:1px solid #e2e8f0;color:#22c55e;font-weight:600;">BAJA</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity.baja.files}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity.baja.lines.toLocaleString()}</td><td style="padding:5px;border:1px solid #e2e8f0;text-align:center;">${complexity.baja.hours.toFixed(2)} h</td></tr>
+                        <tr style="background:#1e293b;color:white;"><td style="padding:5px;font-weight:700;">TOTAL</td><td style="padding:5px;text-align:center;font-weight:700;">${pdfFiles.length}</td><td style="padding:5px;text-align:center;font-weight:700;">${totalLines.toLocaleString()}</td><td style="padding:5px;text-align:center;font-weight:700;">${totalHours.toFixed(2)} h</td></tr>
                     </table>
                 </div>
                 
-                <div style="margin-bottom:20px;page-break-inside:avoid;">
-                    ${pdfH3('Funcionalidades por modulo')}
+                <div style="margin-bottom:22px;page-break-inside:avoid;break-inside:avoid;">
+                    <h3 style="color:#1e293b;font-size:12px;margin:0 0 8px 0;border-left:3px solid #6366f1;padding-left:8px;page-break-inside:avoid;page-break-after:avoid;break-inside:avoid;">FUNCIONALIDADES POR MODULO</h3>
                     <table style="width:100%;border-collapse:collapse;font-size:10px;">
-                        <tr style="background:${teal};color:#f3fffc;"><th style="${th}width:22%;">Modulo</th><th style="${th}">Funcionalidades</th></tr>
+                        <tr style="background:#6366f1;color:white;"><th style="padding:6px;text-align:left;width:20%;">Modulo</th><th style="padding:6px;text-align:left;">Funcionalidades</th></tr>
                         ${funcRows}
                     </table>
                 </div>
                 
-                <div style="margin-bottom:18px;padding-top:4px;page-break-inside:auto;">
-                    ${pdfH3('Detalle de archivos desarrollados')}
+                <div style="margin-bottom:22px;margin-top:2px;padding-top:12px;border-top:1px solid #e2e8f0;page-break-inside:auto;">
+                    <h3 style="color:#1e293b;font-size:12px;margin:0 0 8px 0;border-left:3px solid #6366f1;padding-left:8px;page-break-inside:avoid;page-break-after:avoid;break-inside:avoid;">DETALLE DE ARCHIVOS DESARROLLADOS</h3>
                     <table style="width:100%;border-collapse:collapse;font-size:10px;page-break-inside:auto;">
-                        <tr style="background:${teal};color:#f3fffc;"><th style="${th}">Archivo</th><th style="${th}text-align:center;width:72px;">Lineas</th><th style="${th}text-align:center;width:64px;">Horas</th><th style="${th}text-align:center;width:56px;">Sug.</th><th style="${th}text-align:center;width:88px;">Complej.</th></tr>
+                        <tr style="background:#6366f1;color:white;"><th style="padding:8px;text-align:left;">ARCHIVO</th><th style="padding:8px;text-align:center;width:72px;">LINEAS</th><th style="padding:8px;text-align:center;width:64px;">HORAS</th><th style="padding:8px;text-align:center;width:56px;">SUG.</th><th style="padding:8px;text-align:center;width:88px;">COMPLEJ.</th></tr>
                         ${filesRows}
                     </table>
                 </div>
                 
-                <div style="margin-top:12px;padding-top:10px;border-top:1px solid ${line};text-align:center;page-break-inside:avoid;">
-                    <p style="font-size:8px;color:${muted};margin:0 0 6px 0;word-break:break-all;">DASHCMP|LINEAS:${totalLines}|HORAS:${totalHours.toFixed(2)}|ARCH:${pdfFiles.length}|</p>
-                    <p style="color:${muted};font-size:9px;margin:0;">Documento generado automaticamente &middot; Dashboard de Proyectos &middot; ${dateStr}</p>
+                <div style="margin-top:14px;padding-top:8px;border-top:1px solid #e2e8f0;text-align:center;page-break-inside:avoid;break-inside:avoid;">
+                    <p style="font-size:8px;color:#94a3b8;margin:0 0 6px 0;word-break:break-all;">DASHCMP|LINEAS:${totalLines}|HORAS:${totalHours.toFixed(2)}|ARCH:${pdfFiles.length}|</p>
+                    <p style="color:#64748b;font-size:9px;margin:0;">Documento generado automaticamente | Dashboard de Proyectos | ${dateStr}</p>
                 </div>
             </div>`;
             
             const element = document.getElementById('pdfContent');
-            element.style.cssText = 'display:block;position:relative;margin:0;padding:0;width:794px;max-width:100%;background:#fbf7f0;box-sizing:border-box;overflow:visible;';
+            element.style.cssText = 'display:block;position:relative;margin:0;padding:0;width:794px;max-width:100%;background:#fff;box-sizing:border-box;overflow:visible;';
             element.innerHTML = pdfHtml;
             window.scrollTo(0, 0);
             
@@ -3186,25 +3839,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         // Initial setup
         // document.querySelectorAll('.filter-btn').forEach(btn => { ... }); // Removed old logic
         
-        function loadDevCount() {
-            try {
-                const s = localStorage.getItem(DEV_COUNT_KEY);
-                const n = parseInt(s, 10);
-                if (n >= 1 && n <= 30) devCount = n;
-            } catch (e) { /* ignore */ }
-            const inp = document.getElementById('devCountInput');
-            if (inp) inp.value = String(devCount);
-        }
-
-        function cambiarNumeroDevs(value) {
-            const n = Math.max(1, Math.min(30, parseInt(value, 10) || 1));
-            devCount = n;
-            const inp = document.getElementById('devCountInput');
-            if (inp && String(inp.value) !== String(n)) inp.value = String(n);
-            try { localStorage.setItem(DEV_COUNT_KEY, String(n)); } catch (e) { /* ignore */ }
-            updateStats();
-        }
-
         // Fecha
         function setCurrentDate() {
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -3242,7 +3876,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         
         // Init
         setCurrentDate();
-        loadDevCount();
         renderProjectList();
         (function initServerProjectPick() {
             const sel = document.getElementById('serverProjectPick');

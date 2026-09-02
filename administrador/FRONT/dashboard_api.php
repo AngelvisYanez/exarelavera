@@ -3,6 +3,8 @@
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
+require_once __DIR__ . '/dashboard_json_helper.php';
+
 // Set header
 header('Content-Type: application/json');
 
@@ -36,33 +38,25 @@ try {
             throw new Exception("JSON invalido");
         }
         
-        if ($input !== null && $input !== false) {
-            // Verificar permisos de escritura
-            $dir = dirname($configFile);
-            $dirWritable = is_writable($dir);
-            $fileExists  = file_exists($configFile);
-            $fileWritable = $fileExists ? is_writable($configFile) : false;
-
-            if (!$dirWritable && !$fileWritable) {
-                if ($fileExists) {
-                    throw new Exception("Permisos denegados: el archivo de configuracion no tiene permisos de escritura");
-                } else {
-                    throw new Exception("Permisos denegados: no se puede crear el archivo en " . $dir);
-                }
+        if ($input) {
+            // Check if directory is writable
+            if (!is_writable(dirname($configFile))) {
+                 // Try to check if file is writable if it exists
+                 if (file_exists($configFile) && !is_writable($configFile)) {
+                     throw new Exception("Permisos denegados: No se puede escribir en el archivo");
+                 } elseif (!file_exists($configFile)) {
+                     throw new Exception("Permisos denegados: No se puede crear el archivo en el directorio");
+                 }
             }
 
-            $json = json_encode($input, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            if ($json === false) {
-                throw new Exception("Error al codificar los datos: " . json_last_error_msg());
+            $jsonOut = dashboard_json_encode_save($input);
+            if ($jsonOut !== false && strlen($jsonOut) > 0 && file_put_contents($configFile, $jsonOut)) {
+                echo json_encode(array('success' => true));
+            } else {
+                 throw new Exception("Fallo al escribir el archivo de configuracion");
             }
-
-            $result = file_put_contents($configFile, $json);
-            if ($result === false) {
-                throw new Exception("Fallo al escribir el archivo de configuracion");
-            }
-            echo json_encode(array('success' => true));
         } else {
-            echo json_encode(array('error' => 'Datos vacios o invalidos'));
+            echo json_encode(array('error' => 'Datos vacios'));
         }
     } else {
         echo json_encode(array('error' => 'Accion invalida'));

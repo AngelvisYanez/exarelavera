@@ -1,29 +1,211 @@
 <?php
 header('Content-Type: application/json');
 
-$input = json_decode(file_get_contents('php://input'), true);
-$path = isset($input['path']) ? trim($input['path']) : '';
-$mode = isset($input['mode']) ? $input['mode'] : 'normal';
+$allowFile = __DIR__ . DIRECTORY_SEPARATOR . 'dashboard_scan_allow.json';
 
-if (empty($path)) {
+function dashboard_load_scan_roots($allowFile) {
+    $roots = array();
+    if (!file_exists($allowFile)) {
+        return $roots;
+    }
+    $raw = @file_get_contents($allowFile);
+    if ($raw === false) {
+        return $roots;
+    }
+    $j = json_decode($raw, true);
+    if (!is_array($j) || !isset($j['roots']) || !is_array($j['roots'])) {
+        return $roots;
+    }
+    foreach ($j['roots'] as $r) {
+        $r = trim(str_replace('/', DIRECTORY_SEPARATOR, $r));
+        if ($r !== '' && is_dir($r)) {
+            $roots[] = $r;
+        }
+    }
+    return $roots;
+}
+
+function dashboard_is_windows_os() {
+    if (defined('PHP_WINDOWS_VERSION_BUILD')) {
+        return true;
+    }
+    return strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+}
+
+function dashboard_realpath_norm($p) {
+    $rp = realpath($p);
+    if ($rp === false) {
+        return false;
+    }
+    if (dashboard_is_windows_os()) {
+        return strtolower(str_replace('/', '\\', $rp));
+    }
+    return $rp;
+}
+
+function dashboard_path_under_allowed($path, $roots) {
+    if (empty($roots)) {
+        return true;
+    }
+    $rp = dashboard_realpath_norm($path);
+    if ($rp === false) {
+        return false;
+    }
+    foreach ($roots as $root) {
+        $rr = dashboard_realpath_norm($root);
+        if ($rr === false) {
+            continue;
+        }
+        if ($rp === $rr) {
+            return true;
+        }
+        $sep = dashboard_is_windows_os() ? '\\' : DIRECTORY_SEPARATOR;
+        if (strpos($rp, $rr . $sep) === 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function dashboard_get_scan_bases($allowFile) {
+    $bases = dashboard_load_scan_roots($allowFile);
+    if (empty($bases)) {
+        $guess = dirname(dirname(__DIR__));
+        if (is_dir($guess)) {
+            $bases[] = $guess;
+        }
+    }
+    return $bases;
+}
+
+function dashboard_normalize_input_path($path) {
+    $path = str_replace('/', DIRECTORY_SEPARATOR, trim($path));
+    $ds = DIRECTORY_SEPARATOR;
+    if (strpos($path, '.' . $ds) === 0) {
+        $path = substr($path, 2);
+    }
+    return rtrim($path, $ds);
+}
+
+function dashboard_is_absolute_path($path) {
+    if ($path === '') {
+        return false;
+    }
+    $ds = DIRECTORY_SEPARATOR;
+    if ($path[0] === $ds) {
+        return true;
+    }
+    if (dashboard_is_windows_os()) {
+        if (strlen($path) >= 2 && $path[1] === ':') {
+            return true;
+        }
+        if (strlen($path) >= 2 && ($path[0] === '\\' && $path[1] === '\\')) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function dashboard_resolve_scan_path($rawPath, $allowFile) {
+    $path = dashboard_normalize_input_path($rawPath);
+    if ($path === '') {
+        return '';
+    }
+    if (dashboard_is_absolute_path($path)) {
+        if (is_dir($path)) {
+            $rp = realpath($path);
+            return ($rp !== false) ? $rp : $path;
+        }
+        return '';
+    }
+    $bases = dashboard_get_scan_bases($allowFile);
+    foreach ($bases as $base) {
+        $candidate = $base . DIRECTORY_SEPARATOR . $path;
+        $rp = @realpath($candidate);
+        if ($rp !== false && is_dir($rp)) {
+            return $rp;
+        }
+        if (is_dir($candidate)) {
+            $rp2 = @realpath($candidate);
+            return ($rp2 !== false) ? $rp2 : $candidate;
+        }
+    }
+    return '';
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'list_allowed') {
+    $roots = dashboard_get_scan_bases($allowFile);
+    $projects = array();
+    $skipDirNames = array('node_modules', 'vendor', '.git');
+    foreach ($roots as $root) {
+        $items = @scandir($root);
+        if (!$items) {
+            continue;
+        }
+        foreach ($items as $i) {
+            if ($i === '.' || $i === '..') {
+                continue;
+            }
+            $full = $root . DIRECTORY_SEPARATOR . $i;
+            if (!is_dir($full)) {
+                continue;
+            }
+            if (in_array($i, $skipDirNames)) {
+                continue;
+            }
+            $projects[] = array(
+                'path' => $full,
+                'label' => $i,
+                'root' => $root
+            );
+        }
+    }
+    usort($projects, function ($a, $b) {
+        return strcasecmp($a['label'], $b['label']);
+    });
+    $restrict = file_exists($allowFile) && count(dashboard_load_scan_roots($allowFile)) > 0;
+    echo json_encode(array(
+        'success' => true,
+        'roots' => $roots,
+        'projects' => $projects,
+        'restrictScanToAllowFile' => $restrict,
+        'supportsRelativePaths' => true
+    ));
+    exit;
+}
+
+$input = json_decode(file_get_contents('php://input'), true);
+if (!is_array($input)) {
+    $input = array();
+}
+
+$targets = array();
+if (isset($input['targets']) && is_array($input['targets'])) {
+    foreach ($input['targets'] as $t) {
+        if (!is_array($t)) {
+            continue;
+        }
+        $p = isset($t['path']) ? trim($t['path']) : '';
+        if ($p === '') {
+            continue;
+        }
+        $targets[] = array(
+            'path' => $p,
+            'mode' => dashboard_normalize_scan_mode(isset($t['mode']) ? $t['mode'] : 'normal')
+        );
+    }
+} else {
+    $path = isset($input['path']) ? trim($input['path']) : '';
+    $mode = dashboard_normalize_scan_mode(isset($input['mode']) ? $input['mode'] : 'normal');
+    if ($path !== '') {
+        $targets[] = array('path' => $path, 'mode' => $mode);
+    }
+}
+
+if (empty($targets)) {
     die(json_encode(array('error' => 'Ruta no especificada')));
 }
 
-// Normalizar separadores según el SO del servidor
-if (DIRECTORY_SEPARATOR === '/') {
-    // Linux/Mac: convertir backslashes a slashes
-    $path = str_replace('\\', '/', $path);
-} else {
-    // Windows: convertir slashes a backslashes
-    $path = str_replace('/', '\\', $path);
-}
-$path = rtrim($path, DIRECTORY_SEPARATOR);
-
-if (!is_dir($path)) {
-    die(json_encode(array('error' => 'Ruta no valida: ' . $path)));
-}
-
-// Configurar limites para proyectos grandes
 set_time_limit(0);
 ini_set('memory_limit', '1024M');
 
@@ -32,13 +214,31 @@ $skip = array('node_modules', 'vendor', '.git', 'cache', 'tmp', 'assets', 'img',
 $skipFiles = array('jquery', 'bootstrap', '.min.', 'bundle');
 $rates = array('alta' => 25, 'media-alta' => 35, 'media' => 45, 'baja' => 60);
 
-function cntLines($f, $m) {
+function dashboard_normalize_scan_mode($m) {
+    if ($m === 'no_empty' || $m === 'no_comments') {
+        return $m;
+    }
+    return 'normal';
+}
+
+/**
+ * Cuenta lineas segun modo:
+ * - normal: todas
+ * - no_empty: no vacias
+ * - no_comments: ignora vacias y comentarios (slash, hash, bloque, HTML)
+ */
+function cntLines($f, $m, $ext = '') {
+    if ($m === 'no_comments') {
+        return cntLinesNoComments($f, $ext);
+    }
     $c = 0;
     $h = @fopen($f, 'r');
     if ($h) {
         while (($l = fgets($h)) !== false) {
             if ($m === 'no_empty') {
-                if (trim($l) !== '') $c++;
+                if (trim($l) !== '') {
+                    $c++;
+                }
             } else {
                 $c++;
             }
@@ -48,18 +248,143 @@ function cntLines($f, $m) {
     return $c;
 }
 
+function cntLinesNoComments($f, $ext) {
+    $ext = strtolower($ext);
+    $h = @fopen($f, 'r');
+    if (!$h) {
+        return 0;
+    }
+    $count = 0;
+    $inBlock = false;
+    $htmlMode = ($ext === 'html' || $ext === 'htm');
+    $hashComments = ($ext === 'php' || $ext === 'sql');
+    $slashLine = ($ext === 'php' || $ext === 'js' || $ext === 'css' || $ext === 'sql');
+    $slashBlock = $slashLine;
+    $dashDash = ($ext === 'sql');
+
+    while (($line = fgets($h)) !== false) {
+        $code = '';
+        $len = strlen($line);
+        $i = 0;
+        $inSingle = false;
+        $inDouble = false;
+
+        while ($i < $len) {
+            $ch = $line[$i];
+            $next = ($i + 1 < $len) ? $line[$i + 1] : '';
+
+            if ($inBlock) {
+                if ($htmlMode) {
+                    if ($i + 2 < $len && $ch === '-' && $next === '-' && $line[$i + 2] === '>') {
+                        $inBlock = false;
+                        $i += 3;
+                        continue;
+                    }
+                } elseif ($ch === '*' && $next === '/') {
+                    $inBlock = false;
+                    $i += 2;
+                    continue;
+                }
+                $i++;
+                continue;
+            }
+
+            if ($inSingle) {
+                if ($ch === '\\' && $i + 1 < $len) {
+                    $code .= $ch . $line[$i + 1];
+                    $i += 2;
+                    continue;
+                }
+                if ($ch === "'") {
+                    $inSingle = false;
+                }
+                $code .= $ch;
+                $i++;
+                continue;
+            }
+
+            if ($inDouble) {
+                if ($ch === '\\' && $i + 1 < $len) {
+                    $code .= $ch . $line[$i + 1];
+                    $i += 2;
+                    continue;
+                }
+                if ($ch === '"') {
+                    $inDouble = false;
+                }
+                $code .= $ch;
+                $i++;
+                continue;
+            }
+
+            if ($htmlMode && $i + 3 < $len && substr($line, $i, 4) === '<!--') {
+                $inBlock = true;
+                $i += 4;
+                continue;
+            }
+            if ($slashBlock && $ch === '/' && $next === '*') {
+                $inBlock = true;
+                $i += 2;
+                continue;
+            }
+            if ($slashLine && $ch === '/' && $next === '/') {
+                break;
+            }
+            if ($hashComments && $ch === '#') {
+                break;
+            }
+            if ($dashDash && $ch === '-' && $next === '-') {
+                break;
+            }
+
+            if (!$htmlMode && $ch === "'") {
+                $inSingle = true;
+                $code .= $ch;
+                $i++;
+                continue;
+            }
+            if (!$htmlMode && $ch === '"') {
+                $inDouble = true;
+                $code .= $ch;
+                $i++;
+                continue;
+            }
+
+            $code .= $ch;
+            $i++;
+        }
+
+        if (trim($code) !== '') {
+            $count++;
+        }
+    }
+
+    fclose($h);
+    return $count;
+}
+
 function getComp($n, $t) {
-    if ($t === 'html') return 'baja';
-    if ($n > 1000) return 'alta';
-    if ($n > 500) return 'media-alta';
-    if ($n > 200) return 'media';
+    if ($t === 'html') {
+        return 'baja';
+    }
+    if ($n > 1000) {
+        return 'alta';
+    }
+    if ($n > 500) {
+        return 'media-alta';
+    }
+    if ($n > 200) {
+        return 'media';
+    }
     return 'baja';
 }
 
 function inList($n, $l) {
     $n = strtolower($n);
     foreach ($l as $i) {
-        if (strpos($n, $i) !== false) return true;
+        if (strpos($n, $i) !== false) {
+            return true;
+        }
     }
     return false;
 }
@@ -67,34 +392,47 @@ function inList($n, $l) {
 function escanearDirectorio($d, $b, $e, $s, $sf, $r, $m) {
     $res = array();
     $items = @scandir($d);
-    if (!$items) return $res;
-    
+    if (!$items) {
+        return $res;
+    }
+
     foreach ($items as $i) {
-        if ($i === '.' || $i === '..') continue;
+        if ($i === '.' || $i === '..') {
+            continue;
+        }
         $fp = $d . DIRECTORY_SEPARATOR . $i;
         $rp = str_replace($b . DIRECTORY_SEPARATOR, '', $d);
-        if ($rp === $d) $rp = '';
-        
+        if ($rp === $d) {
+            $rp = '';
+        }
+
         if (is_dir($fp)) {
-            if (inList($i, $s)) continue;
+            if (inList($i, $s)) {
+                continue;
+            }
             $sub = escanearDirectorio($fp, $b, $e, $s, $sf, $r, $m);
             $res = array_merge($res, $sub);
         } else {
             $ext = strtolower(pathinfo($i, PATHINFO_EXTENSION));
-            if (!in_array($ext, $e)) continue;
-            if (inList($i, $sf)) continue;
-            
-            $lin = cntLines($fp, $m);
+            if (!in_array($ext, $e)) {
+                continue;
+            }
+            if (inList($i, $sf)) {
+                continue;
+            }
+
+            $lin = cntLines($fp, $m, $ext);
             $typ = ($ext === 'htm') ? 'html' : $ext;
             $cmp = getComp($lin, $typ);
             $hrs = round($lin / $r[$cmp], 2);
-            
+
             $res[] = array(
                 'name' => $i,
                 'folder' => $rp ? $rp : 'ROOT',
                 'type' => $typ,
                 'lines' => $lin,
                 'complexity' => $cmp,
+                'suggestedComplexity' => $cmp,
                 'hours' => $hrs
             );
         }
@@ -102,10 +440,67 @@ function escanearDirectorio($d, $b, $e, $s, $sf, $r, $m) {
     return $res;
 }
 
-$files = escanearDirectorio($path, $path, $exts, $skip, $skipFiles, $rates, $mode);
+$rootsRestrict = dashboard_load_scan_roots($allowFile);
+$allFiles = array();
+$resolvedTargets = array();
+$multi = count($targets) > 1;
 
-usort($files, function($a, $b) {
+foreach ($targets as $t) {
+    $resolved = dashboard_resolve_scan_path($t['path'], $allowFile);
+    if ($resolved === '') {
+        $bases = dashboard_get_scan_bases($allowFile);
+        $hint = '';
+        if (!empty($bases)) {
+            $hint = ' Pruebe ruta absoluta en este servidor o relativa a: ' . implode('; ', $bases) . '.';
+        }
+        die(json_encode(array(
+            'error' => 'Ruta no valida: ' . $t['path'] . '.' . $hint
+        )));
+    }
+
+    if (!empty($rootsRestrict) && !dashboard_path_under_allowed($resolved, $rootsRestrict)) {
+        die(json_encode(array(
+            'error' => 'Ruta fuera de las carpetas permitidas: ' . $resolved . '. Revise dashboard_scan_allow.json.'
+        )));
+    }
+
+    $label = basename($resolved);
+    $mode = $t['mode'];
+    $files = escanearDirectorio($resolved, $resolved, $exts, $skip, $skipFiles, $rates, $mode);
+
+    foreach ($files as &$f) {
+        $f['project'] = $label;
+        $f['projectPath'] = $resolved;
+        $f['scanMode'] = $mode;
+        if ($multi) {
+            $rel = ($f['folder'] === 'ROOT' || $f['folder'] === '') ? '' : $f['folder'];
+            $f['folder'] = $rel === '' ? $label : ($label . '/' . str_replace('\\', '/', $rel));
+        }
+    }
+    unset($f);
+
+    $allFiles = array_merge($allFiles, $files);
+    $resolvedTargets[] = array(
+        'path' => $resolved,
+        'label' => $label,
+        'mode' => $mode,
+        'files' => count($files)
+    );
+}
+
+usort($allFiles, function ($a, $b) {
     return $b['lines'] - $a['lines'];
 });
 
-echo json_encode(array('success' => true, 'files' => $files, 'total' => count($files)));
+$primaryPath = $resolvedTargets[0]['path'];
+echo json_encode(array(
+    'success' => true,
+    'files' => $allFiles,
+    'total' => count($allFiles),
+    'resolvedPath' => $primaryPath,
+    'resolvedPaths' => array_map(function ($rt) {
+        return $rt['path'];
+    }, $resolvedTargets),
+    'targets' => $resolvedTargets,
+    'multi' => $multi
+));
