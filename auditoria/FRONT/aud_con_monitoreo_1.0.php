@@ -1,11 +1,6 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<?php 
+<?php
 /**
- * Permite visualizar las actividades de los usuarios en el sistema
- *
- * @author
- * @version 1.0
- * @Fecha de actualización:	05-03-2013
+ * Monitoreo de actividades - Model3 + jqGrid.
  *
  * @package auditoria.FRONT
  */
@@ -14,510 +9,1034 @@ require_once('../../administrador/LOGICA/seguridad.php');
 require_once('../LOGICA/aud_log_monitoreo.php');
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 
-/**
- * objeto para la conexion
- */
 $obBD_conexion = new Class_Log_Conexion($Ses_Dat_Dis);
+$obBD_con1 = new Class_Log_Datos;
+$audEmpCod = isset($Ses_Emp_Cod) ? (int)$Ses_Emp_Cod : 0;
+$audUsuCod = isset($Ses_Usu_Cod) ? (int)$Ses_Usu_Cod : 0;
+$audSucCod = isset($Ses_Suc_Cod) ? (int)$Ses_Suc_Cod : 0;
 
-/**
- * objeto para consultas
- */
-$obBD_con1 =  new Class_Log_Datos;
-
-if(isset($_GET['ajax_cmb'])){
-	
-	if($_GET['ajax_cmb'] == 0){
-		$Arr_Resultado = $obBD_con1->getArrayConsulta(6, $_GET['params'], $obBD_conexion);
-	}else{
-		$Arr_Resultado = $obBD_con1->getArrayConsulta(10, $_GET['params'].'*'.$_GET['ajax_cmb'], $obBD_conexion);
-	}
-	
-	$str = '<table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
-	<thead><tr><th width="8%" >Fecha</th><th width="8%" >Hora</th><th>Actividad</th><th width="15%" >Opci&oacute;n</th>
-	<th>Detalle de Opci&oacute;n</th><th width="3%" >&nbsp;</th></tr></thead><tbody>';
-	$i = 0;
-	foreach($Arr_Resultado as $row){
-		$arr = explode(' ', $row['Log_Fec']);
-		$i++;
-		$str .= '<tr><td align="center">'.$arr[0].'</td>
-				 <td align="center">'.$arr[1].'</td>
-				 <td align="left">'.str_replace("{0}", strlen($row['Tab_Ali'])>0?utf8_encode($row['Tab_Ali']):$row['Tab_Nom'], utf8_encode($row['Eve_Des'])).'</td>
-				 <td align="left">'.utf8_encode($row['Pcs_Lin']).'</td>
-				 <td align="left">'.utf8_encode($row['Pcs_Det']).'</td>
-				 <td align="center"><form action="'.$_SERVER['PHP_SELF'].'" method="post" name="frm'.$i.'" id="frm'.$i.'">
-										<button type="button" class="btn btn-success btn-mini" title="Elegir" onclick="Muestra_Aparecer();visualizarCampos(this.form,\'mostrar\');"><i class="icon-arrow-right icon-white"></i></button>
-										<input type="hidden" name="tabCodigo" value="'.$row['Tab_Cod'].'">
-										<input type="hidden" name="logCampos" value="'.$row['Log_Cam'].'">
-										<input type="hidden" name="logValores" value="'.utf8_encode($row['Log_Val']).'">
-										<input type="hidden" name="ajax" value="1">
-									</form></td></tr>';
-	}
-	if(count($Arr_Resultado) == 0){
-		$str .= '<tr><td>&nbsp;</td><td>&nbsp;</td><td>'.error_alerta(utf8_encode("¡No hay resultados que mostrar!"), 1).'</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
-	}
-	$str .= '</tbody></table>';
-	
-	echo $str;
-	
-$obBD_con1->liberar();
-$obBD_conexion->cerrar();
-exit();				    
-}
-
-if(isset($_POST['ajax'])){
-	
-$row_tabla = $obBD_con1->getRowConsulta(7, $_POST['tabCodigo'], $obBD_conexion);
-$str = '<FIELDSET><LEGEND><label class="Titulos2">Datos De la Tabla:</label></LEGEND>';
-$str .= '<table width="100%" cellpadding="0" cellspacing="0"><tr>
-		<td width="10%" class="Etiqueta1">Tabla:</td>
-		<td class="LetraNegra">&nbsp;'.(strlen($row_tabla['Tab_Nom'])>0?$row_tabla['Tab_Nom']:$row_tabla['Tab_Ali']).'</td>
-		</tr><tr><td class="Etiqueta1">Descripci&oacute;n:</td>
-				<td class="LetraNegra">&nbsp;'.$row_tabla['Tab_Des'].'</td></tr></table></FIELDSET>';
-
-$Arr = explode(',', str_replace('(', '', str_replace(')', '', $_POST['logCampos'])));
-
-if(substr_count($_POST['logCampos'], ',') != substr_count($_POST['logValores'], ',')){
-	$count = strlen($_POST['logValores']);
-	$str_ = '';
-	$contador = 0;
-	for($i = 0; $i < $count; $i++){
-		$char = $_POST['logValores'][$i].'';
-		if($char == '~'){
-			if($contador == 0)
-				$contador = 1;
-			else
-				$contador = 0;
-			$char = '';
+/** JSON seguro (latin1 DB -> utf8) sin contaminar la respuesta AJAX */
+if (!function_exists('aud_json_out')) {
+	function aud_to_utf8_deep(&$input) {
+		if (is_string($input)) {
+			if ($input === '') {
+				return;
+			}
+			if (function_exists('mb_check_encoding') && @mb_check_encoding($input, 'UTF-8')) {
+				return;
+			}
+			if (function_exists('mb_convert_encoding')) {
+				$input = @mb_convert_encoding($input, 'UTF-8', 'ISO-8859-1');
+			} elseif (function_exists('utf8_encode')) {
+				$input = @utf8_encode($input);
+			}
+			return;
 		}
-
-		if($char == ',' && $contador == 1){
-			$str_ .= '~';
-		}else{
-			$str_ .= $char;
+		if (is_array($input)) {
+			foreach ($input as $k => $v) {
+				aud_to_utf8_deep($input[$k]);
+			}
 		}
 	}
-	$Arr_val = explode(',', $str_);
-}else{
-	$Arr_val = explode(',', $_POST['logValores']);
-}
-
-$str .= '<FIELDSET><LEGEND><label class="Titulos2">Campos Afectados:</label></LEGEND>
-		 <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
-		 <thead><tr><th width="10%" >C&oacute;d. Int.</th>
-		 <th >Campo</th><th>Valor</th></tr></thead><tbody>';
-
-for($i = 0; $i < count($Arr); $i++){
-	$row = $obBD_con1->getRowConsulta(8, $_POST['tabCodigo'].'*'.str_replace('`', '', $Arr[$i]), $obBD_conexion);
-	if(strlen($row['Cam_Cod'])>0){
-		$str .= '<tr><td align="center">'.$row['Cam_Cod'].'</td><td>'.(strlen($row['Cam_Ali'])>0?$row['Cam_Ali']:$Arr[$i]).'</td><td>'.str_replace('~',',',$Arr_val[$i]).'</td></tr>';
-	}else{
-		$str .= '<tr><td>'.$i.'</td><td>'.$Arr[$i].'</td><td>'.str_replace('~',',',$Arr_val[$i]).'</td></tr>';
+	function aud_json_out($data) {
+		@ini_set('display_errors', '0');
+		aud_to_utf8_deep($data);
+		$json = json_encode($data);
+		echo ($json !== false) ? $json : '{"page":1,"total":1,"records":0,"rows":[]}';
 	}
 }
-$str .= '<tbody></table></FIELDSET>';
-echo $str.barra_estado(count($Arr));
-$obBD_con1->liberar();
-$obBD_conexion->cerrar();
-exit();
+
+/** Detalle modal HTML */
+if (isset($_POST['ajax']) && (string)$_POST['ajax'] === '1') {
+	@ini_set('display_errors', '0');
+	$logCod = isset($_POST['logCodigo']) ? (int)$_POST['logCodigo'] : 0;
+	$rowLog = $logCod > 0 ? $obBD_con1->getRowConsulta(20, array($logCod, $audEmpCod), $obBD_conexion) : array();
+	if (empty($rowLog) || empty($rowLog['Log_Cod'])) {
+		echo error_alerta('No se encontro el detalle de la actividad', 1);
+		$obBD_con1->liberar();
+		$obBD_conexion->cerrar();
+		exit();
+	}
+	$pares = aud_pares_interpretados($rowLog, $obBD_con1, $obBD_conexion);
+	echo aud_html_detalle($rowLog, $pares);
+	echo barra_estado(count($pares));
+	$obBD_con1->liberar();
+	$obBD_conexion->cerrar();
+	exit();
 }
 
-?>
-<html>
+/** Listado jqGrid JSON */
+if (isset($_REQUEST['listMonitoreoGridAjax'])) {
+	@ini_set('display_errors', '0');
+	@header('Content-Type: application/json; charset=utf-8');
+	$fil_from = isset($_REQUEST['from']) ? trim($_REQUEST['from']) : '';
+	$fil_to = isset($_REQUEST['to']) ? trim($_REQUEST['to']) : '';
+	$fil_eve = isset($_REQUEST['eve']) ? (int)$_REQUEST['eve'] : 0;
+	$fil_org = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
+	$fil_dir = isset($_REQUEST['dir']) ? (int)$_REQUEST['dir'] : 0;
+	$fil_pcs = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
+	$fil_usu = isset($_REQUEST['usu']) ? (int)$_REQUEST['usu'] : 0;
+	$fil_suc = isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0;
+	$fil_q = isset($_REQUEST['q']) ? trim($_REQUEST['q']) : '';
+	if ($fil_from === '' && $fil_to === '') {
+		$fil_to = date('Y-m-d');
+		$fil_from = date('Y-m-d', strtotime('-30 days'));
+	}
+	$page = isset($_REQUEST['page']) ? max(1, (int)$_REQUEST['page']) : 1;
+	$pageSize = isset($_REQUEST['rows']) ? (int)$_REQUEST['rows'] : 25;
+	if (!in_array($pageSize, array(10, 25, 50, 100, 200))) {
+		$pageSize = 25;
+	}
+	// 0 emp,1 from,2 to,3 eve,4 mod,5 pcs,6 tab,7 usu,8 limit,9 offset,10 suc,11 dir,12 q
+	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, $pageSize, 0, $fil_suc, $fil_dir, $fil_q);
+	$rowCount = $obBD_con1->getRowConsulta(13, $filtros, $obBD_conexion);
+	$total = isset($rowCount['count']) ? (int)$rowCount['count'] : 0;
+	$totalPages = $total > 0 ? (int)ceil($total / $pageSize) : 1;
+	if ($page > $totalPages) {
+		$page = $totalPages > 0 ? $totalPages : 1;
+	}
+	$offset = ($page - 1) * $pageSize;
+	$filtros[9] = $offset;
+	$Arr_Resultado = $obBD_con1->getArrayConsulta(12, $filtros, $obBD_conexion);
+	if (!is_array($Arr_Resultado)) {
+		$Arr_Resultado = array();
+	}
+	$rows = array();
+	foreach ($Arr_Resultado as $row) {
+		$arr = explode(' ', isset($row['Log_Fec']) ? $row['Log_Fec'] : '');
+		$pares = aud_pares_interpretados($row, null, null);
+		$rows[] = array(
+			'id' => (int)$row['Log_Cod'],
+			'Log_Cod' => (int)$row['Log_Cod'],
+			'Fecha' => isset($arr[0]) ? $arr[0] : '',
+			'Hora' => isset($arr[1]) ? $arr[1] : '',
+			'Empresa' => aud_nombre_empresa($row),
+			'Sucursal' => aud_nombre_sucursal($row),
+			'Usuario' => aud_nombre_usuario($row),
+			'Modulo' => aud_nombre_modulo($row),
+			'Directorio' => aud_nombre_directorio($row),
+			'Proceso' => aud_nombre_proceso($row),
+			'Actividad' => aud_resumen_actividad($row),
+			'Detalle' => aud_resumen_detalle($row, $pares)
+		);
+	}
+	$resp = array(
+		'page' => $page,
+		'total' => $totalPages,
+		'records' => $total,
+		'rows' => $rows
+	);
+	aud_json_out($resp);
+	$obBD_con1->liberar();
+	$obBD_conexion->cerrar();
+	exit();
+}
+
+/** Metricas y KPIs agregados JSON */
+if (isset($_REQUEST['listMonitoreoKpiAjax'])) {
+	@ini_set('display_errors', '0');
+	@header('Content-Type: application/json; charset=utf-8');
+	$fil_from = isset($_REQUEST['from']) ? trim($_REQUEST['from']) : '';
+	$fil_to = isset($_REQUEST['to']) ? trim($_REQUEST['to']) : '';
+	$fil_eve = isset($_REQUEST['eve']) ? (int)$_REQUEST['eve'] : 0;
+	$fil_org = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
+	$fil_dir = isset($_REQUEST['dir']) ? (int)$_REQUEST['dir'] : 0;
+	$fil_pcs = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
+	$fil_usu = isset($_REQUEST['usu']) ? (int)$_REQUEST['usu'] : 0;
+	$fil_suc = isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0;
+	$fil_q = isset($_REQUEST['q']) ? trim($_REQUEST['q']) : '';
+	if ($fil_from === '' && $fil_to === '') {
+		$fil_to = date('Y-m-d');
+		$fil_from = date('Y-m-d', strtotime('-30 days'));
+	}
+	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, 5000, 0, $fil_suc, $fil_dir, $fil_q);
+
+	$rowCount = $obBD_con1->getRowConsulta(13, $filtros, $obBD_conexion);
+	$total = isset($rowCount['count']) ? (int)$rowCount['count'] : 0;
+
+	$arrEventos = $obBD_con1->getArrayConsulta(33, $filtros, $obBD_conexion);
+	if (!is_array($arrEventos)) $arrEventos = array();
+
+	$arrFechas = $obBD_con1->getArrayConsulta(34, $filtros, $obBD_conexion);
+	if (!is_array($arrFechas)) $arrFechas = array();
+
+	$arrModulos = $obBD_con1->getArrayConsulta(35, $filtros, $obBD_conexion);
+	if (!is_array($arrModulos)) $arrModulos = array();
+
+	$arrUsuarios = $obBD_con1->getArrayConsulta(36, $filtros, $obBD_conexion);
+	if (!is_array($arrUsuarios)) $arrUsuarios = array();
+
+	$kpiData = array(
+		'total' => $total,
+		'eventos' => $arrEventos,
+		'fechas' => $arrFechas,
+		'modulos' => $arrModulos,
+		'usuarios' => $arrUsuarios
+	);
+	aud_json_out($kpiData);
+	$obBD_con1->liberar();
+	$obBD_conexion->cerrar();
+	exit();
+}
+
+/** Directorios por modulo (combo dependiente) */
+if (isset($_REQUEST['listDirectoriosAjax'])) {
+	@ini_set('display_errors', '0');
+	@header('Content-Type: application/json; charset=utf-8');
+	$fil_org = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
+	$Arr_Dir = $obBD_con1->getArrayConsulta(30, array($audEmpCod, $fil_org), $obBD_conexion);
+	if (!is_array($Arr_Dir)) {
+		$Arr_Dir = array();
+	}
+	$out = array();
+	foreach ($Arr_Dir as $d) {
+		$out[] = array('Org_Cod' => (int)$d['Org_Cod'], 'Org_Des' => isset($d['Org_Des']) ? $d['Org_Des'] : ('Directorio '.$d['Org_Cod']));
+	}
+	aud_json_out(array('rows' => $out));
+	$obBD_con1->liberar();
+	$obBD_conexion->cerrar();
+	exit();
+}
+
+/** Procesos por directorio/modulo (combo dependiente) */
+if (isset($_REQUEST['listProcesosAjax'])) {
+	@ini_set('display_errors', '0');
+	@header('Content-Type: application/json; charset=utf-8');
+	$fil_org = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
+	$fil_dir = isset($_REQUEST['dir']) ? (int)$_REQUEST['dir'] : 0;
+	$Arr_Pcs = $obBD_con1->getArrayConsulta(26, array($audEmpCod, $fil_dir, $fil_org), $obBD_conexion);
+	if (!is_array($Arr_Pcs)) {
+		$Arr_Pcs = array();
+	}
+	$out = array();
+	foreach ($Arr_Pcs as $p) {
+		$lbl = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : ('Proceso '.$p['Pcs_Cod']));
+		$out[] = array('Pcs_Cod' => (int)$p['Pcs_Cod'], 'Pcs_Lin' => $lbl);
+	}
+	aud_json_out(array('rows' => $out));
+	$obBD_con1->liberar();
+	$obBD_conexion->cerrar();
+	exit();
+}
+
+/** Usuarios de la empresa / sucursal (combo filtro) */
+if (isset($_REQUEST['listUsuariosAjax'])) {
+	@ini_set('display_errors', '0');
+	@header('Content-Type: application/json; charset=utf-8');
+	$fil_suc = isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0;
+	$Arr_Usu = $obBD_con1->getArrayConsulta(27, array($audEmpCod, $fil_suc), $obBD_conexion);
+	if (!is_array($Arr_Usu)) {
+		$Arr_Usu = array();
+	}
+	$out = array();
+	foreach ($Arr_Usu as $u) {
+		$un = trim(isset($u['Usu_Nom']) ? $u['Usu_Nom'] : '');
+		if ($un === '') {
+			$un = 'Usuario '.(int)$u['Usu_Cod'];
+		}
+		$out[] = array('Usu_Cod' => (int)$u['Usu_Cod'], 'Usu_Nom' => $un);
+	}
+	aud_json_out(array('rows' => $out));
+	$obBD_con1->liberar();
+	$obBD_conexion->cerrar();
+	exit();
+}
+
+/** Export CSV de todos los registros del filtro (tope 5000) */
+if (isset($_REQUEST['exportMonitoreoCsv'])) {
+	@ini_set('display_errors', '0');
+	$fil_from = isset($_REQUEST['from']) ? trim($_REQUEST['from']) : '';
+	$fil_to = isset($_REQUEST['to']) ? trim($_REQUEST['to']) : '';
+	$fil_eve = isset($_REQUEST['eve']) ? (int)$_REQUEST['eve'] : 0;
+	$fil_org = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
+	$fil_dir = isset($_REQUEST['dir']) ? (int)$_REQUEST['dir'] : 0;
+	$fil_pcs = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
+	$fil_usu = isset($_REQUEST['usu']) ? (int)$_REQUEST['usu'] : 0;
+	$fil_suc = isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0;
+	$fil_q = isset($_REQUEST['q']) ? trim($_REQUEST['q']) : '';
+	if ($fil_from === '' && $fil_to === '') {
+		$fil_to = date('Y-m-d');
+		$fil_from = date('Y-m-d', strtotime('-30 days'));
+	}
+	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, 5000, 0, $fil_suc, $fil_dir);
+	$Arr_Resultado = $obBD_con1->getArrayConsulta(31, $filtros, $obBD_conexion);
+	if (!is_array($Arr_Resultado)) {
+		$Arr_Resultado = array();
+	}
+	$fname = 'monitoreo_actividades_'.date('Ymd_His').'.csv';
+	header('Content-Type: text/csv; charset=utf-8');
+	header('Content-Disposition: attachment; filename="'.$fname.'"');
+	$out = fopen('php://output', 'w');
+	if ($out) {
+		fwrite($out, "\xEF\xBB\xBF");
+		fputcsv($out, array('Id','Fecha','Hora','Empresa','Sucursal','Usuario','Modulo','Directorio','Proceso','Actividad','Detalle'), ';');
+		foreach ($Arr_Resultado as $row) {
+			$arr = explode(' ', isset($row['Log_Fec']) ? $row['Log_Fec'] : '');
+			$pares = aud_pares_interpretados($row, null, null);
+			fputcsv($out, array(
+				isset($row['Log_Cod']) ? $row['Log_Cod'] : '',
+				isset($arr[0]) ? $arr[0] : '',
+				isset($arr[1]) ? $arr[1] : '',
+				aud_nombre_empresa($row),
+				aud_nombre_sucursal($row),
+				aud_nombre_usuario($row),
+				aud_nombre_modulo($row),
+				aud_nombre_directorio($row),
+				aud_nombre_proceso($row),
+				aud_resumen_actividad($row),
+				aud_resumen_detalle($row, $pares)
+			), ';');
+		}
+		fclose($out);
+	}
+	$obBD_con1->liberar();
+	$obBD_conexion->cerrar();
+	exit();
+}
+
+$pcsSim = array();
+foreach (aud_sim_casos() as $cSim) {
+	$pcsSim[$cSim['id']] = 0;
+	foreach ($cSim['pcs_noms'] as $nomSim) {
+		$rowSim = $obBD_con1->getRowConsulta(23, array($nomSim, $cSim['mod_like']), $obBD_conexion);
+		if (aud_sim_modulo_valido($rowSim, $cSim)) {
+			$pcsSim[$cSim['id']] = (int)$rowSim['Pcs_Cod'];
+			break;
+		}
+	}
+}
+$pcsDemo = isset($pcsSim['comprobantes']) ? (int)$pcsSim['comprobantes'] : 0;
+$pcsMan = isset($pcsSim['manifiesto']) ? (int)$pcsSim['manifiesto'] : 0;
+$pcsTur = isset($pcsSim['turnos']) ? (int)$pcsSim['turnos'] : 0;
+$pcsVis = isset($pcsSim['visitantes']) ? (int)$pcsSim['visitantes'] : 0;
+$pcsEve = isset($pcsSim['eventos']) ? (int)$pcsSim['eventos'] : 0;
+$pcsVen = isset($pcsSim['ventas']) ? (int)$pcsSim['ventas'] : 0;
+$pcsCaj = isset($pcsSim['caja']) ? (int)$pcsSim['caja'] : 0;
+$paramsDemo = array($audUsuCod, $audEmpCod, $audSucCod, $pcsDemo);
+if (isset($_POST['simular']) && $_POST['simular'] == '1') {
+	$obBD_con1->grabarv_registros("INSERT IGNORE INTO `auditoria`.`eventos` (`Eve_Cod`,`Eve_Ini`,`Eve_Des`) VALUES (1,'F','Fallido'),(2,'I','Insertar'),(3,'U','Actualizar'),(4,'D','Eliminar')", $obBD_conexion);
+	$seedTabs = array(
+		array('comprobantes', 'Comprobantes contables', 'Comprobantes'),
+		array('asientos', 'Asientos contables', 'Asientos'),
+		array('manifiesto', 'Manifiestos Relavera', 'Manifiestos'),
+		array('manifiesto_turnos_cab', 'Turnos Relavera', 'Turnos'),
+		array('manifiesto_turnos_det', 'Detalle de turnos Relavera', 'Detalle de turnos'),
+		array('manifiesto_visitante', 'Visitantes Relavera', 'Visitantes'),
+		array('manifiesto_evento', 'Eventos Relavera', 'Eventos'),
+		array('ventas', 'Facturas de venta', 'Facturas de venta'),
+		array('ventas_det', 'Detalle de facturas de venta', 'Detalle de venta'),
+		array('caja_aper', 'Apertura y cierre de caja', 'Caja')
+	);
+	foreach ($seedTabs as $st) {
+		$tn = addslashes($st[0]);
+		$td = addslashes($st[1]);
+		$ta = addslashes($st[2]);
+		$obBD_con1->grabarv_registros("INSERT INTO `auditoria`.`tablas` (`Tab_Nom`,`Tab_Des`,`Tab_Ali`) SELECT '{$tn}','{$td}','{$ta}' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `auditoria`.`tablas` WHERE `Tab_Nom`='{$tn}')", $obBD_conexion);
+		$obBD_con1->grabarv_registros("UPDATE `auditoria`.`tablas` SET `Tab_Ali`='{$ta}', `Tab_Des`='{$td}' WHERE `Tab_Nom`='{$tn}' AND (`Tab_Ali` IS NULL OR `Tab_Ali`='{$tn}')", $obBD_conexion);
+	}
+	if ($pcsDemo > 0) {
+		$obBD_con1->grabarv_registros(sentencias(14, $paramsDemo), $obBD_conexion);
+		$obBD_con1->grabarv_registros(sentencias(15, $paramsDemo), $obBD_conexion);
+		$obBD_con1->grabarv_registros(sentencias(16, $paramsDemo), $obBD_conexion);
+	}
+
+	$hoy = date('Y-m-d');
+	$finTur = date('Y-m-d', strtotime('+6 days'));
+	$baseDemo = array($audUsuCod, $audEmpCod, $audSucCod);
+	$demosRelavera = array(
+		array($pcsEve, 'manifiesto_evento', 'I',
+			'Man_ENom,Man_EFei,Man_EFef,Man_Ehor,Man_Vig,Man_EEst',
+			'~Jornada Demo Relavera~,~'.$hoy.'~,~'.$finTur.'~,8,~S~,~A~',
+			'Man_Eve=DEMO-EVE-1', 70),
+		array($pcsVis, 'manifiesto_visitante', 'I',
+			'MVis_Nac,MVis_Eci,MVis_Est,Man_Eve,MVis_Obs',
+			'~ECUATORIANA~,~SOLTERO~,~A~,1,~INGRESO DEMO VISITANTE~',
+			'MVis_Cod=DEMO-VIS-1', 60),
+		array($pcsTur, 'manifiesto_turnos_cab', 'I',
+			'Tur_Fei,Tur_Fef,Tur_Est',
+			'~'.$hoy.'~,~'.$finTur.'~,~A~',
+			'Tur_Cod=DEMO-TUR-1', 50),
+		array($pcsTur, 'manifiesto_turnos_det', 'I',
+			'Tud_Fec,Tud_Hin,Tud_Hfi,Tud_Cup,Tud_Est',
+			'~'.$hoy.'~,~07:00:00~,~12:00:00~,15,~A~',
+			'Tud_Cod=DEMO-TUD-1', 40),
+		array($pcsMan, 'manifiesto', 'I',
+			'Man_Num,Man_Fec,Man_Pes,Man_Pun,Man_Tip,Man_Est',
+			'1001,~'.$hoy.' 08:30:00~,12500,3.00,~P~,~A~',
+			'Man_Cod=DEMO-M-1001', 30),
+		array($pcsMan, 'manifiesto', 'U',
+			'Man_Pes,Man_Pun,Man_Obe',
+			'13200,3.50,~AJUSTE DEMO RELAVERA~',
+			'Man_Cod=DEMO-M-1001', 20),
+		array($pcsTur, 'manifiesto_turnos_det', 'U',
+			'Tud_Cup,Tud_Est',
+			'12,~A~',
+			'Tud_Cod=DEMO-TUD-1', 10),
+		array($pcsVis, 'manifiesto_visitante', 'U',
+			'MVis_Est,MVis_Obs',
+			'~I~,~ANULACION DEMO VISITANTE~',
+			'MVis_Cod=DEMO-VIS-1', 5),
+		array($pcsVen, 'ventas', 'I',
+			'Tic_Cod,Cli_Cod,Vet_Num,Vet_Des,Vet_Hor',
+			'1,1,~001-001-000000001~,~'.$hoy.'~,~08:30:00~',
+			'Vet_Cod=DEMO-V-1', 15),
+		array($pcsVen, 'ventas_det', 'I',
+			'Vet_Cod,Pro_Cod,Vet_Can,Vet_Pru,Vet_Imp',
+			'1,1,2,10.00,20.00',
+			'Vet_Cod=DEMO-V-1', 12),
+		array($pcsCaj, 'caja_aper', 'I',
+			'Pun_Cod,Caj_Fec,Caj_Hoi,Caj_Exi,Caj_Est,Caj_Gen',
+			'1,~'.$hoy.'~,~08:00:00~,100.00,~A~,~N~',
+			'Caj_Cod=DEMO-CAJ-1', 8),
+		array($pcsCaj, 'caja_aper', 'U',
+			'Caj_Fef,Caj_Hof,Caj_Est',
+			'~'.$hoy.'~,~17:00:00~,~C~',
+			'Caj_Cod=DEMO-CAJ-1', 6)
+	);
+	foreach ($demosRelavera as $d) {
+		if ((int)$d[0] <= 0) {
+			continue;
+		}
+		$fecDemo = date('Y-m-d H:i:s', time() - (int)$d[6]);
+		$obBD_con1->grabarv_registros(sentencias(24, array(
+			$baseDemo[0], $baseDemo[1], $baseDemo[2], $d[0],
+			$d[1], $d[2], $d[3], $d[4], $d[5], $fecDemo
+		)), $obBD_conexion);
+	}
+	if (isset($_POST['simular'])) {
+		header('Location: '.$_SERVER['PHP_SELF']);
+		exit();
+	}
+}
+
+$fil_from = isset($_GET['from']) ? trim($_GET['from']) : '';
+$fil_to = isset($_GET['to']) ? trim($_GET['to']) : '';
+$fil_eve = isset($_GET['eve']) ? (int)$_GET['eve'] : 0;
+$fil_org = isset($_GET['org']) ? (int)$_GET['org'] : 0;
+$fil_dir = isset($_GET['dir']) ? (int)$_GET['dir'] : 0;
+$fil_pcs = isset($_GET['pcs']) ? (int)$_GET['pcs'] : 0;
+$fil_usu = isset($_GET['usu']) ? (int)$_GET['usu'] : 0;
+$fil_suc = isset($_GET['suc']) ? (int)$_GET['suc'] : 0;
+// Al entrar: ultimas actividades (ultimos 30 dias)
+if ($fil_from === '' && $fil_to === '' && !isset($_GET['from']) && !isset($_GET['to'])) {
+	$fil_to = date('Y-m-d');
+	$fil_from = date('Y-m-d', strtotime('-30 days'));
+}
+
+$Arr_Eventos = $obBD_con1->getArrayConsulta(17, '', $obBD_conexion);
+$Arr_Modulos = $obBD_con1->getArrayConsulta(25, array($audEmpCod), $obBD_conexion);
+$Arr_Directorios = $obBD_con1->getArrayConsulta(30, array($audEmpCod, $fil_org), $obBD_conexion);
+$Arr_Procesos = $obBD_con1->getArrayConsulta(26, array($audEmpCod, $fil_dir, $fil_org), $obBD_conexion);
+$Arr_Usuarios = $obBD_con1->getArrayConsulta(27, array($audEmpCod, $fil_suc), $obBD_conexion);
+$Arr_Sucursales = $obBD_con1->getArrayConsulta(28, array($audEmpCod), $obBD_conexion);
+$rowSucCount = $obBD_con1->getRowConsulta(29, array($audEmpCod), $obBD_conexion);
+$hasSucursales = (!empty($rowSucCount['count']) && (int)$rowSucCount['count'] > 1);
+$rowCfgCount = $obBD_con1->getRowConsulta(32, array($audEmpCod), $obBD_conexion);
+$audCfgCount = isset($rowCfgCount['count']) ? (int)$rowCfgCount['count'] : 0;
+$audEstado = aud_estado_captura($audEmpCod, $audCfgCount);
+if (!is_array($Arr_Eventos)) $Arr_Eventos = array();
+if (!is_array($Arr_Modulos)) $Arr_Modulos = array();
+if (!is_array($Arr_Directorios)) $Arr_Directorios = array();
+if (!is_array($Arr_Procesos)) $Arr_Procesos = array();
+if (!is_array($Arr_Usuarios)) $Arr_Usuarios = array();
+if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
+?><!DOCTYPE html>
+<html lang="es">
 <head>
- <TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE>
- <?Php require_once("../../mascaras/model1/estilos/estilos.php"); ?>    
- <script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
- <script type="text/javascript" src="../../Librerias/validaciones/interfaz.js"></script>
- <script type="text/javascript">$(function() { $('#set1 *').tooltip({showURL: false}); });</script>
- <script type="text/javascript" src="../../Librerias/validaciones/interfaz.modals.js"></script>
- <script type="text/javascript" src="../../Librerias/validaciones/interfaz.datepicker.js"></script> 
- <script>$(function() { var dates = $( "#from, #to" ).datepicker({
-		defaultDate: "+1w",
-		changeMonth: true,
-		changeYear:true,
-		numberOfMonths: 1,
-		dateFormat: "yy-mm-dd",
-		onSelect: function( selectedDate ) {
-			var option = this.id == "from" ? "minDate" : "maxDate",
-				instance = $( this ).data( "datepicker" ),
-				date = $.datepicker.parseDate(instance.settings.dateFormat || $.datepicker._defaults.dateFormat, selectedDate, instance.settings);
-			dates.not( this ).datepicker( "option", option, date );
+	<title><?php echo isset($Ses_Sys_Nom) ? $Ses_Sys_Nom : 'Auditoria'; ?></title>
+	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
+	<?php require_once("../../mascaras/model3/estilos/estilos.php"); ?>
+	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
+	<style type="text/css">
+		/* Buscar por - fila compacta model3 */
+		.aud-search-fieldset { margin-bottom: 8px; }
+		.aud-search-row {
+			display: table;
+			width: 100%;
+			table-layout: fixed;
+			border-collapse: separate;
+			border-spacing: 8px 0;
+			margin: 0 -8px;
 		}
-	});
- });
-function visualizarCampos(form, id){
-	$.ajax({
-		url : form.action,
-		data : $(form).serialize(),
-		type : 'POST',
-		success:function(data){
-			$('#' + id).html(data);
-			$('.fixedHeader01').fixedHeaderTable({ height: '250', footer: false, cloneHeadToFoot: true, altClass: 'odd', themeClass: 'fancyTable', autoShow: false });    
-			$('.fixedHeader01').fixedHeaderTable('show', 10);
-		},
-		error:function(jqXHR, status, error){
-			alert("Error al obtener datos");
+		.aud-search-cell {
+			display: table-cell;
+			vertical-align: bottom;
+			padding: 0;
 		}
-	});
-}
- </script>
- <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		.aud-search-cell-date { width: 118px; }
+		.aud-search-cell-usu { width: 13%; }
+		.aud-search-cell-suc { width: 12%; }
+		.aud-search-cell-mod { width: 11%; }
+		.aud-search-cell-dir { width: 11%; }
+		.aud-search-cell-pcs { width: 12%; }
+		.aud-search-cell-eve { width: 9%; }
+		.aud-search-cell-q { width: 15%; }
+		.aud-search-cell-actions {
+			width: 148px;
+			white-space: nowrap;
+			text-align: left;
+		}
+		.aud-search-cell > label {
+			display: block;
+			margin: 0 0 3px 0;
+			padding: 0;
+			font-size: 10px;
+			font-weight: 700;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			color: #5b6f88;
+			line-height: 1.2;
+		}
+		.aud-search-cell .form-control,
+		.aud-search-cell select.form-control {
+			width: 100%;
+			height: 22px;
+			padding: 2px 6px;
+			font-size: 12px;
+			line-height: 1.35;
+		}
+		.aud-search-cell .input-group {
+			display: table;
+			width: 100%;
+			border-collapse: separate;
+		}
+		.aud-search-cell .input-group > .form-control {
+			display: table-cell;
+			width: 100%;
+		}
+		.aud-search-cell .input-group-addon {
+			cursor: pointer;
+			width: 1%;
+			padding: 2px 8px;
+			line-height: 18px;
+			vertical-align: middle;
+		}
+		.aud-search-actions {
+			padding-top: 0;
+		}
+		.aud-search-actions .btn {
+			margin: 0 4px 0 0;
+			vertical-align: middle;
+		}
+		.aud-search-hint {
+			margin: 8px 0 0 0;
+			padding: 0;
+			font-size: 11px;
+			color: #7a8b9e;
+			line-height: 1.35;
+		}
+		.aud-search-hint strong { color: #445566; font-weight: 600; }
+		.aud-captura-banner {
+			margin: 0 0 10px 0;
+			padding: 8px 12px;
+			border-radius: 4px;
+			font-size: 12px;
+			line-height: 1.45;
+		}
+		.aud-captura-ok {
+			background: #eef7f1;
+			border: 1px solid #c5e3d0;
+			color: #1f6b3a;
+		}
+		.aud-captura-off {
+			background: #fdf2f0;
+			border: 1px solid #f0c9c2;
+			color: #a12b22;
+		}
+
+		.aud-toolbar-actions { margin: 0 0 8px 0; overflow: visible; position: relative; z-index: 20; }
+		.aud-toolbar-right { float: right; white-space: nowrap; }
+		.aud-toolbar-right > .btn { margin-left: 4px; vertical-align: middle; }
+		.aud-col-wrap { position: relative; display: inline-block; margin-left: 4px; z-index: 10000; vertical-align: middle; }
+		.aud-col-panel {
+			display: none;
+			position: absolute;
+			right: 0;
+			top: 100%;
+			z-index: 10001;
+			background: #fff;
+			border: 1px solid #778899;
+			padding: 8px 12px;
+			min-width: 200px;
+			text-align: left;
+			box-shadow: 0 2px 8px rgba(0,0,0,.15);
+		}
+		.aud-col-panel label { display: block; margin: 4px 0; cursor: pointer; white-space: nowrap; font-weight: normal; font-size: 12px; }
+		#ui-datepicker-div { z-index: 99999 !important; }
+
+		@media (max-width: 1100px) {
+			.aud-search-row,
+			.aud-search-cell {
+				display: block;
+				width: 100% !important;
+			}
+			.aud-search-cell {
+				margin-bottom: 8px;
+			}
+			.aud-search-cell-actions { width: 100% !important; }
+		}
+
+		/* KPI Dashboard */
+		.aud-kpi-panel {
+			display: none;
+			margin-bottom: 12px;
+			padding: 12px 14px;
+			background: #f8fafc;
+			border: 1px solid #d9e2ec;
+			border-radius: 4px;
+		}
+		.aud-kpi-grid {
+			display: table;
+			width: 100%;
+			table-layout: fixed;
+			border-collapse: separate;
+			border-spacing: 8px 0;
+			margin: 0 -8px 12px -8px;
+		}
+		.aud-kpi-card {
+			display: table-cell;
+			background: #fff;
+			border: 1px solid #e2e8f0;
+			border-radius: 4px;
+			padding: 8px 12px;
+			vertical-align: middle;
+			box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+		}
+		.aud-kpi-card-title {
+			font-size: 10px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: #64748b;
+			margin-bottom: 2px;
+		}
+		.aud-kpi-card-val {
+			font-size: 20px;
+			font-weight: 700;
+			color: #1e293b;
+			line-height: 1.1;
+		}
+		.aud-kpi-card-sub {
+			font-size: 11px;
+			color: #64748b;
+			margin-top: 2px;
+		}
+		.aud-kpi-card-i { border-left: 3px solid #16a34a; }
+		.aud-kpi-card-u { border-left: 3px solid #2563eb; }
+		.aud-kpi-card-d { border-left: 3px solid #dc2626; }
+		.aud-kpi-card-tot { border-left: 3px solid #6366f1; }
+		.aud-charts-row { margin-left: -6px; margin-right: -6px; }
+		.aud-chart-col { padding: 0 6px; margin-bottom: 8px; }
+		.aud-chart-box {
+			background: #fff;
+			border: 1px solid #e2e8f0;
+			border-radius: 4px;
+			padding: 10px;
+			min-height: 150px;
+		}
+		.aud-chart-title {
+			font-size: 11px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.03em;
+			color: #475569;
+			margin: 0 0 8px 0;
+			padding-bottom: 4px;
+			border-bottom: 1px solid #f1f5f9;
+		}
+		.aud-bar-item { margin-bottom: 6px; }
+		.aud-bar-lbl { font-size: 11px; color: #334155; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+		.aud-bar-track { height: 7px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+		.aud-bar-fill { height: 100%; border-radius: 4px; }
+		.aud-sparkline-svg { width: 100%; height: 110px; }
+
+		/* Detalle modal - orden y densidad */
+		.aud-detalle { padding: 2px 2px 6px; }
+		.aud-det-head {
+			display: table;
+			width: 100%;
+			margin: 0 0 12px 0;
+			padding-bottom: 10px;
+			border-bottom: 1px solid #d9e2ec;
+		}
+		.aud-det-head > * { display: table-cell; vertical-align: middle; }
+		.aud-det-when { text-align: right; color: #5b6f88; font-size: 12px; white-space: nowrap; }
+		.aud-det-when-main { font-weight: 600; color: #2f3b4c; }
+		.aud-det-hora { font-weight: 500; color: #5b6f88; margin-left: 4px; }
+		.aud-det-id {
+			display: inline-block;
+			margin-left: 10px;
+			padding: 1px 7px;
+			border-radius: 3px;
+			background: #eef3f8;
+			color: #5b6f88;
+			font-size: 11px;
+			font-weight: 600;
+		}
+		.aud-det-badge {
+			display: inline-block;
+			padding: 4px 10px;
+			border-radius: 3px;
+			font-size: 11px;
+			font-weight: 700;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			background: #e8eef5;
+			color: #445566;
+			border: 1px solid #c5d2e0;
+		}
+		.aud-det-badge-i { background: #e7f6ed; color: #1f7a45; border-color: #b7e0c6; }
+		.aud-det-badge-u { background: #eaf2fb; color: #1f5f9a; border-color: #b7d0ea; }
+		.aud-det-badge-d { background: #fdecea; color: #a12b22; border-color: #f0c2bd; }
+		.aud-det-badge-f { background: #fff6e5; color: #8a5a00; border-color: #f0d7a0; }
+		.aud-det-summary { margin: 0 0 14px 0; }
+		.aud-det-title {
+			margin: 0 0 6px 0;
+			font-size: 14px;
+			line-height: 1.35;
+			color: #243447;
+		}
+		.aud-det-lead {
+			margin: 0;
+			font-size: 12px;
+			line-height: 1.45;
+			color: #5b6f88;
+		}
+		.aud-det-context { margin-bottom: 10px !important; }
+		.aud-det-meta {
+			display: table;
+			width: 100%;
+			border-collapse: separate;
+			border-spacing: 10px 8px;
+			margin: -4px -10px 0;
+		}
+		.aud-det-meta-item {
+			display: inline-block;
+			vertical-align: top;
+			width: 48%;
+			box-sizing: border-box;
+			padding: 8px 10px;
+			background: #f7f9fc;
+			border: 1px solid #e3eaf2;
+			border-radius: 4px;
+			margin: 0 1% 8px 0;
+		}
+		.aud-det-meta-wide { width: 98%; }
+		.aud-det-label {
+			display: block;
+			font-size: 10px;
+			font-weight: 700;
+			letter-spacing: 0.05em;
+			text-transform: uppercase;
+			color: #7a8b9e;
+			margin-bottom: 3px;
+		}
+		.aud-det-value {
+			display: block;
+			font-size: 13px;
+			font-weight: 600;
+			color: #243447;
+			word-break: break-word;
+		}
+		.aud-det-datos { margin-bottom: 0 !important; }
+		.aud-det-empty {
+			margin: 4px 0 0 0;
+			padding: 10px 12px;
+			background: #f7f9fc;
+			border: 1px dashed #cfd9e6;
+			border-radius: 4px;
+			color: #6a7c90;
+			font-size: 12px;
+		}
+		.aud-det-table { margin-bottom: 0 !important; font-size: 12px; }
+		.aud-det-table > thead > tr > th {
+			background: #eef3f8;
+			color: #445566;
+			font-size: 11px;
+			text-transform: uppercase;
+			letter-spacing: 0.03em;
+			border-bottom-width: 1px !important;
+		}
+		.aud-det-col-dato { width: 32%; font-weight: 600; color: #334455; }
+		.aud-det-col-old { width: 34%; }
+		.aud-det-col-new { width: 34%; }
+		.aud-det-val-old.aud-det-val-changed { color: #a12b22; text-decoration: line-through; background: #fef2f1; }
+		.aud-det-val-new.aud-det-val-changed { color: #1a6b3c; background: #eefbf3; }
+		.aud-det-count {
+			display: inline-block;
+			padding: 1px 8px;
+			border-radius: 10px;
+			background: #e8eef5;
+			color: #445566;
+			font-size: 11px;
+			font-weight: 600;
+			vertical-align: middle;
+			margin-left: 4px;
+		}
+		.aud-det-debug { margin-top: 10px; }
+		.aud-det-debug-box { border: 1px solid #e3eaf2; border-radius: 4px; background: #f7f9fc; }
+		.aud-det-debug-toggle {
+			cursor: pointer;
+			padding: 8px 12px;
+			font-size: 11px;
+			font-weight: 700;
+			color: #5b6f88;
+			letter-spacing: 0.03em;
+			text-transform: uppercase;
+			user-select: none;
+		}
+		.aud-det-debug-toggle:hover { color: #334455; }
+		.aud-det-debug-pre {
+			margin: 0;
+			padding: 10px 12px;
+			font-size: 11px;
+			line-height: 1.4;
+			color: #243447;
+			background: #fff;
+			border-top: 1px solid #e3eaf2;
+			border-radius: 0 0 4px 4px;
+			white-space: pre-wrap;
+			word-break: break-all;
+			max-height: 200px;
+			overflow-y: auto;
+		}
+		.ui-dialog.exa-ui-dialog .ui-dialog-content { padding: 12px 14px 8px; }
+		.ui-dialog.exa-ui-dialog .ui-dialog-buttonpane {
+			margin-top: 0;
+			padding: 8px 12px;
+			border-top: 1px solid #d9e2ec;
+			background: #f7f9fc;
+		}
+		.ui-dialog.exa-ui-dialog .ui-dialog-buttonpane .btn,
+		.ui-dialog.exa-ui-dialog .ui-dialog-buttonset button {
+			min-width: 88px;
+		}
+	</style>
 </head>
 <body>
-<div id='set1'>
-	<table width="100%" border="0" cellpadding="0" cellspacing="0">
-  		<tr class="BarraTitulo">
-    		<td height="10">&raquo; Monitorear actividades</td>
-  		</tr>
-  	</table>
-  	<form name="Buscador" method="post" action="<?Php $_SERVER['PHP_SELF']?>">
-		<?Php require_once("../../componentes/FRONT/com_con_persona.php"); ?>
-		<input type="hidden" name="pag" value="1">
-	</form>
-	<?php 
-	switch($pag){
-		case 1:
-			/**
-			 * Resultado de la Busqueda
-			 */
-			$Arr_Busqueda = $obBD_con1->getArrayConsulta($_POST['op_opciones'] == 'd'? 1: 2, $_SESSION['Ses_Suc_Cod'].'*'.$_POST['txt_busqueda'], $obBD_conexion);
-			?>
-			<FIELDSET>
-			    <LEGEND>
-			    	<label class="Titulos2">Resultados de la busqueda</label>
-			    </LEGEND>
-			    <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
-				    <thead>
-					      <tr>
-					        <th width="5%" >Cod. Int. </th>
-					        <th width="10%" >Cédula</th>
-					        <th >Apellidos y Nombres </th>
-							<th width="3%" >&nbsp;</th>
-					      </tr>
-				     </thead> 
-				     <tbody>
-				     <?php foreach($Arr_Busqueda as $row){
-				     	?>
-				     	<tr>
-				     		<td align="center"><?php echo $row['Usu_Cod'];?></td>
-					        <td align="left"><?php echo $row['Prs_Ced']?></td>
-					        <td align="left"><?Php echo marcar_cadena($_POST['txt_busqueda'], $row['Prs_Ape']." ".$row['Prs_Nom'],'#FFFF00', 1);?></td>
-							<td align="center">
-								<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
-									<button type='button' class='btn btn-success btn-mini' title="Elegir" onclick="this.form.submit();"><i class='icon-arrow-right icon-white'></i></button>
-									<input type="hidden" name="pag" value="2">
-									<input type="hidden" name="usuCodigo" value="<?php echo $row['Usu_Cod'];?>" >
-									<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-									<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
-								</form>
-							</td>
-						</tr>
-				     	<?php
-				     }
-				     if(count($Arr_Busqueda) == 0){
-							?>
-							<tr>
-						        <td>&nbsp;</td>
-						        <td>&nbsp;</td>
-						        <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1);?></td>
-								<td>&nbsp;</td>
-						    </tr>
-							<?php
-					 }?>
-				     </tbody>
-			     </table>
-		     </FIELDSET>
-			<?php
-			echo barra_estado(count($Arr_Busqueda));
-			break;
-		case 2:
-			$row_usuario = $obBD_con1->getRowConsulta(3, $_POST['usuCodigo'], $obBD_conexion);
-			?>
-			<FIELDSET>
-			    <LEGEND>
-			    	<label class="Titulos2">Datos del Usuario:</label>
-			    </LEGEND>
-			    <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
-			    <table width="100%" cellpadding="0" cellspacing="0">
-			    	<tr>
-			    		<td width="10%" class="Etiqueta1">Cedula:</td>
-			    		<td class="LetraNegra">&nbsp;<?php echo $row_usuario['Prs_Ced'];?></td>
-			    	</tr>
-			    	<tr>
-			    		<td class="Etiqueta1">Nombres:</td>
-			    		<td class="LetraNegra">&nbsp;<?php echo $row_usuario['Prs_Ape'].' '.$row_usuario['Prs_Ape'];?></td>
-			    	</tr>
-			    	<tr>
-			    		<td width="10%" class="Etiqueta1"></td>
-			    		<td class="LetraNegra">&nbsp;
-				    		<table cellpadding="0" cellspacing="0">
-				    			<tr>
-				    				<td class="Etiqueta1">&nbsp;<span class="Asterisco">*</span>Desde:</td>
-				    				<td class="LetraNegra">&nbsp;<input name="from" type="text" id="from" value="<?php echo strlen($_POST['from'])>0?$_POST['from']:date('Y-m-d');?>" size="10" onKeyUp="mascara(this,'-',patron, true)" ></td>
-				    				<td class="Etiqueta1">&nbsp;&nbsp;<span class="Asterisco">*</span>Hasta:</td>
-				    				<td class="LetraNegra">&nbsp;<input name="to" type="text" id="to" value="<?php echo strlen($_POST['to'])>0?$_POST['to']:date('Y-m-d');?>" size="10" onKeyUp="mascara(this,'-',patron, true)" ></td>
-				    				<td class="LetraNegra"><button type="button" class="btn btn-success btn-mini" title="Buscar" onclick="validar_requeridos(this.form,'from*to',2)" ><i class="icon-search icon-white"></i><span>&nbsp;&nbsp;Buscar&nbsp;&nbsp;</span></button>
-				    					<input type="hidden" name="pag" value="2">
-				    					<input type="hidden" name="usuCodigo" value="<?php echo $_POST['usuCodigo'];?>" >
-				    					<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-										<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
-				    				</td>
-				    			</tr>
-				    		</table>
-			    		</td>
-			    	</tr>
-			    </table>
-			    </form>
-			</FIELDSET>
-			<?php
-			if(isset($_POST['from'])){
-				$Arr_Resultado = $obBD_con1->getArrayConsulta(4, $_POST['usuCodigo'].'*'.$_POST['from'].'*'.$_POST['to'], $obBD_conexion);
-			}else{
-				$Arr_Resultado = $obBD_con1->getArrayConsulta(4, $_POST['usuCodigo'].'*'.date('Y-m-d').'*'.date('Y-m-d'), $obBD_conexion);
-			}
-				?>
-				<FIELDSET>
-				    <LEGEND>
-				    	<label class="Titulos2">Resultados de la busqueda</label>
-				    </LEGEND>
-				    <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
-					    <thead>
-						      <tr>
-						        <th width="5%" >Cod. Int. </th>
-						        <th >Inicio Sesión</th>
-						        <th >Cierre de Sesión </th>
-								<th width="3%" >&nbsp;</th>
-						      </tr>
-					     </thead> 
-					     <tbody>
-					     <?php foreach($Arr_Resultado as $row){
-					     	?>
-					     	<tr>
-					     		<td align="center"><?php echo $row['Ses_Cod'];?></td>
-						        <td align="left"><?php echo $row['Ses_Int']?></td>
-						        <td align="left"><?Php echo $row['Ses_Out'];?></td>
-								<td align="center">
-								<?php 
-								
-								if(strlen($row['Ses_Out']) > 0){
-									$params = $_POST['usuCodigo'].'*'.$row['Ses_Int'].'*'.$row['Ses_Out'];
-									$count = $obBD_con1->getRowConsulta(11, $params, $obBD_conexion);
-								}else{
-									$params = $_POST['usuCodigo'].'*'.$row['Ses_Int'].'*'.date('Y-m-d H:i:s');
-									$count = $obBD_con1->getRowConsulta(11, $params, $obBD_conexion);
-								}
-								
-								if($count['count'] > 0){
-								?>
-									<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
-										<button type='button' class='btn btn-success btn-mini' title="Elegir" onclick="this.form.submit();"><i class='icon-arrow-right icon-white'></i></button>
-										<input type="hidden" name="pag" value="3">
-										<input type="hidden" name="from" value="<?php echo strlen($_POST['from'])>0?$_POST['from']:date('Y-m-d');?>" >
-										<input type="hidden" name="to" value="<?php echo strlen($_POST['to'])>0?$_POST['to']:date('Y-m-d');?>" >
-										<input type="hidden" name="sesCod" value="<?php echo $row['Ses_Cod'];?>" >
-										<input type="hidden" name="usuCodigo" value="<?php echo $_POST['usuCodigo'];?>" >
-										<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-										<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
-									</form>
-								<?php }else{
+<div class="panel panel-default panel-main exa-ui-panel exa-ui-fill-page">
+	<div class="panel-heading exa-header">
+		<h3 class="panel-title"><span class="glyphicon glyphicon-eye-open"></span> Monitorear actividades</h3>
+	</div>
+	<div class="panel-body exa-body">
+		<div id="lista" class="row exa-ui-page-view">
+			<div class="col-xs-12">
+				<?php echo aud_html_banner_captura($audEstado); ?>
+				<fieldset class="exa-fieldset aud-search-fieldset">
+					<legend class="Titulos2">Buscar por</legend>
+					<form id="frmFiltros" class="form-horizontal normal exa-ui-busqueda-filtros" onsubmit="return false;">
+						<div class="aud-search-row">
+							<div class="aud-search-cell aud-search-cell-date">
+								<label for="from">Desde</label>
+								<div class="input-group input-group-xs">
+									<input name="from" type="text" id="from" class="form-control input-xs" value="<?php echo aud_h($fil_from); ?>" maxlength="10" placeholder="aaaa-mm-dd" autocomplete="off" />
+									<span class="input-group-addon" id="btnFromCal" title="Abrir calendario"><span class="glyphicon glyphicon-calendar"></span></span>
+								</div>
+							</div>
+							<div class="aud-search-cell aud-search-cell-date">
+								<label for="to">Hasta</label>
+								<div class="input-group input-group-xs">
+									<input name="to" type="text" id="to" class="form-control input-xs" value="<?php echo aud_h($fil_to); ?>" maxlength="10" placeholder="aaaa-mm-dd" autocomplete="off" />
+									<span class="input-group-addon" id="btnToCal" title="Abrir calendario"><span class="glyphicon glyphicon-calendar"></span></span>
+								</div>
+							</div>
+							<div class="aud-search-cell aud-search-cell-usu">
+								<label for="usu">Usuario</label>
+								<select name="usu" id="usu" class="form-control input-xs" title="Filtrar por usuario">
+									<option value="0">Todos</option>
+									<?php foreach ($Arr_Usuarios as $u) {
+										$un = trim(isset($u['Usu_Nom']) ? $u['Usu_Nom'] : '');
+										if ($un === '') {
+											$un = 'Usuario '.(int)$u['Usu_Cod'];
+										}
 									?>
-									<img src="../../mascaras/model1/imagenes/32x32/ayuda.png" width="25" height="25" title="No hay actividades registradas en esta sesión">
-									<?php
-								}?>
-								</td>
-							</tr>
-					     	<?php
-					     }
-					     if(count($Arr_Resultado) == 0){
-							?>
-							<tr>
-						        <td>&nbsp;</td>
-						        <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1);?></td>
-						        <td>&nbsp;</td>
-								<td>&nbsp;</td>
-						    </tr>
-							<?php
-					     }?>
-					     </tbody>
-				     </table>
-			     </FIELDSET>
-				<?php
-				echo barra_estado(count($Arr_Resultado));
-			?>
-				<br>
-				<table cellpadding="0" cellspacing="0">
-					<tr>
-						<td width="110">
-							<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
-								<button type="button" class="btn btn-inverse fileinput-button" title="Atr&aacute;s" onclick="this.form.submit();"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
-								<input type="hidden" name="pag" value="1">
-								<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-								<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
-							</form>
-						</td>
-					</tr>
-				</table>
-				
-			<?php
-			break;
-			case 3:
-				/**
-				 * obtener datos de usuario
-				 */
-				$row_usuario = $obBD_con1->getRowConsulta(5, $_POST['usuCodigo'].'*'.$_POST['sesCod'], $obBD_conexion);
-				?>
-				<FIELDSET>
-				    <LEGEND>
-				    	<label class="Titulos2">Datos del Usuario:</label>
-				    </LEGEND>
-				    
-				    <table width="100%" cellpadding="0" cellspacing="0">
-				    	<tr>
-				    		<td width="10%" class="Etiqueta1">Cedula:</td>
-				    		<td class="LetraNegra">&nbsp;<?php echo $row_usuario['Prs_Ced'];?></td>
-				    	</tr>
-				    	<tr>
-				    		<td class="Etiqueta1">Nombres:</td>
-				    		<td class="LetraNegra">&nbsp;<?php echo $row_usuario['Prs_Ape'].' '.$row_usuario['Prs_Ape'];?></td>
-				    	</tr>
-				    	<tr>
-				    		<td width="10%" class="Etiqueta1">Inicio Sesión:</td>
-				    		<td class="LetraNegra">&nbsp;<?php echo $row_usuario['Ses_Int'];?></td>
-				    	</tr>
-				    	<tr>
-				    		<td width="10%" class="Etiqueta1">Cierre Sesión:</td>
-				    		<td class="LetraNegra">&nbsp;<?php echo $row_usuario['Ses_Out'];?></td>
-				    	</tr>
-				    </table>
-				    
-				</FIELDSET>
-				<?php
-				if(strlen($row_usuario['Ses_Out']) > 0){
-					$params = $_POST['usuCodigo'].'*'.$row_usuario['Ses_Int'].'*'.$row_usuario['Ses_Out'];
-					$Arr_Resultado = $obBD_con1->getArrayConsulta(6, $params, $obBD_conexion);
-					$Arr_Tablas = $obBD_con1->getArrayConsulta(9, $params, $obBD_conexion);
-				}else{
-					$params = $_POST['usuCodigo'].'*'.$row_usuario['Ses_Int'].'*'.date('Y-m-d H:i:s');
-					$Arr_Resultado = $obBD_con1->getArrayConsulta(6, $params, $obBD_conexion);
-					$Arr_Tablas = $obBD_con1->getArrayConsulta(9, $params, $obBD_conexion);
-				}
-				?>
-				<FIELDSET>
-					<LEGEND>
-				    	<label class="Titulos2">Mostar por:</label>
-				    </LEGEND>
-				    <table width="100%" cellpadding="0" cellspacing="0">
-				    	<tr>
-				    		<td width="10%" class="Etiqueta1">Tabla:</td>
-				    		<td class="LetraNegra">&nbsp;
-				    			<select name="ajax_cmb" id="ajax_cmb" onchange="ajax_datos('<?php echo $_SERVER['PHP_SELF'];?>?ajax_cmb='+this.value+'&params=<?php echo $params; ?>','ajax_result');">
-				    				<option value="0">Todos</option>
-				    				<?php foreach($Arr_Tablas as $row){
-				    				?>
-				    					<option value="<?php echo $row['Tab_Cod'];?>"><?php echo strlen($row['Tab_Ali']) > 0? $row['Tab_Ali'] : $row['Tab_Nom'];?></option>
-				    				<?php
-				    				}?>
-				    			</select>
-				    		</td>
-				    	</tr>
-				    </table>
-				</FIELDSET>
-				<FIELDSET>
-				    <LEGEND>
-				    	<label class="Titulos2">Resultados de la busqueda</label>
-				    </LEGEND>
-				    <div id="ajax_result">
-				    <table width="100%" border="1" cellpadding="0" cellspacing="0" class="fixedHeader01">
-					    <thead>
-						      <tr>
-						        <th width="8%" >Fecha</th>
-						        <th width="8%" >Hora</th>
-						        <th>Actividad</th>
-						        <th width="15%" >Opción</th>
-						        <th>Detalle de Opción</th>
-								<th width="3%" >&nbsp;</th>
-						      </tr>
-					     </thead> 
-					     <tbody>
-					     <?php 
-					     	/**
-						  	 * controlar la secuencia de formularios
-					      	 */
-					     	$i = 0;
-					     	foreach($Arr_Resultado as $row){
-					     	$arr = explode(' ', $row['Log_Fec']);
-					     	$i++;
-					     	?>
-					     	<tr>
-					     		<td align="center"><?php echo $arr[0];?></td>
-					     		<td align="center"><?php echo $arr[1];?></td>
-						        <td align="left"><?php echo str_replace("{0}", strlen($row['Tab_Ali'])>0?$row['Tab_Ali']:$row['Tab_Nom'], $row['Eve_Des']);?></td>
-						        <td align="left"><?php echo $row['Pcs_Lin'];?></td>
-						        <td align="left"><?Php echo $row['Pcs_Det'];?></td>
-								<td align="center">
-									<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post" name="frm<?php echo $i;?>" id="frm<?php echo $i;?>">
-										<button type='button' class='btn btn-success btn-mini' title="Elegir" onclick="Muestra_Aparecer();visualizarCampos(this.form,'mostrar');"><i class='icon-arrow-right icon-white'></i></button>
-										<input type="hidden" name="tabCodigo" value="<?php echo $row['Tab_Cod'];?>">
-										<input type="hidden" name="logCampos" value="<?php echo $row['Log_Cam'];?>">
-										<input type="hidden" name="logValores" value="<?php echo $row['Log_Val'];?>">
-										<input type="hidden" name="ajax" value="1">
-									</form>
-								</td>
-							</tr>
-					     	<?php
-					     }
-					     if(count($Arr_Resultado) == 0){
-					     	?>
-					     	<tr>
-						        <td>&nbsp;</td>
-						        <td>&nbsp;</td>
-						        <td><?Php echo error_alerta("¡No hay resultados que mostrar!", 1) ?></td>
-						        <td>&nbsp;</td>
-						        <td>&nbsp;</td>
-								<td>&nbsp;</td>
-						    </tr>
-					     	<?php
-					     }?>
-					     </tbody>
-				     </table>
-				     </div>
-			     </FIELDSET>
-				<?php
-				echo barra_estado(count($Arr_Resultado));
-				?>
-				<br>
-				<table cellpadding="0" cellspacing="0">
-					<tr>
-						<td width="110">
-							<form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
-								<button type="button" class="btn btn-inverse fileinput-button" title="Atr&aacute;s" onclick="this.form.submit();"><i class=" icon-arrow-left icon-white"></i><span>&nbsp;&nbsp;Atr&aacute;s&nbsp;&nbsp;</span></button>
-								<input type="hidden" name="pag" value="2">
-								<input type="hidden" name="from" value="<?php echo $_POST['from'];?>" >
-								<input type="hidden" name="to" value="<?php echo $_POST['to'];?>" >
-								<input type="hidden" name="usuCodigo" value="<?php echo $_POST['usuCodigo'];?>">
-								<input type="hidden" name="op_opciones" value="<?php echo $_POST['op_opciones'];?>">
-								<input type="hidden" name="txt_busqueda" value="<?php echo $_POST['txt_busqueda'];?>">
-							</form>
-						</td>
-					</tr>
-				</table>
-				<div id="bgtransparent" class="bgtransparent" style="display:none" onClick="closeModal();"></div>
-				  <div id="bgmodal"  class="bgmodal" style="display:none" >
-				 <div id="ajax_modal">
-				    <div id="mostrar"></div>
-				    </div>
+									<option value="<?php echo (int)$u['Usu_Cod']; ?>"<?php echo $fil_usu==(int)$u['Usu_Cod']?' selected="selected"':''; ?>><?php echo aud_h($un); ?></option>
+									<?php } ?>
+								</select>
+							</div>
+							<?php if ($hasSucursales) { ?>
+							<div class="aud-search-cell aud-search-cell-suc">
+								<label for="suc">Sucursal</label>
+								<select name="suc" id="suc" class="form-control input-xs" title="Filtrar por sucursal">
+									<option value="0">Todas</option>
+									<?php foreach ($Arr_Sucursales as $s) { ?>
+									<option value="<?php echo (int)$s['Suc_Cod']; ?>"<?php echo $fil_suc==(int)$s['Suc_Cod']?' selected="selected"':''; ?>><?php echo aud_h($s['Suc_Des']); ?></option>
+									<?php } ?>
+								</select>
+							</div>
+							<?php } ?>
+							<div class="aud-search-cell aud-search-cell-mod">
+								<label for="org">Modulo</label>
+								<select name="org" id="org" class="form-control input-xs" title="Filtrar por modulo">
+									<option value="0">Todos</option>
+									<?php foreach ($Arr_Modulos as $m) { ?>
+									<option value="<?php echo (int)$m['Org_Cod']; ?>"<?php echo $fil_org==(int)$m['Org_Cod']?' selected="selected"':''; ?>><?php echo aud_h($m['Org_Des']); ?></option>
+									<?php } ?>
+								</select>
+							</div>
+							<div class="aud-search-cell aud-search-cell-dir">
+								<label for="dir">Directorio</label>
+								<select name="dir" id="dir" class="form-control input-xs" title="Filtrar por directorio">
+									<option value="0">Todos</option>
+									<?php foreach ($Arr_Directorios as $d) { ?>
+									<option value="<?php echo (int)$d['Org_Cod']; ?>"<?php echo $fil_dir==(int)$d['Org_Cod']?' selected="selected"':''; ?>><?php echo aud_h($d['Org_Des']); ?></option>
+									<?php } ?>
+								</select>
+							</div>
+							<div class="aud-search-cell aud-search-cell-pcs">
+								<label for="pcs">Proceso</label>
+								<select name="pcs" id="pcs" class="form-control input-xs" title="Filtrar por proceso">
+									<option value="0">Todos</option>
+									<?php foreach ($Arr_Procesos as $p) {
+										$pl = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : ('Proceso '.$p['Pcs_Cod']));
+									?>
+									<option value="<?php echo (int)$p['Pcs_Cod']; ?>"<?php echo $fil_pcs==(int)$p['Pcs_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl); ?></option>
+									<?php } ?>
+								</select>
+							</div>
+							<div class="aud-search-cell aud-search-cell-eve">
+								<label for="eve">Evento</label>
+								<select name="eve" id="eve" class="form-control input-xs" title="Filtrar por tipo de evento">
+									<option value="0">Todos</option>
+									<?php foreach ($Arr_Eventos as $ev) { ?>
+									<option value="<?php echo (int)$ev['Eve_Cod']; ?>"<?php echo $fil_eve==(int)$ev['Eve_Cod']?' selected="selected"':''; ?>><?php echo aud_h($ev['Eve_Des']); ?></option>
+									<?php } ?>
+								</select>
+							</div>
+							<div class="aud-search-cell aud-search-cell-q">
+								<label for="fil_q">Buscar texto / dato</label>
+								<input name="q" type="text" id="fil_q" class="form-control input-xs" placeholder="Num, RUC, cliente..." autocomplete="off" />
+							</div>
+							<div class="aud-search-cell aud-search-cell-actions">
+								<label>&nbsp;</label>
+								<div class="aud-search-actions">
+									<button type="button" id="btnBuscar" class="btn btn-success btn-xs" title="Aplicar filtros">
+										<span class="glyphicon glyphicon-search"></span> Buscar
+									</button>
+									<button type="button" id="btnLimpiar" class="btn btn-default btn-xs" title="Restablecer filtros (ultimos 30 dias)">
+										<span class="glyphicon glyphicon-refresh"></span> Limpiar
+									</button>
+								</div>
+							</div>
+						</div>
+						<p class="aud-search-hint" id="audSearchHint">Periodo por defecto: <strong>ultimos 30 dias</strong>. Cambie filtros y pulse Buscar.</p>
+					</form>
+				</fieldset>
+
+				<div class="aud-toolbar-actions clearfix">
+					<form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="display:inline;" onsubmit="return confirm('Esto inserta actividad de demostracion (no es un movimiento real). Continuar?');">
+						<input type="hidden" name="simular" value="1" />
+						<button type="submit" class="btn btn-default btn-xs" title="Inserta actividad de demostracion (solo pruebas)">
+							<span class="glyphicon glyphicon-plus"></span> Simular actividad
+						</button>
+					</form>
+					<div class="aud-toolbar-right">
+						<button type="button" id="btnToggleKpi" class="btn btn-primary btn-xs" title="Ver / Ocultar estadisticas y graficos">
+							<span class="glyphicon glyphicon-stats"></span> Estadisticas
+						</button>
+						<button type="button" id="btnExportExcel" class="btn btn-success btn-xs" title="Exportar a Excel">
+							<span class="glyphicon glyphicon-download-alt"></span> Excel
+						</button>
+						<button type="button" id="btnExportPdf" class="btn btn-danger btn-xs" title="Exportar a PDF / Imprimir">
+							<span class="glyphicon glyphicon-file"></span> PDF
+						</button>
+						<div class="aud-col-wrap" id="aud-col-wrap">
+							<button type="button" id="aud-col-btn" class="btn btn-default btn-xs" title="Columnas visibles">
+								<span class="glyphicon glyphicon-th-list"></span> Columnas
+							</button>
+							<div id="aud-col-panel" class="aud-col-panel">
+								<strong>Columnas visibles</strong>
+								<label><input type="checkbox" class="aud-col-toggle" data-col="Log_Cod" checked="checked" /> Id</label>
+								<label><input type="checkbox" class="aud-col-toggle" data-col="Fecha" checked="checked" /> Fecha</label>
+								<label><input type="checkbox" class="aud-col-toggle" data-col="Hora" checked="checked" /> Hora</label>
+								<label><input type="checkbox" class="aud-col-toggle" data-col="Empresa" checked="checked" /> Empresa</label>
+								<?php if ($hasSucursales) { ?>
+								<label><input type="checkbox" class="aud-col-toggle" data-col="Sucursal" checked="checked" /> Sucursal</label>
+								<?php } ?>
+								<label><input type="checkbox" class="aud-col-toggle" data-col="Usuario" checked="checked" /> Usuario</label>
+								<label><input type="checkbox" class="aud-col-toggle" data-col="Modulo" checked="checked" /> Modulo</label>
+								<label><input type="checkbox" class="aud-col-toggle" data-col="Directorio" checked="checked" /> Directorio</label>
+								<label><input type="checkbox" class="aud-col-toggle" data-col="Proceso" checked="checked" /> Proceso</label>
+								<label><input type="checkbox" class="aud-col-toggle" data-col="Actividad" checked="checked" /> Actividad</label>
+								<label><input type="checkbox" class="aud-col-toggle" data-col="Detalle" checked="checked" /> Detalle</label>
+							</div>
+						</div>
+					</div>
 				</div>
-				<?php
-			break;
-			
-	}
-	?>
-	<script type="text/javascript" src="../VALIDACIONES/aud_par_monitoreo.js"></script>
-	<script type="text/javascript" src="../../Librerias/textbox/main.js"></script>
+
+				<div id="aud-kpi-panel" class="aud-kpi-panel">
+					<div class="aud-kpi-grid">
+						<div class="aud-kpi-card aud-kpi-card-tot">
+							<div class="aud-kpi-card-title">Total Actividades</div>
+							<div class="aud-kpi-card-val" id="kpi-total">0</div>
+							<div class="aud-kpi-card-sub" id="kpi-total-sub">En el periodo seleccionado</div>
+						</div>
+						<div class="aud-kpi-card aud-kpi-card-i">
+							<div class="aud-kpi-card-title">Inserciones (INSERT)</div>
+							<div class="aud-kpi-card-val text-success" id="kpi-ins">0</div>
+							<div class="aud-kpi-card-sub" id="kpi-ins-pct">0% del total</div>
+						</div>
+						<div class="aud-kpi-card aud-kpi-card-u">
+							<div class="aud-kpi-card-title">Modificaciones (UPDATE)</div>
+							<div class="aud-kpi-card-val text-primary" id="kpi-upd">0</div>
+							<div class="aud-kpi-card-sub" id="kpi-upd-pct">0% del total</div>
+						</div>
+						<div class="aud-kpi-card aud-kpi-card-d">
+							<div class="aud-kpi-card-title">Eliminaciones (DELETE)</div>
+							<div class="aud-kpi-card-val text-danger" id="kpi-del">0</div>
+							<div class="aud-kpi-card-sub" id="kpi-del-pct">0% del total</div>
+						</div>
+					</div>
+
+					<div class="row aud-charts-row">
+						<div class="col-md-5 aud-chart-col">
+							<div class="aud-chart-box">
+								<div class="aud-chart-title"><span class="glyphicon glyphicon-time"></span> Tendencia Diaria</div>
+								<div id="chart-fechas-host" style="min-height:110px; display:flex; align-items:center; justify-content:center;">
+									<p class="text-muted" style="margin:0; font-size:11px;">Cargando tendencia...</p>
+								</div>
+							</div>
+						</div>
+						<div class="col-md-4 aud-chart-col">
+							<div class="aud-chart-box">
+								<div class="aud-chart-title"><span class="glyphicon glyphicon-th-large"></span> Top Modulos Activos</div>
+								<div id="chart-modulos-host">
+									<p class="text-muted" style="margin:0; font-size:11px;">Cargando modulos...</p>
+								</div>
+							</div>
+						</div>
+						<div class="col-md-3 aud-chart-col">
+							<div class="aud-chart-box">
+								<div class="aud-chart-title"><span class="glyphicon glyphicon-user"></span> Top Usuarios</div>
+								<div id="chart-usuarios-host">
+									<p class="text-muted" style="margin:0; font-size:11px;">Cargando usuarios...</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="exa-ui-grid-host">
+					<table id="gridMonitoreo"></table>
+					<div id="gridMonitoreoPager"></div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
+
+<div id="detalleDialog" title="Detalle de la actividad" style="display:none;">
+	<div id="detalleContenido"></div>
+</div>
+
+<script type="text/javascript">
+var AUD_HAS_SUCURSALES = <?php echo $hasSucursales ? 'true' : 'false'; ?>;
+</script>
+<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
+<script type="text/javascript" src="../VALIDACIONES/aud_par_monitoreo.js?v=20260817c"></script>
 </body>
 </html>
-<?php 
+<?php
 $obBD_con1->liberar();
 $obBD_conexion->cerrar();
 ?>
