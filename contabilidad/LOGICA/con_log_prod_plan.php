@@ -1,4 +1,4 @@
-<?Php 
+<?php 
 /**
  *
  * @author Erik Niebla
@@ -37,12 +37,13 @@ class Class_Log_Datos_Cons extends MysqlDatos{
 	* @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function consultasobBD($sen_sql,$param, $obBD)
+	function consultasobBD($sen_sql,$param, $obBD = null)
 	{
             //
 		$Par_Sql= $this->parametros($param);
                // var_dump($Par_Sql);
-		return $this->consulta(sentencias_cons($sen_sql,$Par_Sql), $obBD->conexion);
+		$conexion = ($obBD !== null) ? (isset($obBD->conexion) ? $obBD->conexion : $obBD) : null;
+		return $this->consulta(sentencias_cons($sen_sql,$Par_Sql), $conexion);
 	}
 
 	/**
@@ -53,10 +54,11 @@ class Class_Log_Datos_Cons extends MysqlDatos{
 	* @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	* @return result si existen datos de retorno
 	*/
-	function operacionobBD($sen_sql,$param, $obBD)
+	function operacionobBD($sen_sql,$param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
-		return $this->grabarv_registros(sentencias_cons($sen_sql,$Par_Sql), $obBD->conexion);
+		$conexion = ($obBD !== null) ? (isset($obBD->conexion) ? $obBD->conexion : $obBD) : null;
+		return $this->grabarv_registros(sentencias_cons($sen_sql,$Par_Sql), $conexion);
 	}
 	
 	/**
@@ -66,7 +68,7 @@ class Class_Log_Datos_Cons extends MysqlDatos{
 	 * @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	 * @return array $row fila de datos
 	 */
-	function getRowConsulta($sen_sql,$param,$obBD)
+	function getRowConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);		
 		$row =  $this->fetch_assoc($result);		
@@ -82,7 +84,7 @@ class Class_Log_Datos_Cons extends MysqlDatos{
 	 * @param Class_Log_Datos_Cli $obDT para la abtraccion de los datos
 	 * @return array $array arreglo de datos asociados
 	 */ 
-	function getArrayConsulta($sen_sql,$param,$obBD)
+	function getArrayConsulta($sen_sql,$param,$obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);		
 		$array = array();		
@@ -100,12 +102,13 @@ class Class_Log_Datos_Cons extends MysqlDatos{
 	 * @param string $param cadena de datos
 	 * @param Class_Log_Datos_Cli $obBD objeto de conexion
 	 */
-	function insertUpdateDelete($sen_sql,$param, $obBD)
+	function insertUpdateDelete($sen_sql,$param, $obBD = null)
 	{		
-		$this->inicio_transaccion($obBD->conexion);		
+		$conexion = ($obBD !== null) ? (isset($obBD->conexion) ? $obBD->conexion : $obBD) : null;
+		$this->inicio_transaccion($conexion);		
 		//Realiza Insert, Update o Delete
 		$this->operacionobBD($sen_sql,$param,$obBD);			
-		$this->fin_transaccion($obBD->conexion);		
+		$this->fin_transaccion($conexion);		
 	}
 
 }
