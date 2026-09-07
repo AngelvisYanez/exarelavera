@@ -77,7 +77,6 @@ if (isset($_REQUEST['listMonitoreoGridAjax'])) {
 	$fil_pcs = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
 	$fil_usu = isset($_REQUEST['usu']) ? (int)$_REQUEST['usu'] : 0;
 	$fil_suc = isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0;
-	$fil_q = isset($_REQUEST['q']) ? trim($_REQUEST['q']) : '';
 	if ($fil_from === '' && $fil_to === '') {
 		$fil_to = date('Y-m-d');
 		$fil_from = date('Y-m-d', strtotime('-30 days'));
@@ -87,8 +86,8 @@ if (isset($_REQUEST['listMonitoreoGridAjax'])) {
 	if (!in_array($pageSize, array(10, 25, 50, 100, 200))) {
 		$pageSize = 25;
 	}
-	// 0 emp,1 from,2 to,3 eve,4 mod,5 pcs,6 tab,7 usu,8 limit,9 offset,10 suc,11 dir,12 q
-	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, $pageSize, 0, $fil_suc, $fil_dir, $fil_q);
+	// 0 emp,1 from,2 to,3 eve,4 mod,5 pcs,6 tab,7 usu,8 limit,9 offset,10 suc,11 dir
+	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, $pageSize, 0, $fil_suc, $fil_dir);
 	$rowCount = $obBD_con1->getRowConsulta(13, $filtros, $obBD_conexion);
 	$total = isset($rowCount['count']) ? (int)$rowCount['count'] : 0;
 	$totalPages = $total > 0 ? (int)ceil($total / $pageSize) : 1;
@@ -127,53 +126,6 @@ if (isset($_REQUEST['listMonitoreoGridAjax'])) {
 		'rows' => $rows
 	);
 	aud_json_out($resp);
-	$obBD_con1->liberar();
-	$obBD_conexion->cerrar();
-	exit();
-}
-
-/** Metricas y KPIs agregados JSON */
-if (isset($_REQUEST['listMonitoreoKpiAjax'])) {
-	@ini_set('display_errors', '0');
-	@header('Content-Type: application/json; charset=utf-8');
-	$fil_from = isset($_REQUEST['from']) ? trim($_REQUEST['from']) : '';
-	$fil_to = isset($_REQUEST['to']) ? trim($_REQUEST['to']) : '';
-	$fil_eve = isset($_REQUEST['eve']) ? (int)$_REQUEST['eve'] : 0;
-	$fil_org = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
-	$fil_dir = isset($_REQUEST['dir']) ? (int)$_REQUEST['dir'] : 0;
-	$fil_pcs = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
-	$fil_usu = isset($_REQUEST['usu']) ? (int)$_REQUEST['usu'] : 0;
-	$fil_suc = isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0;
-	$fil_q = isset($_REQUEST['q']) ? trim($_REQUEST['q']) : '';
-	if ($fil_from === '' && $fil_to === '') {
-		$fil_to = date('Y-m-d');
-		$fil_from = date('Y-m-d', strtotime('-30 days'));
-	}
-	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, 5000, 0, $fil_suc, $fil_dir, $fil_q);
-
-	$rowCount = $obBD_con1->getRowConsulta(13, $filtros, $obBD_conexion);
-	$total = isset($rowCount['count']) ? (int)$rowCount['count'] : 0;
-
-	$arrEventos = $obBD_con1->getArrayConsulta(33, $filtros, $obBD_conexion);
-	if (!is_array($arrEventos)) $arrEventos = array();
-
-	$arrFechas = $obBD_con1->getArrayConsulta(34, $filtros, $obBD_conexion);
-	if (!is_array($arrFechas)) $arrFechas = array();
-
-	$arrModulos = $obBD_con1->getArrayConsulta(35, $filtros, $obBD_conexion);
-	if (!is_array($arrModulos)) $arrModulos = array();
-
-	$arrUsuarios = $obBD_con1->getArrayConsulta(36, $filtros, $obBD_conexion);
-	if (!is_array($arrUsuarios)) $arrUsuarios = array();
-
-	$kpiData = array(
-		'total' => $total,
-		'eventos' => $arrEventos,
-		'fechas' => $arrFechas,
-		'modulos' => $arrModulos,
-		'usuarios' => $arrUsuarios
-	);
-	aud_json_out($kpiData);
 	$obBD_con1->liberar();
 	$obBD_conexion->cerrar();
 	exit();
@@ -253,7 +205,6 @@ if (isset($_REQUEST['exportMonitoreoCsv'])) {
 	$fil_pcs = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
 	$fil_usu = isset($_REQUEST['usu']) ? (int)$_REQUEST['usu'] : 0;
 	$fil_suc = isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0;
-	$fil_q = isset($_REQUEST['q']) ? trim($_REQUEST['q']) : '';
 	if ($fil_from === '' && $fil_to === '') {
 		$fil_to = date('Y-m-d');
 		$fil_from = date('Y-m-d', strtotime('-30 days'));
@@ -469,8 +420,7 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 		.aud-search-cell-mod { width: 11%; }
 		.aud-search-cell-dir { width: 11%; }
 		.aud-search-cell-pcs { width: 12%; }
-		.aud-search-cell-eve { width: 9%; }
-		.aud-search-cell-q { width: 15%; }
+		.aud-search-cell-eve { width: 10%; }
 		.aud-search-cell-actions {
 			width: 148px;
 			white-space: nowrap;
@@ -575,80 +525,6 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 			}
 			.aud-search-cell-actions { width: 100% !important; }
 		}
-
-		/* KPI Dashboard */
-		.aud-kpi-panel {
-			display: none;
-			margin-bottom: 12px;
-			padding: 12px 14px;
-			background: #f8fafc;
-			border: 1px solid #d9e2ec;
-			border-radius: 4px;
-		}
-		.aud-kpi-grid {
-			display: table;
-			width: 100%;
-			table-layout: fixed;
-			border-collapse: separate;
-			border-spacing: 8px 0;
-			margin: 0 -8px 12px -8px;
-		}
-		.aud-kpi-card {
-			display: table-cell;
-			background: #fff;
-			border: 1px solid #e2e8f0;
-			border-radius: 4px;
-			padding: 8px 12px;
-			vertical-align: middle;
-			box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-		}
-		.aud-kpi-card-title {
-			font-size: 10px;
-			font-weight: 700;
-			text-transform: uppercase;
-			letter-spacing: 0.04em;
-			color: #64748b;
-			margin-bottom: 2px;
-		}
-		.aud-kpi-card-val {
-			font-size: 20px;
-			font-weight: 700;
-			color: #1e293b;
-			line-height: 1.1;
-		}
-		.aud-kpi-card-sub {
-			font-size: 11px;
-			color: #64748b;
-			margin-top: 2px;
-		}
-		.aud-kpi-card-i { border-left: 3px solid #16a34a; }
-		.aud-kpi-card-u { border-left: 3px solid #2563eb; }
-		.aud-kpi-card-d { border-left: 3px solid #dc2626; }
-		.aud-kpi-card-tot { border-left: 3px solid #6366f1; }
-		.aud-charts-row { margin-left: -6px; margin-right: -6px; }
-		.aud-chart-col { padding: 0 6px; margin-bottom: 8px; }
-		.aud-chart-box {
-			background: #fff;
-			border: 1px solid #e2e8f0;
-			border-radius: 4px;
-			padding: 10px;
-			min-height: 150px;
-		}
-		.aud-chart-title {
-			font-size: 11px;
-			font-weight: 700;
-			text-transform: uppercase;
-			letter-spacing: 0.03em;
-			color: #475569;
-			margin: 0 0 8px 0;
-			padding-bottom: 4px;
-			border-bottom: 1px solid #f1f5f9;
-		}
-		.aud-bar-item { margin-bottom: 6px; }
-		.aud-bar-lbl { font-size: 11px; color: #334155; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-		.aud-bar-track { height: 7px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-		.aud-bar-fill { height: 100%; border-radius: 4px; }
-		.aud-sparkline-svg { width: 100%; height: 110px; }
 
 		/* Detalle modal - orden y densidad */
 		.aud-detalle { padding: 2px 2px 6px; }
@@ -757,49 +633,7 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 			letter-spacing: 0.03em;
 			border-bottom-width: 1px !important;
 		}
-		.aud-det-col-dato { width: 32%; font-weight: 600; color: #334455; }
-		.aud-det-col-old { width: 34%; }
-		.aud-det-col-new { width: 34%; }
-		.aud-det-val-old.aud-det-val-changed { color: #a12b22; text-decoration: line-through; background: #fef2f1; }
-		.aud-det-val-new.aud-det-val-changed { color: #1a6b3c; background: #eefbf3; }
-		.aud-det-count {
-			display: inline-block;
-			padding: 1px 8px;
-			border-radius: 10px;
-			background: #e8eef5;
-			color: #445566;
-			font-size: 11px;
-			font-weight: 600;
-			vertical-align: middle;
-			margin-left: 4px;
-		}
-		.aud-det-debug { margin-top: 10px; }
-		.aud-det-debug-box { border: 1px solid #e3eaf2; border-radius: 4px; background: #f7f9fc; }
-		.aud-det-debug-toggle {
-			cursor: pointer;
-			padding: 8px 12px;
-			font-size: 11px;
-			font-weight: 700;
-			color: #5b6f88;
-			letter-spacing: 0.03em;
-			text-transform: uppercase;
-			user-select: none;
-		}
-		.aud-det-debug-toggle:hover { color: #334455; }
-		.aud-det-debug-pre {
-			margin: 0;
-			padding: 10px 12px;
-			font-size: 11px;
-			line-height: 1.4;
-			color: #243447;
-			background: #fff;
-			border-top: 1px solid #e3eaf2;
-			border-radius: 0 0 4px 4px;
-			white-space: pre-wrap;
-			word-break: break-all;
-			max-height: 200px;
-			overflow-y: auto;
-		}
+		.aud-det-col-dato { width: 38%; font-weight: 600; color: #334455; }
 		.ui-dialog.exa-ui-dialog .ui-dialog-content { padding: 12px 14px 8px; }
 		.ui-dialog.exa-ui-dialog .ui-dialog-buttonpane {
 			margin-top: 0;
@@ -903,10 +737,6 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 									<?php } ?>
 								</select>
 							</div>
-							<div class="aud-search-cell aud-search-cell-q">
-								<label for="fil_q">Buscar texto / dato</label>
-								<input name="q" type="text" id="fil_q" class="form-control input-xs" placeholder="Num, RUC, cliente..." autocomplete="off" />
-							</div>
 							<div class="aud-search-cell aud-search-cell-actions">
 								<label>&nbsp;</label>
 								<div class="aud-search-actions">
@@ -931,9 +761,6 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 						</button>
 					</form>
 					<div class="aud-toolbar-right">
-						<button type="button" id="btnToggleKpi" class="btn btn-primary btn-xs" title="Ver / Ocultar estadisticas y graficos">
-							<span class="glyphicon glyphicon-stats"></span> Estadisticas
-						</button>
 						<button type="button" id="btnExportExcel" class="btn btn-success btn-xs" title="Exportar a Excel">
 							<span class="glyphicon glyphicon-download-alt"></span> Excel
 						</button>
@@ -964,58 +791,6 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 					</div>
 				</div>
 
-				<div id="aud-kpi-panel" class="aud-kpi-panel">
-					<div class="aud-kpi-grid">
-						<div class="aud-kpi-card aud-kpi-card-tot">
-							<div class="aud-kpi-card-title">Total Actividades</div>
-							<div class="aud-kpi-card-val" id="kpi-total">0</div>
-							<div class="aud-kpi-card-sub" id="kpi-total-sub">En el periodo seleccionado</div>
-						</div>
-						<div class="aud-kpi-card aud-kpi-card-i">
-							<div class="aud-kpi-card-title">Inserciones (INSERT)</div>
-							<div class="aud-kpi-card-val text-success" id="kpi-ins">0</div>
-							<div class="aud-kpi-card-sub" id="kpi-ins-pct">0% del total</div>
-						</div>
-						<div class="aud-kpi-card aud-kpi-card-u">
-							<div class="aud-kpi-card-title">Modificaciones (UPDATE)</div>
-							<div class="aud-kpi-card-val text-primary" id="kpi-upd">0</div>
-							<div class="aud-kpi-card-sub" id="kpi-upd-pct">0% del total</div>
-						</div>
-						<div class="aud-kpi-card aud-kpi-card-d">
-							<div class="aud-kpi-card-title">Eliminaciones (DELETE)</div>
-							<div class="aud-kpi-card-val text-danger" id="kpi-del">0</div>
-							<div class="aud-kpi-card-sub" id="kpi-del-pct">0% del total</div>
-						</div>
-					</div>
-
-					<div class="row aud-charts-row">
-						<div class="col-md-5 aud-chart-col">
-							<div class="aud-chart-box">
-								<div class="aud-chart-title"><span class="glyphicon glyphicon-time"></span> Tendencia Diaria</div>
-								<div id="chart-fechas-host" style="min-height:110px; display:flex; align-items:center; justify-content:center;">
-									<p class="text-muted" style="margin:0; font-size:11px;">Cargando tendencia...</p>
-								</div>
-							</div>
-						</div>
-						<div class="col-md-4 aud-chart-col">
-							<div class="aud-chart-box">
-								<div class="aud-chart-title"><span class="glyphicon glyphicon-th-large"></span> Top Modulos Activos</div>
-								<div id="chart-modulos-host">
-									<p class="text-muted" style="margin:0; font-size:11px;">Cargando modulos...</p>
-								</div>
-							</div>
-						</div>
-						<div class="col-md-3 aud-chart-col">
-							<div class="aud-chart-box">
-								<div class="aud-chart-title"><span class="glyphicon glyphicon-user"></span> Top Usuarios</div>
-								<div id="chart-usuarios-host">
-									<p class="text-muted" style="margin:0; font-size:11px;">Cargando usuarios...</p>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
 				<div class="exa-ui-grid-host">
 					<table id="gridMonitoreo"></table>
 					<div id="gridMonitoreoPager"></div>
@@ -1037,6 +812,6 @@ var AUD_HAS_SUCURSALES = <?php echo $hasSucursales ? 'true' : 'false'; ?>;
 </body>
 </html>
 <?php
-$obBD_con1->liberar();
-$obBD_conexion->cerrar();
+	$obBD_con1->liberar();
+	$obBD_conexion->cerrar();
 ?>
