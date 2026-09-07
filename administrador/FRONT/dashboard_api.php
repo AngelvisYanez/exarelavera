@@ -1,10 +1,16 @@
 <?php
-// Disable error display to prevent HTML injection into JSON response
+// Disable display of raw errors to ensure clean JSON output
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-// Set header
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
+
+function dashboard_json_encode_save($data) {
+    if (defined('JSON_PRETTY_PRINT') && defined('JSON_UNESCAPED_SLASHES') && defined('JSON_UNESCAPED_UNICODE')) {
+        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+    return json_encode($data);
+}
 
 try {
     $configFile = __DIR__ . '/dashboard_config.json';
@@ -13,64 +19,55 @@ try {
     if ($action === 'load') {
         if (file_exists($configFile)) {
             $content = file_get_contents($configFile);
-            if ($content === false) {
-                throw new Exception("No se pudo leer el archivo de configuracion");
-            }
-            // Ensure content is valid JSON
-            if (trim($content) === '') {
+            if ($content === false || trim($content) === '') {
                 echo '{}';
             } else {
-                echo $content;
+                // Verify it's valid JSON
+                $test = json_decode($content, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    echo $content;
+                } else {
+                    echo '{}';
+                }
             }
         } else {
             echo '{}';
         }
     } elseif ($action === 'save') {
         $rawInput = file_get_contents('php://input');
-        if (!$rawInput) {
-            throw new Exception("No se recibieron datos");
+        if (!$rawInput || trim($rawInput) === '') {
+            throw new Exception("No se recibieron datos para guardar");
         }
         
         $input = json_decode($rawInput, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("JSON invalido");
+            throw new Exception("JSON invalido: " . json_last_error_msg());
         }
         
-        if ($input !== null && $input !== false) {
-            // Verificar permisos de escritura
+        if (is_array($input)) {
             $dir = dirname($configFile);
-            $dirWritable = is_writable($dir);
-            $fileExists  = file_exists($configFile);
-            $fileWritable = $fileExists ? is_writable($configFile) : false;
+            if (!is_dir($dir)) {
+                @mkdir($dir, 0777, true);
+            }
 
-            if (!$dirWritable && !$fileWritable) {
-                if ($fileExists) {
-                    throw new Exception("Permisos denegados: el archivo de configuracion no tiene permisos de escritura");
+            $jsonOut = dashboard_json_encode_save($input);
+            if ($jsonOut !== false && strlen($jsonOut) > 0) {
+                $written = file_put_contents($configFile, $jsonOut, LOCK_EX);
+                if ($written !== false) {
+                    echo json_encode(array('success' => true));
                 } else {
-                    throw new Exception("Permisos denegados: no se puede crear el archivo en " . $dir);
+                    throw new Exception("Fallo al escribir en dashboard_config.json (compruebe permisos)");
                 }
+            } else {
+                throw new Exception("Error al serializar datos en formato JSON");
             }
-
-            $json = json_encode($input, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            if ($json === false) {
-                throw new Exception("Error al codificar los datos: " . json_last_error_msg());
-            }
-
-            $result = file_put_contents($configFile, $json);
-            if ($result === false) {
-                throw new Exception("Fallo al escribir el archivo de configuracion");
-            }
-            echo json_encode(array('success' => true));
         } else {
-            echo json_encode(array('error' => 'Datos vacios o invalidos'));
+            echo json_encode(array('error' => 'Los datos deben ser un objeto o arreglo'));
         }
     } else {
         echo json_encode(array('error' => 'Accion invalida'));
     }
 } catch (Exception $e) {
-    // Return 200 so the frontend can parse the JSON error message
-    // http_response_code(200); // Not available in PHP 5.3
-    header("HTTP/1.1 200 OK");
+    http_response_code(200);
     echo json_encode(array('error' => $e->getMessage()));
 }
-?>

@@ -55,6 +55,9 @@ function ppto_spreadsheet_cell($row, $idx) {
     }
     $v = trim((string)$row[$idx]);
     $v = rtrim($v, '_');
+    if (function_exists('ppto_pdf_a_utf8')) {
+        $v = ppto_pdf_a_utf8($v);
+    }
     return trim($v);
 }
 

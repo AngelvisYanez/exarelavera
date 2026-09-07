@@ -10,6 +10,7 @@
 
 require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
 require_once("aud_sql_monitoreo.php");
+require_once("aud_log_interpretar.php");
 
 /**
  * Clase para conexion a la capa de acceso a datos
@@ -38,10 +39,11 @@ class Class_Log_Datos extends MysqlDatos{
 	 * @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	 * @return result si existen datos de retorno
 	 */
-	function consultasobBD($sen_sql,$param, $obBD)
+	function consultasobBD($sen_sql, $param, $obBD = null)
 	{
 		$Par_Sql= $this->parametros($param);
-		return $this->consulta(sentencias($sen_sql,$Par_Sql), $obBD->conexion);
+		$con = is_object($obBD) && isset($obBD->conexion) ? $obBD->conexion : $obBD;
+		return $this->consulta(sentencias($sen_sql,$Par_Sql), $con);
 	}
 	
 
@@ -52,15 +54,18 @@ class Class_Log_Datos extends MysqlDatos{
 	 * @param Class_Log_Conexion_Cli $obBD para realizar la conexcion correspondiente
 	 * @return array $row fila de datos
 	 */
-	function getRowConsulta($sen_sql,$param,$obBD)
+	function getRowConsulta($sen_sql, $param, $obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
+		if (!$result) {
+			return array();
+		}
 
 		$row =  $this->fetch_assoc($result);
 
 		$this->free_result($result);
 
-		return $row;
+		return $row ? $row : array();
 	}
 
 	/**
@@ -71,11 +76,14 @@ class Class_Log_Datos extends MysqlDatos{
 	 * @param Class_Log_Datos_Cli $obDT para la abtraccion de los datos
 	 * @return array $array arreglo de datos asociados
 	 */
-	function getArrayConsulta($sen_sql,$param,$obBD)
+	function getArrayConsulta($sen_sql, $param, $obBD = null)
 	{
 		$result = $this->consultasobBD($sen_sql,$param,$obBD);
 
 		$array = array();
+		if (!$result) {
+			return $array;
+		}
 
 		while($row_rs = $this->fetch_assoc($result))
 		{

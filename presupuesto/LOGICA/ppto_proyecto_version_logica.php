@@ -182,6 +182,89 @@ function ppto_proy_version_ppe_id_por_anio($mysqli, $Emp_Cod, $anio) {
 }
 
 /**
+ * Busca cabecera presupuestaria sin exigir selector de version en UI:
+ * activa del anio, luego cualquier A, luego la mas reciente.
+ *
+ * @param mysqli $mysqli
+ * @param int $Emp_Cod
+ * @param int $anio
+ * @return int
+ */
+function ppto_proy_version_buscar_activa($mysqli, $Emp_Cod, $anio = 0) {
+    $Emp_Cod = (int)$Emp_Cod;
+    $anio = (int)$anio;
+    if (!$mysqli || $Emp_Cod <= 0) {
+        return 0;
+    }
+    if ($anio > 0) {
+        $ppe = ppto_proy_version_ppe_id_por_anio($mysqli, $Emp_Cod, $anio);
+        if ($ppe > 0) {
+            return $ppe;
+        }
+    }
+    $sqls = array(
+        "SELECT Ppe_Cod AS Ppe_Cod FROM pre_presupuesto WHERE Emp_Cod=$Emp_Cod AND Ppe_Est='A' ORDER BY Ppe_Ani DESC, Ppe_Ver DESC LIMIT 1",
+        "SELECT Ppe_Cod AS Ppe_Cod FROM pre_presupuesto WHERE Emp_Cod=$Emp_Cod ORDER BY Ppe_Ani DESC, Ppe_Ver DESC LIMIT 1",
+    );
+    foreach ($sqls as $sql) {
+        $res = $mysqli->query($sql);
+        if ($res && ($row = $res->fetch_assoc())) {
+            $id = isset($row['Ppe_Cod']) ? (int)$row['Ppe_Cod'] : 0;
+            if ($id > 0) {
+                return $id;
+            }
+        }
+    }
+    return 0;
+}
+
+/**
+ * Resuelve o crea cabecera presupuestaria activa (sin selector de version).
+ *
+ * @param mysqli $mysqli
+ * @param int $Emp_Cod
+ * @param int $Usu_Cod
+ * @param int $anio
+ * @return array
+ */
+function ppto_proy_version_asegurar($mysqli, $Emp_Cod, $Usu_Cod, $anio = 0) {
+    $Emp_Cod = (int)$Emp_Cod;
+    $Usu_Cod = (int)$Usu_Cod;
+    $anio = $anio > 0 ? (int)$anio : (int)date('Y');
+    if (!$mysqli || $Emp_Cod <= 0) {
+        return array('ok' => false, 'Ppe_Cod' => 0, 'created' => false, 'message' => 'Empresa no valida.');
+    }
+    $ppe = ppto_proy_version_buscar_activa($mysqli, $Emp_Cod, $anio);
+    if ($ppe > 0) {
+        return array('ok' => true, 'Ppe_Cod' => $ppe, 'created' => false, 'message' => '');
+    }
+    $des = 'Version proyectos ' . $anio;
+    $des_sql = $mysqli->real_escape_string($des);
+    $ver = 1;
+    $rmax = $mysqli->query("SELECT MAX(Ppe_Ver) AS mx FROM pre_presupuesto WHERE Emp_Cod=$Emp_Cod AND Ppe_Ani=$anio");
+    if ($rmax && ($mx = $rmax->fetch_assoc()) && $mx['mx'] !== null) {
+        $ver = ((int)$mx['mx']) + 1;
+    }
+    $ok = $mysqli->query("INSERT INTO pre_presupuesto (Emp_Cod, Ppe_Ani, Ppe_Ver, Ppe_Des, Ppe_Est, Ppe_Fec, Usu_Cod)
+        VALUES ($Emp_Cod, $anio, $ver, '$des_sql', 'A', CURDATE(), $Usu_Cod)");
+    if (!$ok) {
+        return array('ok' => false, 'Ppe_Cod' => 0, 'created' => false, 'message' => $mysqli->error);
+    }
+    $ppe_id = (int)$mysqli->insert_id;
+    if ($ppe_id <= 0) {
+        $r = $mysqli->query("SELECT Ppe_Cod AS Ppe_Cod FROM pre_presupuesto WHERE Emp_Cod=$Emp_Cod AND Ppe_Ani=$anio AND Ppe_Ver=$ver LIMIT 1");
+        if ($r && ($row = $r->fetch_assoc())) {
+            $ppe_id = (int)$row['Ppe_Cod'];
+        }
+    }
+    if ($ppe_id <= 0) {
+        return array('ok' => false, 'Ppe_Cod' => 0, 'created' => false, 'message' => 'No se pudo crear la cabecera presupuestaria.');
+    }
+    $mysqli->query("UPDATE pre_presupuesto SET Ppe_Est='I' WHERE Emp_Cod=$Emp_Cod AND Ppe_Ani=$anio AND Ppe_Cod<>$ppe_id");
+    return array('ok' => true, 'Ppe_Cod' => $ppe_id, 'created' => true, 'message' => 'Cabecera ' . $anio . ' V' . $ver . ' creada.');
+}
+
+/**
  * Copia la tonelada base PDF (Ton/mes) al plan de produccion esperada.
  *
  * @param mysqli $mysqli

@@ -96,13 +96,38 @@ body {
     background-color: #f8fafc !important;
 }
 
+/* Resaltado amarillo distintivo EXA Model1 para fila seleccionada */
+.exa-ui-panel .ui-jqgrid tr.ui-state-highlight td,
+.exa-ui-panel .ui-jqgrid tr.ui-state-highlight td:not(.jqgrid-rownum),
+.exa-ui-panel .ui-jqgrid tr.ui-state-highlight > td,
+.ui-jqgrid tr.ui-state-highlight,
+.ui-jqgrid tr.ui-state-highlight td,
+.ui-jqgrid tr.ui-state-highlight > td,
+.ui-jqgrid .ui-widget-content tr.ui-state-highlight,
+.ui-jqgrid .ui-widget-content tr.ui-state-highlight td,
+#gridVisitantesEvento tr.ui-state-highlight td,
+#gridVisitantesEvento tr.ui-state-highlight > td {
+    background: #FFF7AA !important;
+    background-color: #FFF7AA !important;
+    color: #000000 !important;
+    border-color: #FACC15 !important;
+}
+
+.exa-ui-panel .ui-jqgrid tr.jqgrow:hover td:not(.jqgrid-rownum),
+.ui-jqgrid tr.jqgrow.ui-state-hover td,
+#gridVisitantesEvento tr.jqgrow:hover td {
+    background: #FEF9C3 !important;
+    background-color: #FEF9C3 !important;
+}
+
 /* Barra de Título del Grid (Historial de Registro) - Altura Aumentada y Alineación Vertical */
+#gbox_gridVisitantesEvento .ui-jqgrid-titlebar,
+#gview_gridVisitantesEvento .ui-jqgrid-titlebar,
 #gbox_gridChoferes .ui-jqgrid-titlebar,
 #gview_gridChoferes .ui-jqgrid-titlebar,
 div.ui-jqgrid-titlebar,
 div.ui-jqgrid .ui-jqgrid-titlebar,
-.ui-jqgrid-titlebar.ui-widget-header,
-.ui-jqgrid .ui-widget-header {
+.ui-jqgrid-titlebar.ui-widget-header {
     height: 34px !important;
     min-height: 34px !important;
     line-height: 34px !important;
@@ -123,12 +148,16 @@ div.ui-jqgrid .ui-jqgrid-titlebar,
     box-sizing: border-box !important;
 }
 
+#gbox_gridVisitantesEvento .ui-jqgrid-titlebar *,
+#gview_gridVisitantesEvento .ui-jqgrid-titlebar *,
 #gbox_gridChoferes .ui-jqgrid-titlebar *,
 #gview_gridChoferes .ui-jqgrid-titlebar *,
 div.ui-jqgrid-titlebar *,
 div.ui-jqgrid .ui-jqgrid-titlebar *,
 .ui-jqgrid-titlebar .ui-jqgrid-title,
 .ui-jqgrid-title,
+#gbox_gridVisitantesEvento .ui-jqgrid-title,
+#gview_gridVisitantesEvento .ui-jqgrid-title,
 #gbox_gridChoferes .ui-jqgrid-title,
 #gview_gridChoferes .ui-jqgrid-title {
     color: #ffffff !important;
@@ -142,6 +171,73 @@ div.ui-jqgrid .ui-jqgrid-titlebar *,
     vertical-align: middle !important;
     text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
     opacity: 1 !important;
+}
+
+/* Posicionamiento relativo de la barra de título para anclar elementos a la derecha */
+#gbox_gridVisitantesEvento .ui-jqgrid-titlebar,
+#gview_gridVisitantesEvento .ui-jqgrid-titlebar {
+    position: relative !important;
+}
+
+/* Selector de orden anclado al extremo derecho de la barra de título */
+.vis-grid-sort-wrap,
+#gview_gridVisitantesEvento .ui-jqgrid-titlebar .vis-grid-sort-wrap,
+#gbox_gridVisitantesEvento .ui-jqgrid-titlebar .vis-grid-sort-wrap {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    z-index: 25 !important;
+    float: none !important;
+}
+
+.vis-grid-sort-wrap label,
+#lblOrdenVisitantes {
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    text-shadow: none !important;
+    white-space: nowrap !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
+#gview_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes,
+#gview_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes *,
+#gview_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes option,
+#gbox_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes,
+#gbox_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes *,
+#gbox_gridVisitantesEvento .ui-jqgrid-titlebar select#selOrdenVisitantes option,
+select#selOrdenVisitantes,
+select#selOrdenVisitantes *,
+select#selOrdenVisitantes option,
+#selOrdenVisitantes,
+#selOrdenVisitantes *,
+#selOrdenVisitantes option,
+.vis-grid-sort-wrap select,
+.vis-grid-sort-wrap select *,
+.vis-grid-sort-wrap select option {
+    color: #000000 !important;
+    -webkit-text-fill-color: #000000 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: normal !important;
+    text-transform: none !important;
+    text-shadow: none !important;
+    opacity: 1 !important;
+}
+
+#selOrdenVisitantes option,
+select#selOrdenVisitantes option,
+.vis-grid-sort-wrap select option {
+    padding: 4px 8px !important;
 }
 
 /* Ocultar botón de contraer/plegar a la derecha */

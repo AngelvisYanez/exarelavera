@@ -208,7 +208,14 @@ if (isset($_POST['getComboEventosAjax'])) {
 if (isset($_POST['getHistorialEventosAjax'])) {
     $resp = array('success' => true, 'data' => array());
     try {
+        @mysqli_set_charset($obBD_conexion->conexion, 'utf8mb4');
         $sql = "SELECT Man_Eve, Man_ENom, Man_Ehor AS Man_EHor, Man_EFei, Man_EFef, Man_EEst, IFNULL(Man_Vig, 'N') AS Man_Vig,
+                       IFNULL(Man_Teve, 'DE ASISTENCIA') AS Man_Teve,
+                       IFNULL(Man_Tcrf, 'la capacitación') AS Man_Tcrf,
+                       IFNULL(Man_Wms, '') AS Man_Wms,
+                       IFNULL(Man_Mmsg, '') AS Man_Mmsg,
+                       IFNULL(Man_Mdel, 5) AS Man_Mdel,
+                       IFNULL(Man_Afir, 'ÁREA DE CAPACITACIÓN') AS Man_Afir,
                        DATE_FORMAT(Man_EFei, '%d/%m/%Y') AS Man_EFei_Fmt, 
                        DATE_FORMAT(Man_EFef, '%d/%m/%Y') AS Man_EFef_Fmt,
                        DATE_FORMAT(NOW(), '%Y-%m-%d') AS Hoy_YMD
@@ -258,6 +265,14 @@ if (isset($_POST['saveEventoAjax'])) {
         $rawHor = isset($_POST['Man_EHor']) ? trim((string)$_POST['Man_EHor']) : '6';
         $manEFei = isset($_POST['Man_EFei']) ? trim((string)$_POST['Man_EFei']) : '';
         $manEFef = isset($_POST['Man_EFef']) ? trim((string)$_POST['Man_EFef']) : '';
+        $manTeve = isset($_POST['Man_Teve']) ? trim((string)$_POST['Man_Teve']) : 'DE ASISTENCIA';
+        if ($manTeve === '') $manTeve = 'DE ASISTENCIA';
+        $manTcrf = isset($_POST['Man_Tcrf']) ? trim((string)$_POST['Man_Tcrf']) : '';
+        $manWms = isset($_POST['Man_Wms']) ? trim((string)$_POST['Man_Wms']) : '';
+        $manMmsg = isset($_POST['Man_Mmsg']) ? trim((string)$_POST['Man_Mmsg']) : '';
+        $manMdel = (isset($_POST['Man_Mdel']) && (int)$_POST['Man_Mdel'] >= 10) ? (int)$_POST['Man_Mdel'] : 10;
+        $manAfir = isset($_POST['Man_Afir']) ? trim((string)$_POST['Man_Afir']) : 'ÁREA DE CAPACITACIÓN';
+        if ($manAfir === '') $manAfir = 'ÁREA DE CAPACITACIÓN';
         $manEEst = 'A';
 
         if (empty($manENom)) {
@@ -284,9 +299,15 @@ if (isset($_POST['saveEventoAjax'])) {
         }
 
         $con = $obBD_con1->getMyCon($obBD_conexion);
+        @mysqli_set_charset($con, 'utf8mb4');
         $nomSql = mysqli_real_escape_string($con, $manENom);
         $feiSql = mysqli_real_escape_string($con, $manEFei);
         $fefSql = mysqli_real_escape_string($con, $manEFef);
+        $teveSql = mysqli_real_escape_string($con, $manTeve);
+        $tcrfSql = mysqli_real_escape_string($con, $manTcrf);
+        $wmsSql = mysqli_real_escape_string($con, $manWms);
+        $mmsgSql = mysqli_real_escape_string($con, $manMmsg);
+        $afirSql = mysqli_real_escape_string($con, $manAfir);
 
         if ($manEve > 0) {
             // Verificar si la fecha fin en la BD aún no ha expirado
@@ -302,11 +323,20 @@ if (isset($_POST['saveEventoAjax'])) {
             }
 
             $sql = "UPDATE manifiesto_evento 
-                    SET Man_ENom = '$nomSql', Man_Ehor = '$manEHorSql', Man_EFei = '$feiSql', Man_EFef = '$fefSql' 
+                    SET Man_ENom = '$nomSql', 
+                        Man_Ehor = '$manEHorSql', 
+                        Man_EFei = '$feiSql', 
+                        Man_EFef = '$fefSql',
+                        Man_Teve = '$teveSql',
+                        Man_Tcrf = '$tcrfSql',
+                        Man_Wms = '$wmsSql',
+                        Man_Mmsg = '$mmsgSql',
+                        Man_Mdel = $manMdel,
+                        Man_Afir = '$afirSql'
                     WHERE Man_Eve = $manEve";
         } else {
-            $sql = "INSERT INTO manifiesto_evento (Man_ENom, Man_Ehor, Man_EFei, Man_EFef, Man_EEst, Man_Vig) 
-                    VALUES ('$nomSql', '$manEHorSql', '$feiSql', '$fefSql', 'A', 'S')";
+            $sql = "INSERT INTO manifiesto_evento (Man_ENom, Man_Ehor, Man_EFei, Man_EFef, Man_Teve, Man_Tcrf, Man_Wms, Man_Mmsg, Man_Mdel, Man_Afir, Man_EEst, Man_Vig) 
+                    VALUES ('$nomSql', '$manEHorSql', '$feiSql', '$fefSql', '$teveSql', '$tcrfSql', '$wmsSql', '$mmsgSql', $manMdel, '$afirSql', 'A', 'S')";
         }
 
         $obBD_con1->consulta($sql, $obBD_conexion);
@@ -728,108 +758,6 @@ if (isset($listEmpresasTransporteGridAjax)) {
         $obBD_con1->utf8_change_param($response['rows']);
     }
     $obBD_con1->echoJson($response);
-}
-
-// Obtener historial completo de eventos
-if (isset($_POST['getHistorialEventosAjax'])) {
-
-    $resp = array('success' => true, 'data' => array());
-    try {
-        $sql = "SELECT Man_Eve, Man_ENom, Man_EFei, Man_EFef, Man_EEst,
-                       DATE_FORMAT(Man_EFei, '%d/%m/%Y') AS Man_EFei_Fmt, 
-                       DATE_FORMAT(Man_EFef, '%d/%m/%Y') AS Man_EFef_Fmt,
-                       DATE_FORMAT(NOW(), '%Y-%m-%d') AS Hoy_YMD
-                FROM manifiesto_evento 
-                ORDER BY Man_Eve DESC";
-        $res = $obBD_con1->consulta($sql, $obBD_conexion->conexion);
-        $data = array();
-        if ($res) {
-            while ($row = $obBD_con1->fetch_assoc($res)) {
-                $data[] = $row;
-            }
-        }
-        $resp['data'] = $data;
-    } catch (Exception $e) {
-        $resp['success'] = false;
-        $resp['message'] = $e->getMessage();
-    }
-    $obBD_con1->echoJson($resp);
-}
-
-// Guardar / Editar Evento
-if (isset($_POST['saveEventoAjax'])) {
-    $resp = array('success' => false);
-    try {
-        $manEve = isset($_POST['Man_Eve']) ? (int)$_POST['Man_Eve'] : 0;
-        $manENom = isset($_POST['Man_ENom']) ? trim((string)$_POST['Man_ENom']) : '';
-        $manEFei = isset($_POST['Man_EFei']) ? trim((string)$_POST['Man_EFei']) : '';
-        $manEFef = isset($_POST['Man_EFef']) ? trim((string)$_POST['Man_EFef']) : '';
-        $manEEst = (isset($_POST['Man_EEst']) && $_POST['Man_EEst'] == 'I') ? 'I' : 'A';
-
-        if (empty($manENom)) {
-            throw new Exception('El nombre del evento es obligatorio.');
-        }
-        if (empty($manEFei) || empty($manEFef)) {
-            throw new Exception('Las fechas de inicio y fin son obligatorias.');
-        }
-
-        $feiParts = explode('-', $manEFei);
-        $fefParts = explode('-', $manEFef);
-        if (strlen($feiParts[0]) !== 4 || !ctype_digit($feiParts[0]) || strlen($fefParts[0]) !== 4 || !ctype_digit($fefParts[0])) {
-            throw new Exception('El año en las fechas debe contener exactamente 4 dígitos (AAAA).');
-        }
-
-        $con = $obBD_con1->getMyCon($obBD_conexion);
-        $nomSql = mysqli_real_escape_string($con, $manENom);
-        $feiSql = mysqli_real_escape_string($con, $manEFei);
-        $fefSql = mysqli_real_escape_string($con, $manEFef);
-
-        if ($manEve > 0) {
-            $sqlCheck = "SELECT Man_EFef, DATE_FORMAT(NOW(), '%Y-%m-%d') AS Hoy FROM manifiesto_evento WHERE Man_Eve = $manEve";
-            $resCheck = $obBD_con1->consulta($sqlCheck, $obBD_conexion->conexion);
-            $rowCheck = $obBD_con1->fetch_assoc($resCheck);
-            if ($rowCheck) {
-                $fechaFinBD = $rowCheck['Man_EFef'];
-                $hoyBD = $rowCheck['Hoy'];
-                if ($fechaFinBD !== $hoyBD) {
-                    throw new Exception("No se puede editar este evento ya que su fecha fin (" . date('d/m/Y', strtotime($fechaFinBD)) . ") no corresponde a la fecha actual.");
-                }
-            }
-
-            $sql = "UPDATE manifiesto_evento 
-                    SET Man_ENom = '$nomSql', Man_EFei = '$feiSql', Man_EFef = '$fefSql', Man_EEst = '$manEEst' 
-                    WHERE Man_Eve = $manEve";
-        } else {
-            $sql = "INSERT INTO manifiesto_evento (Man_ENom, Man_EFei, Man_EFef, Man_EEst, Man_Vig) 
-                    VALUES ('$nomSql', '$feiSql', '$fefSql', '$manEEst', 'S')";
-        }
-
-        $obBD_con1->consulta($sql, $obBD_conexion);
-        $resp['success'] = true;
-        $resp['message'] = ($manEve > 0) ? 'Evento actualizado correctamente.' : 'Evento registrado correctamente.';
-    } catch (Exception $e) {
-        $resp['message'] = $e->getMessage();
-    }
-    $obBD_con1->echoJson($resp);
-}
-
-// Cambiar estado / Anular Evento
-if (isset($_POST['toggleEstadoEventoAjax'])) {
-    $resp = array('success' => false);
-    try {
-        $manEve = isset($_POST['Man_Eve']) ? (int)$_POST['Man_Eve'] : 0;
-        $nuevoEst = (isset($_POST['Man_EEst']) && $_POST['Man_EEst'] == 'A') ? 'A' : 'I';
-        if ($manEve <= 0) {
-            throw new Exception('ID de evento no válido.');
-        }
-        $sql = "UPDATE manifiesto_evento SET Man_EEst = '$nuevoEst' WHERE Man_Eve = $manEve";
-        $obBD_con1->consulta($sql, $obBD_conexion);
-        $resp['success'] = true;
-        $resp['message'] = 'Estado del evento actualizado correctamente.';
-    } catch (Exception $e) {
-        $resp['message'] = $e->getMessage();
-    }
-    $obBD_con1->echoJson($resp);
 }
 
 // Guardar Empresa de Transporte
@@ -2525,7 +2453,7 @@ $obBD_con1->utf8_change_param($transportes);
                                 <div class="col-xs-8">
                                     <div class="input-group input-group-xs">
                                         <span class="input-group-addon" style="background: #f8fafc; border-color: #cbd5e1;"><i class="glyphicon glyphicon-time" style="color: #0284c7;"></i></span>
-                                        <input type="text" id="evt_Man_EHor" name="evt_Man_EHor" class="form-control input-xs bold" placeholder="Ej: 2:30 o 6" value="6" required style="text-align: center; font-size: 13px; font-weight: 700; color: #1e293b;">
+                                        <input type="text" id="evt_Man_EHor" name="evt_Man_EHor" class="form-control input-xs bold" placeholder="Ej: 2:30 o 6" value="" required style="text-align: center; font-size: 13px; font-weight: 700; color: #1e293b;">
                                         <span class="input-group-addon" style="background: #f1f5f9; font-weight: 600; font-size: 11px; color: #475569; border-color: #cbd5e1;">Horas</span>
                                     </div>
                                     <div style="margin-top: 4px; display: flex; gap: 4px; align-items: center;">
@@ -2558,11 +2486,110 @@ $obBD_con1->utf8_change_param($transportes);
                         </div>
                     </div>
 
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-6">
+                            <div class="form-group" style="margin-bottom: 8px;">
+                                <label class="col-xs-4 control-label label-xs required">Tipo Evento:</label>
+                                <div class="col-xs-8">
+                                    <input type="text" id="evt_Man_Teve" name="evt_Man_Teve" class="form-control input-xs bold" placeholder="Ej: DE ASISTENCIA, DE PARTICIPACIÓN" value="" maxlength="100" style="color: #047857; font-weight: 700;">
+                                    <div style="margin-top: 3px; display: flex; gap: 4px; align-items: center;">
+                                        <span style="font-size: 10px; color: #64748b;">Sugeridos:</span>
+                                        <button type="button" class="btn btn-default btn-xs" onclick="$('#evt_Man_Teve').val('DE ASISTENCIA');" style="font-size: 10px; padding: 0px 5px; border-radius: 3px;">Asistencia</button>
+                                        <button type="button" class="btn btn-default btn-xs" onclick="$('#evt_Man_Teve').val('DE PARTICIPACIÓN');" style="font-size: 10px; padding: 0px 5px; border-radius: 3px;">Participación</button>
+                                        <button type="button" class="btn btn-default btn-xs" onclick="$('#evt_Man_Teve').val('DE CAPACITACIÓN');" style="font-size: 10px; padding: 0px 5px; border-radius: 3px;">Capacitación</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 col-sm-6">
+                            <div class="form-group" style="margin-bottom: 8px;">
+                                <label class="col-xs-4 control-label label-xs" style="color: #1e3a8a; font-weight: bold;"><i class="glyphicon glyphicon-pencil"></i> Firma 2 (Área):</label>
+                                <div class="col-xs-8">
+                                    <input type="text" id="evt_Man_Afir" name="evt_Man_Afir" class="form-control input-xs bold" placeholder="Ej: ÁREA DE CAPACITACIÓN" value="" maxlength="100" style="color: #1e3a8a; font-weight: 700;">
+                                    <div style="margin-top: 3px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap;">
+                                        <span style="font-size: 10px; color: #64748b;">Sugeridos:</span>
+                                        <button type="button" class="btn btn-default btn-xs" onclick="$('#evt_Man_Afir').val('ÁREA DE CAPACITACIÓN');" style="font-size: 10px; padding: 0px 5px; border-radius: 3px;">Capacitación</button>
+                                        <button type="button" class="btn btn-default btn-xs" onclick="$('#evt_Man_Afir').val('GESTIÓN AMBIENTAL');" style="font-size: 10px; padding: 0px 5px; border-radius: 3px;">Ambiental</button>
+                                        <button type="button" class="btn btn-default btn-xs" onclick="$('#evt_Man_Afir').val('GESTIÓN SOCIAL');" style="font-size: 10px; padding: 0px 5px; border-radius: 3px;">Social</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="form-group" style="margin-bottom: 8px;">
+                                <label class="col-xs-2 control-label label-xs" style="color: #1e3a8a; font-weight: bold; width: 16.666667%;"><i class="glyphicon glyphicon-certificate"></i> Texto Certificado:</label>
+                                <div class="col-xs-10" style="width: 83.333333%;">
+                                    <textarea id="evt_Man_Tcrf" name="evt_Man_Tcrf" class="form-control input-xs" rows="2" placeholder="Que el Sr(a). {nombre} asistió a la capacitación de {proyecto} el día {fecha} con una duración de {horas} horas con el tema &quot;{evento}&quot;." style="resize: vertical; font-size: 11px;"></textarea>
+                                    <div style="margin-top: 3px; display: flex; gap: 3px; flex-wrap: wrap; align-items: center;">
+                                        <span style="font-size: 10px; color: #64748b;">Tags:</span>
+                                        <a href="javascript:void(0);" class="label label-primary" onclick="insertarTagEvento('evt_Man_Tcrf', '{nombre}')" style="font-size: 9px; cursor: pointer;">{nombre}</a>
+                                        <a href="javascript:void(0);" class="label label-primary" onclick="insertarTagEvento('evt_Man_Tcrf', '{cedula}')" style="font-size: 9px; cursor: pointer;">{cedula}</a>
+                                        <a href="javascript:void(0);" class="label label-primary" onclick="insertarTagEvento('evt_Man_Tcrf', '{fecha}')" style="font-size: 9px; cursor: pointer;">{fecha}</a>
+                                        <a href="javascript:void(0);" class="label label-primary" onclick="insertarTagEvento('evt_Man_Tcrf', '{horas}')" style="font-size: 9px; cursor: pointer;">{horas}</a>
+                                        <a href="javascript:void(0);" class="label label-primary" onclick="insertarTagEvento('evt_Man_Tcrf', '{evento}')" style="font-size: 9px; cursor: pointer;">{evento}</a>
+                                        <a href="javascript:void(0);" class="label label-primary" onclick="insertarTagEvento('evt_Man_Tcrf', '{proyecto}')" style="font-size: 9px; cursor: pointer;">{proyecto}</a>
+                                        <button type="button" class="btn btn-default btn-xs" onclick="restablecerTextoCertificado();" style="font-size: 10px; padding: 0px 5px; border-radius: 3px; margin-left: 6px;">Restablecer texto sugerido</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="form-group" style="margin-bottom: 8px;">
+                                <label class="col-xs-2 control-label label-xs" style="color: #047857; font-weight: bold; width: 16.666667%;"><i class="glyphicon glyphicon-phone"></i> WhatsApp Msg:</label>
+                                <div class="col-xs-10" style="width: 83.333333%;">
+                                    <textarea id="evt_Man_Wms" name="evt_Man_Wms" class="form-control input-xs" rows="3" placeholder="¡Hola *{nombre}*! 👋&#10;&#10;Te has registrado exitosamente en el evento *&quot;{evento}&quot;*.&#10;&#10;🏢 Proyecto: *Relavera Comunitaria &quot;El Tablón&quot;* - ECOPARKMINING S.A.&#10;&#10;¡Gracias por tu participación!" style="resize: vertical; font-size: 11px;"></textarea>
+                                    <div style="margin-top: 3px; display: flex; gap: 3px; flex-wrap: wrap; align-items: center;">
+                                        <span style="font-size: 10px; color: #64748b;">Tags:</span>
+                                        <a href="javascript:void(0);" class="label label-info" onclick="insertarTagEvento('evt_Man_Wms', '{nombre}')" style="font-size: 9px; cursor: pointer;">{nombre}</a>
+                                        <a href="javascript:void(0);" class="label label-info" onclick="insertarTagEvento('evt_Man_Wms', '{evento}')" style="font-size: 9px; cursor: pointer;">{evento}</a>
+                                        <a href="javascript:void(0);" class="label label-info" onclick="insertarTagEvento('evt_Man_Wms', '{proyecto}')" style="font-size: 9px; cursor: pointer;">{proyecto}</a>
+                                        <button type="button" class="btn btn-default btn-xs" onclick="restablecerMensajeWhatsApp();" style="font-size: 10px; padding: 0px 5px; border-radius: 3px; margin-left: 6px;">Cargar plantilla WhatsApp sugerida</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="form-group" style="margin-bottom: 8px;">
+                                <label class="col-xs-2 control-label label-xs" style="color: #2563eb; font-weight: bold; width: 16.666667%;"><i class="glyphicon glyphicon-bullhorn"></i> Msg Masivo / Difusión:</label>
+                                <div class="col-xs-7" style="width: 58.333333%;">
+                                    <textarea id="evt_Man_Mmsg" name="evt_Man_Mmsg" class="form-control input-xs" rows="3" placeholder="¡Hola *{nombre}*! 📢&#10;&#10;Te recordamos que el evento *&quot;{evento}&quot;* se llevará a cabo el día *{fecha}*.&#10;&#10;🏢 Proyecto: *{proyecto}* - ECOPARKMINING S.A.&#10;&#10;¡Te esperamos puntualmente! ✨" style="resize: vertical; font-size: 11px;"></textarea>
+                                    <div style="margin-top: 3px; display: flex; gap: 3px; flex-wrap: wrap; align-items: center;">
+                                        <span style="font-size: 10px; color: #64748b;">Tags:</span>
+                                        <a href="javascript:void(0);" class="label label-primary" onclick="insertarTagEvento('evt_Man_Mmsg', '{nombre}')" style="font-size: 9px; cursor: pointer;">{nombre}</a>
+                                        <a href="javascript:void(0);" class="label label-primary" onclick="insertarTagEvento('evt_Man_Mmsg', '{evento}')" style="font-size: 9px; cursor: pointer;">{evento}</a>
+                                        <a href="javascript:void(0);" class="label label-primary" onclick="insertarTagEvento('evt_Man_Mmsg', '{fecha}')" style="font-size: 9px; cursor: pointer;">{fecha}</a>
+                                        <a href="javascript:void(0);" class="label label-primary" onclick="insertarTagEvento('evt_Man_Mmsg', '{proyecto}')" style="font-size: 9px; cursor: pointer;">{proyecto}</a>
+                                        <button type="button" class="btn btn-default btn-xs" onclick="restablecerMensajeMasivo();" style="font-size: 10px; padding: 0px 5px; border-radius: 3px; margin-left: 6px;">Cargar plantilla masiva sugerida</button>
+                                    </div>
+                                </div>
+                                <div class="col-xs-3" style="width: 25%;">
+                                    <label class="control-label label-xs" style="color: #1e3a8a; font-weight: bold; display: block; margin-bottom: 2px; text-align: left;"><i class="glyphicon glyphicon-time" style="color: #2563eb;"></i> Intervalo Cola:</label>
+                                    <div class="input-group input-group-xs">
+                                        <input type="number" id="evt_Man_Mdel" name="evt_Man_Mdel" class="form-control input-xs text-center" min="5" max="60" value="10" placeholder="10" style="font-weight: bold; color: #1e3a8a;" />
+                                        <span class="input-group-addon" style="font-size: 10px; font-weight: bold;">seg</span>
+                                    </div>
+                                    <span class="help-block" style="font-size: 9.5px; color: #475569; margin-top: 3px; line-height: 1.25;">
+                                        <i class="glyphicon glyphicon-info-sign" style="color: #2563eb;"></i> <b>Recomendado:</b> 10 seg entre cada envío para no saturar WhatsApp.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div style="text-align: right; margin-top: 5px;">
                         <button type="button" class="btn btn-default btn-xs" onclick="limpiarFormEvento();">
                             <i class="glyphicon glyphicon-erase"></i> Limpiar
                         </button>
-                        <button type="button" class="btn btn-primary btn-xs" onclick="guardarEvento();">
+                        <button type="button" id="btnGuardarEvento" class="btn btn-primary btn-xs" onclick="guardarEvento();">
                             <i class="glyphicon glyphicon-floppy-disk"></i> Guardar Evento
                         </button>
                     </div>
@@ -3851,13 +3878,13 @@ $obBD_con1->utf8_change_param($transportes);
 <script>
     var esPerfilLectura = <?php echo (isset($esPerfilLectura) && $esPerfilLectura) ? 'true' : 'false'; ?>;
 </script>
-<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=55"></script>
+<script type="text/javascript" src="../VALIDACIONES/man_adm_configuracion.js?x=59"></script>
 
 
 </script>
 
 </HTML>
 <?php
-$obBD_con1->liberar();
-$obBD_conexion->cerrar();
+    $obBD_con1->liberar();
+    $obBD_conexion->cerrar();
 ?>

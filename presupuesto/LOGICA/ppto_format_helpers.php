@@ -617,13 +617,37 @@ function ppto_consulta_filtrar_plan_estandar($rows, $ppa_proyecto_map) {
 }
 
 /**
+ * Subconsulta: ejecutado de rubros de proyecto desde asientos contables.
+ * Valor = asientos.Asi_Val (debe); mes/anio = comprobantes.Com_Fec.
+ * Vinculo: pre_proyecto_detalle_asiento.Asi_Cod = asientos.Asi_Cod.
+ *
+ * @return string
+ */
+function ppto_sql_ejecutado_asientos_subquery() {
+    return "SELECT
+        pda.Pdp_Cod AS Pdp_Cod,
+        YEAR(c.Com_Fec) AS anio,
+        MONTH(c.Com_Fec) AS mes,
+        SUM(a.Asi_Val) AS ejecutado
+      FROM pre_proyecto_detalle_asiento pda
+      INNER JOIN asientos a ON a.Asi_Cod = pda.Asi_Cod
+      INNER JOIN comprobantes c ON c.Com_Cod = a.Com_Cod
+      WHERE pda.Pdp_Cod IS NOT NULL
+        AND a.Asi_Deh = 'D'
+        AND IFNULL(c.Com_Est, 'A') <> 'I'
+      GROUP BY pda.Pdp_Cod, YEAR(c.Com_Fec), MONTH(c.Com_Fec)";
+}
+
+/**
  * Consulta SQL unificada (subconsulta derivada) que sustituye el uso de vistas guardadas en la BD.
- * Genera dinÃ¡micamente el resumen de presupuesto, ejecuciones, reajustes y disponibles.
+ * Genera dinamicamente el resumen de presupuesto, ejecuciones, reajustes y disponibles.
+ * Ejecutado de proyectos: asientos.Asi_Val + mes de comprobantes.Com_Fec (no Pdm_Ejecutado).
  *
  * @return string
  */
 function ppto_sql_resumen_subquery() {
     // pre_* usa PascalCase (Ppe_Cod/Ppa_Cod); exa_ppto_* usa snake_case (Ppe_Cod/Ppa_Cod/Pro_Cod).
+    $ejAsientos = ppto_sql_ejecutado_asientos_subquery();
     return "SELECT
         c.Emp_Cod AS Emp_Cod,
         d.Ppe_Cod AS Ppe_Cod,
@@ -651,10 +675,15 @@ function ppto_sql_resumen_subquery() {
         CAST(0.00 AS DECIMAL(14,2)) AS reajustes,
         pdm.Pdm_PreMensual AS vigente,
         IFNULL(pdm.Pdm_Comprometido, 0.00) AS comprometido,
-        IFNULL(pdm.Pdm_Ejecutado, 0.00) AS ejecutado,
-        IFNULL(pdm.Pdm_Disponible, pdm.Pdm_PreMensual) AS disponible
+        IFNULL(ej.ejecutado, 0.00) AS ejecutado,
+        (pdm.Pdm_PreMensual - IFNULL(pdm.Pdm_Comprometido, 0.00) - IFNULL(ej.ejecutado, 0.00)) AS disponible
       FROM pre_proyecto_detalles pd
       INNER JOIN pre_proyecto_detalles_mes pdm ON pd.Pdp_Cod = pdm.Pdp_Cod
+      INNER JOIN pre_presupuesto pp ON pp.Ppe_Cod = pd.Ppe_Cod
+      LEFT JOIN ($ejAsientos) ej
+        ON ej.Pdp_Cod = pd.Pdp_Cod
+       AND ej.mes = pdm.Pdm_Mes
+       AND ej.anio = pp.Ppe_Ani
       UNION ALL
       SELECT
         r.Emp_Cod AS Emp_Cod,

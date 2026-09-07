@@ -158,7 +158,7 @@ if (isset($loadElectronico)) {
                     'Ite_Lar' => $items[$x]->descripcion->text(),
                     'Cop_Dec' => $Cod_Dec,
                     'Cop_Decv' => $Cop_Decv,
-                    'Cop_Pru' => round(($items[$x]->precioTotalSinImpuesto->text() * 1 + ($items[$x]->descuento->text() * 1 > 0 ? $items[$x]->descuento->text() * 1 : 0)) / ($items[$x]->cantidad->text() * 1), 8),
+                    'Cop_Pru' => $items[$x]->precioUnitario->text() * 1,
                     'Cop_Imp' => $items[$x]->precioTotalSinImpuesto->text(),
                 );
 
@@ -249,21 +249,8 @@ if ($rs_infoEmpresa["Cof_NegCam"] == 'S') {
     }
 }
 
-$configsTemp = $obBD_con1->getRowConsulta(8, $Ses_Emp_Cod, $obBD_conexion);
-if (isset($configsTemp["Cof_Prl"]) && $configsTemp["Cof_Prl"] == 'S') {
-    if (isset($preliquidacionAjax)) {
-        $sql = "SELECT Mal_Cod, Mal_Num, Mal_Fec, Mal_Obs, Mal_Tot_Cob FROM manifiesto_liquidacion_maq WHERE Mal_Est = 'A'";
-        if (!empty($search)) {
-            $sql .= " AND Mal_Num LIKE '%" . mysqli_real_escape_string($obBD_conexion->conexion, $search) . "%'";
-        }
-        $res = @mysqli_query($obBD_conexion->conexion, $sql);
-        $data = array();
-        while ($row = @mysqli_fetch_assoc($res)) {
-            $data[] = $row;
-        }
-        $obBD_con1->echoJson($data);
-    }
-}
+/* Búsqueda de rubros presupuestarios (pre_partidas clase D) */
+require_once('../COMPONENTES/fac_presupuesto_rubros_ajax.inc.php');
 
 /* ver si exite un proveedor */
 if (isset($provAjax2)) {
@@ -453,6 +440,17 @@ if (isset($saveDocument)) {
     }
     $Vnd_Cod = $vendedor['Vnd_Cod'];
     $For_Cod = $For_Cod * 1;
+    /* Liquidación: armar 001-002- + secuencial de 9 dígitos (el prefijo viene en Pun_Sri) */
+    if ($Tic_Cod == 3 && !empty($Aut_Codliq)) {
+        $partesNum = explode('-', (string)$Cop_Num);
+        $secLiq = preg_replace('/\D+/', '', end($partesNum));
+        if ($secLiq !== '') {
+            $secLiq = str_pad($secLiq, 9, '0', STR_PAD_LEFT);
+            if (!empty($Pun_Sri)) {
+                $Cop_Num = $Pun_Sri . $secLiq;
+            }
+        }
+    }
     /* valida que no exista el documento */
     if ($Tic_Sri * 1 != 17) { // Condicion agregada xq se repite el numero de DAE
         $row_rs_CodDoc = $obBD_con1->getRowConsulta(7, $Prv_Cod . '*' . $Tic_Cod . '*' . $Cop_Num, $obBD_conexion);
@@ -472,6 +470,7 @@ if (isset($saveDocument)) {
     $Retencion = (!empty($rets) && count($rets) > 0);
     //$responce['message'] = "No Existe Periodo para la Fecha:".($Retencion ? 'true' : 'false');
     //No generar retencion si el codigo del sri posee el codigo 332.. 
+    // 332E: solo bloquear si el porcentaje es 0%; con 1% sí generar retención
     if ($Retencion) {
         foreach ($items as $i => $item) { //Verificar si tiene el codigo 332.. del sri
             $cod_sri =  $item['Ret_Ren_Sri'];
@@ -479,8 +478,7 @@ if (isset($saveDocument)) {
             if (!empty($Aut_Cod)  &&  ($cod_sri == "332" || $cod_sri == "332B" || $cod_sri == "332C" || $cod_sri == "332D" || $cod_sri == "332G" || $cod_sri == "332H" || $cod_sri == "332I")) {
                 $Retencion = false;
             }
-             // 332E: solo bloquear si el porcentaje es 0%; con 1% sí generar retención
-             if (!empty($Aut_Cod) && $cod_sri == "332E" && $porc_ret <= 0) {
+            if (!empty($Aut_Cod) && $cod_sri == "332E" && $porc_ret <= 0) {
                 $Retencion = false;
             }
             if ($Tic_Cod == 2  &&  !empty($Aut_Cod)) {
@@ -540,7 +538,6 @@ if (isset($saveDocument)) {
             $Cop_Aut =  $obBD_con1->getLiquidacionClaveAcceso($Aut_Codliq,  $Cop_Fec, $Cop_Num, $obBD_conexion);
 
             $claveAccesoliq = $Cop_Aut;
-            $Cop_Num =  $Pun_Sri . $Cop_Num;
         }
 
         /* Cabecera de la factura de compra */
@@ -560,27 +557,8 @@ if (isset($saveDocument)) {
         /*Update Cop_Ide*/
         $obBD_ins1->operacionobBD(1009, array('Cop_Ide' => $Cop_Ide, 'Cop_Cod' => $Cop_Cod), $obBD_conexionIns);
         //Registrar documento de la negociación
-        if (isset($Cod_Neg) && !empty($Cod_Neg) && $Cod_Neg != 0 && $Cod_Neg !== 'null') {
+        if (isset($Cod_Neg) && !empty($Cod_Neg) && $Cod_Neg != 0) {
             $obBD_ins1->operacionobBD(1007, $Cod_Neg . '*' . $Cop_Cod . '*' . 'CMP', $obBD_conexionIns);
-        }
-        
-        //Registrar documento de la preliquidacion
-        if (isset($Cod_Prl) && !empty($Cod_Prl) && $Cod_Prl != 0 && $Cod_Prl !== 'null') {
-            if (isset($configs["Cof_Prl"]) && $configs["Cof_Prl"] == 'S') {
-                $sql_ver = "SELECT Mal_Tot_Cob FROM manifiesto_liquidacion_maq WHERE Mal_Cod = " . (int)$Cod_Prl;
-                $res_ver = @mysqli_query($obBD_conexionIns->conexion, $sql_ver);
-                if ($res_ver && $row_ver = mysqli_fetch_assoc($res_ver)) {
-                    $total_liq = (float)$row_ver['Mal_Tot_Cob'];
-                    $total_compra = isset($t_rubros) ? (float)str_replace(',', '', $t_rubros) : 0;
-                    if (abs($total_liq - $total_compra) > 0.01) {
-                        $compra_formato = number_format($total_compra, 2);
-                        $preliq_formato = number_format($total_liq, 2);
-                        throw new Exception("Existe diferencia en valores<br><span style=\"color: #4CAF50; font-weight: bold;\">Compra: $$compra_formato</span><br><span style=\"color: #FF9800; font-weight: bold;\">Preliquidacion: $$preliq_formato</span><br>Los totales deben coincidir para esta accion");
-                    }
-                }
-                $sql_update_preliq = "UPDATE manifiesto_liquidacion_maq SET Cop_Cod = " . (int)$Cop_Cod . " WHERE Mal_Cod = " . (int)$Cod_Prl;
-                @mysqli_query($obBD_conexionIns->conexion, $sql_update_preliq);
-            }
         }
 
 
@@ -618,6 +596,8 @@ if (isset($saveDocument)) {
             $Com_Cod = $obBD_ins1->insercionid($obBD_conexionIns);
             $obBD_ins1->operacionobBD(15, $Com_Cod . '*' . $Cop_Cod, $obBD_conexionIns); // relacion compra comprobante
             /* Inserta datos en el detalle del asiento (por items) */
+            $pdpGeneral = isset($Pdp_Cod) ? (int)$Pdp_Cod : 0;
+            $ppaGeneral = isset($Ppa_Cod) ? (int)$Ppa_Cod : 0;
             foreach ($items as &$item) {
                 $addIva = round(($item['Iva_Cos'] == 'S' && $item['Iva_Por'] * 1 > 0 ? (($item['Cop_Imp'] - ($Cop_Des > 0 ? $item['Cop_Imp'] * $Cop_Des / 100 : 0)) * $item['Iva_Por'] / 100) : 0), 2);
                 $Iva_Costo = $Iva_Costo + $addIva;
@@ -629,6 +609,16 @@ if (isset($saveDocument)) {
                 $item['Cop_Imp'] = $item['Cop_Dec'] > 0 ? $item['Cop_Can'] * $item['Cop_Pru'] : $item['Cop_Imp'];
                 $obBD_ins1->operacionobBD(17, array($Com_Cod, 'D', ($item['Cop_Imp'] + $addIva), $cuenta['Pld_Des'], $item['Ite_Lar'], $item['Pld_Cod']), $obBD_conexionIns);  // inserta asiento // Item
                 $Asi_Cod = $obBD_ins1->insercionid($obBD_conexionIns);
+                fac_ppa_vincular_asiento_item($obBD_conexionIns->conexion, $item, $pdpGeneral, $Asi_Cod, $ppaGeneral, array(
+                    'Emp_Cod' => isset($Ses_Emp_Cod) ? $Ses_Emp_Cod : 0,
+                    'Suc_Cod' => isset($Ses_Suc_Cod) ? $Ses_Suc_Cod : null,
+                    'Usu_Cod' => isset($_SESSION['Ses_Usu_Cod']) ? $_SESSION['Ses_Usu_Cod'] : 0,
+                    'Cop_Cod' => $Cop_Cod,
+                    'Cop_Fec' => $Cop_Fec,
+                    'Cop_Num' => isset($Cop_Num) ? $Cop_Num : '',
+                    'monto' => isset($item['Cop_Imp']) ? ($item['Cop_Imp'] + $addIva) : 0,
+                    'Pej_Fase' => 'E'
+                ));
                 // Guardar los códigos Asi_Cod en un array temporal para registrar luego en det_compra
                 if (!isset($array_asi_cod)) $array_asi_cod = array();
                 $array_asi_cod[] = array('Asi_Cod' => $Asi_Cod, 'Pro_Cod' => $item['Pro_Cod'],   'Cop_Cod' => $Cop_Cod, 'Pld_Cod' => $cuenta['Pld_Cod']);
@@ -976,6 +966,7 @@ $Pec_Cop = $obBD_con1->getRowConsulta(33, $Ses_Emp_Cod, $obBD_conexion);
 if (!empty($Pec_Cop['Pec_Fei'])) $hoy = substr($Pec_Cop['Pec_Fei'], 0, 4) . substr($hoy, 4, 10);
 $insert = true;
 $rs_tip_compr = $obBD_con1->getArrayConsulta('tipo_compr.selectWhere', array('clean' => true, 'where' => array('Tic_Est' => 'A')), $obBD_conexion);
+$row_rs_RetPld = $obBD_con1->getArrayConsulta(67, $Ses_Emp_Cod . '*' . 'RA', $obBD_conexion);
 $listaActividad = $obBD_con1->getArrayConsulta('proveedore.selectWhere', array(
     'clean' => true,
     'unsetColsInit' => true,
@@ -1027,6 +1018,7 @@ if (isset($saldoCCxPP)) {
     <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
     <script type="text/javascript">
         var gridFact, index, Cof_Con = '<?php echo $configs['Cof_Con']; ?>',
+            Cof_Mpe = '<?php echo isset($configs['Cof_Mpe']) ? $configs['Cof_Mpe'] : 'N'; ?>',
             cod_banano = <?php echo $cod_banano; ?>;
     </script>
     <script>
@@ -1041,7 +1033,7 @@ if (isset($saldoCCxPP)) {
     </script>
 
     <script language="javascript" src="../../framework/plugins/validadorCedulaRucFinal.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/fac_val_factu.js?gh=100"></script>
+    <script type="text/javascript" src="../VALIDACIONES/fac_val_factu.js?gh=1016"></script>
     <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
 </HEAD>
 
@@ -1226,31 +1218,6 @@ if (isset($saldoCCxPP)) {
         </form>
         <table id="containerNegoci"></table>
     </div>
-
-    <!-- Preliquidacion Dialog -->
-    <div id="prlDialog" title="B&uacute;squeda de Preliquidaci&oacute;n">
-        <form id="frm_prl" name="frm_prl" class="form-horizontal normal" action="javascript:$('#containerPrl').Search('#frm_prl','preliquidacionAjax'); ">
-            <fieldset class="exa-fieldset" id="prodFormTemp">
-                <div class="col-xs-12 col-sm-12">
-                    <legend class="Titulos2">B&uacute;squeda</legend>
-                    <div class="form-group">
-                        <div class="col-sm-12">
-                            <div class="input-group">
-                                <input id="search" name="search" onkeydown=" this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese b&uacute;squeda..." autofocus class="form-control input-xs clearable submit" />
-                                <span class="input-group-btn">
-                                    <button type="button" onclick="this.form.submit()" class="btn btn-success btn-xs" title="Buscar Preliquidación" tabindex="-1">
-                                        <span class="glyphicon glyphicon-search"></span> <span>Buscar</span>
-                                    </button>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <input type="text" tabindex="-1" style="display:none;">
-                </div>
-            </fieldset>
-        </form>
-        <table id="containerPrl"></table>
-    </div>
     <script>
         function selectProvee(provee) {
             var reset = ($('#reset').val() !== '0');
@@ -1295,12 +1262,8 @@ if (isset($saldoCCxPP)) {
                     Cop_Fec: '<?php echo $hoy; ?>',
                     Com_Fec: '<?php echo $hoy; ?>'
                 });
-                // Establecer Ret_Fec con la fecha actual por defecto
-                var hoy = new Date();
-                var mes = (hoy.getMonth() + 1);
-                var dia = hoy.getDate();
-                var fechaActual = hoy.getFullYear() + '-' + (mes < 10 ? '0' : '') + mes + '-' + (dia < 10 ? '0' : '') + dia;
-                $('#Ret_Fec').val(fechaActual);
+                // Establecer Ret_Fec con la fecha del servidor por defecto
+                $('#Ret_Fec').val('<?php echo $hoy; ?>');
                 $('#Cop_Fec').trigger('change');
             }
             if (provee.op_ide === '01') $('#op_ide1').prop('checked', true).trigger('change');
@@ -1310,6 +1273,8 @@ if (isset($saldoCCxPP)) {
                 if (provee.Prs_Ced.length == 13) $('#op_ide1').prop('checked', true).trigger('change');
                 if (provee.Prs_Ced.length == 10) $('#op_ide2').prop('checked', true).trigger('change');
             }
+            // Refrescar tipos: dividendos solo con cédula
+            tipoComprobanteHide($("#Tri_Cod option:selected").attr('data-ticsri'));
             $.getDataJson('', {
                 'cargarDefault': true,
                 'Prv_Cod': provee['Prv_Cod']
@@ -1334,7 +1299,8 @@ if (isset($saldoCCxPP)) {
                         $("#Cop_Cad").val(res['rows']['Prd_Cad']);
                     }
                 }
-
+                var triSri = $("#Tri_Cod option:selected").attr('data-ticsri') || '02';
+                tipoComprobanteHide(triSri, (res && res['rows'] && res['rows']['Tic_Cod']) ? res['rows']['Tic_Cod'] : null);
             }, function(err) {
                 console.log(err['message']);
             });
@@ -1360,12 +1326,8 @@ if (isset($saldoCCxPP)) {
                 Cop_Fec: '<?php echo $hoy; ?>',
                 Com_Fec: '<?php echo $hoy; ?>'
             }).find(':input').attr('readonly');
-            // Establecer Ret_Fec con la fecha actual por defecto
-            var hoy = new Date();
-            var mes = (hoy.getMonth() + 1);
-            var dia = hoy.getDate();
-            var fechaActual = hoy.getFullYear() + '-' + (mes < 10 ? '0' : '') + mes + '-' + (dia < 10 ? '0' : '') + dia;
-            $('#Ret_Fec').val(fechaActual);
+            // Establecer Ret_Fec con la fecha del servidor por defecto
+            $('#Ret_Fec').val('<?php echo $hoy; ?>');
             $('#Cop_Fec').trigger('change');
             $('#Ciu_Cod').trigger('chosen:updated');
             $('.validate').find('i').removeAttr('class');
@@ -1592,6 +1554,9 @@ if (isset($saldoCCxPP)) {
     </div>
     <script>
         function validaRetFec() {
+            if (typeof window.validarRetFecCompraYClave === 'function') {
+                if (!window.validarRetFecCompraYClave()) return;
+            }
             var Ret_Fec = $('#Ret_Fec').val(),
                 Aut_Cad = $('#Ret_Fec').data('Aut_Cad');
             if ($.varValid(Aut_Cad) && Aut_Cad.length > 0) {
@@ -1600,7 +1565,7 @@ if (isset($saldoCCxPP)) {
                         icon: 'exclamation',
                         placement: 'right_bottom'
                     });
-                    $('#Ret_Fec').val($('#Cop_Fec').val()).flyout('show');
+                    $('#Ret_Fec').val('').flyout('show');
                     Ret_Fec = Aut_Cad;
                 }
             }
@@ -1790,12 +1755,10 @@ if (isset($saldoCCxPP)) {
         }
         //Ver negociaciones
         var containerNegoci = $("#containerNegoci");
-        var containerPrl = $("#containerPrl");
-
         $(function() {
             $('#provCreateForm #Prv_Tac').createChosen('input-xs', {
                 width: '100%',
-                placeholder_text_single: '- Seleccionar -',
+                placeholder_text_single: '— Seleccionar —',
                 search_contains: true
             });
             var PRV_TAC_MAX_FACT = 20;
@@ -1828,13 +1791,6 @@ if (isset($saldoCCxPP)) {
             $(document).on('input', '#prvTacDescInputFact', function() {
                 actualizarContadorPrvTacFact(PRV_TAC_MAX_FACT);
             });
-            
-            $('#prlDialog').dialog({
-                autoOpen: false,
-                width: 600,
-                height: 400
-            });
-
             armargrid();
         });
 
@@ -1871,44 +1827,12 @@ if (isset($saldoCCxPP)) {
                 datatype: "local",
                 footerrow: false
             });
-            
-            containerPrl.createGrid({
-                width: 550,
-                height: 250,
-                colModel: [
-                    { label: 'Cod.Prl', name: 'Mal_Cod', width: 50 },
-                    { label: 'Num.Prl', name: 'Mal_Num', width: 80 },
-                    { label: 'Fec.Prl', name: 'Mal_Fec', width: 80 },
-                    { label: 'Obs.Prl', name: 'Mal_Obs', width: 200 },
-                    { label: 'Total', name: 'Mal_Tot_Cob', width: 80, align: 'right' },
-                    { label: '&nbsp;', name: 'act1', width: 30, align: 'center', viewable: false, formatter: 'gridButton', formatoptions: { action: selectPrl } }
-                ],
-                jsonReader: { root: "response", repeatitems: false },
-                datatype: "local",
-                footerrow: false
-            });
         }
 
         function selectNego(data) {
             $('#Num_Neg').val(data['Num_Neg']);
             $('#Cod_Neg').val(data['Cod_Neg']);
             $('#negDialog').dialog('close');
-        }
-        
-        function selectPrl(data) {
-            $('[name="Cod_Prl"]').val(data['Mal_Cod']);
-            $('[name="Num_Prl"]').val(data['Mal_Num']);
-            
-            $('[name="Cop_Obs"]').val(data['Mal_Num']);
-            $('[name="Cpp_Obs"]').val(data['Mal_Num']);
-            $('#Cop_Obs').val(data['Mal_Num']);
-            
-            $('#prlDialog').dialog('close');
-        }
-
-        function limpiarCamposPrl() {
-            $('[name="Cod_Prl"]').val("");
-            $('[name="Num_Prl"]').val("");
         }
     </script>
 

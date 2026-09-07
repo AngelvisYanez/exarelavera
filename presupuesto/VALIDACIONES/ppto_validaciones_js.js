@@ -487,7 +487,7 @@ function pptoRellenarPadresArbol(presetPadreId) {
     var ppaId = parseInt(document.getElementById('form_ppa_id').value, 10) || 0;
     var valorActual = presetPadreId ? String(presetPadreId) : sel.value;
 
-    sel.innerHTML = '<option value="">â€” Seleccione contenedor â€”</option>';
+    sel.innerHTML = '<option value="">- Seleccione contenedor -</option>';
     sel.disabled = false;
 
     var candidatas = pool.filter(function (p) {
@@ -500,7 +500,7 @@ function pptoRellenarPadresArbol(presetPadreId) {
         var indent = '';
         for (var i = 0; i < depth; i++) indent += '   ';
         opt.value = String(p.Ppa_Cod);
-        opt.textContent = indent + p.Ppa_Cla + ' â€” ' + p.Ppa_Des;
+        opt.textContent = indent + p.Ppa_Cla + ' - ' + p.Ppa_Des;
         sel.appendChild(opt);
     });
 
@@ -509,7 +509,7 @@ function pptoRellenarPadresArbol(presetPadreId) {
         if (extra && extra.Ppa_Clase === 'G') {
             var optExtra = document.createElement('option');
             optExtra.value = String(extra.Ppa_Cod);
-            optExtra.textContent = extra.Ppa_Cla + ' â€” ' + extra.Ppa_Des;
+            optExtra.textContent = extra.Ppa_Cla + ' - ' + extra.Ppa_Des;
             sel.appendChild(optExtra);
         }
     }
@@ -632,7 +632,7 @@ function pptoPartidaMostrarUiEdicion(data) {
     var padreTxt = 'Sin padre (raiz)';
     if (data.Ppa_Pad) {
         var pad = pptoPartidaBuscarPorId(data.Ppa_Pad);
-        if (pad) padreTxt = pad.Ppa_Cla + ' â€” ' + pad.Ppa_Des;
+        if (pad) padreTxt = pad.Ppa_Cla + ' - ' + pad.Ppa_Des;
     }
     ubEdit.style.display = 'block';
     ubEdit.innerHTML = '<strong>Ubicacion:</strong> Nivel ' + data.Ppa_Niv + ' &middot; Padre: ' + padreTxt;

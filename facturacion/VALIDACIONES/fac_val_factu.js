@@ -16,9 +16,10 @@ function delFila(row) {
 
 /* OBJETOS JQUERY */
 $(function () {
-    if ($('#searchGrid').length > 0)
+    if ($('#searchGrid').length > 0) {
         $('#searchGrid').createGrid({
-            caption: 'Resultado de la B&uacute;squeda', height: 270, datatype: "local",
+            caption: 'Resultado de la B&uacute;squeda <div class="pull-right" style="margin-top: -2px;"><b>ORDENAR POR:</b>&nbsp;<select id="OrderBy" class="form-control input-xs" style="display:inline-block;width:auto;min-width:140px;vertical-align:middle;height:22px;padding:1px 5px;color:#333;font-weight:normal;"><option value="" selected="selected">No Ordenar</option><option value="prov_asc">Proveedor ASC</option><option value="prov_desc">Proveedor DESC</option><option value="fec_asc">Fecha ASC</option><option value="fec_desc">Fecha DESC</option><option value="doc_asc">No. Documento ASC</option><option value="doc_desc">No. Documento DESC</option><option value="ret_asc">No. Retenci&oacute;n ASC</option><option value="ret_desc">No. Retenci&oacute;n DESC</option></select>&nbsp;</div>',
+            height: 270, datatype: "local",
             colModel: [
                 { label: 'C&oacute;d.Int.', name: 'Cop_Cod', width: 30, align: "center", key: true },
                 { label: 'Alerta', name: 'Alerta', width: 15, align: "center", formatter: 'truefalse', formatoptions: { yesMsg: ' ', noMsg: function (o) { return (o['Com_Mes'] === 'N' ? '<u class="red">Comprobante</u> no se Encuentra en el mismo <u class="red">Mes</u>' : '') + (o['Com_Mes'] === 'N' && o['Com_Est'] === 'I' && o['Cop_Est'] === 'A' ? '<br/>' : '') + (o['Com_Est'] === 'I' && o['Cop_Est'] === 'A' ? 'Comprobante <u class="red">Inactivo</u>, Compra <u class="green">Activa</u>' : ''); }, noIcon: function (o) { return (o['Com_Mes'] === 'N' || (o['Com_Est'] === 'I' && o['Cop_Est'] === 'A')) ? 'fa-exclamation-triangle orange' : ''; }, noText: true }, title: false },
@@ -52,6 +53,12 @@ $(function () {
                     }
             }
         }, false, '#searchGridPager', { refresh: true });
+
+        $(document).on('change', '#OrderBy', function () {
+            $('#serachDocDorm input[name="order"]').val($(this).val());
+            $('#searchGrid').Search('#serachDocDorm', 'searchDocument');
+        });
+    }
     gridFact = $("#documento");
     if (gridFact.length === 1) {
         gridFact.createGrid({
@@ -79,7 +86,7 @@ $(function () {
                 { name: 'Iva_Por', label: 'IVA(%)', labelLong: 'Porcentaje IVA', width: 35, align: 'center', title: false, resizable: false },
                 { name: 'Iva_Sri', label: 'IVA_SRI', labelLong: 'IVA_SRI', width: 25, align: 'center', title: false, resizable: false, hidden: true }, // nuevo campo
                 //{name:'Ice_Int',label:'Ice_Int', width:20,hidden:true},
-                { name: 'Cop_Ice', label: '%ICE', labelLong: '% ICE', width: 25, align: "right", title: true, resizable: false, formatter: 'textboxExa', formatoptions: {/*classes:'clearable', */type: 'decimal',/* prepend:{div:'btn', value:function(o){ return $.getGridButton({action:'alert',data:o.index}); } }, append:{type:'info', value:'%'},*/ dataEvents: { keyup: 'updateDocument();' }, data: function (o) { var ice_por = o['Cop_Ice'] || o['Ice_Por']; if ($.varValid(ice_por) && ice_por !== '' && !isNaN(ice_por) && ice_por * 1 > 0) return ice_por; else return ''; } } },
+                { name: 'Cop_Ice', label: '%ICE', labelLong: '% ICE', width: 25, align: "right", title: true, resizable: false, hidden: true, formatter: 'textboxExa', formatoptions: {/*classes:'clearable', */type: 'decimal',/* prepend:{div:'btn', value:function(o){ return $.getGridButton({action:'alert',data:o.index}); } }, append:{type:'info', value:'%'},*/ dataEvents: { keyup: 'updateDocument();' }, data: function (o) { var ice_por = o['Cop_Ice'] || o['Ice_Por']; if ($.varValid(ice_por) && ice_por !== '' && !isNaN(ice_por) && ice_por * 1 > 0) return ice_por; else return ''; } } },
                 { name: 'Iva_Cos', label: 'Cos.', labelLong: 'IVA al Costo', width: 20, align: "center", formatter: 'checkboxExa', formatoptions: { yes: 'S', no: 'N', conditional: function (o) { return o.Adq_Cor === 'A'; }/*,nullifField:'Adq_Cor',nullifValue:'A'*/ }, resizable: false },
                 { name: 'Adq_Cod', label: 'CodAdq', width: 20, hidden: true },
                 { name: 'Ret_Ren_Sri', label: 'I. Renta', labelLong: 'Impuesto a la Renta', width: 35, align: "center", title: false, formatter: 'impRenta', resizable: false },
@@ -91,6 +98,14 @@ $(function () {
                 { name: 'Iva_Ren_Por', label: 'Iva Ren_Por', width: 20, hidden: true },
                 { name: 'Iva_Ren_Con', label: 'Iva Ren_Con', width: 20, hidden: true },
                 { name: 'Adq_Cor', label: 'Adq.', labelLong: 'Adquisiciones', width: 20, align: "center", title: false, formatter: 'title', formatoptions: { title: 'Adq_Des' }, resizable: false },
+                /* Rubro presupuestario: penúltima columna (antes de eliminar). */
+                { name: 'Ppa_Cod', label: 'Ppa_Cod', width: 20, hidden: true },
+                { name: 'Pdp_Cod', label: 'Pdp_Cod', width: 20, hidden: true },
+                { name: 'Ppa_Cla', label: 'Ppa_Cla', width: 20, hidden: true },
+                { name: 'Ppa_Des', label: 'Ppa_Des', width: 20, hidden: true },
+                { name: 'Ppa_Label', label: 'Ppa_Label', width: 20, hidden: true },
+                { name: 'Ppa_Ruta', label: 'Ppa_Ruta', width: 20, hidden: true },
+                { name: 'selectPpa', label: '<i class="glyphicon glyphicon-stats" title="Presupuesto"></i>', labelLong: 'Rubro presupuesto', width: 10, align: 'center', viewable: false, resizable: false, hidden: (typeof Cof_Mpe === 'undefined' || Cof_Mpe !== 'S'), formatter: 'ppaRubroBtn' },
                 { name: 'delete', label: '<i class="glyphicon glyphicon-remove"></i>', width: 30, align: 'center', viewable: false, formatter: 'gridButton', formatoptions: { action: deleteItem, icon: 'remove', title: 'Eliminar Item', type: 'danger', data: function (o) { return o.index; }, attr: { 'tabindex': '-1' }, conditional: function (o) { return !(!$.varValid(o['Pro_Cod']) || o['Pro_Cod'] === ''); } }, resizable: false }
             ]
         }, true, 'documentoPager', { view: false }).gridButtonsAdd([
@@ -242,7 +257,32 @@ $(function () {
         $('#Cop_Fec').data('anio', $('#Cop_Fec').val().substring(0, 4)).data('mes', $('#Cop_Fec').val().substring(5, 7));
     }
 
-
+    /** Vencimiento compra a crédito: Cpp_Ven = Cop_Fec + días elegidos en #Cpp_Ven_plazo (30/60); si plazo vacío, +15 como antes. */
+    var _cppVenProgramatico = false;
+    function actualizarCppVenDesdeCompra(copFecValue) {
+        if (!$('#Cpp_Ven').length || !copFecValue) {
+            return;
+        }
+        var partes = copFecValue.split('-');
+        if (partes.length !== 3) {
+            return;
+        }
+        var y = parseInt(partes[0], 10), m = parseInt(partes[1], 10) - 1, dia = parseInt(partes[2], 10);
+        if (isNaN(y) || isNaN(m) || isNaN(dia)) {
+            return;
+        }
+        var base = new Date(y, m, dia);
+        var plazoSel = $('#Cpp_Ven_plazo').length ? String($('#Cpp_Ven_plazo').val() || '') : '';
+        var diasPlazo = parseInt(plazoSel, 10);
+        var dias = (plazoSel !== '' && !isNaN(diasPlazo) && diasPlazo > 0) ? diasPlazo : 15;
+        var ven = new Date(base.getTime());
+        ven.setDate(ven.getDate() + dias);
+        _cppVenProgramatico = true;
+        $('#Cpp_Ven').datepicker('option', 'minDate', copFecValue);
+        $('#Cpp_Ven').datepicker('setDate', ven);
+        // El datepicker puede disparar change en el siguiente tick; mantener el flag para no vaciar #Cpp_Ven_plazo.
+        setTimeout(function () { _cppVenProgramatico = false; }, 0);
+    }
 
     function validarFechaRetencion() {
         // Obtener el valor del campo Cop_Fec directamente
@@ -252,19 +292,20 @@ $(function () {
         }
         $('#Cop_Imf').datepicker("option", "maxDate", copFecValue);
         $('#Cop_Cad').datepicker("option", "minDate", copFecValue);
-        // Establecer Ret_Fec con la fecha actual solo si no existe fecha de retención
+        // Establecer Ret_Fec con la fecha del servidor solo si no existe fecha de retención
         var retFecValue = $('#Ret_Fec').val();
-        if (!retFecValue || retFecValue === '' || retFecValue === copFecValue) {
+        var fechaActual = (typeof window.fecRetencionServidor === 'function' ? window.fecRetencionServidor() : '');
+        if (!fechaActual) {
             var hoy = new Date();
             var mes = (hoy.getMonth() + 1);
             var dia = hoy.getDate();
-            var fechaActual = hoy.getFullYear() + '-' + (mes < 10 ? '0' : '') + mes + '-' + (dia < 10 ? '0' : '') + dia;
+            fechaActual = hoy.getFullYear() + '-' + (mes < 10 ? '0' : '') + mes + '-' + (dia < 10 ? '0' : '') + dia;
+        }
+        if (!retFecValue || retFecValue === '' || retFecValue === copFecValue) {
             $('#Ret_Fec').val(fechaActual);
         }
         $('#Ret_Fec').datepicker("option", "minDate", copFecValue);
-        var d = new Date(copFecValue);
-        d.setDate(d.getDate() + 15);
-        $('#Cpp_Ven').datepicker("setDate", d).datepicker("option", "minDate", copFecValue);
+        actualizarCppVenDesdeCompra(copFecValue);
         if (copFecValue.length > 0) {
             var fec_cop = copFecValue.split("-"), anio = fec_cop[0], mes = fec_cop[1];
             if ($('#Cop_Fec').data('mes') !== mes) checkFechaIva(copFecValue);
@@ -300,7 +341,17 @@ $(function () {
 
 
 
-    $('#For_Cod').on('change', function () { $('.pagoCredito')[this.value * 1 === 2 ? 'show' : 'hide'](); $('.Caj_Ven_Div')[this.value * 1 === 1 ? 'show' : 'hide'](); (('0' + this.value) * 1 === 2 ? $('#Cpp_Ven').attr('required', 'required') : $('#Cpp_Ven').removeAttr('required')); });
+    $('#For_Cod').on('change', function () { $('.pagoCredito')[this.value * 1 === 2 ? 'show' : 'hide'](); $('.Caj_Ven_Div')[this.value * 1 === 1 ? 'show' : 'hide'](); (('0' + this.value) * 1 === 2 ? $('#Cpp_Ven').attr('required', 'required') : $('#Cpp_Ven').removeAttr('required')); if (this.value * 1 === 2 && $('#Cop_Fec').val()) { actualizarCppVenDesdeCompra($('#Cop_Fec').val()); } });
+    if ($('#Cpp_Ven_plazo').length) {
+        $('#Cpp_Ven_plazo').on('change', function () {
+            var cf = $('#Cop_Fec').val();
+            if (cf) { actualizarCppVenDesdeCompra(cf); }
+        });
+        $('#Cpp_Ven').on('change', function () {
+            if (_cppVenProgramatico) { return; }
+            $('#Cpp_Ven_plazo').val('');
+        });
+    }
     $('#For_Cod2').on('change', function () { $('.pagoCredito2')[this.value * 1 === 2 ? 'show' : 'hide'](); (('0' + this.value) * 1 === 2 ? $('#Cpp_Ven2').attr('required', 'required') : $('#Cpp_Ven2').removeAttr('required')); });
     $('#Ret_Asu').on('change', function () { calculaRetencion(); });
     if (flyout) {
@@ -313,32 +364,45 @@ $(function () {
     if ($('#provCreateDialog').length > 0) $('#provCreateDialog').createDialog({ icon: 'plus', width: 500, height: 430 });
 
     $('#Tic_Cod').on('change', function () {
-        var val = this.value !== '' ? this.value * 1 : '', sel = $(this).find('option:selected'), sri = sel.data('ticsri'), des = this.value !== '' ? sel.text() : '';
+        var val = this.value !== '' ? this.value * 1 : '', sel = $(this).find('option:selected'), sri = sel.data('ticsri') * 1 || sel.attr('data-ticsri') * 1, des = this.value !== '' ? sel.text() : '';
         $("#Cop_Num").prop("readonly", false);
         $("#Pun_Sri").hide();
         $("#Cop_Aut").prop("disabled", false);
         $("#Aut_Codliq").val("").prop("disabled", false);
 
-        if (val == 3 && (array_documentos.length > 0)) { //valor de liquidacion de compras
+        var esLiq = (sri === 3 || val === 3);
+        $('#Cop_Num').removeData('liq_sec');
+        if (esLiq && (typeof array_documentos !== 'undefined' && array_documentos && array_documentos.length > 0)) { //valor de liquidacion de compras
             $("#Pun_Sri").show();
             $("#Cop_Num").prop("readonly", true);
+            aplicarMascaraCopNum(3);
 
             //bloquear el campo para ingresar autorizacion
-            if (edit_doc != 'S') {
+            var isMod = (typeof edit_doc !== 'undefined' && edit_doc === 'S') || (typeof editDoc !== 'undefined' && editDoc === true);
+            if (!isMod) {
                 $("#Cop_Aut").prop("disabled", true).removeAttr("required").val("9".repeat(49));
             }
-            console.log(array_documentos.length);
             var Suc_Sri = null;
-            var documento_sel = $('#Tic_Cod').find('option:selected').text().split('-')[1];
+            var tic_cod = null, aut_sri = null, pun_sri = null, aut_cod = null;
+            var documento_sel = $('#Tic_Cod').find('option:selected').text().split('-')[1] || 'LIQUIDACIÓN';
             $.each(array_documentos, function (i, v) {
-                tic_cod = v['Tic_Cod'];
-                aut_sri = v['Aut_Sri'];
-                pun_sri = v['Pun_Sri'];
-                aut_cod = v['Aut_Cod'];
-                Suc_Sri = v['Suc_Sri'];
+                if (v['Tic_Sri'] == '3' || v['Tic_Sri'] == '03' || v['Tic_Cod'] == val) {
+                    tic_cod = v['Tic_Cod'];
+                    aut_sri = v['Aut_Sri'];
+                    pun_sri = v['Pun_Sri'];
+                    aut_cod = v['Aut_Cod'];
+                    Suc_Sri = v['Suc_Sri'];
+                }
             });
+            if (!aut_cod && array_documentos.length > 0) {
+                tic_cod = array_documentos[0]['Tic_Cod'];
+                aut_sri = array_documentos[0]['Aut_Sri'];
+                pun_sri = array_documentos[0]['Pun_Sri'];
+                aut_cod = array_documentos[0]['Aut_Cod'];
+                Suc_Sri = array_documentos[0]['Suc_Sri'];
+            }
 
-            if (edit_doc == 'S') { $('#Aut_Codliq').val(aut_cod); }
+            if (isMod) { $('#Aut_Codliq').val(aut_cod); }
 
             $.post('', {
                 'Tic_Cod': tic_cod,
@@ -347,56 +411,78 @@ $(function () {
                 'Aut_Cod': aut_cod,
                 'numeroSec': true
             }, function (response) {
-                console.log(response);
-                var vnum = ((editDoc) ? (!$.vv(response['Aut_Cod']) || AutCod * 1 === response['Aut_Cod'] * 1 ? vet_num_ant : response['Cop_Num']) : response['Cop_Num']);
-                console.log(vnum);
-                $('#formDocumento').setData({ 'Pun_Sri': Suc_Sri + '-' + response['Pun_Sri'] + '-', 'Cop_Num': vnum, 'Aut_Codliq': response['Aut_Cod'] /*, 'Cop_Aut': ""*/ }, false);
-                var doc_disponibles = (response['Aut_Fin'] * 1 - response['Aut_Ini'] * 1) - response['contador'];
-                if (doc_disponibles <= response['Aut_Ads'] * 1 && Nota_CreDeb === false)
-                    alertaAuto(`Quedan <b>${doc_disponibles} ${documento_sel}S</b> disponibles`, '#Vet_Num', 'right');
-                // validarTic_Cod(true);
-                num_old = response.Cop_Sec;
-            }, 'json').fail(function () { $.alert(); });
+                var prefijo = Suc_Sri ? (Suc_Sri + '-' + ((response && response['Pun_Sri']) || pun_sri || '') + '-') : (((response && response['Pun_Sri']) || pun_sri || '') + '-');
+                var vnum = secuencialLiquidacion((isMod && $('#Cop_Num').data('old_num')) ? $('#Cop_Num').data('old_num') : '');
+                if (!vnum) vnum = secuencialLiquidacion(response && response['Cop_Num']);
+                aplicarMascaraCopNum(3);
+                $('#formDocumento').setData({ 'Pun_Sri': prefijo, 'Cop_Num': vnum, 'Aut_Codliq': (response && response['Aut_Cod']) ? response['Aut_Cod'] : aut_cod }, false);
+                $('#Cop_Num').data('liq_sec', vnum);
+                if (response && response['Cop_Num']) {
+                    var doc_disponibles = (response['Aut_Fin'] * 1 - response['Aut_Ini'] * 1) - (response['contador'] * 1 || 0);
+                    if (doc_disponibles <= (response['Aut_Ads'] * 1 || 0) && (typeof Nota_CreDeb !== 'undefined' && Nota_CreDeb === false))
+                        alertaAuto(`Quedan <b>${doc_disponibles} ${documento_sel}S</b> disponibles`, '#Vet_Num', 'right');
+                    num_old = response.Cop_Sec;
+                }
+            }, 'json').fail(function () { $.alert('Error al consultar la secuencia del documento.'); });
+        } else if (esLiq && (!array_documentos || array_documentos.length === 0)) {
+            $.alert('No se encontró una autorización activa para <u>Liquidación de Compras</u> en este punto de emisión.');
         }
 
         $('#asumirRet')[(sri === 1 || sri === 3) && Cof_Con === 'S' ? 'show' : 'hide']();
         $('#Ret_Asu').prop('checked', false);
         checkImportacion(sri);
         if (sri === 3) checkLiquidacion();
+        if (typeof window.toggleBtnIngresoAutLiq === 'function') window.toggleBtnIngresoAutLiq();
         setReembolsosGrid(sri === 41);
         updateDocument();
 
     });
     if ($('#changePagoDialog').length > 0) $('#changePagoDialog').createDialog({ icon: 'transfer', width: 600, height: 300 });
     $('#Cop_Aut').on('change', function () { var val = $(this).val(), aut = val.length; $(this).attr('title', val); if (aut !== 0 && aut !== 10 && aut !== 37 && aut !== 49) { $(this).fieldValid(false, 'El campo debe tener 10, 37 o 49 digitos!'); } else { $(this).fieldValid(aut === 0 ? '' : true); } });
+    if (typeof window.toggleBtnIngresoAutLiq === 'function') window.toggleBtnIngresoAutLiq();
     //validaRetNum();//ESTO VERIFICAR
 });
 
 
 function cambioTipoDoc(i = null) {
     if ($('input[name="Prs_Ced"]').val() !== '') {
-        //var op= $.isEmpty(i)?$('input:radio[name=Cop_Ide]:checked').val():i;            
+        var ticSri = $("#Tic_Cod option:selected").attr('data-ticsri');
+        var triSri = $("#Tri_Cod option:selected").attr('data-ticsri');
+        var ticVal = (i !== null && i !== undefined && i !== '') ? String(i) : String($("#Tic_Cod").val() || '');
+        // Sustento 10 + documento dividendos (Tic_Cod 18 / Tic_Sri 19): mantener cédula, no activar RUC
+        var esDividendos = (String(triSri) === '10' || String(ticSri) === '19' || ticVal === '18');
+        if (esDividendos) {
+            $('#op_ide2').prop('checked', true).trigger('change');
+            var ced = $('input[name="Prs_Ced"]').val();
+            if (ced.length > 10) {
+                $('input[name="Prs_Ced"]').val(ced.substring(0, 10));
+            }
+            return;
+        }
+
         if (!$.isEmpty(i)) {
-            i = i == '3' ? '2' : '1';
-            $('#op_ide' + i).prop('checked', true).trigger('change');
-            var op = i;
+            var esLiquidacion = (i == '3' || i == '03' || ticSri == '3' || ticSri == '03');
+            var ideNum = esLiquidacion ? '2' : '1';
+            $('#op_ide' + ideNum).prop('checked', true).trigger('change');
+            var op = ideNum;
         } else {
             var op = $('input:radio[name=Cop_Ide]:checked').val();
         }
 
-        if (op == '1' || i !== '3') {
+        if (op == '1') {
             if ($('input[name="Prs_Ced"]').val().length < 13) $('input[name="Prs_Ced"]').val($('input[name="Prs_Ced"]').val() + '001');
-            if ($.isEmpty(i)) $('#Tic_Cod').val(1);
-        }
-        if (op == '2' || i == '3') {
+            if ($.isEmpty(i)) {
+                var $facOpt = $("#Tic_Cod option[data-ticsri='1'], #Tic_Cod option[data-ticsri='01']");
+                var facVal = $facOpt.length ? $facOpt.val() : 1;
+                $('#Tic_Cod').val(facVal).trigger('change');
+            }
+        } else if (op == '2') {
             if ($('input[name="Prs_Ced"]').val().length > 10) $('input[name="Prs_Ced"]').val($('input[name="Prs_Ced"]').val().substring(0, 10));
-            if ($.isEmpty(i)) $('#Tic_Cod').val(3);
+            if ($.isEmpty(i)) {
+                var $liqOpt = $("#Tic_Cod option[data-ticsri='3'], #Tic_Cod option[data-ticsri='03']");
+                if ($liqOpt.length) $('#Tic_Cod').val($liqOpt.val()).trigger('change');
+            }
         }
-        /* if(op =='3'){
-             if($('input[name="Prs_Ced"]').val().length>10) $('input[name="Prs_Ced"]').val($('input[name="Prs_Ced"]').val().substring(0,10));
-             //if($.isEmpty(i))$('#Tic_Cod').val(3);
-         }*/
-
     }
 }
 function tipoComprobanteHide(i, y = null) {
@@ -416,18 +502,88 @@ function tipoComprobanteHide(i, y = null) {
         { s: 13, c: [19, 0] },
         { s: 14, c: [1, 2, 4, 5, 0] },
         { s: 15, c: [1, 2, 4, 5, 12, 0] }
-    ]
-    $(document).ready(function () { $('#Tic_Cod option').hide(); }); //Pone a visible los option del select Tic_Cod
-    var r = x.find(x => x.s === i * 1)
-    $.each(r.c, function (index, v) {
-        if ($('input:radio[name=Cop_Ide]:checked').val() == 1 && v !== 3)
-            $("#Tic_Cod option[data-ticsri='" + v + "']").show(); // Ocultamos los option segun id de sustento
-        if ($('input:radio[name=Cop_Ide]:checked').val() == 2 && (v == 3 || v == 0))
-            $("#Tic_Cod option[data-ticsri='" + v + "']").show(); // Ocultamos los option segun id de sustento
-        if ($('input:radio[name=Cop_Ide]:checked').val() == 3 && v !== 1)
-            $("#Tic_Cod option[data-ticsri='" + v + "']").show(); // Ocultamos los option segun id de sustento
+    ];
+    var ide = $('input:radio[name=Cop_Ide]:checked').val();
+    // Sustento dividendos (Tri_Sri 10 / 13): solo con cédula
+    var esCedula = (ide == 2);
+    $("#Tri_Cod option[data-ticsri='10'], #Tri_Cod option[data-ticsri='13']").each(function () {
+        if (esCedula) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
     });
-    $('#Tic_Cod').val(y);
+    if (!esCedula) {
+        var triSriSel = $("#Tri_Cod option:selected").attr('data-ticsri');
+        if (triSriSel == '10' || triSriSel == '13') {
+            var $def = $("#Tri_Cod option[data-ticsri='2']");
+            if (!$def.length) {
+                $def = $("#Tri_Cod option:not([data-ticsri='10']):not([data-ticsri='13']):first");
+            }
+            if ($def.length) {
+                $("#Tri_Cod").val($def.val());
+                i = $def.attr('data-ticsri');
+            }
+        }
+    }
+
+    $('#Tic_Cod option').hide();
+    $("#Tic_Cod option[value='']").show();
+    var r = x.find(function (item) { return item.s === i * 1; });
+    if (!r) {
+        if (y !== null && y !== undefined) $('#Tic_Cod').val(y);
+        return;
+    }
+    $.each(r.c, function (index, v) {
+        var selector = "#Tic_Cod option[data-ticsri='" + v + "'], #Tic_Cod option[data-ticsri='" + (v < 10 ? '0' + v : v) + "'], #Tic_Cod option[data-ticsri='" + (v * 1) + "']";
+        // Comprobante de dividendos (19): solo activo con cédula
+        if (v * 1 === 19) {
+            if (esCedula) {
+                $(selector).show();
+            }
+            return;
+        }
+        if (ide == 1 && v !== 3) {
+            $(selector).show();
+        }
+        if (ide == 2 && (v == 3 || v == 0)) {
+            $(selector).show();
+        }
+        if (ide == 3 && v !== 1) {
+            $(selector).show();
+        }
+    });
+
+    if (y !== null && y !== undefined && y !== '') {
+        $('#Tic_Cod').val(y).trigger('change');
+    } else if (ide == 2) {
+        // Auto-seleccionar Liquidación de compras para Cédula
+        var $liqOpt = $("#Tic_Cod option[data-ticsri='3'], #Tic_Cod option[data-ticsri='03']");
+        var curSri = $("#Tic_Cod option:selected").attr('data-ticsri');
+        if ($liqOpt.length && (curSri != '3' && curSri != '03' && curSri != '19')) {
+            $('#Tic_Cod').val($liqOpt.val()).trigger('change');
+        } else {
+            $('#Tic_Cod').trigger('change');
+        }
+    } else if (ide == 1) {
+        // Auto-seleccionar Factura para RUC
+        var $facOpt = $("#Tic_Cod option[data-ticsri='1'], #Tic_Cod option[data-ticsri='01']");
+        var curSri = $("#Tic_Cod option:selected").attr('data-ticsri');
+        if ($facOpt.length && (!curSri || curSri === '' || curSri == '3' || curSri == '03' || curSri == '19')) {
+            $('#Tic_Cod').val($facOpt.val()).trigger('change');
+        } else {
+            $('#Tic_Cod').trigger('change');
+        }
+    } else {
+        // Si la opción seleccionada quedó oculta, resetear o seleccionar la primera visible
+        var $selOpt = $("#Tic_Cod option:selected");
+        if ($selOpt.length && $selOpt.is(':hidden')) {
+            var $firstVis = $("#Tic_Cod option:visible:not([value='']):first");
+            $('#Tic_Cod').val($firstVis.length ? $firstVis.val() : '').trigger('change');
+        } else {
+            $('#Tic_Cod').trigger('change');
+        }
+    }
 }
 
 function imprimirRetencion(retCod) {
@@ -486,7 +642,8 @@ function selectItem(item) {
     delete (item['Cop_Ice']); delete (item['Ice_Por']);
     item['selectCta'] = '';
     gridFact.changeRowData(index, $.extend($.extend(item, {
-        Ret_Ren_Cod: '', Ret_Ren_Con: '', Ret_Ren_Por: '', Ret_Ren_Sri: '', Iva_Cos: ''
+        Ret_Ren_Cod: '', Ret_Ren_Con: '', Ret_Ren_Por: '', Ret_Ren_Sri: '', Iva_Cos: '',
+        Ppa_Cod: '', Pdp_Cod: '', Ppa_Cla: '', Ppa_Des: '', Ppa_Label: '', Ppa_Ruta: '', selectPpa: ''
     }),
 
         item['Iva_Por'] * 1 > 0 ? {
@@ -557,13 +714,35 @@ function validaCopNum() {
 
 
 //Valida para registrar liquiedacion sin crear xml
+function esLiquidacionCompraTic() {
+    var $tic = $('#Tic_Cod');
+    if (!$tic.length) return false;
+    var val = String($tic.val() || '');
+    if (val === '3' || val * 1 === 3) return true;
+    var sel = $tic.find('option:selected');
+    var sri = parseInt(sel.attr('data-ticsri'), 10);
+    if (!isNaN(sri) && sri === 3) return true;
+    sri = parseInt(sel.data('ticsri'), 10);
+    if (!isNaN(sri) && sri === 3) return true;
+    var txt = $.trim(sel.text()).toUpperCase();
+    return txt.indexOf('LIQUIDACION') >= 0 || txt.indexOf('LIQUIDACIÓN') >= 0;
+}
+
+function toggleBtnIngresoAutLiq() {
+    var $btn = $('#btnIngresoAutLiq');
+    if (!$btn.length) return;
+    $btn.toggleClass('hidden', !esLiquidacionCompraTic());
+}
+window.toggleBtnIngresoAutLiq = toggleBtnIngresoAutLiq;
+
 function validaIngresoAut() {
     $("#Pun_Sri").hide();
     $("#Cop_Num").prop("readonly", false);
     // $("#Cop_Aut").prop("disabled",false);
     $("#Cop_Aut").val("").prop("disabled", false);
     $("#Aut_Codliq").val("").prop("disabled", false);
-    $("#Cop_Num").val("").prop("disabled", false);
+    $("#Cop_Num").val("").prop("disabled", false).removeData('liq_sec');
+    aplicarMascaraCopNum(1);
 }
 
 // Valida q no existe la retencion
@@ -574,7 +753,7 @@ function validaRetNum(saltar) {
         Old_Aut_Cod = $.varValid(old_data['Aut_Cod']) && old_data['Aut_Cod'].trim() !== '' ? old_data['Aut_Cod'] * 1 : '';
     if (data['Ret_Num'] * 1 === Old_Ret_Num && !saltar) {
         $('#reteFormTemp').setData(old_data, false);
-        $('#Aut_Cod').html(old_data['Aut_Cod']);
+        if (window.setAutCodTip) setAutCodTip(old_data['Aut_Cod']); else $('#Aut_Cod').html(old_data['Aut_Cod'] || '');
         rnum.fieldValid();
         return;
     }
@@ -612,7 +791,7 @@ function validaRetNum(saltar) {
         //r['Ret_Num']=Mod_Ret_Num;
         //console.log(rnum.data());
         $('#reteFormTemp').setData(r, false);
-        $('#Aut_Cod').html(r['Aut_Cod']);
+        if (window.setAutCodTip) setAutCodTip(r['Aut_Cod']); else $('#Aut_Cod').html(r['Aut_Cod'] || '');
         $('#Ret_Fec').data({ Aut_Fci: r['Aut_Fci'], Aut_Cad: r['Aut_Cad'] });
         $("#btnClaveExterna").css('display', r['Aut_Tem'] === "E" ? "" : "none");
     });
@@ -749,6 +928,27 @@ function addItem(item) {
 // Abre dialogo producto para cambiar item
 function openItemSelector(id) { index = id; $('#proDialog').dialog('open'); }
 function openCtaSelector(id) { index = id; $('#cuenDialog').dialog('open'); }
+/** Abre popover del rubro (si hay) o el modal de búsqueda (si no hay) para la fila. */
+function openPpaRowSelector(id) {
+    window.ppaRowIndex = id;
+    var row = (gridFact && gridFact.length) ? (gridFact.jqGrid('getLocalRow', id) || gridFact.jqGrid('getRowData', id) || {}) : {};
+    var has = ($.varValid(row['Pdp_Cod']) && String(row['Pdp_Cod']) !== '' && String(row['Pdp_Cod']) !== '0')
+        || ($.varValid(row['Ppa_Cod']) && String(row['Ppa_Cod']) !== '' && String(row['Ppa_Cod']) !== '0');
+    if (has && typeof window.mostrarPpaRowPop === 'function') {
+        window.mostrarPpaRowPop(row, id);
+        return;
+    }
+    if (typeof window.abrirBusquedaPresupuesto === 'function') {
+        window.abrirBusquedaPresupuesto(true);
+    }
+}
+/** Quita el rubro presupuestario de la fila. */
+function clearPpaRow(id) {
+    if (typeof gridFact === 'undefined' || !gridFact || !gridFact.length) return;
+    gridFact.changeRowData(id, {
+        Ppa_Cod: '', Pdp_Cod: '', Ppa_Cla: '', Ppa_Des: '', Ppa_Label: '', Ppa_Ruta: '', selectPpa: ''
+    });
+}
 // Elimina item
 function deleteItem(index) { var data = gridFact.jqGrid('getRowData', index); if (data['Pro_Cod'] !== '') { gridFact.jqGrid('delRowData', index); updateDocument(); resize(); } }
 function resize() { if (gridFact.width() !== $('#documentoMain').width()) gridFact.jqGrid("resizeGrid"); }
@@ -803,7 +1003,12 @@ function updateDocument() {
             tot['t_iva12'] = tot['t_iva12'] + row['Cop_Imp'];//15%
         }
         if ($('#c_tresxmil').is(':checked')) {//Solo es con un item producto de combustible
-            cod_bar_combustible = row['Pro_Bar'];
+            console.log('entro con el checked' + row['Pro_Bar']);
+
+            if (row['Pro_Bar'] == '0121' || row['Pro_Bar'] == '0174' || row['Pro_Bar'] == '0104' || row['Pro_Bar'] == '0103') {
+                console.log('entro con el combustible');
+                cod_bar_combustible = row['Pro_Bar'];
+            }
         }
     }
 
@@ -824,16 +1029,24 @@ function updateDocument() {
     tot['t_ice'] = $.round(tot['t_ice']); /* tot['t_iva'] = Math.round(tot['t_iva'] * 100) / 100;*/
 
     if ($('#c_tresxmil').is(':checked')) {
-        tot['t_imp_combustible'] = ((tot['t_subtotal'] * 3) / 1000);
+        // 3x1000 sobre importes con IVA (excluye 0% y no objeto de IVA)
+        var base_tresxmil = tot['t_iva5'] + tot['t_iva12'];
+        tot['t_imp_combustible'] = ((base_tresxmil * 3) / 1000);
         console.log(tot['t_imp_combustible']);
         var por_iva_pres = 0;
+
         if (cod_bar_combustible == "0103") { //SUPER  //Super 9.50 %  del IVA
             por_iva_pres = 0.095;
-        } else if (cod_bar_combustible == "0121") {//DIESEL  //Diesel 2% del IVA
+        } else if (cod_bar_combustible == "0121") {//DIESEL PREMIUM  //Diesel 2% del IVA
             por_iva_pres = 0.02;
         } else if (cod_bar_combustible == "0174") {//ECOPAIS  //Ecopais   2% del IVA
             por_iva_pres = 0.02;
+        } else if (cod_bar_combustible == "0104") {//DIESEL 2  //Ecopais   2% del IVA
+            por_iva_pres = 0.02;
         }
+
+
+
         tot['t_iva_pres'] = ((tot['t_iva'] * por_iva_pres));
     }
 
@@ -876,14 +1089,28 @@ function validaDocument() {
         if (data['items'][i]['Pro_Cod'] === '') { $.alert('Seleccione producto en la fila ' + (i + 1) + '!', null, 'remove'); return; }
         if (data['items'][i]['Cop_Imp'] * 1 <= 0) { $.alert('El producto <u>' + data['items'][i]['Ite_Lar'] + '</u> no puede tener <i>Importe cero</i>!', null, 'remove'); return; }
     }
-    if ((data['Tic_Sri'] * 1 !== 1 && data['Tic_Sri'] * 1 !== 2 && data['Tic_Sri'] * 1 !== 3 && data['Tic_Sri'] * 1 !== 42) && data['rets'].length > 0) { $.alert('El <u>Comprobante de Retención</u> solo se aplica a <i>Facturas/Liquidaciones</i>!', null, 'remove'); return; }
-    $.arraySpliceFields(data['items'], ['index', 'delete', 'select', 'Uni_Des', 'Pld_Cdc', 'Pld_Des']);
+    if ((data['Tic_Sri'] * 1 !== 1 && data['Tic_Sri'] * 1 !== 2 && data['Tic_Sri'] * 1 !== 3 && data['Tic_Sri'] * 1 !== 42 && data['Tic_Sri'] * 1 !== 19) && data['rets'].length > 0) { $.alert('El <u>Comprobante de Retención</u> solo se aplica a <i>Facturas/Liquidaciones</i>!', null, 'remove'); return; }
+    if (data['Tic_Sri'] * 1 === 19 && $('input:radio[name=Cop_Ide]:checked').val() != 2) {
+        $.alert('El comprobante de <u>Dividendos</u> solo se permite con proveedor identificado por <i>C&eacute;dula</i>.', null, 'remove');
+        return;
+    }
+    $.arraySpliceFields(data['items'], ['index', 'delete', 'select', 'Uni_Des', 'Pld_Cdc', 'Pld_Des', 'selectPpa', 'Ppa_Label', 'Ppa_Ruta', 'Ppa_Cla', 'Ppa_Des']);
     if (data['Tic_Sri'] * 1 === 3) { //liquidacion compras
         if (($('#t_rubros').val() * 1 + ('0' + $('#infoLiquida').data('actual')) * 1) > 13000) { $.alert('Las <u>liquidaciones en Compras</u> de este Proveedor exceden el limite!', null, 'remove'); return; }
+        if (data['Aut_Codliq']) {
+            var punSri = ($('input[name="Pun_Sri"]').val() || '').trim();
+            var secLiq = secuencialLiquidacion($('#Cop_Num').val() || $('#Cop_Num').data('liq_sec'));
+            if (!secLiq) { $.alert('No se pudo obtener el número de secuencia de la liquidación.', null, 'remove'); return; }
+            data['Pun_Sri'] = punSri;
+            data['Cop_Num'] = secLiq;
+        }
     }
     if (!$('#pagoFormTemp').valid()) { setTimeout(function () { $('#pagoFormTemp').formSubmit(); }, 0); return; };
     if ($('#Ren_Tot').val() * 1 > 0) {
         if (!$('#reteFormTemp').valid()) { setTimeout(function () { $('#reteFormTemp').formSubmit(); }, 0); return; };
+        if (typeof window.validarRetFecCompraYClave === 'function' && !window.validarRetFecCompraYClave()) {
+            return;
+        }
         var Ret_Fec = $('#Ret_Fec').val(), Aut_Cad = $('#Ret_Fec').data('Aut_Cad');
         if ($.vv(Aut_Cad) && Aut_Cad.length > 0) {
             if (Ret_Fec > Aut_Cad) {
@@ -1046,11 +1273,25 @@ function guardaProvee() {
     $.saveDataJson("", $('#provCreateForm').getData('guardaProvAjax'), function (resp) { selectProvee(resp['prov']); $('#provCreateDialog').dialog('close'); return false; });
 }
 
+function secuencialLiquidacion(num) {
+    if (num == null || num === '') return '';
+    var parts = String(num).trim().split('-');
+    var sec = (parts.length >= 3 ? parts[parts.length - 1] : parts[0]).replace(/\D/g, '');
+    if (!sec) return '';
+    return ('000000000' + sec).slice(-9);
+}
+function aplicarMascaraCopNum(Tic_Sri) {
+    if (!$.mask) return;
+    var sri = Tic_Sri * 1;
+    $('#Cop_Num').unmask();
+    if (sri === 3) $('#Cop_Num').mask('999999999', { placeholder: '_' });
+    else $('#Cop_Num').mask(sri === 17 ? '999-9999-99-99999999' : '999-999-999999999', { placeholder: '_' });
+}
 function checkImportacion(Tic_Sri) {
-    var Importa = Tic_Sri * 1 === 17;
-    if ($.mask) $('#Cop_Num').unmask().mask(Importa ? "999-9999-99-99999999" : "999-999-999999999", { placeholder: "_" });
+    aplicarMascaraCopNum(Tic_Sri);
 }
 function checkLiquidacion() {
+    if (typeof window.toggleBtnIngresoAutLiq === 'function') window.toggleBtnIngresoAutLiq();
     $('#infoLiquida').hide();
     var Tic_Sri = $('#Tic_Cod').find('option:selected').data('ticsri') * 1, Prv_Cod = $('#provFormTemp').getData()['Prv_Cod']; if (Tic_Sri !== 3 || Prv_Cod === '') return;
     $.post("", { liquida: true, Tic_Sri: Tic_Sri, Prv_Cod: Prv_Cod, Cop_Fec: $('#Cop_Fec').val() }, function (response) {
@@ -1385,17 +1626,60 @@ function saveChangePago() {
 }
 
 function ImpCom(rowCompra) {
+    // Se consulta si la empresa tiene un reporte asignado en la base de datos
     $.getDataJson('', { 'cargarReportes': true }, function (res) {
         var reportes = res['reportes'];
-        $.varValid(reportes[1]) ? $.imprimirUrl(reportes[1] + '?codigo=' + rowCompra.Com_Cod) : $.alert('Sin reportes asociados');
+        var reportPath = null;
+        
+        if ($.varValid(reportes)) {
+            // Obtenemos el primer reporte asociado dinámicamente sin importar su clave (ID)
+            for (var key in reportes) {
+                if (reportes.hasOwnProperty(key) && $.varValid(reportes[key])) {
+                    reportPath = reportes[key];
+                    break;
+                }
+            }
+        }
+        
+        var urlReporte = '';
+        if (reportPath) {
+            // Si la empresa TIENE un reporte configurado en el sistema, lo usamos.
+            // Pasamos ambos parámetros por si es el reporte unificado nuevo.
+            var separador = reportPath.indexOf('?') !== -1 ? '&' : '?';
+            urlReporte = reportPath + separador + 'codigo=' + rowCompra.Com_Cod + '&com_codigo=' + rowCompra.Cop_Cod;
+        } else {
+            // Si NO tiene reporte configurado, evitamos el error y usamos el reporte por defecto.
+            urlReporte = '/contabilidad/FRONT/con_pri_compr_2.1.php?codigo=' + rowCompra.Com_Cod;
+        }
+        
+        $.imprimirUrl(urlReporte);
+        
     }, function (err) {
-        console.log(err['message']);
+        // En caso de que la consulta falle, aseguramos que siempre imprima el por defecto
+        $.imprimirUrl('/contabilidad/FRONT/con_pri_compr_2.1.php?codigo=' + rowCompra.Com_Cod);
     });
 }
-
 /**/
 $.fn.fmatter.ice = function (cv, opts, cObjt) { var ice_por = cObjt['Cop_Ice'] || cObjt['Ice_Por']; if ($.varValid(ice_por) && ice_por !== '' && !isNaN(ice_por) && ice_por * 1 > 0) return ice_por + ' %'; else return ''; };
 $.fn.fmatter.ice.unformat = function (cv, opts, cObjt) { return cv.replace(' %', ''); };
+/** Botón de rubro: warning si falta, success si ya está (el cuadro permite quitar). */
+$.fn.fmatter.ppaRubroBtn = function (cv, opts, o) {
+    if (!$.varValid(o['Pro_Cod']) || o['Pro_Cod'] === '') return '';
+    var has = ($.varValid(o['Pdp_Cod']) && String(o['Pdp_Cod']) !== '' && String(o['Pdp_Cod']) !== '0')
+        || ($.varValid(o['Ppa_Cod']) && String(o['Ppa_Cod']) !== '' && String(o['Ppa_Cod']) !== '0');
+    var label = o['Ppa_Label'] || ((o['Ppa_Cla'] || '') + ' - ' + (o['Ppa_Des'] || ''));
+    var tip = has
+        ? ('Rubro: ' + $.trim(label))
+        : 'Sin rubro de presupuesto — clic para asignar';
+    return $.getGridButton({
+        action: 'openPpaRowSelector',
+        data: o.index,
+        icon: has ? 'ok' : 'warning-sign',
+        type: has ? 'success' : 'warning',
+        title: tip
+    });
+};
+$.fn.fmatter.ppaRubroBtn.unformat = $.unformatCellHtml;
 $.fn.fmatter.impRenta = function (cv, opts, cObjt) { if (!$.varValid(cObjt['Pro_Cod']) || cObjt['Pro_Cod'] === '') return ''; return getRentaButton(cv, { tipo: 'R', index: cObjt['index'] }, cObjt); };
 $.fn.fmatter.impRenta.unformat = $.unformatCellHtml;
 $.fn.fmatter.retIva = function (cv, opts, cObjt) { if (!$.varValid(cObjt['Pro_Cod']) || cObjt['Pro_Cod'] === '') return ''; if (cObjt['Iva_Por'] * 1 === 0) return ''; return getRentaButton(cv, { tipo: 'I', index: cObjt['index'] }, cObjt); };

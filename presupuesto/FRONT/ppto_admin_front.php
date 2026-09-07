@@ -387,9 +387,7 @@ if (isset($_POST['guardar_mensual'])) {
         foreach ($meses as $mes => $monto) {
             $mes = (int)$mes;
             $monto = (float)$monto;
-            $mysqli_conn->query("INSERT INTO pre_detalle (Ppe_Cod, Ppa_Cod, Pde_Mes, Pde_Mon) 
-                                VALUES ($Ppe_Cod, $Ppa_Cod, $mes, $monto) 
-                                ON DUPLICATE KEY UPDATE Pde_Mon = $monto");
+            $mysqli_conn->query("INSERT INTO pre_detalle (Ppe_Cod, Ppa_Cod, Pde_Mes, Pde_Mon)VALUES ($Ppe_Cod, $Ppa_Cod, $mes, $monto)ON DUPLICATE KEY UPDATE Pde_Mon = $monto");
         }
     }
 
@@ -703,7 +701,7 @@ $ppto_admin_qs_raw = 'emp_cod=' . $emp_filtro . '&ani=' . $ani_filtro . '&ver=' 
         var PPTO_PARTIDAS_PADRE_POOL = <?php echo ppto_json_encode_safe($partidas_padre_pool); ?>;
         var PPTO_PARTIDAS_CATALOGO = <?php echo ppto_json_encode_safe($partidas_catalogo_js); ?>;
     </script>
-    <script src="../VALIDACIONES/ppto_validaciones_js.js"></script>
+    <script src="../VALIDACIONES/ppto_validaciones_js.js?v=20260818a"></script>
     <style>
         #modal_partida.exa-pre-modal-overlay { z-index: 10050; }
         #modal_regla.exa-pre-modal-overlay { z-index: 10050; }
@@ -1982,7 +1980,7 @@ $ppto_admin_qs_raw = 'emp_cod=' . $emp_filtro . '&ani=' . $ani_filtro . '&ver=' 
                     <div id="ppto_partida_padre_wrap" style="display:none;">
                         <label style="font-size:11px;font-weight:600;color:#4a5568;">Contenedor (partida padre)</label>
                         <select name="Ppa_Pad" id="form_ppa_padre_id" class="form-control input-sm" onchange="pptoPartidaSyncDesdePadre()">
-                            <option value="">â€” Seleccione contenedor â€”</option>
+                            <option value="">- Seleccione contenedor -</option>
                         </select>
                         <p id="form_ppa_pad_ayuda" style="font-size:11px;color:#718096;margin:6px 0 0;"></p>
                     </div>

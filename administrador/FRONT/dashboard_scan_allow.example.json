@@ -1,0 +1,6 @@
+{
+    "roots": [
+        "/var/www/html",
+        "C:\\xampp\\htdocs"
+    ]
+}

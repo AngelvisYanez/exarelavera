@@ -882,7 +882,7 @@ $partidas = ppto_partidas_listar($mysqli_conn, array(
             <div>
                 <div class="kpi-card">
                     <div class="kpi-indicator"><i class="bi bi-cart-check text-success"></i></div>
-                    <div class="kpi-title" id="lbl_kpi_ejecutado" title="Pagos y egresos ya registrados">Ya gastado</div>
+                    <div class="kpi-title" id="lbl_kpi_ejecutado" title="Asientos contables (Asi_Val) vinculados al rubro; mes segun Com_Fec">Ya gastado</div>
                     <div class="kpi-value" id="kpi_ejecutado">$0.00</div>
                 </div>
             </div>
@@ -1596,7 +1596,7 @@ $partidas = ppto_partidas_listar($mysqli_conn, array(
                 '<th class="text-left" style="width:11%;"' + tip + ' title="Codigo del rubro o capitulo presupuestario">Codigo</th>' +
                 '<th style="width:34%;"' + tip + ' title="Nombre del rubro; las filas azules son capitulos con suma de hijos">Rubro / capitulo</th>' +
                 '<th class="text-right" style="width:15%;"' + tip + ' title="Monto aprobado vigente (despues de reajustes)">Presupuesto</th>' +
-                '<th class="text-right" style="width:14%;"' + tip + ' title="Pagos y egresos ya registrados">Ya gastado</th>' +
+                '<th class="text-right" style="width:14%;"' + tip + ' title="Asientos contables (Asi_Val) del rubro; mes segun fecha del comprobante">Ya gastado</th>' +
                 '<th class="text-right" style="width:14%;"' + tip + ' title="Saldo que aun puede utilizarse">Saldo</th>' +
                 '<th class="text-center" style="width:12%;"' + tip + ' title="Porcentaje del presupuesto aun disponible">Estado</th>' +
                 '</tr>';

@@ -1,0 +1,11 @@
+{
+  "name": "exa-auditoria-e2e",
+  "private": true,
+  "scripts": {
+    "test:browser": "node aud_e2e_browser.mjs",
+    "test:browser:headed": "set HEADED=1&& node aud_e2e_browser.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

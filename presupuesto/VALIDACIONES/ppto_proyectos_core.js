@@ -574,6 +574,59 @@ function setRubroPartidaSeleccion(codigo, ppaId) {
   if (ppaId) $('#rub_ppa_id').val(ppaId);
 }
 
+function versionPpeId(v) {
+  if (!v) return '';
+  var id = (v.Ppe_Cod != null && v.Ppe_Cod !== '') ? v.Ppe_Cod : (v.ppe_id != null ? v.ppe_id : '');
+  return String(id || '');
+}
+
+function versionEst(v) {
+  return String((v && (v.Ppe_Est || v.ppe_estado)) || '').toUpperCase();
+}
+
+function versionAnio(v) {
+  return parseInt((v && (v.Ppe_Ani || v.ppe_anio)) || 0, 10);
+}
+
+function currentRubPpeId() {
+  return String($('#rub_ppe_id').val() || '').trim();
+}
+
+function asegurarVersionServidor(cb) {
+  $.getJSON(API, {action: 'asegurar_version'}, function(r) {
+    if (r && r.status === 'success' && r.Ppe_Cod) {
+      $('#rub_ppe_id').val(String(r.Ppe_Cod));
+    }
+    if (cb) cb(!!currentRubPpeId(), currentRubPpeId());
+  }).fail(function() {
+    if (cb) cb(false, '');
+  });
+}
+
+function ensureRubPpeId(done) {
+  var ppe = currentRubPpeId();
+  if (ppe) {
+    if (done) done(true, ppe);
+    return;
+  }
+  asegurarVersionServidor(done);
+}
+
+function requireProyectoYPpe(onReady, msgProy) {
+  var proy = String($('#rub_proy_id').val() || '').trim();
+  if (!proy) {
+    toast(msgProy || 'Seleccione un proyecto.', false);
+    return;
+  }
+  ensureRubPpeId(function(ok, ppe) {
+    if (!ok) {
+      toast('No se pudo obtener la cabecera presupuestaria activa. Recargue la pagina (Ctrl+F5).', false);
+      return;
+    }
+    onReady(proy, ppe);
+  });
+}
+
 function fillVersionesSelect(versiones, selectedId){
   // Sin selector de version: usa cabecera activa (Ppe_Est=A) o la indicada.
   var list = versiones || [];
@@ -581,23 +634,23 @@ function fillVersionesSelect(versiones, selectedId){
   var anioNow = (new Date()).getFullYear();
   if (selectedId) {
     $.each(list, function(i, v) {
-      if (String(v.Ppe_Cod) === String(selectedId)) { pick = v; return false; }
+      if (versionPpeId(v) === String(selectedId)) { pick = v; return false; }
     });
   }
   if (!pick) {
     $.each(list, function(i, v) {
-      if (v.Ppe_Est === 'A' && parseInt(v.Ppe_Ani, 10) === anioNow) { pick = v; return false; }
+      if (versionEst(v) === 'A' && versionAnio(v) === anioNow) { pick = v; return false; }
     });
   }
   if (!pick) {
     $.each(list, function(i, v) {
-      if (v.Ppe_Est === 'A') { pick = v; return false; }
+      if (versionEst(v) === 'A') { pick = v; return false; }
     });
   }
   if (!pick && list.length) {
     pick = list[0];
   }
-  $('#rub_ppe_id').val(pick ? String(pick.Ppe_Cod) : '');
+  $('#rub_ppe_id').val(pick ? versionPpeId(pick) : '');
 }
 
 function loadCatalogos(cb){
@@ -614,11 +667,16 @@ function loadCatalogos(cb){
     fillPartidasRubro();
     fillVersionesSelect(r.versiones||[]);
 
+    if (!currentRubPpeId()) {
+      asegurarVersionServidor(function(){ if (cb) cb(); });
+      return;
+    }
+
     if (cb) cb();
 
   }).fail(function(){
     toast('Error al cargar catalogos. Recargue la pagina (Ctrl+F5).', false);
-    if (cb) cb();
+    asegurarVersionServidor(function(){ if (cb) cb(); });
   });
 
 }
@@ -1113,7 +1171,7 @@ function renderTablaRubrosPage() {
   var total = rubrosPageRows.length;
   var $pager = $('#tblRubrosPager');
   if (!total) {
-    $tb.append('<tr><td colspan="8" class="text-center text-muted" style="padding:24px;">Sin rubros para este proyecto y version.</td></tr>');
+    $tb.append('<tr><td colspan="8" class="text-center text-muted" style="padding:24px;">Sin rubros para este proyecto.</td></tr>');
     if ($pager.length) $pager.hide();
     return;
   }

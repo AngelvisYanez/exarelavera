@@ -226,6 +226,94 @@ function ppto_schema_ejecutar_sql($mysqli, $path) {
 }
 
 /**
+ * Fija charset UTF-8 en la conexion (el default MySQL/XAMPP es latin1).
+ * Sin esto, tildes del Excel (UTF-8) se guardan como Ã¡ / Ã³ / Ã©.
+ *
+ * @param mysqli $mysqli
+ */
+function ppto_db_set_utf8($mysqli) {
+    if (!$mysqli || !is_object($mysqli) || !method_exists($mysqli, 'set_charset')) {
+        return;
+    }
+    if (@$mysqli->set_charset('utf8mb4')) {
+        return;
+    }
+    @$mysqli->set_charset('utf8');
+}
+
+/**
+ * Repara texto UTF-8 de tildes guardado como Latin-1 (ViÃ¡ticos -> Viaticos con tilde).
+ *
+ * @param string $s
+ * @return string
+ */
+function ppto_texto_reparar_mojibake($s) {
+    $s = (string)$s;
+    if ($s === '') {
+        return '';
+    }
+    if (strpos($s, "\xC3\x83") === false && strpos($s, "\xC3\x82") === false) {
+        return $s;
+    }
+    $fixed = false;
+    if (function_exists('utf8_decode')) {
+        $fixed = utf8_decode($s);
+    } elseif (function_exists('mb_convert_encoding')) {
+        $fixed = @mb_convert_encoding($s, 'ISO-8859-1', 'UTF-8');
+    }
+    if ($fixed === false || $fixed === '') {
+        return $s;
+    }
+    if (function_exists('mb_check_encoding') && !mb_check_encoding($fixed, 'UTF-8')) {
+        return $s;
+    }
+    return $fixed;
+}
+
+/**
+ * Repara rubros/partidas ya guardados con tildes corruptas (una pasada, idempotente).
+ *
+ * @param mysqli $mysqli
+ */
+function ppto_schema_reparar_mojibake_nombres($mysqli) {
+    if (!$mysqli) {
+        return;
+    }
+    $specs = array(
+        array('pre_proyecto_detalles', 'Pdp_Rubro', 'Pdp_Cod'),
+        array('pre_partidas', 'Ppa_Des', 'Ppa_Cod'),
+    );
+    foreach ($specs as $spec) {
+        $tabla = $spec[0];
+        $col = $spec[1];
+        $pk = $spec[2];
+        if (!function_exists('ppto_schema_es_tabla_base') || !ppto_schema_es_tabla_base($mysqli, $tabla)) {
+            continue;
+        }
+        if (!function_exists('ppto_schema_columna_existe') || !ppto_schema_columna_existe($mysqli, $tabla, $col)) {
+            continue;
+        }
+        $sql = "SELECT `$pk` AS id, `$col` AS txt FROM `$tabla`
+                WHERE `$col` LIKE CONCAT('%', CONVERT(UNHEX('C383') USING utf8), '%')
+                   OR `$col` LIKE CONCAT('%', CONVERT(UNHEX('C382') USING utf8), '%')";
+        $res = @$mysqli->query($sql);
+        if (!$res) {
+            continue;
+        }
+        while ($row = $res->fetch_assoc()) {
+            $orig = isset($row['txt']) ? (string)$row['txt'] : '';
+            $fixed = ppto_texto_reparar_mojibake($orig);
+            if ($fixed === '' || $fixed === $orig) {
+                continue;
+            }
+            $id = (int)$row['id'];
+            $esc = $mysqli->real_escape_string($fixed);
+            @$mysqli->query("UPDATE `$tabla` SET `$col`='$esc' WHERE `$pk`=$id LIMIT 1");
+        }
+    }
+}
+
+/**
  * Asegura tablas pre_* (nunca crea/altera vistas exa_ppto_*).
  *
  * @param mysqli $mysqli
@@ -234,6 +322,7 @@ function ppto_schema_ensure($mysqli) {
     if (!$mysqli) {
         return;
     }
+    ppto_db_set_utf8($mysqli);
 
     $sql_dir = __DIR__ . '/../SQL';
     // Canonico EXA: tablas fisicas pre_*. Las vistas exa_ppto_* son compatibilidad.
@@ -272,6 +361,7 @@ function ppto_schema_ensure($mysqli) {
     require_once __DIR__ . '/ppto_ajuste_financiero_logica.php';
     ppto_schema_ensure_ajuste_financiero($mysqli);
     ppto_schema_ensure_nomenclatura_exa($mysqli);
+    ppto_schema_reparar_mojibake_nombres($mysqli);
 }
 
 /**

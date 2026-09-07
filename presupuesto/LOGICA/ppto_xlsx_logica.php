@@ -46,6 +46,9 @@ function ppto_xlsx_load_shared_strings($zip) {
                 }
             }
         }
+        if (function_exists('ppto_pdf_a_utf8')) {
+            $t = ppto_pdf_a_utf8($t);
+        }
         $strings[] = $t;
     }
     return $strings;
@@ -118,11 +121,13 @@ function ppto_xlsx_cell_value($cell, $sharedStrings) {
     $t = isset($cell['t']) ? (string)$cell['t'] : '';
     if ($t === 'inlineStr') {
         if (isset($cell->is->t)) {
-            return (string)$cell->is->t;
+            $inline = (string)$cell->is->t;
+        } elseif (isset($cell->is)) {
+            $inline = trim((string)$cell->is);
+        } else {
+            $inline = '';
         }
-        if (isset($cell->is)) {
-            return trim((string)$cell->is);
-        }
+        return function_exists('ppto_pdf_a_utf8') ? ppto_pdf_a_utf8($inline) : $inline;
     }
     if (!isset($cell->v)) {
         return '';
@@ -133,7 +138,7 @@ function ppto_xlsx_cell_value($cell, $sharedStrings) {
         return isset($sharedStrings[$idx]) ? $sharedStrings[$idx] : '';
     }
     if ($t === 'str') {
-        return $v;
+        return function_exists('ppto_pdf_a_utf8') ? ppto_pdf_a_utf8($v) : $v;
     }
     return $v;
 }
