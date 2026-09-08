@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 /**
  * @abstract Permite realizar la cancelacion de comprobantes por abonos
  * @author Erik Niebla
@@ -29,8 +30,19 @@ if(isset($productoAjax)){
     utf8_encode_deep($responce['rows']);echo json_encode($responce);exit();
 }
 if(isset($listTipo)){ 
-   $responce['rows'] = $obBD_con1->getArrayConsulta(8, $Pro_Cod.'*'.$Pla_Cod.'*'.$listTipo.'*'.$Con_Cod, $obBD_conexion);
-   echo json_encode($responce);exit();
+    $Pro_Cod = isset($Pro_Cod) ? $Pro_Cod : '';
+    $Pla_Cod = isset($Pla_Cod) ? $Pla_Cod : '';
+    $Con_Cod = isset($Con_Cod) ? $Con_Cod : '';
+    $responce = array('page' => 1, 'total' => 1, 'records' => 0, 'rows' => array());
+    if($Pro_Cod != '' && $Pla_Cod != ''){
+        $rows = $obBD_con1->getArrayConsulta(8, $Pro_Cod.'*'.$Pla_Cod.'*'.$listTipo.'*'.$Con_Cod, $obBD_conexion);
+        if(is_array($rows)){
+            utf8_encode_deep($rows);
+            $responce['rows'] = $rows;
+            $responce['records'] = count($rows);
+        }
+    }
+    echo json_encode($responce);exit();
 }
 if(isset($cuenProdAjax)||isset($cuenCatAjax)){ 
     $contar = $obBD_con1->getRowConsulta(9, $search.'*'.$Ses_Emp_Cod.'*'.$Pec_Cod.'*'.$op_opciones.'*'. $tipo_doc_param, $obBD_conexion);	      
@@ -69,8 +81,19 @@ if(isset($categAjax)){
     utf8_encode_deep($responce['rows']);echo json_encode($responce);exit();
 }
 if(isset($listTipoCat)){ 
-   $responce['rows'] = $obBD_con1->getArrayConsulta(13, $Cat_Cod.'*'.$Pla_Cod.'*'.$listTipoCat.'*'.$Con_Cod, $obBD_conexion);
-   echo json_encode($responce);exit();
+    $Cat_Cod = isset($Cat_Cod) ? $Cat_Cod : '';
+    $Pla_Cod = isset($Pla_Cod) ? $Pla_Cod : '';
+    $Con_Cod = isset($Con_Cod) ? $Con_Cod : '';
+    $responce = array('page' => 1, 'total' => 1, 'records' => 0, 'rows' => array());
+    if($Cat_Cod != '' && $Pla_Cod != ''){
+        $rows = $obBD_con1->getArrayConsulta(13, $Cat_Cod.'*'.$Pla_Cod.'*'.$listTipoCat.'*'.$Con_Cod, $obBD_conexion);
+        if(is_array($rows)){
+            utf8_encode_deep($rows);
+            $responce['rows'] = $rows;
+            $responce['records'] = count($rows);
+        }
+    }
+    echo json_encode($responce);exit();
 }
 if(isset($addCuentaCat)){ 
     if(empty($addCuentaCat)){$responce['success']=false;$responce['message']='Seleccione tipo de Parametro!';echo json_encode($responce);exit();}
@@ -83,6 +106,87 @@ if(isset($addCuentaCat)){
     $obBD_con1->fin_transaccion_nomsn($obBD_conexion->conexion);   
     if($obBD_con1->Error==0){ $responce['success']=true;} else{$responce['success']=false;$responce['message']=$obBD_con1->MsgError;}
     echo json_encode($responce);exit();
+}
+if(isset($exportarExcel)){
+    $Pla_Cod = isset($Pla_Cod) ? $Pla_Cod : '';
+    if(empty($Pla_Cod) && isset($Pec_Cod)){
+        $Pec_arr = explode('*', $Pec_Cod);
+        if(isset($Pec_arr[3])) $Pla_Cod = $Pec_arr[3];
+    }
+    $sql = "SELECT 
+        producto.Pro_Cod,
+        producto.Ite_Cod,
+        categorias.Cat_Des,
+        item.Ite_Cor,
+        item.Ite_Lar,
+        COALESCE(marca.Mar_Des, 'NINGUNA') AS Mar_Des,
+        produ_plan.Tip_Pld,
+        COALESCE(consumo.Con_Des, '') AS Con_Des,
+        det_plan.Pld_Cod,
+        det_plan.Pld_Cdc,
+        det_plan.Pld_Des
+    FROM producto
+    INNER JOIN item ON producto.Ite_Cod = item.Ite_Cod
+    INNER JOIN categorias ON item.Cat_Cod = categorias.Cat_Cod
+    LEFT JOIN marca ON producto.Mar_Cod = marca.Mar_Cod
+    LEFT JOIN produ_plan ON produ_plan.Pro_Cod = producto.Pro_Cod
+    LEFT JOIN det_plan ON det_plan.Pld_Cod = produ_plan.Pld_Cod AND det_plan.Pla_Cod = '$Pla_Cod'
+    LEFT JOIN consumo ON consumo.Con_Cod = produ_plan.Con_Cod
+    WHERE item.Ite_Est = 'A' AND producto.Pro_Est = 'A' AND categorias.Emp_Cod = '$Ses_Emp_Cod'
+    ORDER BY producto.Pro_Cod ASC, produ_plan.Tip_Pld ASC";
+    
+    $tip_map = array('C' => 'Compras', 'V' => 'Ventas', 'G' => 'Gastos', 'O' => 'Costos', 'N' => 'Ingresos', 'E' => 'Egresos', 'I' => 'Inventario');
+    $rs = $obBD_con1->consulta($sql, $obBD_conexion->conexion);
+    
+    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
+    header('Content-Disposition: attachment; filename="Reporte_Parametrizacion_Productos_' . date('Ymd') . '.xls"');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+    echo "\xEF\xBB\xBF";
+    ?>
+    <table border="1">
+        <thead>
+            <tr style="background-color: #2F5597; color: #ffffff; font-weight: bold; text-align: center;">
+                <th>Cód. Producto</th>
+                <th>Cód. Ítem</th>
+                <th>Categoría</th>
+                <th>Descripción Corta</th>
+                <th>Descripción Larga</th>
+                <th>Marca</th>
+                <th>Estado Parametrización</th>
+                <th>Tipo Movimiento</th>
+                <th>Centro Consumo</th>
+                <th>Cód. Cuenta Contable</th>
+                <th>Nombre Cuenta Contable</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php
+        while($r = $obBD_con1->fetch_assoc($rs)){
+            $is_param = !empty($r['Pld_Cdc']);
+            $tip = isset($tip_map[$r['Tip_Pld']]) ? $tip_map[$r['Tip_Pld']] : ($is_param ? 'General' : '-');
+            $estado = $is_param ? 'PARAMETRIZADO' : 'SIN PARAMETRIZAR';
+            $bg_estado = $is_param ? '#D4EFDF' : '#FCF3CF';
+            $fg_estado = $is_param ? '#0E6251' : '#7D6608';
+        ?>
+            <tr>
+                <td style="text-align: center;"><?php echo $r['Pro_Cod']; ?></td>
+                <td style="text-align: center;"><?php echo $r['Ite_Cod']; ?></td>
+                <td><?php echo htmlspecialchars($r['Cat_Des']); ?></td>
+                <td><?php echo htmlspecialchars($r['Ite_Cor']); ?></td>
+                <td><?php echo htmlspecialchars($r['Ite_Lar']); ?></td>
+                <td><?php echo htmlspecialchars($r['Mar_Des']); ?></td>
+                <td style="text-align: center; background-color: <?php echo $bg_estado; ?>; color: <?php echo $fg_estado; ?>; font-weight: bold;"><?php echo $estado; ?></td>
+                <td style="text-align: center;"><?php echo $tip; ?></td>
+                <td><?php echo htmlspecialchars($r['Con_Des']); ?></td>
+                <td style="text-align: center; font-weight: bold;"><?php echo $r['Pld_Cdc']; ?></td>
+                <td><?php echo htmlspecialchars($r['Pld_Des']); ?></td>
+            </tr>
+        <?php } ?>
+        </tbody>
+    </table>
+    <?php
+    exit();
 }
  $listOptions = <<<EOF
     <option value="">Seleccione...</option>
@@ -99,6 +203,7 @@ if(isset($addCuentaCat)){
         <option value="O">Costos</option>
     </optgroup>
 EOF;
+header('Content-Type: text/html; charset=UTF-8');
 ?>
 <!DOCTYPE html>
 <HTML>
@@ -135,7 +240,7 @@ EOF;
                     <div class="col-sm-12">  
                         <fieldset class="exa-fieldset">                           
                            <legend class="Titulos2">Seleccione Periodo</legend> <!-- Form Name -->
-                           <form action="<?php echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>" method="post" name= "form1" class="form-horizontal normal">	 
+                           <form action="<? echo filter_input(INPUT_SERVER, 'PHP_SELF', FILTER_SANITIZE_STRING); ?>" method="post" name= "form1" class="form-horizontal normal">	 
                                <div class="form-group">
                                   <label class="col-sm-2 control-label label-sm required" for="Pec_Cod">Periodo:</label>  
                                   <div class="col-sm-2">
@@ -184,11 +289,16 @@ EOF;
                                         </div>
                                         <div class="form-group">
                                             <label class="col-xs-2 control-label">B&uacute;squeda:</label>  
-                                            <div class="col-xs-7" >
+                                            <div class="col-xs-6" >
                                                 <div class="input-group">                        
                                                 <input name="search" onkeydown="if (event.keyCode === 13) this.form.submit()" type="text" size="50" maxlength="50" placeholder="Ingrese Producto a buscar..." autofocus  class="form-control input-sm "/>
                                                 <span class="input-group-btn"><button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm" title="Buscar Producto" ><span class="glyphicon glyphicon-search"></span> <span>Buscar</span></button></span>
                                               </div><!-- /input-group --> 
+                                            </div>
+                                            <div class="col-xs-4 text-right">
+                                                <a href="?exportarExcel=1&Pla_Cod=<?php echo isset($Pec[3]) ? $Pec[3] : ''; ?>" target="_blank" class="btn btn-primary btn-sm" title="Exportar Reporte a Excel">
+                                                    <i class="glyphicon glyphicon-download-alt"></i> <span>Exportar Excel</span>
+                                                </a>
                                             </div>                    
                                         </div>
                                    </form>
@@ -314,7 +424,7 @@ EOF;
                                 },false,"#listProdsPager");                                
 
                                 $("#prodCuentas").createGrid({
-                                    postData:{listTipo:'I'}, height: 150,caption:'<b>&raquo;</b> Cuentas Contables',
+                                    height: 150,caption:'<b>&raquo;</b> Cuentas Contables',
                                     colModel: [                                         
                                         { label: 'Tipo', name: 'Tipo', width: 30,align:"center",classes:'bold cellOrange1', 
                                             formatter:function(cellvalue, options, rowObject){  
@@ -347,7 +457,7 @@ EOF;
                                             }
                                     ],
                                     loadComplete:function (){var ids = $("#prodCuentas").jqGrid('getDataIDs'); if(ids.length===0&&$('#listTipo').val()!=='') $('#btnAddCuenProd').removeAttr('disabled'); else $('#btnAddCuenProd').attr('disabled','disabled'); }
-                                });  
+                                },true);  
                             },true);
                         </script>
                         
@@ -469,6 +579,7 @@ EOF;
                                         { label: 'Desc. Corta', name: 'Ite_Cor', width: 60,align:"center" }, 
                                         { label: 'Desc. Larga', name: 'Ite_Lar', width: 160,align:"left" },
                                         { label: 'Marca', name: 'Mar_Des', width: 40 },                                                
+                                            
                                         { label:'<center><i class="ui-icon ui-icon-circle-check"></i></center>', name: 'act1', width: 20, align: 'center',viewable: false, formatter: 'checkbox',formatoptions: { disabled: false },resizable:false, hidden:true}         
                                     ]
                                 },true);
