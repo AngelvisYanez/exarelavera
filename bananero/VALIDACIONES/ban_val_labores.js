@@ -70,19 +70,58 @@ $(() => {
             { label: 'C�d.Int.', name: 'Fnc_Cod', key: true, width: 15, align: 'center', hidden: false },
             { label: 'Descripci&oacute;n ', name: 'Fnc_Des', width: 45, align: 'left' },
             { label: 'Direcci&oacute;n ', name: 'Fnc_Dir', width: 20, align: 'left' },
-            { label: 'Hect&aacute;reas ', name: 'Fnc_Hec', width: 15, align: 'center' }
+            { label: 'Hect&aacute;reas ', name: 'Fnc_Hec', width: 15, align: 'center', hidden: true },
+            {
+                name: 'delete',
+                label: '<i class="glyphicon glyphicon-trash"></i>',
+                width: 10,
+                align: 'center',
+                viewable: false,
+                formatter: 'gridButton',
+                formatoptions: {
+                    action: delFinca,
+                    icon: 'trash',
+                    type: 'danger',
+                    title: 'Anular Sector',
+                    data: function(o) {
+                        return o;
+                    }
+                },
+                resizable: false
+            },
+            {
+                name: 'update',
+                label: '<i class="glyphicon glyphicon-pencil"></i>',
+                width: 10,
+                align: 'center',
+                viewable: false,
+                formatter: 'gridButton',
+                formatoptions: {
+                    action: updFinca,
+                    icon: 'pencil',
+                    type: 'info',
+                    title: 'Actualizar Sector',
+                    data: function(o) {
+                        return o;
+                    }
+                },
+                resizable: false
+            }
         ]
     };
 
     $('#unidadDialog').createDialog({ height: 135, width: 400, icon: 'glyphicon glyphicon-plus' });
     $('#laborDialog').createDialog({ height: 200, width: 420, icon: 'pencil' });
+    if ($('#fincaDialog').length > 0) {
+        $('#fincaDialog').createDialog({ height: 230, width: 420, icon: 'pencil' });
+    }
 
     if ($('#detaLabores').length > 0)
         $('#detaLabores').createGrid(
             $.extend(opts, {
                 height: 'auto',
-                width: 550,
-                responsive: false,
+                width: Math.max(($('#detaLabores').closest('.lf-grid-wrap').width() || $('#formDatosLabor').width() || 550) - 8, 420),
+                responsive: true,
                 caption: null,
                 rownumbers: false
             }),
@@ -92,8 +131,8 @@ $(() => {
         $('#detaFincas').createGrid(
             $.extend(optsFink, {
                 height: 'auto',
-                width: 550,
-                responsive: false,
+                width: Math.max(($('#detaFincas').closest('.lf-grid-wrap').width() || $('#formDatosFinca').width() || 550) - 8, 420),
+                responsive: true,
                 caption: null,
                 rownumbers: false
             }),
@@ -405,10 +444,10 @@ $(() => {
         regional: 'es',
         shrinkToFit: true,
         colModel: [
-            { label: 'C�d.Int.', name: 'Act_Cod', width: 10, key: true, hidden: false, align: "center", viewable: true },
+            { label: 'Cod.Int.', name: 'Act_Cod', width: 10, key: true, hidden: false, align: "center", viewable: true },
             { name: "Fnc_Cod", hidden: true },
             { label: 'Trabajador', name: 'personal', width: 55, align: "center" },
-            { label: 'Finca', name: 'Fnc_Des', width: 55, align: "center" },
+            { label: 'Sector', name: 'Fnc_Des', width: 55, align: "center" },
             { label: 'Fecha', name: 'Act_Fec', width: 50, align: "left" },
             { label: 'Semana', name: 'Semana', width: 55, align: "center" },
             { label: $.createIcon('info-sign'), name: 'actInfo', align: "center", width: 7, viewable: false, formatter: 'gridButton', formatoptions: { action: viewInfo, icon: 'info-sign', type: 'info', title: 'Info' }, title: false, resizable: false },
@@ -730,6 +769,66 @@ function refreshData() {
 
 }
 
+function resolverGridActividad(rowId) {
+    var id = (rowId !== undefined && rowId !== null && rowId !== '') ? String(rowId) : '';
+    var enCrear = id !== '' && $('#tableActividad').jqGrid('getInd', id) !== false;
+    var enMod = id !== '' && $('#tableActividadMod').jqGrid('getInd', id) !== false;
+
+    if (esCrear && !esMod) {
+        return {
+            nameGrid: 'tableActividad',
+            nameForm: 'frm_alt_actividad',
+            parametro: '_Det_Can',
+            fecha: '_Det_Fec',
+            calc: 0
+        };
+    }
+    if (esMod && !esCrear) {
+        return {
+            nameGrid: 'tableActividadMod',
+            nameForm: 'frm_mod_act_edi',
+            parametro: '_Det_Can_Mod',
+            fecha: '_Det_Fec_Mod',
+            calc: 1
+        };
+    }
+    if (enCrear && !enMod) {
+        return {
+            nameGrid: 'tableActividad',
+            nameForm: 'frm_alt_actividad',
+            parametro: '_Det_Can',
+            fecha: '_Det_Fec',
+            calc: 0
+        };
+    }
+    if (enMod && !enCrear) {
+        return {
+            nameGrid: 'tableActividadMod',
+            nameForm: 'frm_mod_act_edi',
+            parametro: '_Det_Can_Mod',
+            fecha: '_Det_Fec_Mod',
+            calc: 1
+        };
+    }
+    // Fallback: tab visible / crear por defecto
+    if ($('#tabs-2').is(':visible') || $('#tableActividad').length) {
+        return {
+            nameGrid: 'tableActividad',
+            nameForm: 'frm_alt_actividad',
+            parametro: '_Det_Can',
+            fecha: '_Det_Fec',
+            calc: 0
+        };
+    }
+    return {
+        nameGrid: 'tableActividadMod',
+        nameForm: 'frm_mod_act_edi',
+        parametro: '_Det_Can_Mod',
+        fecha: '_Det_Fec_Mod',
+        calc: 1
+    };
+}
+
 function abrirDialogPersonal(personal) {
     $('#personalDialog').dialog('open');
     //console.log('personal', personal);
@@ -737,31 +836,36 @@ function abrirDialogPersonal(personal) {
 }
 
 function abrirDialogLabor(labor) {
-    //console.log(labor);
     var id = labor;
-    if (id > 0) {
-        $('#laboresDialog').dialog('open');
-        var trabajador_data = $('#tableActividad').jqGrid('getRowData', id);
-        //console.log(trabajador_data);
-        $('#CodFormBusLab').val(labor);
+    var ctx = resolverGridActividad(id);
+    var trabajador_data = $('#' + ctx.nameGrid).jqGrid('getRowData', id) || {};
+    var perCod = trabajador_data['Per_Cod'] || $('#' + ctx.nameGrid).find('#' + id + '_Per_Cod').val() || '';
 
-    } else {
+    if (!id || (id * 1) <= 0) {
         $.alert('Debe seleccionar un Trabajador antes.!!');
+        return;
+    }
+    if (perCod === '' || perCod === '0' || perCod === 0) {
+        $.alert('Debe seleccionar un Trabajador antes.!!');
+        return;
     }
 
-
+    $('#CodFormBusLab').val(labor);
+    $('#laboresDialog').dialog('open');
 }
 
 function agregarFila(aux) {
 
     if (aux > 0) {
         esMod = true;
+        esCrear = false;
         var $this = $('#tableActividadMod');
         var campoGrid = '_Det_Can_Mod';
         var fecha = '_Det_Fec_Mod';
         var $form = 'frm_mod_act_edi';
     } else {
         esCrear = true;
+        esMod = false;
         var $this = $('#tableActividad');
         var campoGrid = '_Det_Can';
         var fecha = '_Det_Fec'
@@ -780,7 +884,7 @@ function agregarFila(aux) {
         if (vlInput) {
             $.alert('El valor de la cantidad debe ser mayor que 0');
         }
-        makeCalculation(0);
+        makeCalculation(aux > 0 ? 1 : 0);
         $this.find('tr#' + id).find('#' + id + campoGrid).focus();
 
     }).trigger('change');
@@ -829,6 +933,32 @@ function updLabor(row) {
     $('#Lab_Des_Upd').val(row.Lab_Des);
     $('#Tpg_Cod_Id').val(row.Tpg_Cod);
     $('#Lab_Val_Upd').val(row.Lab_Val);
+}
+
+function delFinca(row) {
+    $.createDialogConfirm('Desea anular el sector seleccionado..!!', null, function() {
+        $.saveDataJson("", { elimFinca: true, Fnc_Cod: row['Fnc_Cod'] }, (respuesta) => {
+            if (respuesta['success']) {
+                $('#detaFincas').jqGrid('delRowData', row.id);
+                $('#detaFincas').trigger("reloadGrid");
+                $(".select_finca option[value='" + row['Fnc_Cod'] + "']").remove();
+                $.alert('La transacci&oacute;n se realizo con exito.');
+                return false;
+            }
+        });
+    });
+}
+
+function updFinca(row) {
+    if ($('#fincaDialog').length === 0) {
+        $.alert('No se encontro el formulario de edicion de sector.');
+        return;
+    }
+    $("#Fnc_Cod_Upd").val(row.Fnc_Cod || row.id);
+    $('#Fnc_Des_Upd').val(row.Fnc_Des || '');
+    $('#Fnc_Dir_Upd').val(row.Fnc_Dir || '');
+    $('#Fnc_Hec_Upd').val((row.Fnc_Hec === undefined || row.Fnc_Hec === null || row.Fnc_Hec === '') ? 0 : row.Fnc_Hec);
+    $('#fincaDialog').dialog('open');
 }
 
 
@@ -955,115 +1085,56 @@ function searchLaborPago() {
 }
 
 function selectPersonal(row) {
-    //console.log('Modificar: ', esMod); console.log('Es crear:', esCrear);  console.log(row);
-    if (esMod && !esCrear || !esMod && !esCrear) {
-        //esMod = false;
-        nameGrid = 'tableActividadMod';
-        nameForm = 'frm_mod_act_edi';
-        parametro = '_Det_Can_Mod';
+    var id = $('#CodFormBus').val();
+    var ctx = resolverGridActividad(id);
+    var nameGrid = ctx.nameGrid;
+    var parametro = ctx.parametro;
 
-
-    }
-    if (!esMod && esCrear) {
-        //esCrear = false;
-        nameGrid = 'tableActividad';
-        nameForm = 'frm_alt_actividad';
-        parametro = '_Det_Can';
-    }
-
-    var ids = $('#' + nameGrid).jqGrid('getDataIDs');
-    var datose = $('#' + nameGrid).jqGrid('getRowData');
-
-    var data = { 'items': $('#' + nameGrid).getGridBatch() };
-
-    var change = true;
-    if (change) {
-        var id = $('#CodFormBus').val();
-        $('#' + nameGrid).changeRow($('#CodFormBus').val(), row);
-        $('#' + nameGrid).find('tr#' + id).setData(row, false);
-        $('#' + nameGrid).find('tr#' + id + parametro).val('');
-        $('#' + nameGrid).find('tr#' + id + '_Total').val('');
-        $('#personalDialog').dialog('close');
+    $('#' + nameGrid).changeRow(id, row);
+    $('#' + nameGrid).find('tr#' + id).setData(row, false);
+    $('#' + nameGrid).find('tr#' + id + parametro).val('');
+    $('#' + nameGrid).find('tr#' + id + '_Total').val('');
+    $('#personalDialog').dialog('close');
+    if (ctx.fecha === '_Det_Fec_Mod') {
         $.createDatePickers('#' + id + '_Det_Fec_Mod');
-        /* if (nameGrid === 'tableActividadMod') {
-            $('#' + nameGrid).find('#' + id + parametro).on('change', function() {
-                console.log('entro en el onchange select PErsonal');
-                $('#btn_guardado').prop('disabled', false);
-            }).trigger('change');
-
-        } */
     }
-    //$('#tableActividad').changeRow($('#CodFormBus').val(), row); //$('#tableActividad').find('tr#' + id).setData(row, false);//$('#' + id + '_Det_Can').val('');  //$('#' + id + '_Total').val('');  //$('#personalDialog').dialog('close');
 }
 
 function selectLabor(row) {
-    //console.log('Modificar: ', esMod); console.log('Es crear:', esCrear);  console.log(row);
-    if (esMod && !esCrear || !esMod && !esCrear) {
-        esMod = false;
-        nameGrid = 'tableActividadMod';
-        nameForm = 'frm_mod_act_edi';
-        parametro = '_Det_Can_Mod';
+    var id = $('#CodFormBusLab').val();
+    var ctx = resolverGridActividad(id);
+    var nameGrid = ctx.nameGrid;
+    var parametro = ctx.parametro;
 
+    var trabajador_data = $('#' + nameGrid).jqGrid('getRowData', id) || {};
+    var perCod = trabajador_data['Per_Cod'] || $('#' + nameGrid).find('#' + id + '_Per_Cod').val() || '';
+    var personalTxt = trabajador_data['Personal'] || $('#' + nameGrid).find('#' + id + '_Personal').val() || '';
 
-    }
-    if (!esMod && esCrear) {
-        esCrear = false;
-        nameGrid = 'tableActividad';
-        nameForm = 'frm_alt_actividad';
-        parametro = '_Det_Can';
-    }
-    var ids = $('#' + nameGrid).jqGrid('getDataIDs');
-
-    var datose = $('#' + nameGrid).jqGrid('getRowData');
-
-    var data = { 'items': $('#' + nameGrid).getGridBatch() };
-
-    var change = true;
-
-    if (change) {
-        var id = $('#CodFormBusLab').val();
-
-        var trabajador_data = $('#' + nameGrid).jqGrid('getRowData', id);
-        if (trabajador_data['Per_Cod'] === '') {
-            $('#laboresDialog').dialog('close');
-            $.alert('Debe Seleccionar un trabajador previamente!<br/>Revise los datos.', null, 'remove');
-            return false;
-        } else {
-            row['Per_Cod'] = trabajador_data['Per_Cod'];
-            row['Personal'] = trabajador_data['Personal'];
-            //console.log(row);
-            $('#' + nameGrid).changeRow($('#CodFormBus').val(), row);
-            $('#' + nameGrid).find('tr#' + id).setData(row, false);
-            $('#' + nameGrid).find('tr#' + id + parametro).val('');
-            $('#' + nameGrid).find('tr#' + id + '_Total').val('');
-            $.createDatePickers('#' + id + '_Det_Fec_Mod');
-            $('#laboresDialog').dialog('close');
-            if (nameGrid === 'tableActividadMod') {
-
-                $('#' + nameGrid).find('#' + id + parametro).on('change', function() {
-                    //console.log('entro en el onchange select PErsonal');
-                    /* var vlInput = validaDecimal($('#' + nameGrid).find('#' + id + parametro).val());
-                    if (vlInput) {
-                        $.alert('El valor de la cantidad debe ser mayor que 0');
-                    } */
-                    makeCalculation(1);
-                    $('#btn_guardado').prop('disabled', false);
-                }).trigger('change');
-
-            }
-
-        }
-
+    if (perCod === '' || perCod === '0' || perCod === 0) {
+        $('#laboresDialog').dialog('close');
+        $.alert('Debe Seleccionar un trabajador previamente!<br/>Revise los datos.', null, 'remove');
+        return false;
     }
 
+    row['Per_Cod'] = perCod;
+    row['Personal'] = personalTxt;
+    $('#' + nameGrid).changeRow(id, row);
+    $('#' + nameGrid).find('tr#' + id).setData(row, false);
+    $('#' + nameGrid).find('#' + id + parametro).val('');
+    $('#' + nameGrid).find('#' + id + '_Total').val('');
+    if (ctx.fecha === '_Det_Fec_Mod') {
+        $.createDatePickers('#' + id + '_Det_Fec_Mod');
+    }
+    $('#laboresDialog').dialog('close');
 
-
-    //console.log(row);
-    //$('#tableActividad').changeRow($('#CodFormBusLab').val(), row);
-    //$('#tableActividad').find('tr#' + id).setData(row, false);
-    // $('#' + id + '_Det_Can').val('');
-    //$('#' + id + '_Total').val('');
-    //$('#laboresDialog').dialog('close');
+    if (nameGrid === 'tableActividadMod') {
+        $('#' + nameGrid).find('#' + id + parametro).off('change.selectLabor').on('change.selectLabor', function() {
+            makeCalculation(1);
+            $('#btn_guardado').prop('disabled', false);
+        }).trigger('change');
+    } else {
+        makeCalculation(0);
+    }
 }
 
 function makeCalculation(aux) {
