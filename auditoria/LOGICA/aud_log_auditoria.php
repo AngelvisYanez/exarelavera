@@ -366,7 +366,7 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 			$this->fin_transaccion_nomsn($obBD_conexion->conexion);
 			$this->registrarLogSesion($obBD_conexion, $Ses_Usu_Cod, 'I', 'Ses_Cod', (string)$Ses_Cod, 'Ses_Cod='.$Ses_Cod);
 			return $Ses_Cod;
-		} catch (Throwable $e) {
+		} catch (\Exception $e) {
 			if (class_exists('DebugBar')) {
 				DebugBar::addException($e);
 			}
@@ -424,7 +424,7 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 			$obBD_conexion->cerrar();
 
 			return $this->Error;
-		} catch (Throwable $e) {
+		} catch (\Exception $e) {
 			if (class_exists('DebugBar')) {
 				DebugBar::addException($e);
 			}

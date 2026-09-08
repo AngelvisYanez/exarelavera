@@ -316,13 +316,13 @@ class AuditQueue
             foreach ($batch as $evento) {
                 try {
                     self::persistOne($evento, $con);
-                } catch (Throwable $eOne) {
+                } catch (\Exception $eOne) {
                 }
             }
             if ($con) {
                 self::purgeOldLogs($con);
             }
-        } catch (Throwable $e) {
+        } catch (\Exception $e) {
         }
         if ($con) {
             @mysqli_close($con);

@@ -33,6 +33,7 @@ Todas las pantallas del módulo de auditoría muestran **un solo título**, sobr
 
 ## 2) Requisitos para que funcione
 
+- **PHP 5.6 o superior.** El módulo está escrito para ser compatible con PHP 5.6 (no usa `??`, `Throwable`, ni otros constructos de PHP 7+); producción corre sobre PHP 5.6.
 - Tener accesible la base `auditoria`.
 - Tener accesible la **base maestra** definida en `DB_DATABASE` (por defecto `exa_master`): es donde viven los catálogos `usuarios`, `persona`, `empresas`, `sucursal`, `procesos` y `organizado`. El login ya consulta estos catálogos ahí.
 - Incluir `Librerias/config.php/register_globals.php` en el flujo normal del sistema (carga `AuditQueue`).

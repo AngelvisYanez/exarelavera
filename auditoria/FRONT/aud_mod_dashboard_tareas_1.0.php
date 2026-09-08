@@ -445,7 +445,7 @@ if (!empty($_REQUEST['listarAdjuntosTarea'])) {
     if ($tarCod > 0) {
         try {
             $arr = $obBD_con1->getArrayConsulta(43, array('Tar_Cod' => $tarCod), $obBD_conexion);
-        } catch (Throwable $e) {
+        } catch (\Exception $e) {
             $arr = array();
         }
         if (!is_array($arr)) $arr = array();

@@ -300,7 +300,7 @@ if (!function_exists('aud_ses_detectar_ubicacion')) {
 						}
 					}
 				}
-			} catch (Throwable $e) {
+			} catch (\Exception $e) {
 				// Silencioso
 			}
 		}

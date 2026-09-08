@@ -329,7 +329,7 @@ function aud_cfg_trazar_cambio($obBD_con1, $obBD_conexion, $emp, $usu, $count)
 		$obBD_con1->Error = 0;
 		$obBD_con1->operacionobBD(8, array((int)$emp, (int)$usu, $suc, (int)$count), $obBD_conexion);
 		$obBD_con1->Error = 0;
-	} catch (Throwable $e) {
+	} catch (\Exception $e) {
 		if (isset($obBD_con1->Error)) {
 			$obBD_con1->Error = 0;
 		}
