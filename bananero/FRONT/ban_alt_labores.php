@@ -269,7 +269,7 @@ $periodos = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('perio_
 <BODY>
 	<div class="panel panel-main">
 		<div class="panel-heading exa-header">
-			<h3 class="panel-title">&raquo; Gestionar Actividades Bananeras</h3>
+			<h3 class="panel-title">&raquo; Gestionar Actividades Sector</h3>
 		</div>
 		<div class="panel-body ui-widget-content ui-corner-bottom exa-body">
 			<div class="row">
@@ -358,7 +358,7 @@ $periodos = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('perio_
 												</div>
 												<div class="form-group">
 													<div class="col-xs-1"></div>
-													<label class="col-xs-2 control-label label-xs required">Finca:</label>
+													<label class="col-xs-2 control-label label-xs required">Sector:</label>
 													<div class="col-xs-4">
 														<div class="input-group input-group-xs">
 															<select id="Fnc_Cod_D" name="Fnc_Cod_D" onchange="verificaExistente()" class="form-control input-xs select_finca">
@@ -373,7 +373,7 @@ $periodos = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('perio_
 												</div>
 												<div class="form-group">
 													<div class="col-xs-1"></div>
-													<label class="col-xs-2 control-label label-xs required ">Responsable (Mayordomo):</label>
+													<label class="col-xs-2 control-label label-xs required ">Responsable :</label>
 													<div class="col-sm-6">
 														<div class="input-group input-group-sm">
 															<span id="prefijo" class="input-group-addon bold"></span>
@@ -404,7 +404,7 @@ $periodos = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('perio_
 													<label class="col-sm-2 control-label label-xs">Filtrar por:</label>
 													<div class="col-sm-5 radioset">
 														<input id="rad_ba1" name="op_opciones" type="radio" value="fnc" checked="" onclick="setfocus(this.form.search)" />
-														<label for="rad_ba1">&nbsp;&nbsp;Finca&nbsp;&nbsp;</label>
+														<label for="rad_ba1">&nbsp;&nbsp;Sector&nbsp;&nbsp;</label>
 														<input id="rad_ba2" name="op_opciones" type="radio" value="lbr" onclick="setfocus(this.form.search)" />
 														<label for="rad_ba2">&nbsp;&nbsp;Trabajador&nbsp;&nbsp;</label>
 														<input id="rad_ba3" name="op_opciones" type="radio" value="fch" onclick="setfocus(this.form.search)" />
@@ -541,7 +541,7 @@ $periodos = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('perio_
 												</div>
 												<div class="form-group">
 													<div class="col-xs-1"></div>
-													<label class="col-xs-2 control-label label-xs required">Finca:</label>
+													<label class="col-xs-2 control-label label-xs required">Sector:</label>
 													<div class="col-xs-4">
 														<select id="Fnc_Cod" name="Fnc_Cod" onchange="" class="form-control input-xs select_finca">
 															<option value="0" required="true">Seleccione...</option>
@@ -550,7 +550,7 @@ $periodos = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('perio_
 												</div>
 												<div class="form-group">
 													<div class="col-xs-1"></div>
-													<label class="col-xs-2 control-label label-xs required ">Responsable (Mayordomo):</label>
+													<label class="col-xs-2 control-label label-xs required ">Responsable :</label>
 													<div class="col-sm-6">
 														<div class="input-group input-group-sm">
 															<span id="prefijo" class="input-group-addon bold"></span>
@@ -596,7 +596,7 @@ $periodos = $obBD_con1->getArrayConsulta('perio_cont.selectWhere', array('perio_
 		</form>
 	</div>
 
-	<script src="../VALIDACIONES/ban_val_labores.js?k=5621"></script>
+	<script src="../VALIDACIONES/ban_val_labores.js?k=5623"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js?x=1"></script>
 	<script type="text/javascript" src="../../framework/jquery/validate/jquery.validate.min.js"></script>
