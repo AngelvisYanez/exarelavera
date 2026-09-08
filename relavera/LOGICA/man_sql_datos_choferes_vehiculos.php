@@ -138,7 +138,7 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
                 } else if ($Par_Sql['op_opciones'] == 'pl') {
                     $search = " AND manifiesto_plantas.Pla_Lic LIKE '%$searchTerm%'";
                 } else if ($Par_Sql['op_opciones'] == 'c') {
-                    $search = " AND (manifiesto_transporte.Mat_Mae LIKE '%$searchTerm%' OR manifiesto_transporte.Mat_Des LIKE '%$searchTerm%')";
+                    $search = " AND (persona_prv.Prs_Ced LIKE '%$searchTerm%' OR manifiesto_transporte.Mat_Mae LIKE '%$searchTerm%' OR manifiesto_transporte.Mat_Des LIKE '%$searchTerm%')";
                 }
             }
 
@@ -148,16 +148,23 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
                         LEFT JOIN manifiesto_vehiculo ON manifiesto_vehiculo.Veh_Cod = vehiculo.Veh_Cod
                         LEFT JOIN manifiesto_plantas ON manifiesto_plantas.Pla_Cod = manifiesto_vehiculo.Pla_Cod
                         LEFT JOIN manifiesto_transporte ON manifiesto_transporte.Mat_Cod = vehiculo.Mat_Cod
+                        LEFT JOIN manifiesto_matricula_vehiculo ON manifiesto_matricula_vehiculo.Veh_Cod = vehiculo.Veh_Cod
+                        LEFT JOIN proveedore ON proveedore.Prv_Cod = vehiculo.Prv_Cod
+                        LEFT JOIN persona persona_prv ON persona_prv.Prs_Cod = proveedore.Prs_Cod
                         WHERE vehiculo.Emp_Cod = '$Par_Sql[0]' 
                           AND vehiculo.Veh_Est = 'A' $search";
             } else {
                 $sql = "SELECT vehiculo.*, 
                                manifiesto_plantas.Pla_Nom, manifiesto_plantas.Pla_Cod,
-                               manifiesto_transporte.Mat_Des
+                               manifiesto_transporte.Mat_Des,
+                               manifiesto_matricula_vehiculo.Mat_Adj
                         FROM vehiculo
                         LEFT JOIN manifiesto_vehiculo ON manifiesto_vehiculo.Veh_Cod = vehiculo.Veh_Cod
                         LEFT JOIN manifiesto_plantas ON manifiesto_plantas.Pla_Cod = manifiesto_vehiculo.Pla_Cod
                         LEFT JOIN manifiesto_transporte ON manifiesto_transporte.Mat_Cod = vehiculo.Mat_Cod
+                        LEFT JOIN manifiesto_matricula_vehiculo ON manifiesto_matricula_vehiculo.Veh_Cod = vehiculo.Veh_Cod
+                        LEFT JOIN proveedore ON proveedore.Prv_Cod = vehiculo.Prv_Cod
+                        LEFT JOIN persona persona_prv ON persona_prv.Prs_Cod = proveedore.Prs_Cod
                         WHERE vehiculo.Emp_Cod = '$Par_Sql[0]' 
                           AND vehiculo.Veh_Est = 'A' $search
                         ORDER BY vehiculo.Veh_Pla ASC " . $Par_Sql['limits'];
@@ -234,37 +241,49 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
             break;
 
         case 12:
-            // Obtener Vehículo Completo por ID con datos de matrícula y planta
+            // Obtener Vehículo Completo por ID con datos de matrícula, planta y propietario (proveedore)
             $sql = "SELECT vehiculo.*, 
+                           vehiculo.Mat_Cod AS Mat_Cod,
                            manifiesto_plantas.Pla_Nom, manifiesto_plantas.Pla_Cod,
                            manifiesto_transporte.Mat_Des,
+                           proveedore.Prv_Cod as Prv_Cod_Join,
+                           persona_prv.Prs_Ced as Prv_Ced,
+                           IF(proveedore.Prv_Com IS NULL OR proveedore.Prv_Com = '',
+                              CONCAT(IFNULL(persona_prv.Prs_Nom,''), ' ', IFNULL(persona_prv.Prs_Ape,'')),
+                              proveedore.Prv_Com) as Prv_Nom,
+                           IFNULL(IFNULL(proveedore.Prv_Tel, persona_prv.Prs_Tel), persona_prv.Prs_Cel) as Prv_Tel,
+                           IFNULL(proveedore.Prv_Cor, persona_prv.Prs_Cor) as Prv_Cor,
+                           ciudad_prv.Ciu_Des as Prv_Can,
                            manifiesto_matricula_vehiculo.Mat_Cod as Mat_Mat_Cod,
-                           manifiesto_matricula_vehiculo.Mat_Pro_Nom, manifiesto_matricula_vehiculo.Mat_Pro_Id,
-                           manifiesto_matricula_vehiculo.Mat_Pro_Prv, manifiesto_matricula_vehiculo.Mat_Pro_Can,
-                           manifiesto_matricula_vehiculo.Mat_Pro_Dir, manifiesto_matricula_vehiculo.Mat_Pro_Tel,
-                           manifiesto_matricula_vehiculo.Mat_Ctr, manifiesto_matricula_vehiculo.Mat_Ttr,
-                           manifiesto_matricula_vehiculo.Mat_Aop, manifiesto_matricula_vehiculo.Mat_Otr,
-                           manifiesto_matricula_vehiculo.Mat_Dis, manifiesto_matricula_vehiculo.Mat_Ava,
-                           manifiesto_matricula_vehiculo.Mat_Vma, manifiesto_matricula_vehiculo.Mat_Fco,
-                           manifiesto_matricula_vehiculo.Mat_Dig, manifiesto_matricula_vehiculo.Mat_Nma,
-                           manifiesto_matricula_vehiculo.Mat_Fem, manifiesto_matricula_vehiculo.Mat_Fve,
-                           manifiesto_matricula_vehiculo.Mat_Lem, manifiesto_matricula_vehiculo.Mat_Pla,
-                           manifiesto_matricula_vehiculo.Mat_Pan, manifiesto_matricula_vehiculo.Mat_Ano,
-                           manifiesto_matricula_vehiculo.Mat_Nmo, manifiesto_matricula_vehiculo.Mat_Cha,
-                           manifiesto_matricula_vehiculo.Mat_Ram, manifiesto_matricula_vehiculo.Mat_Mar,
-                           manifiesto_matricula_vehiculo.Mat_Mde, manifiesto_matricula_vehiculo.Mat_Cil,
-                           manifiesto_matricula_vehiculo.Mat_Amo, manifiesto_matricula_vehiculo.Mat_Cve,
-                           manifiesto_matricula_vehiculo.Mat_Tip as Mat_Mat_Tip, manifiesto_matricula_vehiculo.Mat_Npa,
-                           manifiesto_matricula_vehiculo.Mat_Ton, manifiesto_matricula_vehiculo.Mat_Ori,
-                           manifiesto_matricula_vehiculo.Mat_Tco, manifiesto_matricula_vehiculo.Mat_Car,
-                           manifiesto_matricula_vehiculo.Mat_Tpe, manifiesto_matricula_vehiculo.Mat_Co1,
-                           manifiesto_matricula_vehiculo.Mat_Co2, manifiesto_matricula_vehiculo.Mat_Ort,
-                           manifiesto_matricula_vehiculo.Mat_Rem, manifiesto_matricula_vehiculo.Mat_Obs
+                           manifiesto_matricula_vehiculo.Ciu_Cod as Mat_Ciu_Cod,
+                           manifiesto_matricula_vehiculo.Mat_Pla,
+                           manifiesto_matricula_vehiculo.Mat_Pan,
+                           manifiesto_matricula_vehiculo.Mat_Fem,
+                           manifiesto_matricula_vehiculo.Mat_Fca,
+                           manifiesto_matricula_vehiculo.Mat_Nmo,
+                           manifiesto_matricula_vehiculo.Mat_Cha,
+                           manifiesto_matricula_vehiculo.Mat_Ram,
+                           manifiesto_matricula_vehiculo.Mat_Cil,
+                           manifiesto_matricula_vehiculo.Mat_Cve,
+                           manifiesto_matricula_vehiculo.Mat_Tip as Mat_Mat_Tip,
+                           manifiesto_matricula_vehiculo.Mat_Npa,
+                           manifiesto_matricula_vehiculo.Mat_Ori,
+                           manifiesto_matricula_vehiculo.Mat_Tco,
+                           manifiesto_matricula_vehiculo.Mat_Car,
+                           manifiesto_matricula_vehiculo.Mat_Tpe,
+                           manifiesto_matricula_vehiculo.Mat_Deg,
+                           manifiesto_matricula_vehiculo.Mat_Est as Mat_Mat_Est,
+                           manifiesto_matricula_vehiculo.Mat_Adj,
+                           ciudad_mat.Ciu_Des as Mat_Ciu_Des
                     FROM vehiculo
                     LEFT JOIN manifiesto_vehiculo ON manifiesto_vehiculo.Veh_Cod = vehiculo.Veh_Cod
                     LEFT JOIN manifiesto_plantas ON manifiesto_plantas.Pla_Cod = manifiesto_vehiculo.Pla_Cod
                     LEFT JOIN manifiesto_transporte ON manifiesto_transporte.Mat_Cod = vehiculo.Mat_Cod
                     LEFT JOIN manifiesto_matricula_vehiculo ON manifiesto_matricula_vehiculo.Veh_Cod = vehiculo.Veh_Cod
+                    LEFT JOIN ciudad ciudad_mat ON ciudad_mat.Ciu_Cod = manifiesto_matricula_vehiculo.Ciu_Cod
+                    LEFT JOIN proveedore ON proveedore.Prv_Cod = vehiculo.Prv_Cod
+                    LEFT JOIN persona persona_prv ON persona_prv.Prs_Cod = proveedore.Prs_Cod
+                    LEFT JOIN ciudad ciudad_prv ON ciudad_prv.Ciu_Cod = persona_prv.Ciu_Cod
                     WHERE vehiculo.Veh_Cod = '$Par_Sql[0]' LIMIT 1";
             break;
 
@@ -297,6 +316,84 @@ function sentencias_datos_choferes_vehiculos($Nro_Sql, $Par_Sql)
                       AND persona.Prs_Ced = '$Par_Sql[1]'
                       AND chofer.Cho_Est != 'I' 
                     ORDER BY chofer.Cho_Cod ASC LIMIT 1";
+            break;
+
+        case 16:
+            // Buscar proveedor por CI (10), RUC (13) o ID < 10 (pasaporte/otro)
+            $cedBusq = addslashes($Par_Sql[0]);
+            $empBusq = addslashes($Par_Sql[1]);
+            $lenCed = strlen($Par_Sql[0]);
+            $cedBase = ($lenCed === 13) ? substr($Par_Sql[0], 0, 10) : $Par_Sql[0];
+            $cedBase = addslashes($cedBase);
+            $whereCed = "(persona.Prs_Ced = '$cedBusq'";
+            if ($lenCed === 13) {
+                $whereCed .= " OR persona.Prs_Ced = '$cedBase' OR persona.Prs_Ced LIKE '$cedBase%'";
+            } else if ($lenCed === 10) {
+                $whereCed .= " OR persona.Prs_Ced LIKE '$cedBusq%'";
+            }
+            $whereCed .= ")";
+            $sql = "SELECT proveedore.Prv_Cod, proveedore.Prv_Com, proveedore.Prv_Tic, proveedore.Prv_Tel as Prv_Tel_Prv,
+                           proveedore.Prv_Cor,
+                           persona.Prs_Cod, persona.Prs_Ced, persona.Prs_Nom, persona.Prs_Ape,
+                           persona.Prs_Tel, persona.Prs_Cel, persona.Prs_Cor, persona.Prs_Dir, persona.Ciu_Cod,
+                           ciudad.Ciu_Des as Prv_Can,
+                           IF(proveedore.Prv_Com IS NULL OR proveedore.Prv_Com = '',
+                              CONCAT(IFNULL(persona.Prs_Nom,''), ' ', IFNULL(persona.Prs_Ape,'')),
+                              proveedore.Prv_Com) as Prv_Nom
+                    FROM proveedore
+                    INNER JOIN persona ON persona.Prs_Cod = proveedore.Prs_Cod
+                    LEFT JOIN ciudad ON ciudad.Ciu_Cod = persona.Ciu_Cod
+                    WHERE $whereCed
+                      AND proveedore.Emp_Cod = '$empBusq'
+                      AND proveedore.Prv_Est = 'A'
+                    ORDER BY CASE
+                        WHEN persona.Prs_Ced = '$cedBusq' THEN 0
+                        WHEN persona.Prs_Ced = '$cedBase' THEN 1
+                        ELSE 2
+                    END
+                    LIMIT 1";
+            break;
+
+        case 17:
+            // Buscar proveedore por Prs_Cod y Emp_Cod
+            $sql = "SELECT Prv_Cod FROM proveedore WHERE Prs_Cod = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]' LIMIT 1";
+            break;
+
+        case 18:
+            // Persona por CI (10), RUC (13) o ID < 10, con ciudad
+            $cedBusq = addslashes($Par_Sql[0]);
+            $lenCed = strlen($Par_Sql[0]);
+            $cedBase = ($lenCed === 13) ? substr($Par_Sql[0], 0, 10) : $Par_Sql[0];
+            $cedBase = addslashes($cedBase);
+            $whereCed = "(persona.Prs_Ced = '$cedBusq'";
+            if ($lenCed === 13) {
+                $whereCed .= " OR persona.Prs_Ced = '$cedBase' OR persona.Prs_Ced LIKE '$cedBase%'";
+            } else if ($lenCed === 10) {
+                $whereCed .= " OR persona.Prs_Ced LIKE '$cedBusq%'";
+            }
+            $whereCed .= ")";
+            $sql = "SELECT persona.*,
+                           ciudad.Ciu_Des as Prv_Can
+                    FROM persona
+                    LEFT JOIN ciudad ON ciudad.Ciu_Cod = persona.Ciu_Cod
+                    WHERE $whereCed
+                    ORDER BY CASE
+                        WHEN persona.Prs_Ced = '$cedBusq' THEN 0
+                        WHEN persona.Prs_Ced = '$cedBase' THEN 1
+                        ELSE 2
+                    END
+                    LIMIT 1";
+            break;
+
+        case 19:
+            // Ciudades activas para matrícula
+            $sql = "SELECT Ciu_Cod, Ciu_Des
+                    FROM ciudad
+                    WHERE Ciu_Est = 'A'
+                      AND Ciu_Des IS NOT NULL
+                      AND TRIM(Ciu_Des) <> ''
+                      AND Ciu_Des <> '(Ninguna)'
+                    ORDER BY Ciu_Des ASC";
             break;
     }
     return $sql;

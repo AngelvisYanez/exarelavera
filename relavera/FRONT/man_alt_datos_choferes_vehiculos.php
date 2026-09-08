@@ -16,25 +16,7 @@ require_once(__DIR__ . '/../LOGICA/relavera_notif_mail_utils.php');
 
 $obBD_conexion = new Class_Log_Conexion_Datos_Choferes_Vehiculos($Ses_Dat_Dis);
 $obBD_con1 = new Class_Log_Datos_Choferes_Vehiculos;
-
-// Cargar catálogos iniciales
-$transportes = $obBD_con1->getArrayConsulta(1, array($Ses_Emp_Cod), $obBD_conexion);
-$obBD_con1->utf8_change_param($transportes);
-
-$plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
-
-
-
-
-
-
-
-
-
-
-
-
-
+require_once(__DIR__ . '/../COMPONENTES/man_sanciones_ajax.inc.php');
 
 // Cargar catálogos iniciales
 $transportes = $obBD_con1->getArrayConsulta(1, array($Ses_Emp_Cod), $obBD_conexion);
@@ -42,6 +24,9 @@ $obBD_con1->utf8_change_param($transportes);
 
 $plantas = $obBD_con1->getArrayConsulta(2, array(), $obBD_conexion);
 $obBD_con1->utf8_change_param($plantas);
+
+$ciudades = $obBD_con1->getArrayConsulta(19, array(), $obBD_conexion);
+$obBD_con1->utf8_change_param($ciudades);
 
 
 
@@ -102,6 +87,144 @@ function optimizarYComprimirImagen($sourcePath, $targetPath, $maxDim = 1920, $qu
     imagedestroy($dstImg);
 
     return $res && file_exists($targetPath);
+}
+
+/**
+ * Une dos imágenes (frente + reverso) en un solo JPEG vertical.
+ */
+function unirDosImagenesVertical($pathFrente, $pathReverso, $targetPath, $maxWidth = 1600, $quality = 85)
+{
+    $load = function ($path) {
+        $info = @getimagesize($path);
+        if (!$info) {
+            return null;
+        }
+        switch ($info[2]) {
+            case IMAGETYPE_JPEG:
+                $img = @imagecreatefromjpeg($path);
+                break;
+            case IMAGETYPE_PNG:
+                $img = @imagecreatefrompng($path);
+                break;
+            case IMAGETYPE_WEBP:
+                $img = @imagecreatefromwebp($path);
+                break;
+            case IMAGETYPE_GIF:
+                $img = @imagecreatefromgif($path);
+                break;
+            default:
+                return null;
+        }
+        if (!$img) {
+            return null;
+        }
+        return array('img' => $img, 'w' => imagesx($img), 'h' => imagesy($img));
+    };
+
+    $a = $load($pathFrente);
+    $b = $load($pathReverso);
+    if (!$a || !$b) {
+        if ($a) {
+            imagedestroy($a['img']);
+        }
+        if ($b) {
+            imagedestroy($b['img']);
+        }
+        return false;
+    }
+
+    $scale = function ($src, $maxW) {
+        $w = $src['w'];
+        $h = $src['h'];
+        if ($w > $maxW) {
+            $nw = $maxW;
+            $nh = max(1, (int) round($h * ($maxW / $w)));
+        } else {
+            $nw = $w;
+            $nh = $h;
+        }
+        $dst = imagecreatetruecolor($nw, $nh);
+        $white = imagecolorallocate($dst, 255, 255, 255);
+        imagefill($dst, 0, 0, $white);
+        imagecopyresampled($dst, $src['img'], 0, 0, 0, 0, $nw, $nh, $w, $h);
+        imagedestroy($src['img']);
+        return array('img' => $dst, 'w' => $nw, 'h' => $nh);
+    };
+
+    $a = $scale($a, $maxWidth);
+    $b = $scale($b, $maxWidth);
+    $gap = 12;
+    $outW = max($a['w'], $b['w']);
+    $outH = $a['h'] + $gap + $b['h'];
+    $out = imagecreatetruecolor($outW, $outH);
+    $bg = imagecolorallocate($out, 245, 247, 250);
+    imagefill($out, 0, 0, $bg);
+
+    $xA = (int) (($outW - $a['w']) / 2);
+    $xB = (int) (($outW - $b['w']) / 2);
+    imagecopy($out, $a['img'], $xA, 0, 0, 0, $a['w'], $a['h']);
+    imagecopy($out, $b['img'], $xB, $a['h'] + $gap, 0, 0, $b['w'], $b['h']);
+
+    imagedestroy($a['img']);
+    imagedestroy($b['img']);
+
+    $dir = dirname($targetPath);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0777, true);
+    }
+    $ok = imagejpeg($out, $targetPath, $quality);
+    imagedestroy($out);
+    return $ok && file_exists($targetPath);
+}
+
+/**
+ * Procesa un archivo subido (PDF o imagen) hacia carpeta de vehículos.
+ */
+function guardarArchivoMatriculaVehiculo($fileInfo, $placa, $prefijoNombre)
+{
+    if (empty($fileInfo) || !isset($fileInfo['error']) || $fileInfo['error'] === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+    if ($fileInfo['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('Error al recibir archivo de matrícula (código ' . $fileInfo['error'] . ').');
+    }
+
+    $placaSafe = preg_replace('/[^A-Za-z0-9_-]/', '', strtoupper($placa));
+    if ($placaSafe === '') {
+        $placaSafe = 'SINPLACA';
+    }
+    $baseDir = dirname(__DIR__) . '/RECURSOS/archivos_adjuntos/vehiculos/' . $placaSafe . '/';
+    if (!is_dir($baseDir) && !@mkdir($baseDir, 0777, true) && !is_dir($baseDir)) {
+        throw new Exception('No se pudo crear carpeta de adjuntos del vehículo.');
+    }
+
+    $origName = isset($fileInfo['name']) ? $fileInfo['name'] : 'archivo';
+    $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+    $tmp = $fileInfo['tmp_name'];
+    $mime = isset($fileInfo['type']) ? $fileInfo['type'] : '';
+    $isPdf = ($ext === 'pdf' || $mime === 'application/pdf');
+    $isImage = in_array($ext, array('jpg', 'jpeg', 'png', 'webp', 'gif'), true) || strpos($mime, 'image/') === 0;
+
+    if (!$isPdf && !$isImage) {
+        throw new Exception('El adjunto de matrícula debe ser PDF o imagen.');
+    }
+
+    $filename = $prefijoNombre . '_' . date('Ymd_His') . ($isPdf ? '.pdf' : '.jpg');
+    $target = $baseDir . $filename;
+
+    if ($isPdf) {
+        if (!move_uploaded_file($tmp, $target)) {
+            throw new Exception('No se pudo guardar el PDF de matrícula.');
+        }
+    } else {
+        if (!optimizarYComprimirImagen($tmp, $target, 1920, 85)) {
+            if (!move_uploaded_file($tmp, $target)) {
+                throw new Exception('No se pudo guardar la imagen de matrícula.');
+            }
+        }
+    }
+
+    return '../RECURSOS/archivos_adjuntos/vehiculos/' . $placaSafe . '/' . $filename;
 }
 
 // Función auxiliar para responder JSON limpio sin interferencia de buffers o advertencias de PHP
@@ -814,80 +937,221 @@ if (isset($_GET['getVehiculoByIdAjax'])) {
     responderJsonLimpio($resp);
 }
 
+// 9.6. Buscar Proveedor (Propietario) por CI 10, RUC 13 o ID < 10
+if (isset($_GET['buscarProveedorPropietarioAjax'])) {
+    $resp = array('success' => true, 'existe' => false, 'esProveedor' => false);
+    $ced = isset($_GET['Prv_Ced']) ? preg_replace('/[^a-zA-Z0-9]/', '', trim($_GET['Prv_Ced'])) : '';
+    if ($ced !== '') {
+        $proveedor = $obBD_con1->getRowConsulta(16, array($ced, $Ses_Emp_Cod), $obBD_conexion);
+        if (!empty($proveedor)) {
+            $resp['existe'] = true;
+            $resp['esProveedor'] = true;
+            if (empty($proveedor['Prv_Tel']) && !empty($proveedor['Prv_Tel_Prv'])) {
+                $proveedor['Prv_Tel'] = $proveedor['Prv_Tel_Prv'];
+            }
+            if (empty($proveedor['Prv_Tel']) && !empty($proveedor['Prs_Tel'])) {
+                $proveedor['Prv_Tel'] = $proveedor['Prs_Tel'];
+            }
+            if (empty($proveedor['Prv_Tel']) && !empty($proveedor['Prs_Cel'])) {
+                $proveedor['Prv_Tel'] = $proveedor['Prs_Cel'];
+            }
+            $resp['proveedor'] = $proveedor;
+            $obBD_con1->utf8_change_param($resp['proveedor']);
+        } else {
+            $persona = $obBD_con1->getRowConsulta(18, array($ced), $obBD_conexion);
+            if (!empty($persona)) {
+                $resp['existe'] = true;
+                $resp['esProveedor'] = false;
+                if (empty($persona['Prs_Tel']) && !empty($persona['Prs_Cel'])) {
+                    $persona['Prs_Tel'] = $persona['Prs_Cel'];
+                }
+                $resp['persona'] = $persona;
+                $obBD_con1->utf8_change_param($resp['persona']);
+            }
+        }
+    }
+    responderJsonLimpio($resp);
+}
+
 // 10. Guardar Vehículo Completo (vehiculo + manifiesto_vehiculo + manifiesto_matricula_vehiculo)
 if (isset($_POST['saveVehiculoAjax'])) {
     $resp = array('success' => false);
     $Veh_Cod = isset($_POST['Veh_Cod']) ? trim($_POST['Veh_Cod']) : '';
     $Pla_Cod = !empty($_POST['Pla_Cod']) ? trim($_POST['Pla_Cod']) : null;
-    $Mat_Cod = !empty($_POST['Mat_Cod']) ? trim($_POST['Mat_Cod']) : null;
+    $Mat_Cod = !empty($_POST['Mat_Cod']) ? trim($_POST['Mat_Cod']) : null; // empresa transporte
     $Veh_Pla = isset($_POST['Veh_Pla']) ? strtoupper(trim($_POST['Veh_Pla'])) : '';
     $Veh_Mar = isset($_POST['Veh_Mar']) ? addslashes(trim($_POST['Veh_Mar'])) : '';
     $Veh_Col = isset($_POST['Veh_Col']) ? addslashes(trim($_POST['Veh_Col'])) : '';
+    $Veh_Col2 = isset($_POST['Veh_Col2']) ? addslashes(trim($_POST['Veh_Col2'])) : '';
     $Veh_Cap = isset($_POST['Veh_Cap']) ? floatval($_POST['Veh_Cap']) : 0;
     $Veh_Tit = isset($_POST['Veh_Tit']) ? $_POST['Veh_Tit'] : 'V';
     $Veh_Est = isset($_POST['Veh_Est']) ? $_POST['Veh_Est'] : 'A';
+    $Veh_Mde = isset($_POST['Veh_Mde']) ? addslashes(trim($_POST['Veh_Mde'])) : '';
+    $Veh_Amo = isset($_POST['Veh_Amo']) ? preg_replace('/\D/', '', trim($_POST['Veh_Amo'])) : '';
+    $Veh_Pes = isset($_POST['Veh_Pes']) ? trim($_POST['Veh_Pes']) : '';
+    if (strlen($Veh_Amo) > 4) {
+        $Veh_Amo = substr($Veh_Amo, 0, 4);
+    }
+    if ($Veh_Amo === '') {
+        $Veh_Amo = '0000';
+    }
+    if ($Veh_Mde === '') {
+        $Veh_Mde = '-';
+    }
 
-    // Campos de Matricula y Propietario (manifiesto_matricula_vehiculo)
-    $Mat_Pro_Nom = isset($_POST['Mat_Pro_Nom']) ? addslashes(trim($_POST['Mat_Pro_Nom'])) : '';
-    $Mat_Pro_Id  = isset($_POST['Mat_Pro_Id']) ? trim($_POST['Mat_Pro_Id']) : '';
-    $Mat_Pro_Prv = isset($_POST['Mat_Pro_Prv']) ? addslashes(trim($_POST['Mat_Pro_Prv'])) : '';
-    $Mat_Pro_Can = isset($_POST['Mat_Pro_Can']) ? addslashes(trim($_POST['Mat_Pro_Can'])) : '';
-    $Mat_Pro_Dir = isset($_POST['Mat_Pro_Dir']) ? addslashes(trim($_POST['Mat_Pro_Dir'])) : '';
-    $Mat_Pro_Tel = isset($_POST['Mat_Pro_Tel']) ? trim($_POST['Mat_Pro_Tel']) : '';
+    // Propietario → proveedore (Prv_*)
+    $Prv_Cod = !empty($_POST['Prv_Cod']) ? intval($_POST['Prv_Cod']) : 0;
+    $Prv_Ced = isset($_POST['Prv_Ced']) ? preg_replace('/[^a-zA-Z0-9]/', '', trim($_POST['Prv_Ced'])) : '';
+    $Prv_Nom = isset($_POST['Prv_Nom']) ? trim($_POST['Prv_Nom']) : '';
+    $Prv_Can = isset($_POST['Prv_Can']) ? addslashes(trim($_POST['Prv_Can'])) : '';
+    $Prv_Tel = isset($_POST['Prv_Tel']) ? trim($_POST['Prv_Tel']) : '';
+    $Prv_Cor = isset($_POST['Prv_Cor']) ? trim($_POST['Prv_Cor']) : '';
 
-    $Mat_Ctr = isset($_POST['Mat_Ctr']) ? addslashes(trim($_POST['Mat_Ctr'])) : '';
-    $Mat_Ttr = isset($_POST['Mat_Ttr']) ? addslashes(trim($_POST['Mat_Ttr'])) : '';
-    $Mat_Aop = isset($_POST['Mat_Aop']) ? addslashes(trim($_POST['Mat_Aop'])) : '';
-    $Mat_Otr = isset($_POST['Mat_Otr']) ? addslashes(trim($_POST['Mat_Otr'])) : '';
-    $Mat_Dis = isset($_POST['Mat_Dis']) ? trim($_POST['Mat_Dis']) : '';
-
-    $Mat_Ava = !empty($_POST['Mat_Ava']) ? floatval($_POST['Mat_Ava']) : null;
-    $Mat_Vma = !empty($_POST['Mat_Vma']) ? floatval($_POST['Mat_Vma']) : null;
-    $Mat_Fco = !empty($_POST['Mat_Fco']) ? $_POST['Mat_Fco'] : null;
-    $Mat_Dig = isset($_POST['Mat_Dig']) ? addslashes(trim($_POST['Mat_Dig'])) : '';
-
-    $Mat_Nma = isset($_POST['Mat_Nma']) ? trim($_POST['Mat_Nma']) : '';
-    $Mat_Fem = !empty($_POST['Mat_Fem']) ? $_POST['Mat_Fem'] : null;
-    $Mat_Fve = !empty($_POST['Mat_Fve']) ? $_POST['Mat_Fve'] : null;
-    $Mat_Lem = isset($_POST['Mat_Lem']) ? addslashes(trim($_POST['Mat_Lem'])) : '';
-
+    // Matrícula (manifiesto_matricula_vehiculo) — columnas reales
+    $Ciu_Cod = !empty($_POST['Ciu_Cod']) ? intval($_POST['Ciu_Cod']) : null;
     $Mat_Pan = isset($_POST['Mat_Pan']) ? strtoupper(trim($_POST['Mat_Pan'])) : '';
-    $Mat_Ano = isset($_POST['Mat_Ano']) ? trim($_POST['Mat_Ano']) : '';
+    $Mat_Fem = !empty($_POST['Mat_Fem']) ? $_POST['Mat_Fem'] : date('Y-m-d');
+    $Mat_Fca = !empty($_POST['Mat_Fca']) ? $_POST['Mat_Fca'] : $Mat_Fem;
     $Mat_Nmo = isset($_POST['Mat_Nmo']) ? addslashes(trim($_POST['Mat_Nmo'])) : '';
     $Mat_Cha = isset($_POST['Mat_Cha']) ? addslashes(trim($_POST['Mat_Cha'])) : '';
     $Mat_Ram = isset($_POST['Mat_Ram']) ? addslashes(trim($_POST['Mat_Ram'])) : '';
-    $Mat_Mar = isset($_POST['Mat_Mar']) ? addslashes(trim($_POST['Mat_Mar'])) : $Veh_Mar;
-    $Mat_Mde = isset($_POST['Mat_Mde']) ? addslashes(trim($_POST['Mat_Mde'])) : '';
-    $Mat_Cil = !empty($_POST['Mat_Cil']) ? floatval($_POST['Mat_Cil']) : null;
-    $Mat_Amo = isset($_POST['Mat_Amo']) ? trim($_POST['Mat_Amo']) : '';
+    $Mat_Cil = isset($_POST['Mat_Cil']) && $_POST['Mat_Cil'] !== '' ? floatval($_POST['Mat_Cil']) : 0;
     $Mat_Cve = isset($_POST['Mat_Cve']) ? addslashes(trim($_POST['Mat_Cve'])) : '';
     $Mat_Tip = isset($_POST['Mat_Tip']) ? addslashes(trim($_POST['Mat_Tip'])) : '';
-    $Mat_Npa = !empty($_POST['Mat_Npa']) ? intval($_POST['Mat_Npa']) : null;
-    $Mat_Ton = isset($_POST['Mat_Ton']) ? trim($_POST['Mat_Ton']) : '';
+    $Mat_Npa = isset($_POST['Mat_Npa']) && $_POST['Mat_Npa'] !== '' ? intval($_POST['Mat_Npa']) : null;
     $Mat_Ori = isset($_POST['Mat_Ori']) ? addslashes(trim($_POST['Mat_Ori'])) : '';
-    $Mat_Tco = isset($_POST['Mat_Tco']) ? $_POST['Mat_Tco'] : 'D';
+    $Mat_Tco = isset($_POST['Mat_Tco']) ? substr(trim($_POST['Mat_Tco']), 0, 1) : 'D';
     $Mat_Car = isset($_POST['Mat_Car']) ? addslashes(trim($_POST['Mat_Car'])) : '';
-    $Mat_Tpe = isset($_POST['Mat_Tpe']) ? $_POST['Mat_Tpe'] : 'PESADO (>3.5T)';
-
-    $Mat_Co1 = isset($_POST['Mat_Co1']) ? addslashes(trim($_POST['Mat_Co1'])) : $Veh_Col;
-    $Mat_Co2 = isset($_POST['Mat_Co2']) ? addslashes(trim($_POST['Mat_Co2'])) : '';
-    $Mat_Ort = isset($_POST['Mat_Ort']) ? $_POST['Mat_Ort'] : 'N';
-    $Mat_Rem = isset($_POST['Mat_Rem']) ? $_POST['Mat_Rem'] : 'N';
-    $Mat_Obs = isset($_POST['Mat_Obs']) ? addslashes(trim($_POST['Mat_Obs'])) : '';
-
-    $datosVehiculo = array(
-        'Veh_Mar' => $Veh_Mar,
-        'Veh_Pla' => $Veh_Pla,
-        'Veh_Col' => $Veh_Col,
-        'Veh_Cap' => $Veh_Cap,
-        'Veh_Tit' => $Veh_Tit,
-        'Emp_Cod' => $Ses_Emp_Cod,
-        'Mat_Cod' => $Mat_Cod,
-        'Veh_Est' => $Veh_Est
-    );
+    $Mat_Tpe = isset($_POST['Mat_Tpe']) ? addslashes(trim($_POST['Mat_Tpe'])) : '';
+    $Mat_Deg = isset($_POST['Mat_Deg']) ? addslashes(trim($_POST['Mat_Deg'])) : '';
+    $Mat_Est = isset($_POST['Mat_Est']) ? substr(trim($_POST['Mat_Est']), 0, 1) : 'A';
+    if ($Mat_Nmo === '') { $Mat_Nmo = '-'; }
+    if ($Mat_Cha === '') { $Mat_Cha = '-'; }
+    if ($Mat_Ram === '') { $Mat_Ram = '-'; }
 
     $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
+        // 0. Registrar / resolver propietario en proveedore
+        if (!empty($Prv_Ced)) {
+            $persona = $obBD_con1->getRowConsulta(18, array($Prv_Ced), $obBD_conexion);
+            $Prs_Cod_Pro = !empty($persona['Prs_Cod']) ? $persona['Prs_Cod'] : 0;
+
+            $nomParts = preg_split('/\s+/', $Prv_Nom, 2);
+            $Prs_Nom_Pro = addslashes(!empty($nomParts[0]) ? $nomParts[0] : $Prv_Nom);
+            $Prs_Ape_Pro = addslashes(!empty($nomParts[1]) ? $nomParts[1] : $Prv_Nom);
+            if ($Prv_Nom === '') {
+                $Prs_Nom_Pro = !empty($persona['Prs_Nom']) ? addslashes($persona['Prs_Nom']) : '';
+                $Prs_Ape_Pro = !empty($persona['Prs_Ape']) ? addslashes($persona['Prs_Ape']) : $Prs_Nom_Pro;
+            }
+
+            $Ide_Cod = (strlen($Prv_Ced) === 13) ? 1 : 2;
+            $Prv_Tic = (strlen($Prv_Ced) === 13) ? 'J' : 'N';
+            $Prv_Com = ($Prv_Tic === 'J') ? addslashes($Prv_Nom) : '';
+
+            if (empty($Prs_Cod_Pro)) {
+                $datosPersona = array(
+                    'Prs_Ced' => $Prv_Ced,
+                    'Prs_Nom' => $Prs_Nom_Pro,
+                    'Prs_Ape' => $Prs_Ape_Pro,
+                    'Prs_Tel' => $Prv_Tel,
+                    'Prs_Cor' => $Prv_Cor,
+                    'Ide_Cod' => $Ide_Cod,
+                    'Prs_Est' => 'A'
+                );
+                $obBD_con1->operacionobBD('persona.insert', $datosPersona, $obBD_conexion);
+                if ($obBD_con1->Error != 0) {
+                    $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
+                    throw new Exception("Error al guardar Persona del propietario: " . $errMsg);
+                }
+                $Prs_Cod_Pro = $obBD_con1->insercionid($obBD_conexion);
+            } else {
+                $datosPrs = array(
+                    'Prs_Tel' => $Prv_Tel,
+                    'Prs_Cor' => $Prv_Cor,
+                    'where' => array('Prs_Cod' => $Prs_Cod_Pro)
+                );
+                if (!empty($Prv_Nom)) {
+                    $datosPrs['Prs_Nom'] = $Prs_Nom_Pro;
+                    $datosPrs['Prs_Ape'] = $Prs_Ape_Pro;
+                }
+                $obBD_con1->operacionobBD('persona.update', $datosPrs, $obBD_conexion);
+                if ($obBD_con1->Error != 0) {
+                    $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
+                    throw new Exception("Error al actualizar Persona del propietario: " . $errMsg);
+                }
+            }
+
+            if (empty($Prv_Cod) && !empty($Prs_Cod_Pro)) {
+                $prvRow = $obBD_con1->getRowConsulta(17, array($Prs_Cod_Pro, $Ses_Emp_Cod), $obBD_conexion);
+                if (!empty($prvRow['Prv_Cod'])) {
+                    $Prv_Cod = intval($prvRow['Prv_Cod']);
+                }
+            }
+
+            if (empty($Prv_Cod) && !empty($Prs_Cod_Pro)) {
+                $datosProveedor = array(
+                    'Emp_Cod' => $Ses_Emp_Cod,
+                    'Prs_Cod' => $Prs_Cod_Pro,
+                    'Prv_Com' => $Prv_Com,
+                    'Prv_Tic' => $Prv_Tic,
+                    'Prv_Esp' => 'N',
+                    'Prv_Con' => 'N',
+                    'Prv_Reg' => 'N',
+                    'Prv_Ris' => 'N',
+                    'Prv_Gct' => 'N',
+                    'Prv_Rim_Emp' => 'N',
+                    'Prv_Rim_Np' => 'N',
+                    'Prv_Ag_Ret' => 'N',
+                    'Prv_Est' => 'A'
+                );
+                if (!empty($Prv_Tel)) {
+                    $datosProveedor['Prv_Tel'] = $Prv_Tel;
+                }
+                if (!empty($Prv_Cor)) {
+                    $datosProveedor['Prv_Cor'] = $Prv_Cor;
+                }
+                $obBD_con1->operacionobBD('proveedore.insert', $datosProveedor, $obBD_conexion);
+                if ($obBD_con1->Error != 0) {
+                    $errMsg = !empty($obBD_con1->MsgError) ? $obBD_con1->MsgError : ("Error Cód: " . $obBD_con1->Error);
+                    throw new Exception("Error al registrar Proveedor (propietario): " . $errMsg);
+                }
+                $Prv_Cod = $obBD_con1->insercionid($obBD_conexion);
+            } else if (!empty($Prv_Cod)) {
+                $updPrv = array(
+                    'Prv_Tel' => $Prv_Tel,
+                    'Prv_Cor' => $Prv_Cor,
+                    'where' => array('Prv_Cod' => $Prv_Cod)
+                );
+                if ($Prv_Tic === 'J' && !empty($Prv_Com)) {
+                    $updPrv['Prv_Com'] = $Prv_Com;
+                }
+                $obBD_con1->operacionobBD('proveedore.update', $updPrv, $obBD_conexion);
+            }
+        }
+
+        $datosVehiculo = array(
+            'Veh_Mar' => $Veh_Mar,
+            'Veh_Pla' => $Veh_Pla,
+            'Veh_Col' => $Veh_Col,
+            'Veh_Col2' => $Veh_Col2,
+            'Veh_Cap' => $Veh_Cap,
+            'Veh_Tit' => $Veh_Tit,
+            'Veh_Mde' => $Veh_Mde,
+            'Veh_Amo' => $Veh_Amo,
+            'Veh_Pes' => $Veh_Pes,
+            'Emp_Cod' => $Ses_Emp_Cod,
+            'Veh_Est' => $Veh_Est
+        );
+        // Empresa transporte opcional (Mat_Cod puede quedar NULL)
+        if (!empty($Mat_Cod)) {
+            $datosVehiculo['Mat_Cod'] = $Mat_Cod;
+        } elseif (!empty($Veh_Cod)) {
+            $datosVehiculo['Mat_Cod'] = null;
+        }
+        if (!empty($Prv_Cod)) {
+            $datosVehiculo['Prv_Cod'] = $Prv_Cod;
+        }
+
         // 1. Guardar o Actualizar Tabla vehiculo
         if (!empty($Veh_Cod)) {
             $datosVehiculo['where'] = array('Veh_Cod' => $Veh_Cod);
@@ -919,54 +1183,92 @@ if (isset($_POST['saveVehiculoAjax'])) {
             }
         }
 
-        // 3. Guardar o Actualizar Matrícula (manifiesto_matricula_vehiculo)
-        if (!empty($Veh_Cod)) {
+        // 3. Guardar o Actualizar Matrícula (columnas reales de manifiesto_matricula_vehiculo)
+        if (!empty($Veh_Cod) && !empty($Veh_Pla)) {
             $datosMatricula = array(
                 'Veh_Cod' => $Veh_Cod,
-                'Mat_Pro_Nom' => $Mat_Pro_Nom,
-                'Mat_Pro_Id'  => $Mat_Pro_Id,
-                'Mat_Pro_Prv' => $Mat_Pro_Prv,
-                'Mat_Pro_Can' => $Mat_Pro_Can,
-                'Mat_Pro_Dir' => $Mat_Pro_Dir,
-                'Mat_Pro_Tel' => $Mat_Pro_Tel,
-                'Mat_Ctr' => $Mat_Ctr,
-                'Mat_Ttr' => $Mat_Ttr,
-                'Mat_Aop' => $Mat_Aop,
-                'Mat_Otr' => $Mat_Otr,
-                'Mat_Dis' => $Mat_Dis,
-                'Mat_Dig' => $Mat_Dig,
-                'Mat_Nma' => $Mat_Nma,
-                'Mat_Lem' => $Mat_Lem,
                 'Mat_Pla' => $Veh_Pla,
                 'Mat_Pan' => $Mat_Pan,
-                'Mat_Ano' => $Mat_Ano,
+                'Mat_Fem' => $Mat_Fem,
+                'Mat_Fca' => $Mat_Fca,
                 'Mat_Nmo' => $Mat_Nmo,
                 'Mat_Cha' => $Mat_Cha,
                 'Mat_Ram' => $Mat_Ram,
-                'Mat_Mar' => $Mat_Mar,
-                'Mat_Mde' => $Mat_Mde,
-                'Mat_Amo' => $Mat_Amo,
+                'Mat_Cil' => $Mat_Cil,
                 'Mat_Cve' => $Mat_Cve,
                 'Mat_Tip' => $Mat_Tip,
-                'Mat_Ton' => $Mat_Ton,
                 'Mat_Ori' => $Mat_Ori,
                 'Mat_Tco' => $Mat_Tco,
                 'Mat_Car' => $Mat_Car,
                 'Mat_Tpe' => $Mat_Tpe,
-                'Mat_Co1' => $Mat_Co1,
-                'Mat_Co2' => $Mat_Co2,
-                'Mat_Ort' => $Mat_Ort,
-                'Mat_Rem' => $Mat_Rem,
-                'Mat_Obs' => $Mat_Obs
+                'Mat_Deg' => $Mat_Deg,
+                'Mat_Est' => $Mat_Est
             );
+            if (!empty($Ciu_Cod)) {
+                $datosMatricula['Ciu_Cod'] = $Ciu_Cod;
+            }
+            if (!is_null($Mat_Npa)) {
+                $datosMatricula['Mat_Npa'] = $Mat_Npa;
+            }
 
-            if (!empty($Mat_Fem)) $datosMatricula['Mat_Fem'] = $Mat_Fem;
-            if (!empty($Mat_Fve)) $datosMatricula['Mat_Fve'] = $Mat_Fve;
-            if (!empty($Mat_Fco)) $datosMatricula['Mat_Fco'] = $Mat_Fco;
-            if (!is_null($Mat_Ava)) $datosMatricula['Mat_Ava'] = $Mat_Ava;
-            if (!is_null($Mat_Vma)) $datosMatricula['Mat_Vma'] = $Mat_Vma;
-            if (!is_null($Mat_Cil)) $datosMatricula['Mat_Cil'] = $Mat_Cil;
-            if (!is_null($Mat_Npa)) $datosMatricula['Mat_Npa'] = $Mat_Npa;
+            // Adjunto matrícula: PDF directo o unión Frente+Reverso
+            $Mat_Adj_Modo = isset($_POST['Mat_Adj_Modo']) ? $_POST['Mat_Adj_Modo'] : 'pdf';
+            $Mat_Adj_Clear = !empty($_POST['Mat_Adj_Clear']);
+            $Mat_Adj_Path = null;
+
+            if ($Mat_Adj_Clear) {
+                $datosMatricula['Mat_Adj'] = '';
+            }
+
+            if ($Mat_Adj_Modo === 'fotos') {
+                $hasFrente = isset($_FILES['Mat_Adj_Frente']) && $_FILES['Mat_Adj_Frente']['error'] === UPLOAD_ERR_OK;
+                $hasReverso = isset($_FILES['Mat_Adj_Reverso']) && $_FILES['Mat_Adj_Reverso']['error'] === UPLOAD_ERR_OK;
+                if ($hasFrente xor $hasReverso) {
+                    throw new Exception('Para unir la matrícula debe adjuntar las 2 fotos: Frente y Reverso.');
+                }
+                if ($hasFrente && $hasReverso) {
+                    $placaSafe = preg_replace('/[^A-Za-z0-9_-]/', '', strtoupper($Veh_Pla));
+                    if ($placaSafe === '') {
+                        $placaSafe = 'SINPLACA';
+                    }
+                    $baseDir = dirname(__DIR__) . '/RECURSOS/archivos_adjuntos/vehiculos/' . $placaSafe . '/';
+                    if (!is_dir($baseDir) && !@mkdir($baseDir, 0777, true) && !is_dir($baseDir)) {
+                        throw new Exception('No se pudo crear carpeta de adjuntos del vehículo.');
+                    }
+                    $tmpFrente = $baseDir . 'tmp_frente_' . uniqid() . '.jpg';
+                    $tmpReverso = $baseDir . 'tmp_reverso_' . uniqid() . '.jpg';
+                    if (!optimizarYComprimirImagen($_FILES['Mat_Adj_Frente']['tmp_name'], $tmpFrente, 1600, 85)) {
+                        if (!move_uploaded_file($_FILES['Mat_Adj_Frente']['tmp_name'], $tmpFrente)) {
+                            throw new Exception('No se pudo procesar la foto frontal de la matrícula.');
+                        }
+                    }
+                    if (!optimizarYComprimirImagen($_FILES['Mat_Adj_Reverso']['tmp_name'], $tmpReverso, 1600, 85)) {
+                        if (!move_uploaded_file($_FILES['Mat_Adj_Reverso']['tmp_name'], $tmpReverso)) {
+                            @unlink($tmpFrente);
+                            throw new Exception('No se pudo procesar la foto reverso de la matrícula.');
+                        }
+                    }
+                    $filename = 'matricula_unida_' . date('Ymd_His') . '.jpg';
+                    $target = $baseDir . $filename;
+                    if (!unirDosImagenesVertical($tmpFrente, $tmpReverso, $target, 1600, 85)) {
+                        @unlink($tmpFrente);
+                        @unlink($tmpReverso);
+                        throw new Exception('No se pudo unir las fotos de la matrícula.');
+                    }
+                    @unlink($tmpFrente);
+                    @unlink($tmpReverso);
+                    $Mat_Adj_Path = '../RECURSOS/archivos_adjuntos/vehiculos/' . $placaSafe . '/' . $filename;
+                }
+            } else {
+                // Modo PDF (también acepta imagen única)
+                if (isset($_FILES['Mat_Adj_Pdf']) && $_FILES['Mat_Adj_Pdf']['error'] !== UPLOAD_ERR_NO_FILE) {
+                    $Mat_Adj_Path = guardarArchivoMatriculaVehiculo($_FILES['Mat_Adj_Pdf'], $Veh_Pla, 'matricula');
+                }
+            }
+
+            if (!empty($Mat_Adj_Path)) {
+                $datosMatricula['Mat_Adj'] = $Mat_Adj_Path;
+            }
 
             $matRow = $obBD_con1->getRowConsulta(13, array($Veh_Cod), $obBD_conexion);
             if (empty($matRow)) {
@@ -984,6 +1286,9 @@ if (isset($_POST['saveVehiculoAjax'])) {
         $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
         $resp['success'] = true;
         $resp['message'] = 'Vehículo guardado correctamente';
+        if (!empty($Prv_Cod)) {
+            $resp['Prv_Cod'] = $Prv_Cod;
+        }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
         $resp['success'] = false;
@@ -1031,38 +1336,37 @@ if (isset($_POST['anularVehiculoAjax'])) {
             <!-- Pestañas (Tabs) -->
             <div class="nav-tabs-custom">
                 <ul class="nav nav-tabs" role="tablist">
-                    <!-- <li role="presentation">
+                    <li role="presentation">
                         <a href="#tabEmpresasTransporte" aria-controls="tabEmpresasTransporte" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-truck icon-tab"></i>Empresas Transporte
                         </a>
-                    </li> -->
+                    </li>
                     <li role="presentation" class="active">
                         <a href="#tabChoferes" aria-controls="tabChoferes" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-user icon-tab"></i>Choferes
                         </a>
                     </li>
-                    <!-- <li role="presentation">
+                    <li role="presentation">
                         <a href="#tabVehiculos" aria-controls="tabVehiculos" role="tab" data-toggle="tab">
                             <i class="glyphicon glyphicon-road icon-tab"></i>Vehículos
                         </a>
-                    </li> -->
+                    </li>
+                    <li role="presentation">
+                        <a href="#tabSanciones" aria-controls="tabSanciones" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-ban-circle icon-tab"></i>Sanciones
+                        </a>
+                    </li>
                 </ul>
 
                 <div class="tab-content">
-                    <!-- ==================== TAB 1: EMPRESAS TRANSPORTE (COMENTADO) ==================== -->
-                    <!--
+                    <!-- ==================== TAB: EMPRESAS TRANSPORTE ==================== -->
                     <div role="tabpanel" class="tab-pane" id="tabEmpresasTransporte">
-                        <div class="btn-toolbar" style="margin-bottom: 10px;">
-                            <button class="btn btn-success" onclick="abrirModalEmpresaTransporte();">
-                                <i class="glyphicon glyphicon-plus"></i> Nueva Empresa
-                            </button>
-                        </div>
-                        <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
+                        <div class="row" style="margin-top: 5px; margin-bottom: 10px;">
                             <div class="col-xs-12">
                                 <fieldset class="exa-fieldset">
                                     <legend class="Titulos2">Filtro de Búsqueda</legend>
                                     <form id="filtroEmpresasTransporteForm" class="form-horizontal normal" onsubmit="event.preventDefault(); actualizarGridEmpresasTransporte();">
-                                        <div class="form-group">
+                                        <div class="form-group" style="margin-bottom: 8px;">
                                             <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>
                                             <div class="col-xs-10 radioset opt_search">
                                                 <input id="radTransporte1" name="op_opciones" type="radio" value="n" checked="" onclick="setfocus(this.form.search)" />
@@ -1071,17 +1375,24 @@ if (isset($_POST['anularVehiculoAjax'])) {
                                                 <label for="radTransporte2">Licencia MAE</label>
                                             </div>
                                         </div>
-                                        <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs">Búsqueda:</label>
-                                            <div class="col-xs-8">
-                                                <div class="input-group input-group-xs">
-                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese búsqueda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridEmpresasTransporte(); }" />
-                                                    <span class="input-group-btn">
-                                                        <button type="button" onclick="actualizarGridEmpresasTransporte();" class="btn btn-success btn-xs" title="Buscar">
-                                                            <span class="glyphicon glyphicon-search"></span> Buscar
-                                                        </button>
-                                                    </span>
+                                        <div style="margin-top: 6px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                            <div style="display: flex; align-items: center; flex-grow: 1;">
+                                                <label class="control-label label-xs" style="width: 100px; text-align: right; padding-right: 8px; margin-bottom: 0; line-height: 32px; flex-shrink: 0;">Búsqueda:</label>
+                                                <div style="width: 520px; max-width: 100%;">
+                                                    <div class="input-group">
+                                                        <input name="search" type="text" maxlength="50" placeholder="Ingrese búsqueda..." class="form-control clearable" style="height: 32px; font-size: 12px;" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridEmpresasTransporte(); }" />
+                                                        <span class="input-group-btn">
+                                                            <button type="button" onclick="actualizarGridEmpresasTransporte();" class="btn btn-success" style="height: 32px; font-size: 12px;" title="Buscar">
+                                                                <span class="glyphicon glyphicon-search"></span> Buscar
+                                                            </button>
+                                                        </span>
+                                                    </div>
                                                 </div>
+                                            </div>
+                                            <div style="flex-shrink: 0; margin-left: 15px;">
+                                                <button class="btn btn-success" type="button" onclick="abrirModalEmpresaTransporte();" style="height: 32px; font-size: 12px; font-weight: 600; padding: 0 18px;">
+                                                    <i class="glyphicon glyphicon-plus"></i> Nueva Empresa
+                                                </button>
                                             </div>
                                         </div>
                                     </form>
@@ -1093,9 +1404,8 @@ if (isset($_POST['anularVehiculoAjax'])) {
                             <div id="gridEmpresasTransportePager"></div>
                         </div>
                     </div>
-                    -->
 
-                    <!-- ==================== TAB 2: CHOFERES (ACTIVO) ==================== -->
+                    <!-- ==================== TAB: CHOFERES (ACTIVO) ==================== -->
                     <div role="tabpanel" class="tab-pane active" id="tabChoferes">
                         <div class="row" style="margin-top: 5px; margin-bottom: 10px;">
                             <div class="col-xs-12">
@@ -1156,20 +1466,14 @@ if (isset($_POST['anularVehiculoAjax'])) {
 
 
 
-                    <!-- ==================== TAB 3: VEHÍCULOS (COMENTADO) ==================== -->
-                    <!--
+                    <!-- ==================== TAB 3: VEHÍCULOS ==================== -->
                     <div role="tabpanel" class="tab-pane" id="tabVehiculos">
-                        <div class="btn-toolbar" style="margin-bottom: 10px;">
-                            <button class="btn btn-success" onclick="abrirModalVehiculo();">
-                                <i class="glyphicon glyphicon-plus"></i> Nuevo Vehículo
-                            </button>
-                        </div>
                         <div class="row" style="margin-top: 10px; margin-bottom: 10px;">
                             <div class="col-xs-12">
                                 <fieldset class="exa-fieldset">
                                     <legend class="Titulos2">Filtro de Búsqueda</legend>
                                     <form id="filtroVehiculosForm" class="form-horizontal normal" onsubmit="event.preventDefault(); actualizarGridVehiculos();">
-                                        <div class="form-group">
+                                        <div class="form-group" style="margin-bottom: 8px;">
                                             <label class="col-xs-2 control-label label-xs">Filtrar Por:</label>
                                             <div class="col-xs-10 radioset opt_search">
                                                 <input id="radVehiculo1" name="op_opciones" type="radio" value="p" checked="" onclick="setfocus(this.form.search)" />
@@ -1179,20 +1483,27 @@ if (isset($_POST['anularVehiculoAjax'])) {
                                                 <input id="radVehiculo3" name="op_opciones" type="radio" value="pl" onclick="setfocus(this.form.search)" />
                                                 <label for="radVehiculo3">Licencia Planta</label>
                                                 <input id="radVehiculo4" name="op_opciones" type="radio" value="c" onclick="setfocus(this.form.search)" />
-                                                <label for="radVehiculo4">Cédula/RUC Cliente</label>
+                                                <label for="radVehiculo4">Cédula/RUC Propietario</label>
                                             </div>
                                         </div>
-                                        <div class="form-group">
-                                            <label class="col-xs-2 control-label label-xs">Búsqueda:</label>
-                                            <div class="col-xs-8">
-                                                <div class="input-group input-group-xs">
-                                                    <input name="search" type="text" size="50" maxlength="50" placeholder="Ingrese búsqueda..." class="form-control input-xs clearable" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridVehiculos(); }" />
-                                                    <span class="input-group-btn">
-                                                        <button type="button" onclick="actualizarGridVehiculos();" class="btn btn-success btn-xs" title="Buscar">
-                                                            <span class="glyphicon glyphicon-search"></span> Buscar
-                                                        </button>
-                                                    </span>
+                                        <div style="margin-top: 6px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                            <div style="display: flex; align-items: center; flex-grow: 1;">
+                                                <label class="control-label label-xs" style="width: 100px; text-align: right; padding-right: 8px; margin-bottom: 0; line-height: 32px; padding-top: 0; flex-shrink: 0;">Búsqueda:</label>
+                                                <div style="width: 650px; max-width: 100%;">
+                                                    <div class="input-group">
+                                                        <input name="search" type="text" maxlength="70" placeholder="Ingrese búsqueda..." class="form-control clearable" style="height: 32px; font-size: 12px;" onkeydown="if (event.keyCode === 13) { event.preventDefault(); actualizarGridVehiculos(); }" />
+                                                        <span class="input-group-btn">
+                                                            <button type="button" onclick="actualizarGridVehiculos();" class="btn btn-success" style="height: 32px; font-size: 12px;" title="Buscar">
+                                                                <span class="glyphicon glyphicon-search"></span> Buscar
+                                                            </button>
+                                                        </span>
+                                                    </div>
                                                 </div>
+                                            </div>
+                                            <div style="flex-shrink: 0; margin-left: 15px;">
+                                                <button class="btn btn-success" type="button" onclick="abrirModalVehiculo();" style="height: 32px; font-size: 12px; font-weight: 600; padding: 0 18px;">
+                                                    <i class="glyphicon glyphicon-plus"></i> Nuevo Vehículo
+                                                </button>
                                             </div>
                                         </div>
                                     </form>
@@ -1204,7 +1515,7 @@ if (isset($_POST['anularVehiculoAjax'])) {
                             <div id="gridVehiculosPager"></div>
                         </div>
                     </div>
-                    -->
+                    <?php require_once(__DIR__ . '/../COMPONENTES/man_sanciones_ui.inc.php'); ?>
                 </div>
             </div>
         </div>
@@ -1212,44 +1523,44 @@ if (isset($_POST['anularVehiculoAjax'])) {
 
     <!-- ==================== MODALES / DIÁLOGOS ==================== -->
 
-    <!-- Modal Empresa de Transporte -->
+    <!-- Modal Empresa Transporte (igual que man_adm_configuracion) -->
     <div id="empresaTransporteDialog" title="Registrar Empresa de Transporte" style="display: none;">
         <form id="empresaTransporteForm" class="form-horizontal normal">
             <input type="hidden" id="Mat_Cod" name="Mat_Cod">
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs required" title="Descripción / Nombre de la empresa">Descripción / Nombre:</label>
+                <label class="col-xs-4 control-label label-xs required">Nombre de la Empresa:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Mat_Des" name="Mat_Des" class="form-control input-xs" required placeholder="Nombre de la empresa">
+                    <input type="text" id="Mat_Des" name="Mat_Des" class="form-control input-xs" required placeholder="Nombre de la Empresa" maxlength="100">
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs" title="Número de RUC / Cédula / Licencia MAE">Licencia MAE / RUC:</label>
+                <label class="col-xs-4 control-label label-xs required">Licencia Ambiental MAE:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Mat_Mae" name="Mat_Mae" class="form-control input-xs" placeholder="Número de RUC / Licencia MAE" maxlength="30">
+                    <input type="text" id="Mat_Mae" name="Mat_Mae" class="form-control input-xs" required placeholder="Licencia Ambiental MAE" maxlength="30">
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs" title="Teléfono de Contacto">Teléfono:</label>
+                <label class="col-xs-4 control-label label-xs">Teléfono:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Mat_Tel" name="Mat_Tel" class="form-control input-xs" placeholder="Teléfono" maxlength="20">
+                    <input type="text" id="Mat_Tel" name="Mat_Tel" class="form-control input-xs" placeholder="Teléfono" maxlength="10" onkeypress="return validar_numeric(event);">
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs" title="Persona de Contacto">Persona Contacto:</label>
+                <label class="col-xs-4 control-label label-xs">Nro. Plan de Contingencia:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Mat_Pco" name="Mat_Pco" class="form-control input-xs" placeholder="Nombre de contacto" maxlength="50">
+                    <input type="text" id="Mat_Pco" name="Mat_Pco" class="form-control input-xs" placeholder="Número Plan de Contingencia" maxlength="30">
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-xs-4 control-label label-xs" title="Dirección de la Empresa">Dirección:</label>
+                <label class="col-xs-4 control-label label-xs">Dirección:</label>
                 <div class="col-xs-8">
-                    <input type="text" id="Mat_Dir" name="Mat_Dir" class="form-control input-xs" placeholder="Dirección">
+                    <textarea id="Mat_Dir" name="Mat_Dir" class="form-control input-xs" rows="3" placeholder="Dirección"></textarea>
                 </div>
             </div>
         </form>
-        <div style="text-align: center; margin-top: 15px;">
+        <div style="text-align: center; margin-top: 15px; padding: 10px; border-top: 1px solid #ddd;">
             <button id="btnGuardarEmpresa" class="btn btn-sm btn-primary" type="button" onclick="guardarEmpresaTransporte();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar</button>
-            <button class="btn btn-sm btn-danger" type="button" onclick="$('#empresaTransporteDialog').dialog('close');"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
+            <button class="btn btn-sm btn-default" type="button" onclick="$('#empresaTransporteDialog').dialog('close');"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
         </div>
     </div>
 
@@ -1590,420 +1901,497 @@ if (isset($_POST['anularVehiculoAjax'])) {
 
     </div>
 
-    <!-- Modal Vehículo Completo (Layout Multicolumna 1250px con 6 Fieldsets) -->
+    <!-- Modal Vehículo Completo — Tabs Propietario / Matrícula -->
     <div id="vehiculoDialog" title="Registrar Vehículo" style="display: none;">
-        <form id="vehiculoForm" class="form-horizontal normal">
+        <form id="vehiculoForm" class="form-horizontal normal" enctype="multipart/form-data" autocomplete="off">
             <input type="hidden" id="Veh_Cod" name="Veh_Cod">
+            <input type="hidden" id="Prv_Cod" name="Prv_Cod">
+            <input type="hidden" id="Mat_Adj_Clear" name="Mat_Adj_Clear" value="0">
+            <input type="hidden" id="Mat_Adj_Actual" name="Mat_Adj_Actual" value="">
 
-            <!-- BLOQUE 1: PROPIETARIO Y ASIGNACIÓN -->
-            <div class="row">
-                <div class="col-xs-6">
-                    <fieldset class="exa-fieldset height-sync">
-                        <legend class="Titulos2"><i class="glyphicon glyphicon-user"></i> 1. Datos del Propietario</legend>
-                        <div class="row">
-                            <div class="col-xs-5">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="C.I. / Pasaporte / RUC Propietario">C.I. / RUC / Pasap.:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Pro_Id" name="Mat_Pro_Id" class="form-control input-xs" placeholder="Identificación" maxlength="20" onchange="buscarPersonaPropietario(this.value);" onkeyup="if(event.keyCode===13){ buscarPersonaPropietario(this.value); }">
-                                        <div id="Mat_Pro_Id_Est" style="margin-top: 2px;"></div>
+            <ul class="nav nav-tabs veh-inner-tabs" role="tablist">
+                <li role="presentation" class="active">
+                    <a href="#vehTabPropietario" aria-controls="vehTabPropietario" role="tab" data-toggle="tab">
+                        <i class="glyphicon glyphicon-user"></i> Propietario
+                    </a>
+                </li>
+                <li role="presentation">
+                    <a href="#vehTabMatricula" aria-controls="vehTabMatricula" role="tab" data-toggle="tab">
+                        <i class="glyphicon glyphicon-file"></i> Matrícula
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content veh-inner-tab-content">
+
+                <!-- ==================== TAB PROPIETARIO ==================== -->
+                <div role="tabpanel" class="tab-pane active" id="vehTabPropietario">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <fieldset class="exa-fieldset">
+                                <legend class="Titulos2"><i class="glyphicon glyphicon-credit-card"></i> Identificación del Propietario</legend>
+                                <div class="row">
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="C.I. / RUC / Pasaporte">C.I. / RUC:</label>
+                                            <div class="col-xs-12">
+                                                <div class="input-group input-group-xs">
+                                                    <input type="text" id="Prv_Ced" name="Prv_Ced" class="form-control input-xs" placeholder="RUC/CI" maxlength="13" onchange="buscarProveedorPropietario(this.value);" onkeyup="if(event.keyCode===13){ buscarProveedorPropietario(this.value); }">
+                                                    <span class="input-group-btn">
+                                                        <button type="button" id="btnReloadPrv" class="btn btn-default btn-xs" title="Recargar proveedor" onclick="buscarProveedorPropietario($('#Prv_Ced').val());">
+                                                            <i class="glyphicon glyphicon-refresh"></i>
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-9">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Nombre del propietario">Nombre:</label>
+                                            <div class="col-xs-12">
+                                                <input type="text" id="Prv_Nom" name="Prv_Nom" class="form-control input-xs" placeholder="Nombres del propietario" maxlength="150">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-xs-7">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Nombre Completo del Propietario">Nombre Propietario:</label>
+                                <div class="row veh-status-row">
                                     <div class="col-xs-12">
-                                        <input type="text" id="Mat_Pro_Nom" name="Mat_Pro_Nom" class="form-control input-xs" placeholder="Nombres del propietario" maxlength="150">
+                                        <div id="Prv_Ced_Est"></div>
                                     </div>
                                 </div>
-                            </div>
+                                <div class="row">
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Ciudad">Ciudad:</label>
+                                            <div class="col-xs-11">
+                                                <input type="text" id="Prv_Can" name="Prv_Can" class="form-control input-xs" placeholder="Ciudad" maxlength="50" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Teléfono">Teléfono:</label>
+                                            <div class="col-xs-11">
+                                                <input type="text" id="Prv_Tel" name="Prv_Tel" class="form-control input-xs" placeholder="Teléfono" maxlength="30">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Correo">Correo:</label>
+                                            <div class="col-xs-12">
+                                                <input type="email" id="Prv_Cor" name="Prv_Cor" class="form-control input-xs" placeholder="correo@ejemplo.com" maxlength="100">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
                         </div>
-                        <div class="row" style="margin-top: 4px;">
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Provincia Residencial">Provincia:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Pro_Prv" name="Mat_Pro_Prv" class="form-control input-xs" placeholder="Provincia" maxlength="50">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <fieldset class="exa-fieldset">
+                                <legend class="Titulos2"><i class="glyphicon glyphicon-road"></i> Asignación Operativa</legend>
+                                <div class="row">
+                                    <div class="col-xs-6">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Planta de Beneficio (opcional)">Planta:</label>
+                                            <div class="col-xs-11">
+                                                <select id="Veh_Pla_Cod" name="Pla_Cod" class="form-control input-xs select-wide chosen-select" data-placeholder="Opcional...">
+                                                    <option value="">Sin planta asignada</option>
+                                                    <?php foreach ($plantas as $row) { ?>
+                                                        <option value="<?php echo $row['Pla_Cod']; ?>"><?php echo $row['Pla_Nom']; ?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Empresa de Transporte (opcional)">Empresa Transporte:</label>
+                                            <div class="col-xs-12">
+                                                <select id="Veh_Mat_Cod" name="Mat_Cod" class="form-control input-xs select-wide chosen-select" data-placeholder="Opcional...">
+                                                    <option value="">Sin empresa asignada</option>
+                                                    <?php foreach ($transportes as $row) { ?>
+                                                        <option value="<?php echo $row['Mat_Cod']; ?>"><?php echo htmlspecialchars($row['Mat_Des']); ?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Cantón Residencial">Cantón:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Pro_Can" name="Mat_Pro_Can" class="form-control input-xs" placeholder="Cantón" maxlength="50">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Teléfono del Propietario">Teléfono:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Pro_Tel" name="Mat_Pro_Tel" class="form-control input-xs" placeholder="Teléfono" maxlength="30">
-                                    </div>
-                                </div>
-                            </div>
+                            </fieldset>
                         </div>
-                    </fieldset>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <fieldset class="exa-fieldset">
+                                <legend class="Titulos2"><i class="glyphicon glyphicon-tags"></i> Datos Principales</legend>
+                                <div class="row">
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="Placa Actual">Placa Actual:</label>
+                                            <div class="col-xs-11">
+                                                <input type="text" id="Veh_Pla" name="Veh_Pla" class="form-control input-xs bold text-uppercase" required placeholder="Ej: ABC-1234" maxlength="10" onchange="validarPlacaVehiculo(this.value);" onkeyup="this.value = this.value.toUpperCase();">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Placa Anterior">Placa Anterior:</label>
+                                            <div class="col-xs-11">
+                                                <input type="text" id="Mat_Pan" name="Mat_Pan" class="form-control input-xs text-uppercase" placeholder="Placa anterior" maxlength="10" onkeyup="this.value = this.value.toUpperCase();">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="Tipo">Tipo:</label>
+                                            <div class="col-xs-11">
+                                                <select id="Veh_Tit" name="Veh_Tit" class="form-control input-xs select-wide chosen-select" required>
+                                                    <option value="V">VOLQUETA</option>
+                                                    <option value="C">CAMION / CAMIONETA</option>
+                                                    <option value="D">TIPO DUMPER</option>
+                                                    <option value="B">BUS / VAN</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Estado">Estado:</label>
+                                            <div class="col-xs-12">
+                                                <select id="Veh_Est" name="Veh_Est" class="form-control input-xs select-wide chosen-select">
+                                                    <option value="A">ACTIVO</option>
+                                                    <option value="I">INACTIVO</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row veh-status-row">
+                                    <div class="col-xs-12">
+                                        <div id="Veh_Pla_Est"></div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <fieldset class="exa-fieldset">
+                                <legend class="Titulos2"><i class="glyphicon glyphicon-cog"></i> Especificaciones</legend>
+                                <div class="row">
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="Marca">Marca:</label>
+                                            <div class="col-xs-11">
+                                                <input type="text" id="Veh_Mar" name="Veh_Mar" class="form-control input-xs" required placeholder="Marca" maxlength="30">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="Modelo">Modelo:</label>
+                                            <div class="col-xs-11">
+                                                <input type="text" id="Veh_Mde" name="Veh_Mde" class="form-control input-xs" required placeholder="Modelo" maxlength="50">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="Año Modelo">Año Modelo:</label>
+                                            <div class="col-xs-11">
+                                                <input type="text" id="Veh_Amo" name="Veh_Amo" class="form-control input-xs text-center" required placeholder="AAAA" maxlength="4">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Peso en toneladas">Peso (Tn):</label>
+                                            <div class="col-xs-11">
+                                                <input type="text" id="Veh_Pes" name="Veh_Pes" class="form-control input-xs text-right" placeholder="Tn" maxlength="10">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-4">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="Color 1">Color 1:</label>
+                                            <div class="col-xs-10">
+                                                <input type="text" id="Veh_Col" name="Veh_Col" class="form-control input-xs" required placeholder="Color 1" maxlength="20">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-4">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Color 2">Color 2:</label>
+                                            <div class="col-xs-11">
+                                                <input type="text" id="Veh_Col2" name="Veh_Col2" class="form-control input-xs" placeholder="Color 2" maxlength="20">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-4">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="Capacidad Kg">Capacidad Kg:</label>
+                                            <div class="col-xs-11">
+                                                <input type="number" id="Veh_Cap" name="Veh_Cap" class="form-control input-xs text-right" required placeholder="Kg" step="0.01">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="col-xs-6">
-                    <fieldset class="exa-fieldset height-sync">
-                        <legend class="Titulos2"><i class="glyphicon glyphicon-road"></i> 2. Asignación y Datos Principales</legend>
-                        <div class="row">
-                            <div class="col-xs-6">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs required" title="Planta de Beneficio">Planta Beneficio:</label>
-                                    <div class="col-xs-12">
-                                        <select id="Veh_Pla_Cod" name="Pla_Cod" class="form-control input-xs select-wide chosen-select" required>
-                                            <option value="">Seleccione Planta...</option>
-                                            <?php foreach ($plantas as $row) { ?>
-                                                <option value="<?php echo $row['Pla_Cod']; ?>"><?php echo $row['Pla_Nom']; ?></option>
-                                            <?php } ?>
-                                        </select>
+                <!-- ==================== TAB MATRÍCULA ==================== -->
+                <div role="tabpanel" class="tab-pane" id="vehTabMatricula">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <fieldset class="exa-fieldset">
+                                <legend class="Titulos2"><i class="glyphicon glyphicon-barcode"></i> Motor y Chasis</legend>
+                                <div class="row">
+                                    <div class="col-xs-4">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="N° Motor">N° Motor:</label>
+                                            <div class="col-xs-12">
+                                                <input type="text" id="Mat_Nmo" name="Mat_Nmo" class="form-control input-xs" required placeholder="Motor" maxlength="30">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-4">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="N° Chasis">N° Chasis:</label>
+                                            <div class="col-xs-12">
+                                                <input type="text" id="Mat_Cha" name="Mat_Cha" class="form-control input-xs" required placeholder="Chasis" maxlength="50">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-4">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="RAMV / CPN">RAMV / CPN:</label>
+                                            <div class="col-xs-12">
+                                                <input type="text" id="Mat_Ram" name="Mat_Ram" class="form-control input-xs" required placeholder="RAMV" maxlength="30">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-xs-6">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs required" title="Empresa de Transporte">Empresa Transporte:</label>
-                                    <div class="col-xs-12">
-                                        <select id="Mat_Cod" name="Mat_Cod" class="form-control input-xs select-wide chosen-select" required>
-                                            <option value="">Seleccione Empresa...</option>
-                                            <?php foreach ($transportes as $row) { ?>
-                                                <option value="<?php echo $row['Mat_Cod']; ?>"><?php echo $row['Mat_Des']; ?></option>
-                                            <?php } ?>
-                                        </select>
+                                <div class="row">
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="Cilindraje">Cilindraje:</label>
+                                            <div class="col-xs-12">
+                                                <input type="number" id="Mat_Cil" name="Mat_Cil" class="form-control input-xs text-right" required placeholder="cc" step="0.01">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Combustible">Combustible:</label>
+                                            <div class="col-xs-12">
+                                                <select id="Mat_Tco" name="Mat_Tco" class="form-control input-xs select-wide chosen-select">
+                                                    <option value="D">DIÉSEL</option>
+                                                    <option value="G">GASOLINA</option>
+                                                    <option value="E">ELÉCTRICO</option>
+                                                    <option value="H">HÍBRIDO</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Clase">Clase vehiculo:</label>
+                                            <div class="col-xs-12">
+                                                <input type="text" id="Mat_Cve" name="Mat_Cve" class="form-control input-xs" placeholder="Clase" maxlength="20">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Tipo Específico">Tipo Vehiculo</label>
+                                            <div class="col-xs-12">
+                                                <input type="text" id="Mat_Tip" name="Mat_Tip" class="form-control input-xs" placeholder="Tipo" maxlength="20">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </fieldset>
                         </div>
-                        <div class="row" style="margin-top: 4px;">
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs required" title="Placa Actual del Vehículo">Placa Actual:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Veh_Pla" name="Veh_Pla" class="form-control input-xs bold text-uppercase" required placeholder="Ej: ABC-1234" maxlength="10" onchange="validarPlacaVehiculo(this.value);" onkeyup="this.value = this.value.toUpperCase();">
-                                        <div id="Veh_Pla_Est" style="margin-top: 2px;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Placa Anterior (Si aplica)">Placa Anterior:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Pan" name="Mat_Pan" class="form-control input-xs text-uppercase" placeholder="Placa anterior" maxlength="10" onkeyup="this.value = this.value.toUpperCase();">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Estado Operativo del Vehículo">Estado:</label>
-                                    <div class="col-xs-12">
-                                        <select id="Veh_Est" name="Veh_Est" class="form-control input-xs select-wide chosen-select">
-                                            <option value="A">ACTIVO</option>
-                                            <option value="I">INACTIVO</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </fieldset>
-                </div>
-            </div>
+                    </div>
 
-            <!-- BLOQUE 2: ESPECIFICACIONES TÉCNICAS Y COLORES -->
-            <div class="row" style="margin-top: 4px;">
-                <div class="col-xs-6">
-                    <fieldset class="exa-fieldset height-sync">
-                        <legend class="Titulos2"><i class="glyphicon glyphicon-cog"></i> 3. Especificaciones Técnicas y Colores</legend>
-                        <div class="row">
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs required" title="Marca del Vehículo">Marca:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Veh_Mar" name="Veh_Mar" class="form-control input-xs" required placeholder="Marca">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <fieldset class="exa-fieldset">
+                                <legend class="Titulos2"><i class="glyphicon glyphicon-file"></i> Datos de Matrícula</legend>
+                                <div class="row">
+                                    <div class="col-xs-4">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Ciudad emisión matrícula">Ciudad Emisión:</label>
+                                            <div class="col-xs-12">
+                                                <select id="Ciu_Cod" name="Ciu_Cod" class="form-control input-xs select-wide chosen-select">
+                                                    <option value="">Seleccione ciudad...</option>
+                                                    <?php foreach ($ciudades as $ciu) { ?>
+                                                        <option value="<?php echo $ciu['Ciu_Cod']; ?>"><?php echo htmlspecialchars($ciu['Ciu_Des']); ?></option>
+                                                    <?php } ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-4">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="Fecha emisión">Fec. Emisión:</label>
+                                            <div class="col-xs-12">
+                                                <input type="date" id="Mat_Fem" name="Mat_Fem" class="form-control input-xs input-date-wide" required min="2000-01-01" max="2050-12-31">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-4">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs required" title="Fecha caducidad">Fec. Caducidad:</label>
+                                            <div class="col-xs-12">
+                                                <input type="date" id="Mat_Fca" name="Mat_Fca" class="form-control input-xs input-date-wide" required min="2000-01-01" max="2050-12-31">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Modelo del Vehículo">Modelo:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Mde" name="Mat_Mde" class="form-control input-xs" placeholder="Modelo">
+                                <div class="row">
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Pasajeros">Pasajeros:</label>
+                                            <div class="col-xs-12">
+                                                <input type="number" id="Mat_Npa" name="Mat_Npa" class="form-control input-xs text-right" placeholder="N°" step="1" min="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="País de origen">Origen:</label>
+                                            <div class="col-xs-12">
+                                                <input type="text" id="Mat_Ori" name="Mat_Ori" class="form-control input-xs" placeholder="País" maxlength="20">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Carrocería">Carrocería:</label>
+                                            <div class="col-xs-12">
+                                                <input type="text" id="Mat_Car" name="Mat_Car" class="form-control input-xs" placeholder="Carrocería" maxlength="20">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Tipo peso">Tipo Peso:</label>
+                                            <div class="col-xs-12">
+                                                <select id="Mat_Tpe" name="Mat_Tpe" class="form-control input-xs select-wide chosen-select">
+                                                    <option value="">Seleccione...</option>
+                                                    <option value="LIVIANO (<=3.5T)">LIVIANO (&lt;=3.5T)</option>
+                                                    <option value="PESADO (>3.5T)">PESADO (&gt;3.5T)</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-xs-2">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Año Fabricación">Año Fab.:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Ano" name="Mat_Ano" class="form-control input-xs text-center" placeholder="AAAA" maxlength="4">
+                                <div class="row">
+                                    <div class="col-xs-6">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Digitador">Digitador:</label>
+                                            <div class="col-xs-12">
+                                                <input type="text" id="Mat_Deg" name="Mat_Deg" class="form-control input-xs" placeholder="Digitador" maxlength="20">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-6">
+                                        <div class="form-group">
+                                            <label class="col-xs-12 control-label label-xs" title="Estado matrícula">Estado Matrícula:</label>
+                                            <div class="col-xs-12">
+                                                <select id="Mat_Est" name="Mat_Est" class="form-control input-xs select-wide chosen-select">
+                                                    <option value="A">ACTIVO</option>
+                                                    <option value="I">INACTIVO</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-xs-2">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Año del Modelo">Año Modelo:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Amo" name="Mat_Amo" class="form-control input-xs text-center" placeholder="AAAA" maxlength="4">
-                                    </div>
-                                </div>
-                            </div>
+                            </fieldset>
                         </div>
-                        <div class="row" style="margin-top: 4px;">
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs required" title="Color Primario / Color 1">Color 1 (Principal):</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Veh_Col" name="Veh_Col" class="form-control input-xs" required placeholder="Color 1">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Color Secundario / Color 2">Color 2 (Secundario):</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Co2" name="Mat_Co2" class="form-control input-xs" placeholder="Color 2">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-2">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs required" title="Capacidad en Kilogramos">Capac. (Kg):</label>
-                                    <div class="col-xs-12">
-                                        <input type="number" id="Veh_Cap" name="Veh_Cap" class="form-control input-xs text-right" required placeholder="Kg" step="0.01">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-2">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Capacidad en Toneladas">Toneladas:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Ton" name="Mat_Ton" class="form-control input-xs text-right" placeholder="Ton">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-2">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs required" title="Tipo Principal">Tipo Modalidad:</label>
-                                    <div class="col-xs-12">
-                                        <select id="Veh_Tit" name="Veh_Tit" class="form-control input-xs select-wide chosen-select" required>
-                                            <option value="V">VOLQUETA</option>
-                                            <option value="D">TIPO DUMPER</option>
-                                            <option value="C">CAMION</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </fieldset>
-                </div>
+                    </div>
 
-                <div class="col-xs-6">
-                    <fieldset class="exa-fieldset height-sync">
-                        <legend class="Titulos2"><i class="glyphicon glyphicon-barcode"></i> 4. Motor, Chasis y Mecánica</legend>
-                        <div class="row">
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Número de Motor">N° Motor:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Nmo" name="Mat_Nmo" class="form-control input-xs" placeholder="Número de motor" maxlength="30">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <fieldset class="exa-fieldset">
+                                <legend class="Titulos2"><i class="glyphicon glyphicon-camera"></i> Documento de Matrícula</legend>
+                                <div class="mat-adj-top-row">
+                                    <div class="mat-adj-modo-wrap">
+                                        <label class="mat-adj-modo-opt">
+                                            <input type="radio" name="Mat_Adj_Modo" value="pdf" checked onchange="toggleMatAdjModo('pdf');">
+                                            <span><i class="glyphicon glyphicon-file"></i> Subir PDF</span>
+                                        </label>
+                                        <label class="mat-adj-modo-opt">
+                                            <input type="radio" name="Mat_Adj_Modo" value="fotos" onchange="toggleMatAdjModo('fotos');">
+                                            <span><i class="glyphicon glyphicon-camera"></i> Fotos Frente + Reverso</span>
+                                        </label>
+                                    </div>
+                                    <div id="matAdjActualBox" class="mat-adj-actual" style="display:none;">
+                                        <span class="mat-adj-actual-label">Archivo actual:</span>
+                                        <div id="preview_Mat_Adj" class="preview-doc-box"></div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Número de Chasis">N° Chasis:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Cha" name="Mat_Cha" class="form-control input-xs" placeholder="Número de chasis" maxlength="50">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Número RAMV / CPN">RAMV / CPN:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Ram" name="Mat_Ram" class="form-control input-xs" placeholder="RAMV / CPN" maxlength="30">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row" style="margin-top: 4px;">
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Cilindraje (cc)">Cilindraje:</label>
-                                    <div class="col-xs-12">
-                                        <input type="number" id="Mat_Cil" name="Mat_Cil" class="form-control input-xs text-right" placeholder="cc" step="0.01">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Tipo de Combustible">Combustible:</label>
-                                    <div class="col-xs-12">
-                                        <select id="Mat_Tco" name="Mat_Tco" class="form-control input-xs select-wide chosen-select">
-                                            <option value="D">DIÉSEL</option>
-                                            <option value="G">GASOLINA</option>
-                                            <option value="E">ELÉCTRICO</option>
-                                            <option value="H">HÍBRIDO</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Clase de Vehículo">Clase Vehículo:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Cve" name="Mat_Cve" class="form-control input-xs" placeholder="Ej: JEPP, VOLQUETA" maxlength="20">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Tipo Específico de Vehículo">Tipo Específico:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Tip" name="Mat_Tip" class="form-control input-xs" placeholder="Ej: DUMPER" maxlength="20">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </fieldset>
-                </div>
-            </div>
 
-            <!-- BLOQUE 3: REGISTRO MATRÍCULA Y OBSERVACIONES -->
-            <div class="row" style="margin-top: 4px;">
-                <div class="col-xs-6">
-                    <fieldset class="exa-fieldset height-sync">
-                        <legend class="Titulos2"><i class="glyphicon glyphicon-file"></i> 5. Matrícula, Fechas y Avalúo</legend>
-                        <div class="row">
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="N° de Matrícula">N° Matrícula:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Nma" name="Mat_Nma" class="form-control input-xs" placeholder="N° Matrícula" maxlength="50">
+                                <div id="matAdjPdfBlock" class="mat-adj-block">
+                                    <div class="row">
+                                        <div class="col-xs-12">
+                                            <div class="form-group">
+                                                <label class="col-xs-12 control-label label-xs" title="Archivo PDF de matrícula">Archivo PDF:</label>
+                                                <div class="col-xs-12">
+                                                    <input type="file" id="Mat_Adj_Pdf" name="Mat_Adj_Pdf" class="form-control input-xs input-file-compressed" accept=".pdf,application/pdf">
+                                                    <div id="preview_Mat_Adj_Pdf" class="preview-doc-box"></div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Fecha de Emisión Matrícula">Fec. Emisión:</label>
-                                    <div class="col-xs-12">
-                                        <input type="date" id="Mat_Fem" name="Mat_Fem" class="form-control input-xs input-date-wide" min="2000-01-01" max="2050-12-31">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-4">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Fecha de Vencimiento Matrícula">Fec. Vencimiento:</label>
-                                    <div class="col-xs-12">
-                                        <input type="date" id="Mat_Fve" name="Mat_Fve" class="form-control input-xs input-date-wide" min="2000-01-01" max="2050-12-31">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row" style="margin-top: 4px;">
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Lugar de Emisión">Lugar Emisión:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Lem" name="Mat_Lem" class="form-control input-xs" placeholder="Lugar emisión" maxlength="100">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Fecha de Compra">Fecha Compra:</label>
-                                    <div class="col-xs-12">
-                                        <input type="date" id="Mat_Fco" name="Mat_Fco" class="form-control input-xs input-date-wide" min="2000-01-01" max="2050-12-31">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Avalúo Comercial ($)">Avalúo ($):</label>
-                                    <div class="col-xs-12">
-                                        <input type="number" id="Mat_Ava" name="Mat_Ava" class="form-control input-xs text-right" placeholder="0.00" step="0.01">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Valor Matrícula ($)">Valor Matrícula ($):</label>
-                                    <div class="col-xs-12">
-                                        <input type="number" id="Mat_Vma" name="Mat_Vma" class="form-control input-xs text-right" placeholder="0.00" step="0.01">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </fieldset>
-                </div>
 
-                <div class="col-xs-6">
-                    <fieldset class="exa-fieldset height-sync">
-                        <legend class="Titulos2"><i class="glyphicon glyphicon-list-alt"></i> 6. Operación y Observaciones</legend>
-                        <div class="row">
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="N° de Disco">Disco:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Dis" name="Mat_Dis" class="form-control input-xs text-center" placeholder="N° Disco" maxlength="20">
+                                <div id="matAdjFotosBlock" class="mat-adj-block" style="display:none;">
+                                    <p class="mat-adj-hint">Capture o seleccione las 2 caras. Al guardar, el sistema las unirá en un solo archivo.</p>
+                                    <div class="row">
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label class="col-xs-12 control-label label-xs required" title="Frente de matrícula">Frente:</label>
+                                                <div class="col-xs-12">
+                                                    <input type="file" id="Mat_Adj_Frente" name="Mat_Adj_Frente" class="form-control input-xs input-file-compressed" accept="image/*" capture="environment">
+                                                    <div id="preview_Mat_Adj_Frente" class="preview-doc-box"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-6">
+                                            <div class="form-group">
+                                                <label class="col-xs-12 control-label label-xs required" title="Reverso de matrícula">Reverso:</label>
+                                                <div class="col-xs-12">
+                                                    <input type="file" id="Mat_Adj_Reverso" name="Mat_Adj_Reverso" class="form-control input-xs input-file-compressed" accept="image/*" capture="environment">
+                                                    <div id="preview_Mat_Adj_Reverso" class="preview-doc-box"></div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Vehículo Ortopédico">Ortopédico:</label>
-                                    <div class="col-xs-12">
-                                        <select id="Mat_Ort" name="Mat_Ort" class="form-control input-xs select-wide chosen-select">
-                                            <option value="N">NO</option>
-                                            <option value="S">SÍ</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Motor / Chasis Remarcado">Remarcado:</label>
-                                    <div class="col-xs-12">
-                                        <select id="Mat_Rem" name="Mat_Rem" class="form-control input-xs select-wide chosen-select">
-                                            <option value="N">NO</option>
-                                            <option value="S">SÍ</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xs-3">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Digitador del Registro">Digitador:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Dig" name="Mat_Dig" class="form-control input-xs" placeholder="Digitador" maxlength="50">
-                                    </div>
-                                </div>
-                            </div>
+                            </fieldset>
                         </div>
-                        <div class="row" style="margin-top: 4px;">
-                            <div class="col-xs-12">
-                                <div class="form-group">
-                                    <label class="col-xs-12 control-label label-xs" title="Observaciones Adicionales">Observaciones:</label>
-                                    <div class="col-xs-12">
-                                        <input type="text" id="Mat_Obs" name="Mat_Obs" class="form-control input-xs" placeholder="Observaciones generales sobre el vehículo o matrícula">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </fieldset>
+                    </div>
                 </div>
             </div>
         </form>
-        <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
+        <div class="veh-modal-actions">
             <button id="btnGuardarVehiculo" class="btn btn-primary" type="button" onclick="guardarVehiculo();"><i class="glyphicon glyphicon-floppy-disk"></i> Guardar Vehículo</button>
-            <button class="btn btn-danger" type="button" onclick="$('#vehiculoDialog').dialog('close');"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
+            <button class="btn btn-danger" type="button" onclick="$('#vehiculoDialog').dialog('close');" style="margin-left: 5px;"><i class="glyphicon glyphicon-remove"></i> Cancelar</button>
         </div>
     </div>
-
     <!-- Modal QR Vehículo -->
     <div id="qrVehiculoDialog" title="Código QR del Vehículo" style="display: none;">
         <div id="qrVehiculoContainer">
@@ -2034,7 +2422,8 @@ if (isset($_POST['anularVehiculoAjax'])) {
     <!-- JS Scripts Inclusion con parámetro de cache-busting -->
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=41"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_sanciones.js?e=1"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_datos_choferes_vehiculos.js?e=59"></script>
 </body>
 
 </html>

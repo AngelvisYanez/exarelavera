@@ -393,6 +393,438 @@ div.ui-jqgrid .ui-jqgrid-titlebar *,
     margin-bottom: 4px;
 }
 
+/* ==========================================================================
+   MODAL VEHÍCULO — estilo profesional / moderno
+   ========================================================================== */
+
+.ui-dialog.veh-modal-pro {
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow:
+        0 4px 6px rgba(15, 23, 42, 0.04),
+        0 20px 40px rgba(15, 23, 42, 0.18) !important;
+    overflow: hidden !important;
+    background: #f8fafc !important;
+}
+
+.ui-dialog.veh-modal-pro .ui-dialog-titlebar {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 55%, #1d4ed8 100%) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 12px 16px !important;
+    min-height: 44px;
+}
+
+.ui-dialog.veh-modal-pro .ui-dialog-title {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    color: #f8fafc !important;
+}
+
+.ui-dialog.veh-modal-pro .ui-dialog-titlebar-close {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 7px !important;
+}
+
+.ui-dialog.veh-modal-pro .ui-dialog-titlebar-close:hover {
+    background: #ef4444 !important;
+    border-color: #dc2626 !important;
+}
+
+.ui-dialog.veh-modal-pro .ui-dialog-content,
+#vehiculoDialog {
+    background: #f1f5f9 !important;
+    padding: 12px 14px 10px !important;
+}
+
+#vehiculoDialog .exa-fieldset {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 9px !important;
+    padding: 8px 10px 6px !important;
+    margin: 0 0 8px 0 !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+#vehiculoDialog .exa-fieldset.height-sync {
+    min-height: 0 !important;
+    height: 100%;
+}
+
+#vehiculoDialog .exa-fieldset legend.Titulos2 {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    color: #1e40af !important;
+    background: #ffffff !important;
+    border: none !important;
+    margin-bottom: 5px !important;
+    padding: 0 5px !important;
+    width: auto !important;
+}
+
+#vehiculoDialog .exa-fieldset legend.Titulos2 .glyphicon {
+    color: #3b82f6;
+    margin-right: 4px;
+    font-size: 10px;
+}
+
+#vehiculoDialog .form-group {
+    margin-bottom: 5px !important;
+}
+
+#vehiculoDialog .exa-fieldset .row:last-child .form-group {
+    margin-bottom: 2px !important;
+}
+
+#vehiculoDialog .label-xs {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    line-height: 1.25 !important;
+    min-height: 0;
+    height: auto;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    margin-bottom: 3px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    word-break: break-word;
+}
+
+#vehiculoDialog .row {
+    margin-left: -5px !important;
+    margin-right: -5px !important;
+}
+
+#vehiculoDialog [class*="col-"] {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+}
+
+#vehiculoDialog .row + .row {
+    margin-top: 2px !important;
+}
+
+#vehiculoDialog .form-control.input-xs,
+#vehiculoDialog .input-group-xs > .form-control {
+    height: 28px !important;
+    padding: 3px 9px !important;
+    font-size: 11.5px !important;
+    border: 1px solid #d0d7e2 !important;
+    border-radius: 7px !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#vehiculoDialog .form-control.input-xs:focus,
+#vehiculoDialog .input-group-xs > .form-control:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+    outline: none !important;
+}
+
+#vehiculoDialog .form-control.input-xs[readonly] {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    border-style: dashed !important;
+}
+
+#vehiculoDialog .input-group-btn > .btn {
+    height: 28px !important;
+    border-radius: 0 7px 7px 0 !important;
+    border-color: #d0d7e2 !important;
+    background: #f8fafc !important;
+    color: #334155 !important;
+    padding: 0 9px !important;
+}
+
+#vehiculoDialog .input-group-btn > .btn:hover {
+    background: #eff6ff !important;
+    color: #1d4ed8 !important;
+    border-color: #93c5fd !important;
+}
+
+#vehiculoDialog .input-group-xs > .form-control {
+    border-radius: 7px 0 0 7px !important;
+}
+
+#vehiculoDialog .chosen-container .chosen-single {
+    height: 28px !important;
+    line-height: 26px !important;
+    font-size: 11.5px !important;
+    border: 1px solid #d0d7e2 !important;
+    border-radius: 7px !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+
+#vehiculoDialog .chosen-container-active .chosen-single {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+}
+
+#vehiculoDialog .chosen-container .chosen-single div b {
+    background-position: 0 4px !important;
+}
+
+#vehiculoDialog .veh-status-row {
+    min-height: 0 !important;
+    margin: 0 !important;
+    height: auto;
+}
+
+#vehiculoDialog .veh-status-row > [class*="col-"] {
+    min-height: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+#vehiculoDialog #Prv_Ced_Est,
+#vehiculoDialog #Veh_Pla_Est {
+    min-height: 0;
+    line-height: 1.2;
+    font-size: 9.5px !important;
+    margin: 0 0 2px 0;
+    padding: 0;
+}
+
+#vehiculoDialog #Prv_Ced_Est:empty,
+#vehiculoDialog #Veh_Pla_Est:empty {
+    display: none;
+}
+
+/* Colapsa la fila de estado cuando no hay mensaje (evita el hueco bajo Nombre/Placa) */
+#vehiculoDialog .veh-status-row:has(#Prv_Ced_Est:empty),
+#vehiculoDialog .veh-status-row:has(#Veh_Pla_Est:empty) {
+    display: none;
+}
+
+#vehiculoDialog > form > .tab-content > .tab-pane > .row {
+    margin-bottom: 0 !important;
+}
+
+#vehiculoDialog #Prv_Ced_Est .text-success,
+#vehiculoDialog #Veh_Pla_Est .text-success {
+    color: #059669 !important;
+}
+
+#vehiculoDialog #Prv_Ced_Est .text-info {
+    color: #0284c7 !important;
+}
+
+/* Tabs internos — compactos, alineados a la izquierda (color más fuerte) */
+#vehiculoDialog .veh-inner-tabs {
+    display: inline-flex;
+    float: none;
+    width: auto;
+    max-width: 100%;
+    gap: 4px;
+    margin: 0 0 10px 0;
+    padding: 4px;
+    border: 1px solid #94a3b8;
+    border-radius: 7px;
+    background: #cbd5e1;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+    border-bottom: 1px solid #94a3b8;
+}
+
+#vehiculoDialog .veh-inner-tabs > li {
+    float: none;
+    flex: 0 0 auto;
+    width: auto !important;
+    margin: 0 !important;
+}
+
+#vehiculoDialog .veh-inner-tabs > li > a {
+    display: block;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #1e293b !important;
+    padding: 7px 14px;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 5px !important;
+    background: #e2e8f0 !important;
+    line-height: 1.3;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+#vehiculoDialog .veh-inner-tabs > li > a .glyphicon {
+    margin-right: 4px;
+    font-size: 11px;
+    color: #334155;
+}
+
+#vehiculoDialog .veh-inner-tabs > li > a:hover {
+    background: #94a3b8 !important;
+    color: #0f172a !important;
+}
+
+#vehiculoDialog .veh-inner-tabs > li > a:hover .glyphicon {
+    color: #0f172a;
+}
+
+#vehiculoDialog .veh-inner-tabs > li.active > a,
+#vehiculoDialog .veh-inner-tabs > li.active > a:hover,
+#vehiculoDialog .veh-inner-tabs > li.active > a:focus {
+    background: #1d4ed8 !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(29, 78, 216, 0.35);
+    border: 1px solid #1e40af !important;
+}
+
+#vehiculoDialog .veh-inner-tabs > li.active > a .glyphicon {
+    color: #ffffff;
+}
+
+#vehiculoDialog .veh-inner-tab-content {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    min-height: 0;
+}
+
+#vehiculoDialog .veh-inner-tab-content > .tab-pane {
+    background: transparent !important;
+}
+
+#vehiculoDialog .veh-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    margin-bottom: 0;
+    padding: 10px 2px 4px;
+    border-top: 1px solid #e2e8f0;
+    text-align: right;
+}
+
+#vehiculoDialog .veh-modal-actions .btn {
+    border-radius: 7px !important;
+    font-weight: 600 !important;
+    font-size: 11.5px !important;
+    padding: 6px 15px !important;
+    border: none !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+#vehiculoDialog .veh-modal-actions .btn-primary {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb) !important;
+    color: #fff !important;
+}
+
+#vehiculoDialog .veh-modal-actions .btn-primary:hover {
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
+    transform: translateY(-1px);
+}
+
+#vehiculoDialog .veh-modal-actions .btn-danger {
+    background: #fff !important;
+    color: #b91c1c !important;
+    border: 1px solid #fecaca !important;
+    box-shadow: none !important;
+}
+
+#vehiculoDialog .veh-modal-actions .btn-danger:hover {
+    background: #fef2f2 !important;
+}
+
+/* Documento de matrícula: PDF o Frente+Reverso */
+#vehiculoDialog .mat-adj-top-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 10px 0;
+}
+
+#vehiculoDialog .mat-adj-modo-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+}
+
+#vehiculoDialog .mat-adj-modo-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 6px 12px;
+    border: 1px solid #dbe3ee;
+    border-radius: 8px;
+    background: #f8fafc;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+#vehiculoDialog .mat-adj-modo-opt input {
+    margin: 0;
+}
+
+#vehiculoDialog .mat-adj-modo-opt:has(input:checked) {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1e4a7a;
+}
+
+#vehiculoDialog .mat-adj-hint {
+    margin: 0 0 8px 0;
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.35;
+}
+
+#vehiculoDialog .mat-adj-actual {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 4px 10px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #eff6ff;
+}
+
+#vehiculoDialog .mat-adj-actual-label {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    color: #1e4a7a;
+    text-transform: uppercase;
+    margin: 0;
+    white-space: nowrap;
+}
+
+#vehiculoDialog .mat-adj-actual .preview-doc-box {
+    margin: 0;
+    display: inline-block;
+}
+
 /* Previsualizaciones de Documentos Adjuntos */
 .preview-doc-box {
     margin-top: 1px;
@@ -434,7 +866,11 @@ div.ui-jqgrid .ui-jqgrid-titlebar *,
     #choferDialog .col-xs-6,
     #choferDialog .col-xs-4,
     #choferDialog .col-xs-3,
-    #choferDialog .col-xs-5 {
+    #choferDialog .col-xs-5,
+    #vehiculoDialog .col-xs-6,
+    #vehiculoDialog .col-xs-4,
+    #vehiculoDialog .col-xs-3,
+    #vehiculoDialog .col-xs-2 {
         width: 100% !important;
         float: none !important;
         margin-bottom: 4px;
@@ -442,6 +878,10 @@ div.ui-jqgrid .ui-jqgrid-titlebar *,
     
     .exa-fieldset.height-sync {
         min-height: auto !important;
+    }
+
+    #vehiculoDialog .label-xs {
+        min-height: 0;
     }
 }
 

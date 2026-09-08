@@ -165,8 +165,28 @@ $(document).ready(function () {
   if ($("#gridChoferes").length) initGridChoferes();
   if ($("#gridVehiculos").length) initGridVehiculos();
 
+  
+  if (typeof initSancionesTab === 'function') {
+    initSancionesTab();
+  }
+
   // Listener para pestañas
   $('a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
+    var href = e && e.target ? $(e.target).attr("href") : "";
+    if (href === "#tabSanciones") {
+      var $gs = $("#gridSanciones");
+      if ($gs.length && $gs.jqGrid) {
+        var ws = $("#tabSanciones").width();
+        if (ws > 0) $gs.jqGrid("setGridWidth", ws);
+      }
+    }
+    if (href === "#tabEmpresasTransporte") {
+      var $ge = $("#gridEmpresasTransporte");
+      if ($ge.length && $ge.jqGrid) {
+        var we = $("#tabEmpresasTransporte").width();
+        if (we > 0) $ge.jqGrid("setGridWidth", we);
+      }
+    }
     if ($.fn.buttonset) {
       $(".radioset").buttonset("refresh");
     }
@@ -196,8 +216,27 @@ $(document).ready(function () {
     $.extend({}, modalOptions, { width: getModalWidth(960) }),
   );
   $("#vehiculoDialog").dialog(
-    $.extend({}, modalOptions, { width: getModalWidth(1250) }),
+    $.extend({}, modalOptions, {
+      width: getModalWidth(980),
+      dialogClass: "exa-ui-panel exa-ui-dialog veh-modal-pro",
+      open: function () {
+        $("#vehiculoDialog .veh-inner-tabs a[href='#vehTabPropietario']").tab(
+          "show",
+        );
+        if ($.fn.chosen) {
+          $("#vehiculoForm select.chosen-select").trigger("chosen:updated");
+        }
+      },
+    }),
   );
+
+  $("#vehiculoDialog").on("shown.bs.tab", 'a[data-toggle="tab"]', function () {
+    if ($.fn.chosen) {
+      setTimeout(function () {
+        $("#vehiculoForm select.chosen-select").trigger("chosen:updated");
+      }, 30);
+    }
+  });
   $("#qrVehiculoDialog").dialog(
     $.extend({}, modalOptions, { width: getModalWidth(350) }),
   );
@@ -316,16 +355,19 @@ $(document).ready(function () {
       var objectUrl = URL.createObjectURL(fileObj);
       var icon = isPdf ? "glyphicon-file" : "glyphicon-picture";
       var tagLabel = isPdf ? "Ver PDF" : "Ver Foto";
+      var btnId = "btnPrevTmp_" + fieldId + "_" + Date.now();
 
       var html = '<div class="btn-group btn-group-xs" style="margin:0;">';
       html +=
-        '<button type="button" class="btn btn-info btn-xs btn-preview-inline" onclick="abrirModalDocumento(\'' +
-        objectUrl +
-        "', '" +
+        '<button type="button" id="' +
+        btnId +
+        '" class="btn btn-info btn-xs btn-preview-inline" data-preview-url="' +
+        objectUrl.replace(/"/g, "&quot;") +
+        '" data-preview-pdf="' +
+        (isPdf ? "1" : "0") +
+        '" data-preview-title="' +
         tagLabel +
-        "', " +
-        isPdf +
-        ');"><i class="glyphicon ' +
+        '"><i class="glyphicon ' +
         icon +
         '"></i> ' +
         tagLabel +
@@ -338,6 +380,15 @@ $(document).ready(function () {
       $box.html(html);
     }
   }
+
+  $(document).on("click", ".btn-preview-inline[data-preview-url]", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    var url = $(this).attr("data-preview-url");
+    var title = $(this).attr("data-preview-title") || "Vista previa";
+    var isPdf = $(this).attr("data-preview-pdf") === "1";
+    abrirModalDocumento(url, title, isPdf);
+  });
 
   // Inicializar Dropzones unificados de archivos
   initExaDropzones();
@@ -523,7 +574,7 @@ $(document).ready(function () {
       $("#choferDialog").dialog("option", "width", getModalWidth(960));
     }
     if ($("#vehiculoDialog").is(":visible")) {
-      $("#vehiculoDialog").dialog("option", "width", getModalWidth(1250));
+      $("#vehiculoDialog").dialog("option", "width", getModalWidth(980));
     }
     if ($("#previewDocModal").is(":visible")) {
       $("#previewDocModal").dialog("option", "width", getModalWidth(720));
@@ -746,11 +797,25 @@ function limpiarArchivoAdjunto(fieldId) {
   if ($prevHidden.length) {
     $prevHidden.val("");
   }
+  if (fieldId === "Mat_Adj") {
+    $("#Mat_Adj_Clear").val("1");
+    $("#Mat_Adj_Actual").val("");
+    $("#matAdjActualBox").hide();
+  }
 }
 
 function normalizarRutaArchivo(filePath) {
   if (!filePath || filePath === "null" || filePath === "undefined" || filePath === "") return "";
-  var path = filePath.trim();
+  var path = String(filePath).trim();
+  // No alterar URLs locales de vista previa ni absolutas
+  if (
+    path.indexOf("blob:") === 0 ||
+    path.indexOf("data:") === 0 ||
+    path.indexOf("http://") === 0 ||
+    path.indexOf("https://") === 0
+  ) {
+    return path;
+  }
   path = path.replace(/^(\.\.\/)+/, "../");
   if (!path.startsWith("../") && !path.startsWith("/") && !path.startsWith("http")) {
     path = "../" + path;
@@ -782,11 +847,14 @@ function renderDocPreview(containerId, filePath, labelTitulo) {
     var tagLabel = isPdf ? "Ver PDF" : "Ver Foto";
     var displayTitle = labelTitulo ? labelTitulo : tagLabel;
 
+    // Escapar comillas para atributo onclick
+    var safePath = cleanPath.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+
     // Carga Bajo Demanda (Lazy Loading): 0 peticiones HTTP al abrir el modal para velocidad ultra rápida
     var html = '<div class="btn-group btn-group-xs" style="margin-top: 4px;">';
     html +=
       '  <button type="button" class="btn btn-info btn-xs btn-preview-inline" onclick="abrirModalDocumento(\'' +
-      cleanPath +
+      safePath +
       "', '" +
       displayTitle +
       "', " +
@@ -810,7 +878,7 @@ function abrirModalDocumento(filePath, titulo, isPdf) {
     !filePath ||
     filePath === "undefined" ||
     filePath === "null" ||
-    filePath.trim() === ""
+    String(filePath).trim() === ""
   ) {
     mostrarAlertaUI(
       "Sin Documento",
@@ -825,6 +893,8 @@ function abrirModalDocumento(filePath, titulo, isPdf) {
   var isPdfDoc = false;
   if (typeof isPdf === "boolean") {
     isPdfDoc = isPdf;
+  } else if (typeof isPdf === "string") {
+    isPdfDoc = isPdf === "true" || isPdf === "1";
   } else {
     var ext = cleanPath.split("?")[0].split("#")[0].split(".").pop().toLowerCase();
     isPdfDoc = ext === "pdf";
@@ -858,10 +928,10 @@ function initGridEmpresasTransporte() {
     datatype: "json",
     colNames: [
       "Código",
-      "Descripción / Empresa",
-      "Licencia MAE / RUC",
+      "Nombre",
+      "Licencia MAE",
       "Teléfono",
-      "Contacto",
+      "Plan Contingencia",
       "Dirección",
       "Estado",
       "Acciones",
@@ -871,7 +941,7 @@ function initGridEmpresasTransporte() {
       { name: "Mat_Des", index: "Mat_Des", width: 220, align: "left" },
       { name: "Mat_Mae", index: "Mat_Mae", width: 140, align: "center" },
       { name: "Mat_Tel", index: "Mat_Tel", width: 90, align: "center" },
-      { name: "Mat_Pco", index: "Mat_Pco", width: 130, align: "left" },
+      { name: "Mat_Pco", index: "Mat_Pco", width: 130, align: "center" },
       { name: "Mat_Dir", index: "Mat_Dir", width: 150, align: "left" },
       {
         name: "Mat_Est",
@@ -1638,40 +1708,77 @@ function buscarPersonaCedula(cedula) {
   );
 }
 
-function buscarPersonaPropietario(cedula) {
-  var $est = $("#Mat_Pro_Id_Est");
-  if (!cedula || cedula.length < 5) {
+function buscarProveedorPropietario(cedula) {
+  var $est = $("#Prv_Ced_Est");
+  var $btn = $("#btnReloadPrv");
+  var $icon = $btn.find("i");
+  var ced = (cedula || "").toString().replace(/[^a-zA-Z0-9]/g, "").trim();
+  if (!ced) {
     if ($est.length) $est.empty();
+    $("#Prv_Cod").val("");
+    $btn.prop("disabled", false);
+    $icon.removeClass("glyphicon-spin");
     return;
   }
+  $btn.prop("disabled", true);
+  $icon.addClass("glyphicon-spin");
   $.get(
     "",
-    { buscarPersonaCedulaAjax: true, Prs_Ced: cedula },
+    { buscarProveedorPropietarioAjax: true, Prv_Ced: ced },
     function (r) {
       if (r.success && r.existe) {
-        var nom = (
-          (r.persona.Prs_Nom || "") +
-          " " +
-          (r.persona.Prs_Ape || "")
-        ).trim();
-        $("#Mat_Pro_Nom").val(nom);
-        if (r.persona.Prs_Tel) $("#Mat_Pro_Tel").val(r.persona.Prs_Tel);
-        if (r.persona.Prs_Dir) $("#Mat_Pro_Dir").val(r.persona.Prs_Dir);
-        if ($est.length) {
-          $est.html(
-            '<span class="text-success" style="font-size: 10px; font-weight: bold;"><i class="glyphicon glyphicon-ok"></i> Registrado en Sistema</span>',
-          );
+        if (r.esProveedor && r.proveedor) {
+          var p = r.proveedor;
+          $("#Prv_Cod").val(p.Prv_Cod || "");
+          if (p.Prs_Ced) $("#Prv_Ced").val(p.Prs_Ced);
+          $("#Prv_Nom").val((p.Prv_Nom || "").trim());
+          $("#Prv_Can").val(p.Prv_Can || "");
+          var tel =
+            p.Prv_Tel || p.Prv_Tel_Prv || p.Prs_Tel || p.Prs_Cel || "";
+          $("#Prv_Tel").val(tel);
+          $("#Prv_Cor").val(p.Prv_Cor || p.Prs_Cor || "");
+          if ($est.length) {
+            $est.html(
+              '<span class="text-success" style="font-size: 10px; font-weight: bold;"><i class="glyphicon glyphicon-ok"></i> Proveedor registrado</span>',
+            );
+          }
+        } else if (r.persona) {
+          var per = r.persona;
+          $("#Prv_Cod").val("");
+          if (per.Prs_Ced) $("#Prv_Ced").val(per.Prs_Ced);
+          var nom = ((per.Prs_Nom || "") + " " + (per.Prs_Ape || "")).trim();
+          $("#Prv_Nom").val(nom);
+          $("#Prv_Can").val(per.Prv_Can || "");
+          $("#Prv_Tel").val(per.Prs_Tel || per.Prs_Cel || "");
+          $("#Prv_Cor").val(per.Prs_Cor || "");
+          if ($est.length) {
+            $est.html(
+              '<span class="text-info" style="font-size: 10px;"><i class="glyphicon glyphicon-user"></i> Persona encontrada (se registrará como proveedor)</span>',
+            );
+          }
         }
       } else {
+        $("#Prv_Cod").val("");
         if ($est.length) {
           $est.html(
-            '<span class="text-muted" style="font-size: 10px;"><i class="glyphicon glyphicon-pencil"></i> Nuevo Propietario</span>',
+            '<span class="text-muted" style="font-size: 10px;"><i class="glyphicon glyphicon-pencil"></i> Nuevo propietario / proveedor</span>',
           );
         }
       }
     },
     "json",
-  );
+  )
+    .fail(function () {
+      if ($est.length) {
+        $est.html(
+          '<span class="text-danger" style="font-size: 10px;"><i class="glyphicon glyphicon-remove"></i> Error al consultar</span>',
+        );
+      }
+    })
+    .always(function () {
+      $btn.prop("disabled", false);
+      $icon.removeClass("glyphicon-spin");
+    });
 }
 
 function abrirModalChofer(id) {
@@ -2211,6 +2318,7 @@ function initGridVehiculos() {
       "Color",
       "Capacidad (Kg)",
       "Tipo",
+      "Doc. Matrícula",
       "Acciones",
     ],
     colModel: [
@@ -2248,7 +2356,46 @@ function initGridVehiculos() {
             return '<span class="label label-warning">TIPO DUMPER</span>';
           if (cellvalue === "C")
             return '<span class="label label-info">CAMION</span>';
+          if (cellvalue === "B")
+            return '<span class="label label-default">BUS / VAN</span>';
           return cellvalue || "-";
+        },
+      },
+      {
+        name: "Mat_Adj",
+        index: "Mat_Adj",
+        width: 110,
+        align: "center",
+        sortable: false,
+        formatter: function (cellvalue, options, rowObject) {
+          var adj = (cellvalue || rowObject.Mat_Adj || "").toString().trim();
+          if (!adj || adj === "null" || adj === "undefined") {
+            return '<span class="text-muted" title="Sin documento">—</span>';
+          }
+          var cleanPath = normalizarRutaArchivo(adj);
+          var ext = cleanPath
+            .split("?")[0]
+            .split("#")[0]
+            .split(".")
+            .pop()
+            .toLowerCase();
+          var isPdf = ext === "pdf";
+          var safePath = cleanPath.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+          var titulo = isPdf ? "Matrícula PDF" : "Matrícula";
+          var iconView = isPdf ? "glyphicon-file" : "glyphicon-picture";
+          return (
+            '<button type="button" class="btn btn-info btn-xs" title="Ver documento" ' +
+            "onclick=\"abrirModalDocumento('" +
+            safePath +
+            "', '" +
+            titulo +
+            "', " +
+            isPdf +
+            ');">' +
+            '<i class="glyphicon ' +
+            iconView +
+            '"></i></button>'
+          );
         },
       },
       {
@@ -2358,12 +2505,58 @@ function validarPlacaVehiculo(placa) {
   );
 }
 
+function toggleMatAdjModo(modo) {
+  if (modo === "fotos") {
+    $("#matAdjPdfBlock").hide();
+    $("#matAdjFotosBlock").show();
+    $("#Mat_Adj_Pdf").val("");
+    $("#preview_Mat_Adj_Pdf").empty();
+  } else {
+    $("#matAdjFotosBlock").hide();
+    $("#matAdjPdfBlock").show();
+    $("#Mat_Adj_Frente").val("");
+    $("#Mat_Adj_Reverso").val("");
+    $("#preview_Mat_Adj_Frente").empty();
+    $("#preview_Mat_Adj_Reverso").empty();
+  }
+}
+
+function resetMatAdjUI() {
+  $("#Mat_Adj_Clear").val("0");
+  $("#Mat_Adj_Actual").val("");
+  $('input[name="Mat_Adj_Modo"][value="pdf"]').prop("checked", true);
+  toggleMatAdjModo("pdf");
+  $("#Mat_Adj_Pdf").val("");
+  $("#Mat_Adj_Frente").val("");
+  $("#Mat_Adj_Reverso").val("");
+  $("#preview_Mat_Adj_Pdf").empty();
+  $("#preview_Mat_Adj_Frente").empty();
+  $("#preview_Mat_Adj_Reverso").empty();
+  $("#preview_Mat_Adj").empty();
+  $("#matAdjActualBox").hide();
+}
+
+function setMatAdjActual(path) {
+  $("#Mat_Adj_Actual").val(path || "");
+  $("#Mat_Adj_Clear").val("0");
+  if (path) {
+    $("#matAdjActualBox").css("display", "inline-flex");
+    renderDocPreview("preview_Mat_Adj", path, "Matrícula");
+  } else {
+    $("#matAdjActualBox").hide();
+    $("#preview_Mat_Adj").empty();
+  }
+}
+
 function abrirModalVehiculo(id) {
   $("#vehiculoForm")[0].reset();
   $("#Veh_Cod").val("");
+  $("#Prv_Cod").val("");
+  $("#Prv_Ced_Est").html("");
   $("#Veh_Pla_Est").html("");
   $("#Veh_Pla_Cod").val("");
-  $("#Mat_Cod").val("");
+  $("#Veh_Mat_Cod").val("");
+  resetMatAdjUI();
   $("#vehiculoForm select.chosen-select").trigger("chosen:updated");
 
   if (id) {
@@ -2375,31 +2568,34 @@ function abrirModalVehiculo(id) {
           var row = r.vehiculo;
           $("#Veh_Cod").val(row.Veh_Cod || "");
           $("#Veh_Pla_Cod").val(row.Pla_Cod || "");
-          $("#Mat_Cod").val(row.Mat_Cod || "");
+          $("#Veh_Mat_Cod").val(row.Mat_Cod || "");
           $("#Veh_Pla").val(row.Veh_Pla || "");
           $("#Mat_Pan").val(row.Mat_Pan || "");
           $("#Veh_Est").val(row.Veh_Est || "A");
 
-          // Datos Propietario
-          $("#Mat_Pro_Nom").val(row.Mat_Pro_Nom || "");
-          $("#Mat_Pro_Id").val(row.Mat_Pro_Id || "");
-          $("#Mat_Pro_Prv").val(row.Mat_Pro_Prv || "");
-          $("#Mat_Pro_Can").val(row.Mat_Pro_Can || "");
-          $("#Mat_Pro_Dir").val(row.Mat_Pro_Dir || "");
-          $("#Mat_Pro_Tel").val(row.Mat_Pro_Tel || "");
+          // Datos Propietario (proveedore)
+          var cedPrv = row.Prv_Ced || "";
+          $("#Prv_Cod").val(row.Prv_Cod || row.Prv_Cod_Join || "");
+          $("#Prv_Ced").val(cedPrv);
+          $("#Prv_Nom").val((row.Prv_Nom || "").toString().trim());
+          $("#Prv_Can").val(row.Prv_Can || "");
+          $("#Prv_Tel").val(row.Prv_Tel || "");
+          $("#Prv_Cor").val(row.Prv_Cor || "");
+          if (cedPrv) {
+            buscarProveedorPropietario(cedPrv);
+          }
 
-          // Especificaciones Técnicas y Colores
-          $("#Veh_Mar").val(row.Veh_Mar || row.Mat_Mar || "");
-          $("#Mat_Mde").val(row.Mat_Mde || "");
-          $("#Mat_Ano").val(row.Mat_Ano || "");
-          $("#Mat_Amo").val(row.Mat_Amo || "");
-          $("#Veh_Col").val(row.Veh_Col || row.Mat_Co1 || "");
-          $("#Mat_Co2").val(row.Mat_Co2 || "");
+          // Especificaciones (tabla vehiculo)
+          $("#Veh_Mar").val(row.Veh_Mar || "");
+          $("#Veh_Mde").val(row.Veh_Mde || "");
+          $("#Veh_Amo").val(row.Veh_Amo || "");
+          $("#Veh_Pes").val(row.Veh_Pes || "");
+          $("#Veh_Col").val(row.Veh_Col || "");
+          $("#Veh_Col2").val(row.Veh_Col2 || "");
           $("#Veh_Cap").val(row.Veh_Cap || "");
-          $("#Mat_Ton").val(row.Mat_Ton || "");
           $("#Veh_Tit").val(row.Veh_Tit || "V");
 
-          // Motor, Chasis y Mecánica
+          // Motor, Chasis y Matrícula
           $("#Mat_Nmo").val(row.Mat_Nmo || "");
           $("#Mat_Cha").val(row.Mat_Cha || "");
           $("#Mat_Ram").val(row.Mat_Ram || "");
@@ -2407,26 +2603,17 @@ function abrirModalVehiculo(id) {
           $("#Mat_Tco").val(row.Mat_Tco || "D");
           $("#Mat_Cve").val(row.Mat_Cve || "");
           $("#Mat_Tip").val(row.Mat_Mat_Tip || row.Mat_Tip || "");
-          $("#Mat_Car").val(row.Mat_Car || "");
-          $("#Mat_Tpe").val(row.Mat_Tpe || "PESADO (>3.5T)");
+          $("#Ciu_Cod").val(row.Mat_Ciu_Cod || row.Ciu_Cod || "");
+          $("#Mat_Fem").val(row.Mat_Fem || "");
+          $("#Mat_Fca").val(row.Mat_Fca || "");
           $("#Mat_Npa").val(row.Mat_Npa || "");
           $("#Mat_Ori").val(row.Mat_Ori || "");
+          $("#Mat_Car").val(row.Mat_Car || "");
+          $("#Mat_Tpe").val(row.Mat_Tpe || "");
+          $("#Mat_Deg").val(row.Mat_Deg || "");
+          $("#Mat_Est").val(row.Mat_Mat_Est || row.Mat_Est || "A");
 
-          // Matrícula, Fechas y Avalúo
-          $("#Mat_Nma").val(row.Mat_Nma || "");
-          $("#Mat_Fem").val(row.Mat_Fem || "");
-          $("#Mat_Fve").val(row.Mat_Fve || "");
-          $("#Mat_Lem").val(row.Mat_Lem || "");
-          $("#Mat_Fco").val(row.Mat_Fco || "");
-          $("#Mat_Ava").val(row.Mat_Ava || "");
-          $("#Mat_Vma").val(row.Mat_Vma || "");
-
-          // Operación, Flags y Observaciones
-          $("#Mat_Dis").val(row.Mat_Dis || "");
-          $("#Mat_Ort").val(row.Mat_Ort || "N");
-          $("#Mat_Rem").val(row.Mat_Rem || "N");
-          $("#Mat_Dig").val(row.Mat_Dig || "");
-          $("#Mat_Obs").val(row.Mat_Obs || "");
+          setMatAdjActual(row.Mat_Adj || "");
 
           // Refrescar Chosen (Buscador interno)
           $("#vehiculoForm select.chosen-select").trigger("chosen:updated");
@@ -2462,6 +2649,8 @@ function abrirModalVehiculo(id) {
 function guardarVehiculo() {
   var pla = $("#Veh_Pla").val().trim();
   var mar = $("#Veh_Mar").val().trim();
+  var mde = $("#Veh_Mde").val().trim();
+  var amo = $("#Veh_Amo").val().trim();
   if (!pla || !mar) {
     mostrarAlertaUI(
       "Atención",
@@ -2469,6 +2658,39 @@ function guardarVehiculo() {
       "warning",
     );
     return;
+  }
+  if (!mde || !amo) {
+    mostrarAlertaUI(
+      "Atención",
+      "Complete el Modelo y el Año Modelo del vehículo",
+      "warning",
+    );
+    $("#vehiculoDialog .veh-inner-tabs a[href='#vehTabPropietario']").tab("show");
+    return;
+  }
+  if (!$("#Mat_Fem").val() || !$("#Mat_Fca").val()) {
+    mostrarAlertaUI(
+      "Atención",
+      "Complete las fechas de Emisión y Caducidad de la matrícula",
+      "warning",
+    );
+    $("#vehiculoDialog .veh-inner-tabs a[href='#vehTabMatricula']").tab("show");
+    return;
+  }
+
+  var modoAdj = $('input[name="Mat_Adj_Modo"]:checked').val() || "pdf";
+  var fFrente = $("#Mat_Adj_Frente")[0].files[0];
+  var fReverso = $("#Mat_Adj_Reverso")[0].files[0];
+  if (modoAdj === "fotos") {
+    if ((fFrente && !fReverso) || (!fFrente && fReverso)) {
+      mostrarAlertaUI(
+        "Atención",
+        "Debe adjuntar las 2 fotos (Frente y Reverso) para unir el documento de matrícula.",
+        "warning",
+      );
+      $("#vehiculoDialog .veh-inner-tabs a[href='#vehTabMatricula']").tab("show");
+      return;
+    }
   }
 
   var $btnSave = $("#btnGuardarVehiculo");
@@ -2479,12 +2701,48 @@ function guardarVehiculo() {
     );
   bloquearModalYMostrarLoader("#vehiculoDialog", "Guardando Vehículo...");
 
-  var data = $("#vehiculoForm").serialize() + "&saveVehiculoAjax=true";
-  $.post(
-    "",
-    data,
-    function (r) {
-      if (r.success) {
+  var formEl = $("#vehiculoForm")[0];
+  var formData = new FormData(formEl);
+  formData.append("saveVehiculoAjax", "true");
+
+  var inputs = $(formEl).find('input[type="file"]');
+  var promises = [];
+  var fileFieldsMeta = [];
+
+  inputs.each(function () {
+    var fieldName = $(this).attr("name");
+    var files = this.files;
+    if (files && files.length > 0) {
+      var f = files[0];
+      // En modo PDF no enviar fotos; en modo fotos no enviar PDF
+      if (modoAdj === "pdf" && (fieldName === "Mat_Adj_Frente" || fieldName === "Mat_Adj_Reverso")) {
+        return;
+      }
+      if (modoAdj === "fotos" && fieldName === "Mat_Adj_Pdf") {
+        return;
+      }
+      fileFieldsMeta.push({ field: fieldName, originalFile: f });
+      promises.push(optimizarImagenCliente(f, 1920, 0.85));
+    }
+  });
+
+  Promise.all(promises)
+    .then(function (processedFiles) {
+      for (var i = 0; i < fileFieldsMeta.length; i++) {
+        formData.set(fileFieldsMeta[i].field, processedFiles[i]);
+      }
+
+      return $.ajax({
+        url: "",
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: "json",
+      });
+    })
+    .then(function (r) {
+      if (r && r.success) {
         mostrarAlertaUI(
           "Éxito",
           "Vehículo guardado correctamente",
@@ -2497,21 +2755,19 @@ function guardarVehiculo() {
       } else {
         mostrarAlertaUI(
           "Error",
-          r.message || "No se pudo guardar el vehículo",
+          (r && r.message) || "No se pudo guardar el vehículo",
           "error",
         );
       }
-    },
-    "json",
-  )
-    .fail(function () {
+    })
+    .catch(function () {
       mostrarAlertaUI(
         "Error",
         "Ocurrió un error al procesar el vehículo",
         "error",
       );
     })
-    .always(function () {
+    .then(function () {
       desbloquearModalYOcultarLoader("#vehiculoDialog");
       $btnSave
         .prop("disabled", false)
