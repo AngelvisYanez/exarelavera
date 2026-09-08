@@ -423,8 +423,8 @@ function sentencias_maquinaria_dispensador($id, $Par_Sql)
                     LEFT JOIN persona pu ON u.Prs_Cod = pu.Prs_Cod
                     LEFT JOIN maquinaria_dispensador d ON m.Dis_Cod = d.Dis_Cod
                     WHERE m.Did_Est = 'A' AND m.Did_Tip = 'SA' 
-                      AND DATE(m.Did_Fec) BETWEEN '" . addslashes($Par_Sql[1]) . "' AND '" . addslashes($Par_Sql[2]) . "'
-                      " . $filtro . "
+                        AND DATE(m.Did_Fec) BETWEEN '" . addslashes($Par_Sql[1]) . "' AND '" . addslashes($Par_Sql[2]) . "'
+                        " . $filtro . "
                     GROUP BY m.Veh_Cod, vehiculo_nombre, pu.Prs_Ape, pu.Prs_Nom
                     ORDER BY consumo DESC LIMIT 5";
             break;
@@ -438,8 +438,8 @@ function sentencias_maquinaria_dispensador($id, $Par_Sql)
                     FROM maquinaria_dispensador_det m
                     LEFT JOIN maquinaria_dispensador d ON m.Dis_Cod = d.Dis_Cod
                     WHERE m.Did_Est = 'A' AND m.Did_Tip = 'SA' 
-                      AND DATE(m.Did_Fec) BETWEEN '" . addslashes($Par_Sql[1]) . "' AND '" . addslashes($Par_Sql[2]) . "'
-                      " . $filtro . "
+                        AND DATE(m.Did_Fec) BETWEEN '" . addslashes($Par_Sql[1]) . "' AND '" . addslashes($Par_Sql[2]) . "'
+                        " . $filtro . "
                     GROUP BY DATE(m.Did_Fec)
                     ORDER BY fecha ASC";
             break;
