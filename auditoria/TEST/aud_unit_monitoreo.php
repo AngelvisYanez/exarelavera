@@ -304,11 +304,14 @@ function aud_unit_front_export_banner()
 	$front = file_get_contents(dirname(__FILE__) . '/../FRONT/aud_con_monitoreo_1.0.php');
 	aud_assert(strpos($front, 'exportMonitoreoCsv') !== false, 'FRONT exporta el filtro completo por CSV');
 	aud_assert(strpos($front, 'aud_html_banner_captura') !== false, 'FRONT muestra aviso de captura');
-	aud_assert(strpos($front, 'confirm(') !== false, 'Simular pide confirmacion');
-	aud_assert(strpos($front, "name=\"simular\"") !== false, 'El formulario de simular conserva el input');
+	aud_assert(strpos($front, 'name="simular"') === false, 'Formulario de simular actividad no figura en pantalla');
+	aud_assert(strpos($front, 'btnToggleGraficos') === false, 'Boton de graficos comparativos removido de la pantalla');
 	$js = file_get_contents(dirname(__FILE__) . '/../VALIDACIONES/aud_par_monitoreo.js');
 	aud_assert(strpos($js, 'exportMonitoreoCsv=1') !== false, 'Excel usa export del servidor');
 	aud_assert(strpos($js, 'serialize()') !== false, 'Excel envia los filtros actuales');
+	aud_assert(strpos($front, 'exportMonitoreoPdf') !== false, 'FRONT exporta el filtro por PDF');
+	aud_assert(strpos($front, 'btnExportPdf') !== false, 'Boton de exportar PDF presente en la barra de herramientas');
+	aud_assert(strpos($js, 'exportMonitoreoPdf=1') !== false, 'JS envia exportMonitoreoPdf al servidor');
 }
 
 function aud_exa_disponible($con)

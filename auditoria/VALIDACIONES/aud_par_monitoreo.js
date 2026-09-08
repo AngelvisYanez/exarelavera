@@ -647,7 +647,8 @@ $(function () {
 		};
 	}
 
-	$('#btnExportExcel').on('click', function () {
+	$('#btnExportCsv, #btnExportExcel').on('click', function (e) {
+		if (e && e.preventDefault) e.preventDefault();
 		var $frm = $('#frmFiltros');
 		if (!$frm.length) {
 			return;
@@ -667,7 +668,12 @@ $(function () {
 		window.location = window.location.pathname + '?' + $frm.serialize() + '&exportMonitoreoCsv=1';
 	});
 
-	$('#btnExportPdf').on('click', function () {
+	$('#btnExportPdf').on('click', function (e) {
+		if (e && e.preventDefault) e.preventDefault();
+		var $frm = $('#frmFiltros');
+		if (!$frm.length) {
+			return;
+		}
 		var total = 0;
 		try {
 			total = parseInt($grid.jqGrid('getGridParam', 'records'), 10) || 0;
@@ -680,41 +686,8 @@ $(function () {
 			}
 			return;
 		}
-		if (typeof $grid.jqGrid === 'function' && typeof $grid.jqGrid('printGrid') === 'function') {
-			$grid.jqGrid('printGrid', {
-				nombre: 'Monitoreo de actividades',
-				removeHiddens: true,
-				removeCols: ['acciones'],
-				caption: true
-			});
-			return;
-		}
-		/* Fallback: ventana imprimible (Guardar como PDF) */
-		try {
-			var html = $grid.jqGrid('exportGridHTML', {
-				caption: true,
-				removeHiddens: true,
-				removeCols: ['acciones'],
-				footer: false,
-				generated: true
-			});
-			var w = window.open('', '_blank');
-			if (!w) {
-				alert('Permita ventanas emergentes para exportar a PDF.');
-				return;
-			}
-			w.document.write('<!DOCTYPE html><html><head><title>Monitoreo de actividades</title>');
-			w.document.write('<style>body{font-family:Arial,sans-serif;font-size:11px;padding:12px;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #999;padding:4px 6px;} th{background:#eef3f8;} h3{margin:0 0 10px 0;}</style>');
-			w.document.write('</head><body>');
-			w.document.write('<h3>Monitoreo de actividades</h3>');
-			w.document.write(html);
-			w.document.write('</body></html>');
-			w.document.close();
-			w.focus();
-			setTimeout(function () { w.print(); }, 300);
-		} catch (ePdf) {
-			alert('No se pudo generar el PDF.');
-		}
+		var url = window.location.pathname + '?' + $frm.serialize() + '&exportMonitoreoPdf=1';
+		window.open(url, '_blank');
 	});
 
 	actualizarHint();

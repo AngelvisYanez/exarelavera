@@ -3,12 +3,35 @@
  * Logica configuracion de monitoreo.
  * @package auditoria.LOGICA
  */
+if (!class_exists('DebugBar')) {
+	class DebugBar {
+		public static function __callStatic($name, $args) {}
+	}
+}
+
 require_once(__DIR__ . '/../../DATA/MysqlConexion.php');
 require_once(__DIR__ . '/../../DATA/MysqlDatos.php');
 require_once(__DIR__ . '/aud_sql_config_monitoreo.php');
+require_once(__DIR__ . '/aud_log_interpretar.php');
 
 class Class_Log_Conexion_CfgMon extends MysqlConexion
 {
+	function __construct($bd = null)
+	{
+		if (empty($bd)) {
+			$bd = !empty($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null;
+		}
+		if (empty($bd) && !empty($GLOBALS['Ses_Dat_Dis'])) {
+			$bd = $GLOBALS['Ses_Dat_Dis'];
+		}
+		if (empty($bd) && class_exists('Env')) {
+			$bd = \Env::get('DB_DATABASE', 'exa');
+		}
+		if (empty($bd) || $bd === 'exa_master') {
+			$bd = 'exa';
+		}
+		parent::__construct(preg_replace('/[^a-zA-Z0-9_]/', '', $bd));
+	}
 }
 
 class Class_Log_Datos_CfgMon extends MysqlDatos
@@ -36,7 +59,7 @@ class Class_Log_Datos_CfgMon extends MysqlDatos
 		$result = $this->consultasobBD($sen_sql, $param, $obBD);
 		$array = array();
 		if (!$result) {
-			return $array;
+			return array();
 		}
 		while ($row_rs = $this->fetch_assoc($result)) {
 			$array[] = $row_rs;
@@ -52,6 +75,14 @@ class Class_Log_Datos_CfgMon extends MysqlDatos
 		$con = is_object($obBD) && isset($obBD->conexion) ? $obBD->conexion : $obBD;
 		return $this->grabarv_registros($sql, $con);
 	}
+}
+
+// Aliases para compatibilidad con código existente
+if (!class_exists('Class_Log_Conexion_Cfg_Monitoreo')) {
+	class Class_Log_Conexion_Cfg_Monitoreo extends Class_Log_Conexion_CfgMon {}
+}
+if (!class_exists('Class_Log_Datos_Cfg_Monitoreo')) {
+	class Class_Log_Datos_Cfg_Monitoreo extends Class_Log_Datos_CfgMon {}
 }
 
 function aud_cfg_ensure_schema($obBD_conexion)
@@ -75,6 +106,23 @@ function aud_cfg_ensure_schema($obBD_conexion)
 			FROM DUAL WHERE NOT EXISTS (
 				SELECT 1 FROM `auditoria`.`tablas` WHERE `Tab_Nom`='cfg_monitoreo'
 			)");
+	}
+}
+
+if (!function_exists('aud_cfg_asegurar_tabla')) {
+	function aud_cfg_asegurar_tabla($obBD_conexion)
+	{
+		return aud_cfg_ensure_schema($obBD_conexion);
+	}
+}
+
+if (!function_exists('aud_cfg_comprobar_captura')) {
+	function aud_cfg_comprobar_captura($obBD_con1, $obBD_conexion, $audEmpCod)
+	{
+		$audEmpCod = (int)$audEmpCod;
+		$rowCfgCount = $obBD_con1->getRowConsulta(6, array($audEmpCod), $obBD_conexion);
+		$audCfgCount = isset($rowCfgCount['count']) ? (int)$rowCfgCount['count'] : 0;
+		return aud_estado_captura($audEmpCod, $audCfgCount);
 	}
 }
 
@@ -335,5 +383,40 @@ function aud_cfg_compactar_reglas($arbol, $modFull, $dirFull, $pcsChecked)
 		}
 	}
 	return $items;
+}
+
+/**
+ * Verifica si el usuario actual tiene permisos de Administrador de Sistemas.
+ */
+function aud_cfg_es_admin_sistemas($usuCod = 0, $obBD_con = null, $obBD_conexion = null)
+{
+	// 1. Revisar sesion Ses_Per_Des
+	if (isset($_SESSION['Ses_Per_Des'])) {
+		$perfilesArray = is_array($_SESSION['Ses_Per_Des']) ? $_SESSION['Ses_Per_Des'] : array($_SESSION['Ses_Per_Des']);
+		foreach ($perfilesArray as $perfil) {
+			if (stripos($perfil, 'Administrador de sistemas') !== false || strtoupper(trim($perfil)) === 'ADMINISTRADOR' || stripos($perfil, 'Sistemas') !== false) {
+				return true;
+			}
+		}
+	}
+	// 2. Revisar sesion Ses_Lis_Per (ID 1 es el perfil Administrador de Sistemas en Exa)
+	if (isset($_SESSION['Ses_Lis_Per'])) {
+		$perfilesCod = is_array($_SESSION['Ses_Lis_Per']) ? $_SESSION['Ses_Lis_Per'] : array($_SESSION['Ses_Lis_Per']);
+		if (in_array(1, $perfilesCod)) {
+			return true;
+		}
+	}
+	// 3. Usuario root / admin maestro (Usu_Cod = 1)
+	if ((int)$usuCod === 1) {
+		return true;
+	}
+	// 4. Verificacion directa en base de datos si se proporcionan objetos de conexion
+	if ((int)$usuCod > 0 && is_object($obBD_con) && is_object($obBD_conexion)) {
+		$row = $obBD_con->getRowConsulta(13, array((int)$usuCod), $obBD_conexion);
+		if (!empty($row['is_admin'])) {
+			return true;
+		}
+	}
+	return false;
 }
 ?>

@@ -11,17 +11,32 @@ require_once(dirname(__FILE__) . '/../../DATA/libs/Env.php');
 
 /** Base maestra de catalogo (usuarios, persona, empresas, sucursal, procesos, organizado). */
 if (!function_exists('aud_master_db')) {
-    function aud_master_db()
-    {
-        if (session_id() !== '' && !empty($_SESSION['Ses_Dat_Dis'])) {
-            return preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']);
-        }
-        $db = \Env::get('DB_DATABASE', 'exa_master');
-        if (is_string($db) && $db !== '') {
-            return preg_replace('/[^a-zA-Z0-9_]/', '', $db);
-        }
-        return 'exa_master';
-    }
+	function aud_master_db()
+	{
+		if (session_id() !== '' && !empty($_SESSION['Ses_Dat_Dis'])) {
+			$db = preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']);
+			if ($db !== '' && $db !== 'exa_master') {
+				return $db;
+			}
+		}
+		if (!empty($GLOBALS['Ses_Dat_Dis'])) {
+			$db = preg_replace('/[^a-zA-Z0-9_]/', '', $GLOBALS['Ses_Dat_Dis']);
+			if ($db !== '' && $db !== 'exa_master') {
+				return $db;
+			}
+		}
+		if (class_exists('Env')) {
+			$db = \Env::get('DB_DATABASE_CORP', '');
+			if (is_string($db) && $db !== '' && $db !== 'exa_master') {
+				return preg_replace('/[^a-zA-Z0-9_]/', '', $db);
+			}
+			$db2 = \Env::get('DB_DATABASE', '');
+			if (is_string($db2) && $db2 !== '' && $db2 !== 'exa_master') {
+				return preg_replace('/[^a-zA-Z0-9_]/', '', $db2);
+			}
+		}
+		return 'exa';
+	}
 }
 
 class AuditQueue

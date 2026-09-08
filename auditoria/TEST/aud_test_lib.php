@@ -10,11 +10,17 @@ if (!class_exists('DebugBar')) {
 		public static function startQueryMeasure() {}
 		public static function addQuery($sql, $data) {}
 		public static function addException($e) {}
+		public static function addTransactionEvent($n, $d = array()) {}
+		public static function __callStatic($name, $arguments) {
+			if ($name == 'measure' && isset($arguments[1]) && is_callable($arguments[1])) $arguments[1]();
+			return null;
+		}
 	}
 }
 if (!class_exists('Debugbar')) {
 	class Debugbar {
 		public static function addException($e) {}
+		public static function __callStatic($name, $arguments) { return null; }
 	}
 }
 
@@ -23,6 +29,8 @@ require_once dirname(__FILE__) . '/../LOGICA/aud_log_queue.php';
 function aud_test_putenv($key, $value)
 {
 	putenv($key . '=' . $value);
+	$_ENV[$key] = $value;
+	$_SERVER[$key] = $value;
 }
 
 function aud_test_sqls()

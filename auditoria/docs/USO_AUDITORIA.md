@@ -1,4 +1,4 @@
-# Auditoría y Monitoreo en EXA (ofsercont)
+# Auditoría y Monitoreo en Exa Contable - RCET
 
 ## Objetivo
 
@@ -16,11 +16,18 @@ La captura se hace de forma centralizada desde `DATA/MysqlDatos.php` y la persis
 | Captura | `DATA/MysqlDatos.php`, `DATA/GestorErrores.php` | Hooks `captureBefore()` / `capture()` / `flush()` |
 | Cola diferida | `auditoria/LOGICA/aud_log_queue.php` | Encola en memoria y persiste tras responder |
 | Sesiones | `auditoria/LOGICA/aud_log_auditoria.php` | Login, logout, error de login (`auditoria.sesion`) |
-| Monitor | `auditoria/FRONT/aud_con_monitoreo_1.0.php` + `LOGICA/aud_log_monitoreo.php` + `LOGICA/aud_sql_monitoreo.php` | Consulta de actividad |
+| Monitor | `auditoria/FRONT/aud_con_monitoreo_1.0.php` + `LOGICA/aud_log_monitoreo.php` + `LOGICA/aud_sql_monitoreo.php` | Consulta de actividad (jqGrid) |
+| Actividad en vivo / Sesiones | `auditoria/FRONT/aud_con_actividad_usuarios_1.0.php` + `LOGICA/aud_log_actividad_sesion.php` + `LOGICA/aud_log_config_monitoreo.php` | Usuarios en línea, auto-refresco, cierre forzado de sesión |
+| Dashboard comparativo | `auditoria/FRONT/aud_con_dashboard_comparativo_1.0.php` + `LOGICA/aud_log_dashboard.php` | Estadísticas Período A vs B (gráficas, KPIs, observaciones) |
 | Configuración | `auditoria/FRONT/aud_adm_config_monitoreo_1.0.php` + `LOGICA/aud_log_config_monitoreo.php` + `LOGICA/aud_sql_config_monitoreo.php` | Reglas por empresa (`auditoria.cfg_monitoreo`) |
+| Reportes PDF | `auditoria/LOGICA/aud_rep_monitoreo_pdf.php`, `aud_rep_comparativa_pdf.php` | Exportación formal del monitor y del dashboard comparativo |
 | Interpretación | `auditoria/LOGICA/aud_log_interpretar.php` | Lenguaje natural del detalle, resolución de nombres |
 | Validaciones JS | `auditoria/VALIDACIONES/aud_par_monitoreo.js`, `aud_par_config_monitoreo.js` | Grids y formularios |
 | BD | `db/auditoria.sql`, `db/auditoria_config_monitoreo.sql`, `db/auditoria_menu.sql`, `db/auditoria_local.sql` | Esquema, seed de menú |
+
+### Convención de encabezados (UI)
+
+Todas las pantallas del módulo de auditoría muestran **un solo título**, sobre el fondo azul del `exa-header`. No se usa la barra gris de título (`BarraTitulo`) en los front-ends del módulo; el título único del encabezado desplaza a la antigua barra duplicada.
 
 ---
 
@@ -61,6 +68,8 @@ AUDIT_ENABLED=true
 AUDIT_TABLES=comprobantes,asientos,manifiesto,manifiesto_turnos_cab,manifiesto_turnos_det,manifiesto_visitante,manifiesto_evento,ventas,ventas_det
 AUDIT_MAX_QUEUE=150
 AUDIT_RETENTION_DAYS=180
+AUDIT_IDLE_LOGOUT=false
+AUDIT_GEOIP=false
 ```
 
 ### Significado
@@ -77,6 +86,12 @@ AUDIT_RETENTION_DAYS=180
 
 - `AUDIT_RETENTION_DAYS`
   Días de retención en `auditoria.logs` (mínimo 30).
+
+- `AUDIT_IDLE_LOGOUT`
+  Cierre automático de sesión por inactividad (15 minutos). Por defecto `false` (desactivado): **no** se expulsa a los usuarios por inactividad y **no** se destruye su sesión PHP. Al ponerlo en `true` se activa el modal de advertencia de 60 segundos y el logout automático.
+
+- `AUDIT_GEOIP`
+  Geo-ubicación por IP pública con el servicio externo `ip-api.com` (se guarda en `auditoria.sesion.Ses_Ubi`). Por defecto `false` (desactivado): no se envían IPs del cliente a terceros ni hay dependencia de internet al iniciar sesión. Al ponerlo en `true` se resuelve ciudad+país con timeout corto.
 
 ---
 
@@ -123,7 +138,7 @@ Qué permite:
 - filtrar por fechas, evento, módulo, directorio, proceso, usuario y sucursal;
 - ver usuario/empresa/sucursal por nombre (JOINs contra la base maestra; si no hay coincidencia muestra "Usuario N" / "Empresa N");
 - abrir el detalle de cada registro con descripción en lenguaje natural (`aud_log_interpretar.php`);
-- exportar CSV/Excel con los filtros actuales;
+- exportar CSV y PDF con los filtros actuales (`aud_rep_monitoreo_pdf.php`);
 - simular actividad a demanda (útil para verificar la captura).
 
 ### Auditoría de sesiones
@@ -133,6 +148,30 @@ Qué permite:
 - inicio de sesión (con proceso `*index.php` de la base maestra),
 - cierre de sesión,
 - intentos fallidos de login (búsqueda de usuario por cédula/empresa contra la base maestra).
+
+### Monitor de actividad y sesiones de usuario
+
+Pantalla: `auditoria/FRONT/aud_con_actividad_usuarios_1.0.php`.
+
+- Tarjetas KPI: usuarios en línea, ausentes, sesiones de hoy y tiempo promedio de uso.
+- Tabla de sesiones con presets de período (Hoy / Ayer / 1 semana / 1 mes / 3 meses) y calendario personalizado; filtros por estado (en línea / ausente / cerradas), rol y texto libre.
+- Barra lateral con el "Mayor tiempo de uso" e información de inactividad. El cierre automático por inactividad (15 min) está desactivado por defecto en producción (`AUDIT_IDLE_LOGOUT=false`): las sesiones inactivas se conservan y nadie es expulsado.
+- Auto-refresco configurable (15s / 30s / 1 min / desactivado) con indicador "En Vivo" (basado en el heartbeat del navegador, que se mantiene activo).
+- El Administrador de Sistemas puede forzar el cierre de una sesión desde el botón "Desconectar" (acción `cerrar_forzada` en `aud_log_actividad_sesion.php`).
+- El layout usa una cuadrícula CSS (`aud-main-grid`) responsiva: tabla + barra lateral de 300px, que colapsa a una columna en pantallas menores a 992px y aprovecha el alto completo de la ventana.
+
+### Dashboard comparativo
+
+Pantalla: `auditoria/FRONT/aud_con_dashboard_comparativo_1.0.php`.
+
+- Compara dos períodos (A = base histórica, B = evaluado/actual) con presets o fechas libres.
+- KPIs comparativos, tendencia diaria (A vs B), comparativa por módulo/operaciones, franja horaria y sesiones/seguridad.
+- Tablas desglosadas (variación por módulo, usuarios más activos) y diagnóstico automatizado con observaciones.
+- Exportación a PDF (`aud_rep_comparativa_pdf.php`), correo y WhatsApp.
+
+### Reportes PDF
+
+Los reportes del monitor (`aud_rep_monitoreo_pdf.php`) y del dashboard comparativo (`aud_rep_comparativa_pdf.php`) generan la cabecera con empresa, sucursal, emisor y período consultado. La fila de metadatos ya **no** incluye el texto "ExaContable Security & Audit Engine"; la marca se eliminó de los encabezados de ambos PDF.
 
 ---
 

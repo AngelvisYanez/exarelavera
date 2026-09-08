@@ -16,15 +16,28 @@ if (!function_exists('aud_master_db')) {
 	function aud_master_db()
 	{
 		if (session_id() !== '' && !empty($_SESSION['Ses_Dat_Dis'])) {
-			return preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']);
-		}
-		if (class_exists('Env')) {
-			$db = \Env::get('DB_DATABASE', 'exa_master');
-			if (is_string($db) && $db !== '') {
-				return preg_replace('/[^a-zA-Z0-9_]/', '', $db);
+			$db = preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']);
+			if ($db !== '' && $db !== 'exa_master') {
+				return $db;
 			}
 		}
-		return 'exa_master';
+		if (!empty($GLOBALS['Ses_Dat_Dis'])) {
+			$db = preg_replace('/[^a-zA-Z0-9_]/', '', $GLOBALS['Ses_Dat_Dis']);
+			if ($db !== '' && $db !== 'exa_master') {
+				return $db;
+			}
+		}
+		if (class_exists('Env')) {
+			$db = \Env::get('DB_DATABASE_CORP', '');
+			if (is_string($db) && $db !== '' && $db !== 'exa_master') {
+				return preg_replace('/[^a-zA-Z0-9_]/', '', $db);
+			}
+			$db2 = \Env::get('DB_DATABASE', '');
+			if (is_string($db2) && $db2 !== '' && $db2 !== 'exa_master') {
+				return preg_replace('/[^a-zA-Z0-9_]/', '', $db2);
+			}
+		}
+		return 'exa';
 	}
 }
 function sentencias($id,$Par_Sql){
@@ -538,7 +551,7 @@ function sentencias($id,$Par_Sql){
 		/** KPI 4: Top Usuarios con mas movimientos */
 		case 36:
 			$where = aud_logs_filtro($Par_Sql);
-			$sql = "SELECT IFNULL(NULLIF(TRIM(CONCAT(IFNULL(`persona`.`Prs_Ape`,''),' ',IFNULL(`persona`.`Prs_Nom`,''))),''), IFNULL(NULLIF(TRIM(`usuarios`.`Usu_Nom`),''), CONCAT('Usuario ', `logs`.`Usu_Cod`))) AS `usuario`, COUNT(`logs`.`Log_Cod`) AS `total`
+			$sql = "SELECT IFNULL(NULLIF(TRIM(CONCAT(IFNULL(`persona`.`Prs_Ape`,''),' ',IFNULL(`persona`.`Prs_Nom`,''))),''), CONCAT('Usuario ', `logs`.`Usu_Cod`)) AS `usuario`, COUNT(`logs`.`Log_Cod`) AS `total`
 			FROM `auditoria`.`logs`
 			INNER JOIN `auditoria`.`eventos` ON `logs`.`Eve_Cod` = `eventos`.`Eve_Cod`
 			INNER JOIN `auditoria`.`tablas` ON `tablas`.`Tab_Cod` = `logs`.`Tab_Cod`

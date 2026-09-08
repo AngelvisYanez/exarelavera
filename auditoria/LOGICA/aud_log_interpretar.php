@@ -896,15 +896,27 @@ function aud_html_detalle($row, $pares)
 	$ident = aud_h(aud_identificador($row));
 	$eveIni = strtoupper(trim(isset($row['Eve_Ini']) ? $row['Eve_Ini'] : ''));
 	$eveDes = aud_h(isset($row['Eve_Des']) ? $row['Eve_Des'] : aud_verbo_evento($eveIni, ''));
-	$badgeClass = 'aud-det-badge';
+
+	// Terminos y colores estandar: Ingresar, Actualizar, Eliminar
 	if ($eveIni === 'I') {
-		$badgeClass .= ' aud-det-badge-i';
+		$eveDes = 'Ingresar';
+		$badgeStyle = 'background-color:#d1fae5; color:#065f46; border:1px solid #a7f3d0;';
+		$badgeClass = 'aud-det-badge badge-eve-ins';
 	} elseif ($eveIni === 'U') {
-		$badgeClass .= ' aud-det-badge-u';
+		$eveDes = 'Actualizar';
+		$badgeStyle = 'background-color:#fef3c7; color:#92400e; border:1px solid #fde68a;';
+		$badgeClass = 'aud-det-badge badge-eve-upd';
 	} elseif ($eveIni === 'D') {
-		$badgeClass .= ' aud-det-badge-d';
+		$eveDes = 'Eliminar';
+		$badgeStyle = 'background-color:#fee2e2; color:#991b1b; border:1px solid #fecaca;';
+		$badgeClass = 'aud-det-badge badge-eve-del';
 	} elseif ($eveIni === 'F') {
-		$badgeClass .= ' aud-det-badge-f';
+		$eveDes = 'Fallido';
+		$badgeStyle = 'background-color:#fff6e5; color:#8a5a00; border:1px solid #f0d7a0;';
+		$badgeClass = 'aud-det-badge badge-eve-fal';
+	} else {
+		$badgeStyle = 'background-color:#f1f5f9; color:#475569; border:1px solid #e2e8f0;';
+		$badgeClass = 'aud-det-badge badge-eve-def';
 	}
 
 	$fecha = '';
@@ -916,63 +928,88 @@ function aud_html_detalle($row, $pares)
 	}
 	$logCod = isset($row['Log_Cod']) ? (int)$row['Log_Cod'] : 0;
 
-	$html = '<div class="aud-detalle">';
+	$html = '<div class="aud-detalle" style="padding:2px 4px 8px;">';
 
 	/* 1) Cabecera: evento + fecha + id */
-	$html .= '<div class="aud-det-head">';
-	$html .= '<span class="'.$badgeClass.'">'.($eveDes !== '' ? $eveDes : 'Actividad').'</span>';
-	$html .= '<div class="aud-det-when">';
+	$html .= '<div class="aud-det-head" style="display:flex; align-items:center; justify-content:space-between; margin:0 0 12px 0; padding-bottom:8px; border-bottom:1px solid #e2e8f0;">';
+	$html .= '<div><span class="'.$badgeClass.'" style="'.$badgeStyle.' display:inline-block; padding:4px 10px; border-radius:4px; font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;">'.($eveDes !== '' ? $eveDes : 'Actividad').'</span></div>';
+	$html .= '<div class="aud-det-when" style="font-size:12px; color:#64748b;">';
 	if ($fecha !== '') {
-		$html .= '<span class="aud-det-when-main">'.$fecha.($hora !== '' ? ' <span class="aud-det-hora">'.$hora.'</span>' : '').'</span>';
+		$html .= '<span class="aud-det-when-main" style="font-weight:600; color:#1e293b;"><i class="fa fa-calendar text-muted" style="margin-right:3px;"></i> '.$fecha.($hora !== '' ? ' <span class="aud-det-hora" style="font-weight:normal; color:#64748b; margin-left:6px;"><i class="fa fa-clock-o text-muted" style="margin-right:3px;"></i> '.$hora.'</span>' : '').'</span>';
 	}
 	if ($logCod > 0) {
-		$html .= '<span class="aud-det-id">#'.$logCod.'</span>';
+		$html .= '<span class="aud-det-id" style="display:inline-block; margin-left:10px; padding:2px 8px; border-radius:3px; background:#e2e8f0; color:#334155; font-size:11px; font-weight:700;">#'.$logCod.'</span>';
 	}
 	$html .= '</div></div>';
 
 	/* 2) Resumen de la accion */
-	$html .= '<div class="aud-det-summary">';
-	$html .= '<p class="aud-det-title"><strong>'.$usuario.'</strong> realizo la accion: '.$actividad.'.</p>';
-	$html .= '<p class="aud-det-lead">'.aud_h(aud_frase_movimiento($row, $pares)).'</p>';
+	$html .= '<div class="aud-det-summary" style="margin:0 0 14px 0; padding:10px 14px; background:#f8fafc; border-left:4px solid #3b82f6; border-radius:4px;">';
+	$html .= '<p class="aud-det-title" style="margin:0 0 4px 0; font-size:13px; font-weight:700; color:#1e293b;"><strong>'.$usuario.'</strong> realiz&oacute; la acci&oacute;n: '.$actividad.'.</p>';
+	$html .= '<p class="aud-det-lead" style="margin:0; font-size:12px; line-height:1.45; color:#475569;">'.aud_h(aud_frase_movimiento($row, $pares)).'</p>';
 	$html .= '</div>';
 
-	/* 3) Contexto en rejilla */
-	$html .= '<fieldset class="exa-fieldset aud-det-context"><legend class="Titulos2">Contexto</legend>';
-	$html .= '<div class="aud-det-meta">';
-	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Empresa</span><span class="aud-det-value">'.$empresa.'</span></div>';
-	if ($sucursal !== '') {
-		$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Sucursal</span><span class="aud-det-value">'.$sucursal.'</span></div>';
-	}
-	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Modulo</span><span class="aud-det-value">'.$modulo.'</span></div>';
+	/* 3) Contexto de la Actividad (Estructura Tabular Limpia, Espaciosa y No Aglomerada) */
+	$html .= '<fieldset class="exa-fieldset aud-det-context" style="margin-bottom:14px; border:1px solid #d0dbe5; border-radius:4px; padding:10px 14px; background:#fff;">';
+	$html .= '<legend class="Titulos2" style="font-size:12px; font-weight:700; color:#1e3a5f; margin-bottom:8px; border-bottom:none; padding:0 6px; width:auto;"><i class="fa fa-info-circle text-primary" style="margin-right:4px;"></i> Contexto de la Actividad</legend>';
+	$html .= '<div class="table-responsive" style="margin-bottom:0;">';
+	$html .= '<table class="table table-bordered table-condensed aud-table-context" style="margin-bottom:0; background:#fff; font-size:12px;">';
+	$html .= '<tbody>';
+
+	// Fila 1: Empresa y Sucursal
+	$html .= '<tr>';
+	$html .= '<th style="width:16%; background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-building-o text-muted" style="margin-right:4px;"></i> Empresa</th>';
+	$html .= '<td style="width:34%; color:#0f172a; font-weight:600; vertical-align:middle;">'.$empresa.'</td>';
+	$html .= '<th style="width:16%; background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-map-marker text-muted" style="margin-right:4px;"></i> Sucursal</th>';
+	$html .= '<td style="width:34%; color:#334155; vertical-align:middle;">'.($sucursal !== '' ? $sucursal : '<span class="text-muted" style="font-style:italic;">Matriz / Principal</span>').'</td>';
+	$html .= '</tr>';
+
+	// Fila 2: Módulo y Proceso
+	$html .= '<tr>';
+	$html .= '<th style="background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-cubes text-muted" style="margin-right:4px;"></i> M&oacute;dulo</th>';
+	$modTxt = '<span class="text-primary" style="font-weight:600;">'.$modulo.'</span>';
 	if ($directorio !== '' && $directorio !== $modulo) {
-		$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Directorio</span><span class="aud-det-value">'.$directorio.'</span></div>';
-	} elseif ($directorio !== '') {
-		$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Directorio</span><span class="aud-det-value">'.$directorio.'</span></div>';
+		$modTxt .= ' <span class="text-muted" style="font-size:11px; margin-left:4px;"><i class="fa fa-angle-right"></i> '.$directorio.'</span>';
 	}
-	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Proceso</span><span class="aud-det-value">'.$proceso.'</span></div>';
-	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Tipo de registro</span><span class="aud-det-value">'.$registro.'</span></div>';
-	if ($ident !== '') {
-		$html .= '<div class="aud-det-meta-item aud-det-meta-wide"><span class="aud-det-label">Referencia</span><span class="aud-det-value">'.$ident.'</span></div>';
-	}
-	$html .= '</div></fieldset>';
+	$html .= '<td style="color:#0f172a; vertical-align:middle;">'.$modTxt.'</td>';
+	$html .= '<th style="background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-cogs text-muted" style="margin-right:4px;"></i> Proceso</th>';
+	$html .= '<td style="color:#334155; vertical-align:middle;">'.($proceso !== '' ? $proceso : '<span class="text-muted" style="font-style:italic;">Proceso general</span>').'</td>';
+	$html .= '</tr>';
+
+	// Fila 3: Registro y Referencia
+	$html .= '<tr>';
+	$html .= '<th style="background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-table text-muted" style="margin-right:4px;"></i> Registro</th>';
+	$html .= '<td style="color:#334155; vertical-align:middle;">'.($registro !== '' ? $registro : '<span class="text-muted" style="font-style:italic;">Transacci&oacute;n general</span>').'</td>';
+	$html .= '<th style="background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-tag text-muted" style="margin-right:4px;"></i> Referencia</th>';
+	$refHtml = ($ident !== '') 
+		? '<span class="label label-info" style="font-size:11px; font-weight:600; font-family:monospace, sans-serif; padding:3px 8px; border-radius:3px; display:inline-block;">'.$ident.'</span>'
+		: '<span class="text-muted" style="font-style:italic;">Sin referencia registrada</span>';
+	$html .= '<td style="color:#334155; vertical-align:middle;">'.$refHtml.'</td>';
+	$html .= '</tr>';
+
+	$html .= '</tbody>';
+	$html .= '</table>';
+	$html .= '</div>';
+	$html .= '</fieldset>';
 
 	/* 4) Datos del movimiento */
 	$viejos = aud_valores_anteriores($row);
 	$tieneOld = count($viejos) > 0;
-	$html .= '<fieldset class="exa-fieldset aud-det-datos"><legend class="Titulos2">Datos del movimiento';
+	$html .= '<fieldset class="exa-fieldset aud-det-datos" style="margin-bottom:12px; border:1px solid #d0dbe5; border-radius:4px; padding:10px 14px; background:#fff;">';
+	$html .= '<legend class="Titulos2" style="font-size:12px; font-weight:700; color:#1e3a5f; margin-bottom:8px; border-bottom:none; padding:0 6px; width:auto;"><i class="fa fa-exchange text-primary" style="margin-right:4px;"></i> Datos del Movimiento';
 	if (count($pares) > 0) {
-		$html .= ' <span class="aud-det-count">'.count($pares).' campo'.(count($pares) !== 1 ? 's' : '').'</span>';
+		$html .= ' <span class="badge" style="background:#e2e8f0; color:#334155; font-size:11px; font-weight:600; vertical-align:middle; margin-left:4px;">'.count($pares).' campo'.(count($pares) !== 1 ? 's' : '').'</span>';
 	}
 	$html .= '</legend>';
 	if (count($pares) === 0) {
-		$html .= '<p class="aud-det-empty">No se registraron campos adicionales en este movimiento.</p>';
+		$html .= '<p class="aud-det-empty" style="margin:4px 0 0 0; padding:10px 12px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:4px; color:#64748b; font-size:12px;">No se registraron campos adicionales en este movimiento.</p>';
 	} else {
-		$html .= '<div class="table-responsive"><table class="table table-bordered table-condensed table-striped aud-det-table">';
-		$html .= '<thead><tr><th class="aud-det-col-dato">Dato</th>';
+		$html .= '<div class="table-responsive" style="margin-bottom:0;"><table class="table table-bordered table-condensed table-striped aud-det-table" style="margin-bottom:0; font-size:12px;">';
+		$html .= '<thead><tr style="background:#f1f5f9;">';
+		$html .= '<th class="aud-det-col-dato" style="width:32%; font-weight:600; color:#334e68; font-size:11px; text-transform:uppercase;">Dato</th>';
 		if ($tieneOld) {
-			$html .= '<th class="aud-det-col-old">Valor anterior</th>';
+			$html .= '<th class="aud-det-col-old" style="width:34%; font-weight:600; color:#334e68; font-size:11px; text-transform:uppercase;">Valor Anterior</th>';
 		}
-		$html .= '<th class="aud-det-col-new">Valor registrado</th></tr></thead><tbody>';
+		$html .= '<th class="aud-det-col-new" style="width:'.($tieneOld ? '34%' : '68%').'; font-weight:600; color:#334e68; font-size:11px; text-transform:uppercase;">Valor Registrado</th></tr></thead><tbody>';
 		foreach ($pares as $p) {
 			$eti = isset($p['eti']) ? $p['eti'] : aud_humanizar_campo($p['atr']);
 			if ($eti === $p['atr']) {
@@ -984,33 +1021,28 @@ function aud_html_detalle($row, $pares)
 				$oldVal = aud_valor_natural($p['atr'], $viejos[$p['atr']], $row, null);
 				$hasOld = ($oldVal !== '' && $oldVal !== $p['val']);
 			}
-			$html .= '<tr><td class="aud-det-col-dato">'.aud_h($eti).'</td>';
+			$html .= '<tr><td class="aud-det-col-dato" style="font-weight:600; color:#1e293b; vertical-align:middle;">'.aud_h($eti).'</td>';
 			if ($tieneOld) {
-				$html .= '<td class="aud-det-val-old';
-				if ($hasOld) {
-					$html .= ' aud-det-val-changed';
-				}
-				$html .= '">'.aud_h($oldVal).'</td>';
+				$oldStyle = $hasOld ? 'color:#b91c1c; text-decoration:line-through; background:#fef2f2; font-weight:500;' : 'color:#64748b;';
+				$html .= '<td class="aud-det-val-old'.($hasOld ? ' aud-det-val-changed' : '').'" style="vertical-align:middle; '.$oldStyle.'">'.aud_h($oldVal).'</td>';
 			}
-			$html .= '<td class="aud-det-val-new';
-			if ($hasOld) {
-				$html .= ' aud-det-val-changed';
-			}
-			$html .= '">'.aud_h($p['val']).'</td></tr>';
+			$newStyle = $hasOld ? 'color:#15803d; background:#f0fdf4; font-weight:600;' : 'color:#0f172a;';
+			$html .= '<td class="aud-det-val-new'.($hasOld ? ' aud-det-val-changed' : '').'" style="vertical-align:middle; '.$newStyle.'">'.aud_h($p['val']).'</td></tr>';
 		}
 		$html .= '</tbody></table></div>';
 	}
+	$html .= '</fieldset>';
 
 	/* 5) Debug: Log_Int completo (colapsable) */
 	$logInt = isset($row['Log_Int']) ? trim((string)$row['Log_Int']) : '';
 	if ($logInt !== '') {
-		$html .= '<div class="aud-det-debug">';
-		$html .= '<details class="aud-det-debug-box"><summary class="aud-det-debug-toggle">Informacion interna (Log_Int)</summary>';
-		$html .= '<pre class="aud-det-debug-pre">'.aud_h(wordwrap($logInt, 90, "\n", true)).'</pre>';
+		$html .= '<div class="aud-det-debug" style="margin-top:10px;">';
+		$html .= '<details class="aud-det-debug-box" style="border:1px solid #e2e8f0; border-radius:4px; background:#f8fafc;"><summary class="aud-det-debug-toggle" style="cursor:pointer; padding:6px 12px; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;"><i class="fa fa-terminal text-muted" style="margin-right:4px;"></i> Informaci&oacute;n interna (Log_Int)</summary>';
+		$html .= '<pre class="aud-det-debug-pre" style="margin:0; padding:10px 12px; font-size:11px; line-height:1.4; color:#1e293b; background:#fff; border-top:1px solid #e2e8f0; border-radius:0 0 4px 4px; white-space:pre-wrap; word-break:break-all; max-height:180px; overflow-y:auto;">'.aud_h(wordwrap($logInt, 90, "\n", true)).'</pre>';
 		$html .= '</details></div>';
 	}
 
-	$html .= '</fieldset></div>';
+	$html .= '</div>';
 	return $html;
 }
 
@@ -1020,6 +1052,12 @@ function aud_html_detalle($row, $pares)
  */
 function aud_estado_captura($empCod, $cfgCount = -1)
 {
+	if (!class_exists('AuditQueue')) {
+		$qPath = dirname(__FILE__) . '/aud_log_queue.php';
+		if (file_exists($qPath)) {
+			require_once($qPath);
+		}
+	}
 	$enabled = class_exists('AuditQueue') && AuditQueue::enabled();
 	$emp = (int)$empCod;
 	$cfg = (int)$cfgCount;

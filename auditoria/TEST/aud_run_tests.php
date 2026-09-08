@@ -21,6 +21,8 @@
 require_once dirname(__FILE__) . '/aud_unit_test.php';
 require_once dirname(__FILE__) . '/aud_unit_monitoreo.php';
 require_once dirname(__FILE__) . '/aud_unit_config.php';
+require_once dirname(__FILE__) . '/aud_unit_actividad.php';
+require_once dirname(__FILE__) . '/aud_unit_dashboard.php';
 
 // En entornos locales donde el catalogo (procesos/organizado) no vive en la
 // base maestra sino en otra (p.ej. `exa`), apuntar DB_DATABASE a esa base
@@ -207,8 +209,10 @@ function aud_run_concurrent_tests()
 $unitFails = aud_run_unit_tests();
 $monFails = aud_run_monitoreo_tests();
 $cfgFails = aud_run_config_tests();
+$actFails = aud_run_actividad_tests();
+$dashFails = aud_run_dashboard_tests();
 $loadFails = aud_run_concurrent_tests();
-$total = $unitFails + $monFails + $cfgFails + $loadFails;
+$total = $unitFails + $monFails + $cfgFails + $actFails + $dashFails + $loadFails;
 
 echo "\n========================================\n";
 if ($total === 0) {

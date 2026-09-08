@@ -8,9 +8,9 @@
  * @package administrador.LOGICA
  */
 
-require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
-require_once("aud_sql_monitoreo.php");
-require_once("aud_log_interpretar.php");
+require_once (__DIR__ . '/aud_log_auditoria.php');
+require_once(__DIR__ . "/aud_sql_monitoreo.php");
+require_once(__DIR__ . "/aud_log_interpretar.php");
 
 /**
  * Clase para conexion a la capa de acceso a datos
