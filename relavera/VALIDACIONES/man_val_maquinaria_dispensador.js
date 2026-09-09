@@ -38,6 +38,7 @@ $(document).ready(function () {
         if (typeof exaUiFitJqGrid === "function") {
             if (target === "#tab-dispensadores") {
                 exaUiFitJqGrid('#gridData', '#tab-dispensadores .exa-ui-grid-host');
+                $('#gridData').trigger('reloadGrid');
             } else if (target === "#tab-ingresos") {
                 exaUiFitJqGrid('#gridIngresos', '#tab-ingresos .exa-ui-grid-host');
             } else if (target === "#tab-despachos") {
@@ -46,6 +47,7 @@ $(document).ready(function () {
                 exaUiFitJqGrid('#gridAjustes', '#tab-ajustes .exa-ui-grid-host');
             } else if (target === "#tab-kardex") {
                 exaUiFitJqGrid('#gridKardex', '#tab-kardex .exa-ui-grid-host');
+                $('#gridKardex').trigger('reloadGrid');
             } else if (target === "#tab-cierre") {
                 exaUiFitJqGrid('#gridCierre', '#tab-cierre .exa-ui-grid-host');
             }
@@ -62,15 +64,30 @@ function inicializarGridDispensador() {
         datatype: "json",
         mtype: "GET",
         cmTemplate: { sortable: false },
-        colNames: ['Cod', 'Nombre', 'Capacidad', 'Combustible', 'Unidad', 'Estado', 'Opciones'],
+        colNames: ['Cod', 'Nombre', '&Aacute;rea / Ubicaci&oacute;n', 'Capacidad', 'Stock Actual', 'Disponible', 'Combustible', 'Unidad', 'Estado', 'Opciones'],
         colModel: [
             { name: 'Dis_Cod', index: 'Dis_Cod', width: 50, align: 'center', key: true },
-            { name: 'Dis_Nom', index: 'Dis_Nom', width: 200 },
-            { name: 'Dis_Cap', index: 'Dis_Cap', width: 100, align: 'right' },
-            { name: 'Dis_Tip', index: 'Dis_Tip', width: 100, align: 'center', formatter: formatoCombustible },
-            { name: 'Dis_Uni', index: 'Dis_Uni', width: 100, align: 'center', formatter: formatoUnidad },
-            { name: 'Dis_Est', index: 'Dis_Est', width: 80, align: 'center', formatter: formatoEstadoDispensador },
-            { name: 'opciones', index: 'opciones', width: 100, align: 'center', sortable: false, formatter: formatoOpcionesDispensador }
+            { name: 'Dis_Nom', index: 'Dis_Nom', width: 160 },
+            { name: 'Dis_Are', index: 'Dis_Are', width: 130, formatter: function(cv) { return cv ? cv : '<span class="text-muted">-</span>'; } },
+            { name: 'Dis_Cap', index: 'Dis_Cap', width: 85, align: 'right', formatter: function(cv) {
+                var val = parseFloat(cv) || 0;
+                return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }},
+            { name: 'existencia', index: 'existencia', width: 90, align: 'right', formatter: function(cv) {
+                var val = parseFloat(cv) || 0;
+                var fmt = val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return '<strong style="color:#0f766e; font-size:12px;">' + fmt + '</strong>';
+            }},
+            { name: 'disponible', index: 'disponible', width: 90, align: 'right', formatter: function(cv) {
+                var val = parseFloat(cv) || 0;
+                var color = val <= 0 ? '#b91c1c' : '#1d4ed8';
+                var fmt = val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return '<strong style="color:' + color + '; font-size:12px;">' + fmt + '</strong>';
+            }},
+            { name: 'Dis_Tip', index: 'Dis_Tip', width: 85, align: 'center', formatter: formatoCombustible },
+            { name: 'Dis_Uni', index: 'Dis_Uni', width: 80, align: 'center', formatter: formatoUnidad },
+            { name: 'Dis_Est', index: 'Dis_Est', width: 70, align: 'center', formatter: formatoEstadoDispensador },
+            { name: 'opciones', index: 'opciones', width: 85, align: 'center', sortable: false, formatter: formatoOpcionesDispensador }
         ],
         rowNum: 50,
         rowList: [20, 50, 100],
@@ -89,7 +106,7 @@ function inicializarGridDispensador() {
     });
     $("#gridData").jqGrid('navGrid', '#pagerData', { edit: false, add: false, del: false, search: false, refresh: true, view: true })
     .jqGrid('navButtonAdd', '#pagerData', {
-        caption: "", title: "Exportar a Excel", buttonicon: "ui-icon-document",
+        caption: " Excel", title: "Exportar a Excel", buttonicon: "fa fa-file-excel-o",
         onClickButton: function () {
             $("#gridData").jqGrid('exportGridExcel', { nombre: 'Dispensadores', hoja: 'Datos', footer: false, removeHiddens: true });
         }, position: "last"
@@ -150,6 +167,7 @@ function reloadGrid() {
 function abrirModalNuevo() {
     $("#formDispensador")[0].reset();
     $("#Dis_Cod").val("0");
+    $("#Dis_Are").val("");
     $("#modalFormulario").modal('show');
 }
 
@@ -157,6 +175,7 @@ function abrirModalEditar(rowDataStr) {
     var rowData = JSON.parse(decodeURIComponent(rowDataStr));
     $("#Dis_Cod").val(rowData.Dis_Cod);
     $("#Dis_Nom").val(rowData.Dis_Nom);
+    $("#Dis_Are").val(rowData.Dis_Are || "");
     $("#Dis_Cap").val(rowData.Dis_Cap);
     $("#Dis_Tip").val(rowData.Dis_Tip);
     $("#Dis_Uni").val(rowData.Dis_Uni);
@@ -256,7 +275,7 @@ function inicializarGridIngresos() {
         datatype: "json",
         mtype: "GET",
         cmTemplate: { sortable: false },
-        colNames: ['Cod', 'Tipo', 'Fecha', 'Hora', 'Dispensador', 'Responsable', 'Cantidad', 'Precio Unit.', 'Total Ref.', 'Estado', 'Opciones'],
+        colNames: ['Cod', 'Tipo', 'Fecha', 'Hora', 'Dispensador', 'Responsable / Origen', 'Cantidad', 'Precio Unit.', 'Total Ref.', 'Estado', 'Opciones'],
         colModel: [
             { name: 'Did_Cod', index: 'Did_Cod', width: 50, align: 'center', key: true },
             { name: 'Did_Tip', index: 'Did_Tip', width: 120, align: 'center', formatter: formatoTipoIngreso },
@@ -265,8 +284,8 @@ function inicializarGridIngresos() {
             { name: 'Dis_Nom', index: 'Dis_Nom', width: 150 },
             { name: 'responsable', index: 'responsable', width: 180, formatter: formatoResponsableIngreso },
             { name: 'Did_Can', index: 'Did_Can', width: 80, align: 'right', formatter: 'number' },
-            { name: 'Did_Pun', index: 'Did_Pun', width: 80, align: 'right', formatter: 'currency', formatoptions: { prefix: '$ ' } },
-            { name: 'total_calculado', index: 'total_calculado', width: 100, align: 'right', formatter: 'currency', formatoptions: { prefix: '$ ' } },
+            { name: 'Did_Pun', index: 'Did_Pun', width: 80, align: 'right', formatter: 'currency', formatoptions: { prefix: '$ ' }, hidden: true },
+            { name: 'total_calculado', index: 'total_calculado', width: 100, align: 'right', formatter: 'currency', formatoptions: { prefix: '$ ' }, hidden: true },
             { name: 'Did_Est', index: 'Did_Est', width: 60, align: 'center', formatter: formatoEstadoIngreso },
             { name: 'opciones', index: 'opciones', width: 60, align: 'center', sortable: false, formatter: formatoOpcionesIngreso }
         ],
@@ -305,7 +324,7 @@ function inicializarGridIngresos() {
     });
     $("#gridIngresos").jqGrid('navGrid', '#pagerIngresos', { edit: false, add: false, del: false, search: false, refresh: true, view: true })
     .jqGrid('navButtonAdd', '#pagerIngresos', {
-        caption: "", title: "Exportar a Excel", buttonicon: "ui-icon-document",
+        caption: " Excel", title: "Exportar a Excel", buttonicon: "fa fa-file-excel-o",
         onClickButton: function () {
             $("#gridIngresos").jqGrid('exportGridExcel', { nombre: 'Ingresos_Combustible', hoja: 'Datos', footer: true, removeHiddens: true });
         }, position: "last"
@@ -313,20 +332,54 @@ function inicializarGridIngresos() {
 }
 
 function formatoTipoIngreso(cellvalue, options, rowObject) {
-    if (cellvalue == 'IN') return 'Compra a Proveedor';
-    if (cellvalue == 'IC') return 'Ingreso Consignado';
+    if (cellvalue == 'IN') return '<span class="label label-success" style="font-size:11px; padding:3px 7px;">IN - Compra</span>';
+    if (cellvalue == 'IC') return '<span class="label label-primary" style="font-size:11px; padding:3px 7px;">IC - Carga Interna</span>';
+    if (cellvalue == 'ET') return '<span class="label label-info" style="font-size:11px; padding:3px 7px; background:#17a2b8;">ET - Transf. Entrada</span>';
     return cellvalue;
 }
 
 function formatoResponsableIngreso(cellvalue, options, rowObject) {
-    if (rowObject.Did_Tip == 'IN') return rowObject.proveedor_nombre || '';
-    if (rowObject.Did_Tip == 'IC') return rowObject.vehiculo_nombre || '';
+    if (rowObject.Did_Tip == 'IN') {
+        var resp = rowObject.proveedor_nombre || '';
+        if (rowObject.Did_Obs && $.trim(rowObject.Did_Obs) !== '') {
+            resp += ' <span class="text-muted" style="font-size:11px; display:block;" title="' + rowObject.Did_Obs + '"><i class="glyphicon glyphicon-comment"></i> ' + rowObject.Did_Obs + '</span>';
+        }
+        return resp;
+    }
+    if (rowObject.Did_Tip == 'IC') {
+        var resp = '';
+        if (rowObject.Did_Otr && $.trim(rowObject.Did_Otr) !== '') {
+            resp = 'Otros: ' + rowObject.Did_Otr;
+        } else {
+            resp = rowObject.vehiculo_nombre || '';
+        }
+        if (rowObject.Did_Obs && $.trim(rowObject.Did_Obs) !== '') {
+            resp += ' <span class="text-muted" style="font-size:11px; display:block;" title="' + rowObject.Did_Obs + '"><i class="glyphicon glyphicon-comment"></i> ' + rowObject.Did_Obs + '</span>';
+        }
+        return resp;
+    }
+    if (rowObject.Did_Tip == 'ET') {
+        var origen = rowObject.origen_nom || 'Dispensador';
+        if (rowObject.origen_are && $.trim(rowObject.origen_are) !== '') {
+            origen += ' (' + rowObject.origen_are + ')';
+        }
+        var resp = '<strong>Desde: ' + origen + '</strong>';
+
+        var obs = rowObject.Did_Obs ? $.trim(rowObject.Did_Obs) : '';
+        obs = obs.replace(/^Transferencia desde:[\s\-]*/i, '').trim();
+        if (obs !== '') {
+            resp += ' <span class="text-muted" style="font-size:11px; display:block;" title="' + obs + '"><i class="glyphicon glyphicon-comment"></i> ' + obs + '</span>';
+        }
+        return resp;
+    }
     return '';
 }
 
 function formatoEstadoIngreso(cellvalue, options, rowObject) {
     if (cellvalue == 'A') {
         return '<span class="label label-success">ACTIVO</span>';
+    } else if (cellvalue == 'P') {
+        return '<span class="label label-warning" style="background:#f39c12; font-weight:bold;">PENDIENTE RECEPCI&Oacute;N</span>';
     } else {
         return '<span class="label label-danger">ANULADO</span>';
     }
@@ -335,23 +388,28 @@ function formatoEstadoIngreso(cellvalue, options, rowObject) {
 function formatoOpcionesIngreso(cellvalue, options, rowObject) {
     var didCod = rowObject.Did_Cod;
     var est = rowObject.Did_Est;
-    var btnAnular = '';
-    
-    if (est == 'A') {
-        btnAnular = '<button class="btn btn-xs btn-danger" onclick="anularIngreso(' + didCod + ')" title="Anular Carga"><i class="glyphicon glyphicon-remove"></i></button>';
+    var tip = rowObject.Did_Tip;
+    var btns = '';
+
+    if (tip == 'ET' && est == 'P') {
+        btns += '<button class="btn btn-xs btn-success" onclick="aceptarTransferencia(' + didCod + ')" title="Aceptar y Recibir Combustible" style="margin-right:3px;"><i class="glyphicon glyphicon-ok"></i></button>';
+        btns += '<button class="btn btn-xs btn-warning" onclick="rechazarTransferencia(' + didCod + ')" title="Rechazar / Devolver al Origen"><i class="glyphicon glyphicon-ban-circle"></i></button>';
+    } else if (est == 'A') {
+        btns += '<button class="btn btn-xs btn-danger" onclick="anularIngreso(' + didCod + ')" title="Anular Carga"><i class="glyphicon glyphicon-remove"></i></button>';
     }
     
-    return btnAnular;
+    return btns;
 }
 
 function reloadGridIngresos() {
-    var fec_ini = $("#filtro_fec_ini").val();
-    var fec_fin = $("#filtro_fec_fin").val();
-    var Dis_Cod = $("#filtro_Dis_Cod_In").val();
-    var Prv_Cod = $("#filtro_Prv_Cod_In").val();
+    var fec_ini = $.trim($("#filtro_fec_ini").val() || '');
+    var fec_fin = $.trim($("#filtro_fec_fin").val() || '');
+    var Dis_Cod = $.trim($("#filtro_Dis_Cod_In").val() || '');
+    var Prv_Cod = $.trim($("#filtro_Prv_Cod_In").val() || '');
+    var Did_Tip = $.trim($("#filtro_Did_Tip_In").val() || '');
 
     $("#gridIngresos").jqGrid('setGridParam', {
-        url: 'man_alt_maquinaria_dispensador.php?listIngresosGridAjax=true&fec_ini=' + fec_ini + '&fec_fin=' + fec_fin + '&Dis_Cod=' + Dis_Cod + '&Prv_Cod=' + Prv_Cod,
+        url: 'man_alt_maquinaria_dispensador.php?listIngresosGridAjax=true&fec_ini=' + encodeURIComponent(fec_ini) + '&fec_fin=' + encodeURIComponent(fec_fin) + '&Dis_Cod=' + encodeURIComponent(Dis_Cod) + '&Prv_Cod=' + encodeURIComponent(Prv_Cod) + '&Did_Tip=' + encodeURIComponent(Did_Tip),
         page: 1
     }).trigger("reloadGrid");
 }
@@ -366,6 +424,10 @@ function abrirModalIngreso() {
     $("#infoDispensadorBox").hide();
     $("#capacidad_disponible").val(0);
     $("#lbl_Total").text("0.00");
+    $("#Tip_Ingreso_In").val('V');
+    $("#Did_Otr_In_Select").val('');
+    $("#Did_Otr_In").hide().val('');
+    cargarListaOtrosMaquinarias();
     cambiarTipoIngreso();
     $("#modalFormularioIngreso").modal('show');
 }
@@ -374,17 +436,48 @@ function cambiarTipoIngreso() {
     var tip = $("#Did_Tip").val();
     if (tip == 'IN') {
         $("#div_proveedor").slideDown();
+        $("#div_tipo_origen_in").slideUp();
         $("#div_vehiculo").slideUp();
+        $("#div_otros_in").slideUp();
         $("#Veh_Cod_In").val('');
+        $("#Did_Otr_In_Select").val('');
+        $("#Did_Otr_In").hide().val('');
     } else if (tip == 'IC') {
         $("#div_proveedor").slideUp();
-        $("#div_vehiculo").slideDown();
         $("#Prv_Cod_In").val('');
+        $("#div_tipo_origen_in").slideDown();
+        cambiarDestinoIngreso();
     } else {
         $("#div_proveedor").slideUp();
+        $("#div_tipo_origen_in").slideUp();
         $("#div_vehiculo").slideUp();
+        $("#div_otros_in").slideUp();
         $("#Prv_Cod_In").val('');
         $("#Veh_Cod_In").val('');
+        $("#Did_Otr_In_Select").val('');
+        $("#Did_Otr_In").hide().val('');
+    }
+}
+
+function cambiarDestinoIngreso() {
+    var tipDest = $("#Tip_Ingreso_In").val();
+    if (tipDest == 'O') {
+        $("#div_vehiculo").hide();
+        $("#div_otros_in").show();
+        $("#Veh_Cod_In").val('');
+    } else {
+        $("#div_otros_in").hide();
+        $("#div_vehiculo").show();
+        $("#Did_Otr_In_Select").val('');
+        $("#Did_Otr_In").hide().val('');
+    }
+}
+
+function seleccionarEquipoOtroIn(val) {
+    if (val === '__MANUAL__') {
+        $('#Did_Otr_In').show().val('').focus();
+    } else {
+        $('#Did_Otr_In').hide().val(val);
     }
 }
 
@@ -455,6 +548,8 @@ function guardarIngreso(btn) {
     var Did_Tip = $("#Did_Tip").val();
     var Prv_Cod = $("#Prv_Cod_In").val();
     var Veh_Cod = $("#Veh_Cod_In").val();
+    var Tip_Ingreso = $("#Tip_Ingreso_In").val();
+    var Did_Otr = $.trim($("#Did_Otr_In").val());
     var Did_Fec = $("#Did_Fec").val();
     var Did_Can = parseFloat($("#Did_Can").val());
     var Did_Pun = parseFloat($("#Did_Pun").val());
@@ -462,7 +557,16 @@ function guardarIngreso(btn) {
 
     if (Did_Tip == "") { $.alert("Seleccione el tipo de ingreso."); return; }
     if (Did_Tip == "IN" && Prv_Cod == "") { $.alert("Seleccione un proveedor."); return; }
-    if (Did_Tip == "IC" && Veh_Cod == "") { $.alert("Seleccione un veh�culo consignado."); return; }
+    if (Did_Tip == "IC") {
+        if (Tip_Ingreso == "V" && Veh_Cod == "") {
+            $.alert("Seleccione un veh\xedculo consignado.");
+            return;
+        }
+        if (Tip_Ingreso == "O" && Did_Otr == "") {
+            $.alert("Debe escribir o seleccionar el equipo/maquinaria en Otros.");
+            return;
+        }
+    }
     if (Dis_Cod == "") { $.alert("Seleccione un dispensador."); return; }
     if (Did_Fec == "") { $.alert("Ingrese la fecha."); return; }
     if (isNaN(Did_Can) || Did_Can <= 0) { $.alert("La cantidad debe ser mayor a cero."); return; }
@@ -547,6 +651,84 @@ function ejecutarAnulacionIngreso(didCod) {
     });
 }
 
+function aceptarTransferencia(didCod) {
+    var msg = "Esta seguro de aceptar y recibir esta transferencia de combustible? La cantidad se sumara inmediatamente a la existencia de este dispensador.";
+    if (typeof $.createDialogConfirm === "function") {
+        $.createDialogConfirm(msg, { didCod: didCod }, function(data) {
+            ejecutarAceptarTransferencia(data.didCod);
+        });
+    } else {
+        if (confirm(msg)) {
+            ejecutarAceptarTransferencia(didCod);
+        }
+    }
+}
+
+function ejecutarAceptarTransferencia(didCod) {
+    if (typeof $.carga === "function") { $.carga('show'); }
+    $.ajax({
+        url: 'man_alt_maquinaria_dispensador.php',
+        type: 'POST',
+        data: {
+            acceptTransferenciaAjax: true,
+            Did_Cod: didCod
+        },
+        dataType: 'json',
+        success: function (res) {
+            if (typeof $.carga === "function") { $.carga('hide'); }
+            if (res.success) {
+                $.alert(res.message || "Transferencia aceptada exitosamente.");
+                reloadGridIngresos();
+            } else {
+                $.alert("Error: " + res.message);
+            }
+        },
+        error: function () {
+            if (typeof $.carga === "function") { $.carga('hide'); }
+            $.alert("Error de comunicacion con el servidor.");
+        }
+    });
+}
+
+function rechazarTransferencia(didCod) {
+    var msg = "Esta seguro de rechazar esta transferencia? La recepcion se cancelara y el combustible retornara a la existencia del dispensador de origen.";
+    if (typeof $.createDialogConfirm === "function") {
+        $.createDialogConfirm(msg, { didCod: didCod }, function(data) {
+            ejecutarRechazarTransferencia(data.didCod);
+        });
+    } else {
+        if (confirm(msg)) {
+            ejecutarRechazarTransferencia(didCod);
+        }
+    }
+}
+
+function ejecutarRechazarTransferencia(didCod) {
+    if (typeof $.carga === "function") { $.carga('show'); }
+    $.ajax({
+        url: 'man_alt_maquinaria_dispensador.php',
+        type: 'POST',
+        data: {
+            rechazarTransferenciaAjax: true,
+            Did_Cod: didCod
+        },
+        dataType: 'json',
+        success: function (res) {
+            if (typeof $.carga === "function") { $.carga('hide'); }
+            if (res.success) {
+                $.alert(res.message || "Transferencia rechazada exitosamente.");
+                reloadGridIngresos();
+            } else {
+                $.alert("Error: " + res.message);
+            }
+        },
+        error: function () {
+            if (typeof $.carga === "function") { $.carga('hide'); }
+            $.alert("Error de comunicacion con el servidor.");
+        }
+    });
+}
+
 
 // ======================================================================
 // FASE 3: DESPACHOS DE COMBUSTIBLE
@@ -566,8 +748,8 @@ function inicializarGridDespachos() {
             { name: 'Dis_Nom', index: 'Dis_Nom', width: 150 },
             { name: 'responsable', index: 'responsable', width: 180, formatter: formatoResponsableDespacho },
             { name: 'Did_Can', index: 'Did_Can', width: 80, align: 'right', formatter: 'number' },
-            { name: 'Did_Pun', index: 'Did_Pun', width: 80, align: 'right', formatter: 'currency', formatoptions: { prefix: '$ ' } },
-            { name: 'total_calculado', index: 'total_calculado', width: 100, align: 'right', formatter: 'currency', formatoptions: { prefix: '$ ' } },
+            { name: 'Did_Pun', index: 'Did_Pun', width: 80, align: 'right', formatter: 'currency', formatoptions: { prefix: '$ ' }, hidden: true },
+            { name: 'total_calculado', index: 'total_calculado', width: 100, align: 'right', formatter: 'currency', formatoptions: { prefix: '$ ' }, hidden: true },
             { name: 'Did_Est', index: 'Did_Est', width: 60, align: 'center', formatter: formatoEstadoIngreso },
             { name: 'opciones', index: 'opciones', width: 60, align: 'center', sortable: false, formatter: formatoOpcionesDespacho }
         ],
@@ -606,7 +788,7 @@ function inicializarGridDespachos() {
     });
     $("#gridDespachos").jqGrid('navGrid', '#pagerDespachos', { edit: false, add: false, del: false, search: false, refresh: true, view: true })
     .jqGrid('navButtonAdd', '#pagerDespachos', {
-        caption: "", title: "Exportar a Excel", buttonicon: "ui-icon-document",
+        caption: " Excel", title: "Exportar a Excel", buttonicon: "fa fa-file-excel-o",
         onClickButton: function () {
             $("#gridDespachos").jqGrid('exportGridExcel', { nombre: 'Salidas_Combustible', hoja: 'Datos', footer: true, removeHiddens: true });
         }, position: "last"
@@ -614,14 +796,42 @@ function inicializarGridDespachos() {
 }
 
 function formatoTipoDespacho(cellvalue, options, rowObject) {
-    if (cellvalue == 'SA') return 'Abastecimiento a Maquinaria';
-    if (cellvalue == 'SC') return 'Ajuste Negativo';
+    if (cellvalue == 'SA') return '<span class="label label-danger" style="font-size:11px; padding:3px 7px;">SA - Abastecimiento</span>';
+    if (cellvalue == 'SC') return '<span class="label label-warning" style="font-size:11px; padding:3px 7px;">SC - Ajuste (-)</span>';
+    if (cellvalue == 'ST') return '<span class="label" style="font-size:11px; padding:3px 7px; background:#6f42c1; color:#fff;">ST - Transf. Salida</span>';
     return cellvalue;
 }
 
 function formatoResponsableDespacho(cellvalue, options, rowObject) {
-    if (rowObject.Did_Tip == 'SA') return rowObject.vehiculo_nombre || '';
-    if (rowObject.Did_Tip == 'SC') return rowObject.Did_Obs || '';
+    if (rowObject.Did_Tip == 'SA') {
+        var resp = '';
+        if (rowObject.Did_Otr && $.trim(rowObject.Did_Otr) !== '') {
+            resp = 'Otros: ' + rowObject.Did_Otr;
+        } else {
+            resp = rowObject.vehiculo_nombre || '';
+        }
+        if (rowObject.Did_Obs && $.trim(rowObject.Did_Obs) !== '') {
+            resp += ' <span class="text-muted" style="font-size:11px; display:block;" title="' + rowObject.Did_Obs + '"><i class="glyphicon glyphicon-comment"></i> ' + rowObject.Did_Obs + '</span>';
+        }
+        return resp;
+    }
+    if (rowObject.Did_Tip == 'SC') {
+        return rowObject.Did_Obs || '';
+    }
+    if (rowObject.Did_Tip == 'ST') {
+        var destino = rowObject.destino_nom || 'Dispensador';
+        if (rowObject.destino_are && $.trim(rowObject.destino_are) !== '') {
+            destino += ' (' + rowObject.destino_are + ')';
+        }
+        var resp = '<strong>Hacia: ' + destino + '</strong>';
+
+        var obs = rowObject.Did_Obs ? $.trim(rowObject.Did_Obs) : '';
+        obs = obs.replace(/^Transferencia a:[\s\-]*/i, '').trim();
+        if (obs !== '') {
+            resp += ' <span class="text-muted" style="font-size:11px; display:block;" title="' + obs + '"><i class="glyphicon glyphicon-comment"></i> ' + obs + '</span>';
+        }
+        return resp;
+    }
     return '';
 }
 
@@ -638,13 +848,13 @@ function formatoOpcionesDespacho(cellvalue, options, rowObject) {
 }
 
 function reloadGridDespachos() {
-    var fec_ini = $("#filtro_fec_ini_out").val();
-    var fec_fin = $("#filtro_fec_fin_out").val();
-    var Dis_Cod = $("#filtro_Dis_Cod_Out").val();
-    var Did_Tip = $("#filtro_Did_Tip_Out").val();
+    var fec_ini = $.trim($("#filtro_fec_ini_out").val() || '');
+    var fec_fin = $.trim($("#filtro_fec_fin_out").val() || '');
+    var Dis_Cod = $.trim($("#filtro_Dis_Cod_Out").val() || '');
+    var Did_Tip = $.trim($("#filtro_Did_Tip_Out").val() || '');
 
     $("#gridDespachos").jqGrid('setGridParam', {
-        url: 'man_alt_maquinaria_dispensador.php?listDespachosGridAjax=true&fec_ini=' + fec_ini + '&fec_fin=' + fec_fin + '&Dis_Cod=' + Dis_Cod + '&Did_Tip=' + Did_Tip,
+        url: 'man_alt_maquinaria_dispensador.php?listDespachosGridAjax=true&fec_ini=' + encodeURIComponent(fec_ini) + '&fec_fin=' + encodeURIComponent(fec_fin) + '&Dis_Cod=' + encodeURIComponent(Dis_Cod) + '&Did_Tip=' + encodeURIComponent(Did_Tip),
         page: 1
     }).trigger("reloadGrid");
 }
@@ -657,8 +867,15 @@ function limpiarFiltrosDespachos() {
 function abrirModalDespacho() {
     $("#formDespacho")[0].reset();
     $("#infoDispensadorBoxOut").hide();
+    $("#infoDispensadorDestBoxOut").hide();
     $("#existencia_actual_out").val(0);
+    $("#capacidad_disponible_des_out").val(0);
     $("#lbl_Total_Out").text("0.00");
+    $("#Tip_Despacho_Out").val('V');
+    $("#Did_Otr_Out_Select").val('');
+    $("#Did_Otr_Out").hide().val('');
+    $("#Did_Obs_Transf_Out").val('');
+    cargarListaOtrosMaquinarias();
     cambiarTipoSalida();
     $("#modalFormularioDespacho").modal('show');
 }
@@ -666,27 +883,115 @@ function abrirModalDespacho() {
 function cambiarTipoSalida() {
     var tip = $("#Did_Tip_Out").val();
     if (tip == 'SA') {
-        $("#div_vehiculo_out").slideDown();
+        $("#div_transferencia_out").slideUp();
+        $("#infoDispensadorDestBoxOut").hide();
+        $("#div_tipo_destino_out").slideDown();
+        cambiarDestinoDespacho();
         $("#div_motivo_out").slideUp();
-        $("#div_precio_out").slideDown();
-        $("#div_total_out").slideDown();
+        $("#div_precio_out").hide();
+        $("#div_total_out").hide();
         $("#Did_Obs_Out").val('');
+        $("#Dis_Cod_Des_Out").val('');
     } else if (tip == 'SC') {
+        $("#div_transferencia_out").slideUp();
+        $("#infoDispensadorDestBoxOut").hide();
+        $("#div_tipo_destino_out").slideUp();
         $("#div_vehiculo_out").slideUp();
+        $("#div_otros_out").slideUp();
         $("#div_motivo_out").slideDown();
-        $("#div_precio_out").slideUp();
-        $("#div_total_out").slideUp();
+        $("#div_precio_out").hide();
+        $("#div_total_out").hide();
         $("#Veh_Cod_Out").val('');
+        $("#Did_Otr_Out_Select").val('');
+        $("#Did_Otr_Out").hide().val('');
         $("#Did_Pun_Out").val('0');
+        $("#Dis_Cod_Des_Out").val('');
+        calcularTotalOut();
+    } else if (tip == 'ST') {
+        $("#div_tipo_destino_out").slideUp();
+        $("#div_vehiculo_out").slideUp();
+        $("#div_otros_out").slideUp();
+        $("#div_motivo_out").slideUp();
+        $("#div_transferencia_out").slideDown();
+        $("#div_precio_out").hide();
+        $("#div_total_out").hide();
+        $("#Veh_Cod_Out").val('');
+        $("#Did_Otr_Out_Select").val('');
+        $("#Did_Otr_Out").hide().val('');
+        $("#Did_Pun_Out").val('0');
+        filtrarDispensadoresDestino();
         calcularTotalOut();
     } else {
+        $("#div_transferencia_out").slideUp();
+        $("#infoDispensadorDestBoxOut").hide();
+        $("#div_tipo_destino_out").slideUp();
         $("#div_vehiculo_out").slideUp();
+        $("#div_otros_out").slideUp();
         $("#div_motivo_out").slideUp();
-        $("#div_precio_out").slideDown();
-        $("#div_total_out").slideDown();
+        $("#div_precio_out").hide();
+        $("#div_total_out").hide();
         $("#Did_Obs_Out").val('');
         $("#Veh_Cod_Out").val('');
+        $("#Did_Otr_Out_Select").val('');
+        $("#Did_Otr_Out").hide().val('');
+        $("#Dis_Cod_Des_Out").val('');
     }
+}
+
+function cambiarDestinoDespacho() {
+    var tipDest = $("#Tip_Despacho_Out").val();
+    if (tipDest == 'O') {
+        $("#div_vehiculo_out").hide();
+        $("#div_otros_out").show();
+        $("#Veh_Cod_Out").val('');
+    } else {
+        $("#div_otros_out").hide();
+        $("#div_vehiculo_out").show();
+        $("#Did_Otr_Out_Select").val('');
+        $("#Did_Otr_Out").hide().val('');
+    }
+}
+
+function seleccionarEquipoOtroOut(val) {
+    if (val === '__MANUAL__') {
+        $('#Did_Otr_Out').show().val('').focus();
+    } else {
+        $('#Did_Otr_Out').hide().val(val);
+    }
+}
+
+function cargarListaOtrosMaquinarias() {
+    $.ajax({
+        url: 'man_alt_maquinaria_dispensador.php',
+        type: 'GET',
+        data: { getOtrosMaquinariasAjax: true },
+        dataType: 'json',
+        success: function(res) {
+            if (res && res.success && res.rows) {
+                var $selIn = $("#Did_Otr_In_Select");
+                var $selOut = $("#Did_Otr_Out_Select");
+                var curIn = $selIn.val();
+                var curOut = $selOut.val();
+
+                $selIn.empty().append('<option value="">-- Seleccione Equipo --</option>');
+                $selOut.empty().append('<option value="">-- Seleccione Equipo --</option>');
+
+                $.each(res.rows, function(idx, item) {
+                    var nom = item.equipo_nombre || item.Did_Otr;
+                    if (nom) {
+                        $selIn.append($('<option>').attr('value', nom).text(nom));
+                        $selOut.append($('<option>').attr('value', nom).text(nom));
+                    }
+                });
+
+                $selIn.append('<option value="__MANUAL__">+ Escribir otro equipo manualmente...</option>');
+                $selOut.append('<option value="__MANUAL__">+ Escribir otro equipo manualmente...</option>');
+
+                if (curIn) $selIn.val(curIn);
+                if (curOut) $selOut.val(curOut);
+            }
+        }
+    });
 }
 
 function cargarInfoDispensadorOut(dis_cod) {
@@ -728,6 +1033,9 @@ function cargarInfoDispensadorOut(dis_cod) {
                 
                 calcularExistenciaPosterior();
                 $("#infoDispensadorBoxOut").show();
+                if ($("#Did_Tip_Out").val() == 'ST') {
+                    filtrarDispensadoresDestino();
+                }
             } else {
                 $.alert("Error al obtener informacion del dispensador.");
                 $("#infoDispensadorBoxOut").hide();
@@ -737,6 +1045,83 @@ function cargarInfoDispensadorOut(dis_cod) {
         error: function() {
             if (typeof $.carga === "function") { $.carga('hide'); }
             $.alert("Error de comunicacion al consultar dispensador.");
+        }
+    });
+}
+
+function filtrarDispensadoresDestino() {
+    var disCodOrigen = $("#Dis_Cod_Out").val();
+    var tipCombustible = $("#Dis_Cod_Out").find('option:selected').attr('data-tip');
+
+    $("#Dis_Cod_Des_Out option").each(function() {
+        var $opt = $(this);
+        var val = $opt.val();
+        if (val === "") {
+            $opt.show();
+            return;
+        }
+        var optTip = $opt.attr('data-tip');
+        if (val == disCodOrigen || (tipCombustible && optTip != tipCombustible)) {
+            $opt.hide();
+            if ($opt.is(':selected')) {
+                $("#Dis_Cod_Des_Out").val('');
+                $("#infoDispensadorDestBoxOut").hide();
+                $("#capacidad_disponible_des_out").val(0);
+            }
+        } else {
+            $opt.show();
+        }
+    });
+}
+
+function cargarInfoDispensadorDestinoOut(dis_cod_des) {
+    if (dis_cod_des == "") {
+        $("#infoDispensadorDestBoxOut").hide();
+        $("#capacidad_disponible_des_out").val(0);
+        return;
+    }
+
+    if (typeof $.carga === "function") { $.carga('show'); }
+
+    $.ajax({
+        url: 'man_alt_maquinaria_dispensador.php',
+        type: 'POST',
+        data: { getInfoDispensadorAjax: true, Dis_Cod: dis_cod_des },
+        dataType: 'json',
+        success: function(res) {
+            if (typeof $.carga === "function") { $.carga('hide'); }
+            if (res.success && res.data) {
+                var d = res.data;
+                var cap = parseFloat(d.Dis_Cap) || 0;
+                var ext = parseFloat(d.existencia) || 0;
+                var disp = cap - ext;
+                
+                var tip = d.Dis_Tip;
+                if (tip == 'DI') tip = 'DIESEL';
+                if (tip == 'SU') tip = 'SUPER';
+                if (tip == 'EC') tip = 'ECO';
+                if (tip == 'EX') tip = 'EXTRA';
+                
+                var uni = d.Dis_Uni;
+                if (uni == 'GA') uni = 'GALONES';
+                if (uni == 'LI') uni = 'LITROS';
+
+                $("#lbl_Dis_Tip_Des_Out").text(tip);
+                $("#lbl_Dis_Uni_Des_Out").text(uni);
+                $("#lbl_Dis_Cap_Des_Out").text(cap.toFixed(2));
+                $("#lbl_Dis_Ext_Des_Out").text(ext.toFixed(2));
+                $("#lbl_Dis_Dispo_Des_Out").text(disp.toFixed(2));
+                $("#capacidad_disponible_des_out").val(disp);
+                $("#infoDispensadorDestBoxOut").show();
+            } else {
+                $.alert("Error al obtener informacion del dispensador de destino.");
+                $("#infoDispensadorDestBoxOut").hide();
+                $("#capacidad_disponible_des_out").val(0);
+            }
+        },
+        error: function() {
+            if (typeof $.carga === "function") { $.carga('hide'); }
+            $.alert("Error de comunicacion al consultar dispensador de destino.");
         }
     });
 }
@@ -769,7 +1154,9 @@ function guardarDespacho(btn) {
 
     var Dis_Cod = $("#Dis_Cod_Out").val();
     var Did_Tip = $("#Did_Tip_Out").val();
+    var Tip_Despacho = $("#Tip_Despacho_Out").val();
     var Veh_Cod = $("#Veh_Cod_Out").val();
+    var Did_Otr = $.trim($("#Did_Otr_Out").val());
     var Did_Obs = $.trim($("#Did_Obs_Out").val());
     var Did_Fec = $("#Did_Fec_Out").val();
     var Did_Can = parseFloat($("#Did_Can_Out").val());
@@ -777,13 +1164,39 @@ function guardarDespacho(btn) {
     var extActual = parseFloat($("#existencia_actual_out").val());
 
     if (Did_Tip == "") { $.alert("Seleccione el tipo de salida."); return; }
-    if (Did_Tip == "SA" && Veh_Cod == "") { $.alert("Seleccione una maquinaria/veh�culo."); return; }
+    if (Did_Tip == "SA") {
+        if (Tip_Despacho == "V" && Veh_Cod == "") {
+            $.alert("Seleccione una maquinaria / veh\xedculo.");
+            return;
+        }
+        if (Tip_Despacho == "O" && Did_Otr == "") {
+            $.alert("Debe escribir o seleccionar la maquinaria/equipo en Otros.");
+            return;
+        }
+    }
     if (Did_Tip == "SC" && Did_Obs == "") { $.alert("Debe ingresar el motivo del ajuste negativo."); return; }
+    if (Did_Tip == "ST") {
+        var disCodDes = $("#Dis_Cod_Des_Out").val();
+        if (disCodDes == "") {
+            $.alert("Seleccione el dispensador de destino.");
+            return;
+        }
+        if (Dis_Cod == disCodDes) {
+            $.alert("El dispensador de origen y destino no pueden ser el mismo.");
+            return;
+        }
+        var dispoDest = parseFloat($("#capacidad_disponible_des_out").val()) || 0;
+        if (Did_Can > dispoDest) {
+            $.alert("La cantidad a transferir (" + Did_Can.toFixed(2) + ") supera el espacio disponible del dispensador de destino (" + dispoDest.toFixed(2) + ").");
+            return;
+        }
+        Did_Obs = $.trim($("#Did_Obs_Transf_Out").val());
+    }
     if (Dis_Cod == "") { $.alert("Seleccione un dispensador."); return; }
     if (Did_Fec == "") { $.alert("Ingrese la fecha."); return; }
     if (isNaN(Did_Can) || Did_Can <= 0) { $.alert("La cantidad debe ser mayor a cero."); return; }
     
-    if (isNaN(Did_Pun) || Did_Pun < 0) { 
+    if (isNaN(Did_Pun) || Did_Pun < 0 || Did_Tip == "ST") { 
         Did_Pun = 0;
         $("#Did_Pun_Out").val(0);
     }
@@ -795,6 +1208,9 @@ function guardarDespacho(btn) {
     }
 
     var formData = $("#formDespacho").serialize();
+    if (Did_Tip == "ST") {
+        formData += '&Did_Obs=' + encodeURIComponent(Did_Obs);
+    }
     formData += '&saveDespachoAjax=true';
 
     if ($btn.prop('disabled')) { return; }
@@ -1109,46 +1525,70 @@ function inicializarGridKardex() {
     $('#gridKardex').jqGrid({
         url: window.location.href + (window.location.href.indexOf('?') > -1 ? '&' : '?') + 'listKardexAjax=true',
         mtype: 'GET',
-        datatype: 'local', // Inicia local para no cargar autom�ticamente al inicio
+        datatype: 'json',
         postData: {
-            fec_ini: function () { return $('#filtro_fec_ini_kx').val(); },
-            fec_fin: function () { return $('#filtro_fec_fin_kx').val(); },
-            Dis_Cod: function () { return $('#filtro_Dis_Cod_Kx').val(); },
-            Did_Tip: function () { return $('#filtro_Did_Tip_Kx').val(); }
+            fec_ini: function () { return $.trim($('#filtro_fec_ini_kx').val() || ''); },
+            fec_fin: function () { return $.trim($('#filtro_fec_fin_kx').val() || ''); },
+            Dis_Cod: function () { return $.trim($('#filtro_Dis_Cod_Kx').val() || ''); },
+            Did_Tip: function () { return $.trim($('#filtro_Did_Tip_Kx').val() || ''); },
+            Did_Est: function () { return $.trim($('#filtro_Did_Est_Kx').val() || ''); }
         },
         cmTemplate: { sortable: false },
-        colNames: ['Fecha', 'Hora', 'Dispensador', 'Tipo Movimiento', 'Responsable / Origen / Destino', 'Entrada', 'Salida', 'Precio Unit.', 'Total Ref.', 'Saldo', 'Usuario Reg.', 'Estado'],
+        colNames: ['Fecha', 'Hora', 'Dispensador', 'Tipo Movimiento', 'Responsable / Origen / Destino', 'Entrada', 'Salida', 'Saldo', 'Usuario Reg.'],
         colModel: [
-            { name: 'Did_Fec_Fecha', index: 'Did_Fec', width: 80, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec ? row.Did_Fec.split(' ')[0] : ''; } },
-            { name: 'Did_Fec_Hora', index: 'Did_Fec', width: 60, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec && row.Did_Fec.split(' ').length > 1 ? row.Did_Fec.split(' ')[1] : ''; } },
-            { name: 'Dis_Nom', index: 'Dis_Nom', width: 150 },
-            { name: 'Did_Tip', index: 'Did_Tip', width: 100, align: 'center', formatter: function(cellvalue) {
-                if (cellvalue == 'IN') return '<span class=\"label label-success\">IN - Compra</span>';
-                if (cellvalue == 'IC') return '<span class=\"label label-warning\">IC - Ajuste (+)</span>';
-                if (cellvalue == 'SA') return '<span class=\"label label-danger\">SA - Salida</span>';
-                if (cellvalue == 'SC') return '<span class=\"label label-warning\">SC - Ajuste (-)</span>';
+            { name: 'Did_Fec_Fecha', index: 'Did_Fec', width: 85, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec ? row.Did_Fec.split(' ')[0] : ''; } },
+            { name: 'Did_Fec_Hora', index: 'Did_Fec', width: 65, align: 'center', formatter: function(cv, opt, row) { return row.Did_Fec && row.Did_Fec.split(' ').length > 1 ? row.Did_Fec.split(' ')[1] : ''; } },
+            { name: 'Dis_Nom', index: 'Dis_Nom', width: 160 },
+            { name: 'Did_Tip', index: 'Did_Tip', width: 145, align: 'center', formatter: function(cellvalue) {
+                if (cellvalue == 'IN') return '<span class="label label-success" style="font-size:11px; padding:3px 7px;">IN - Compra</span>';
+                if (cellvalue == 'IC') return '<span class="label label-primary" style="font-size:11px; padding:3px 7px;">IC - Carga Interna</span>';
+                if (cellvalue == 'ET') return '<span class="label label-info" style="font-size:11px; padding:3px 7px; background:#17a2b8;">ET - Transf. Entrada</span>';
+                if (cellvalue == 'SA') return '<span class="label label-danger" style="font-size:11px; padding:3px 7px;">SA - Abastecimiento</span>';
+                if (cellvalue == 'SC') return '<span class="label label-warning" style="font-size:11px; padding:3px 7px;">SC - Ajuste (-)</span>';
+                if (cellvalue == 'ST') return '<span class="label" style="font-size:11px; padding:3px 7px; background:#6f42c1; color:#fff;">ST - Transf. Salida</span>';
+                if (cellvalue == 'SI') return '<span class="label label-default" style="font-size:11px; padding:3px 7px;">SI - Saldo Inicial</span>';
                 return cellvalue;
             }},
-            { name: 'responsable', index: 'responsable', width: 220 },
-            { name: 'entrada', index: 'entrada', width: 80, align: 'right', formatter: 'number' },
-            { name: 'salida', index: 'salida', width: 80, align: 'right', formatter: 'number' },
-            { name: 'Did_Pun', index: 'Did_Pun', width: 80, align: 'right', formatter: 'currency' },
-            { name: 'total_ref', index: 'total_ref', width: 90, align: 'right', formatter: 'currency' },
-            { name: 'saldo', index: 'saldo', width: 90, align: 'right', formatter: 'number', classes: 'font-bold text-primary' },
-            { name: 'usuario_nombre', index: 'usuario_nombre', width: 150 },
-            { name: 'Did_Est', index: 'Did_Est', width: 80, align: 'center', formatter: function(cellvalue) {
-                return cellvalue == 'A' ? 'Activo' : 'Anulado';
-            }}
+            { name: 'responsable', index: 'responsable', width: 230 },
+            { name: 'entrada', index: 'entrada', width: 105, align: 'center', formatter: function(cv) {
+                var val = parseFloat(cv) || 0;
+                if (val > 0) {
+                    var fmt = val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    return '<span class="label label-success" style="font-size:11.5px; padding:3px 8px; font-weight:700; background:#16a34a; border-radius:3px; display:inline-block;"><i class="fa fa-arrow-down" style="font-size:9px; margin-right:3px;"></i>' + fmt + '</span>';
+                }
+                return '<span style="color:#94a3b8; font-weight:400;">-</span>';
+            }},
+            { name: 'salida', index: 'salida', width: 105, align: 'center', formatter: function(cv) {
+                var val = parseFloat(cv) || 0;
+                if (val > 0) {
+                    var fmt = val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    return '<span class="label label-danger" style="font-size:11.5px; padding:3px 8px; font-weight:700; background:#dc2626; border-radius:3px; display:inline-block;"><i class="fa fa-arrow-up" style="font-size:9px; margin-right:3px;"></i>' + fmt + '</span>';
+                }
+                return '<span style="color:#94a3b8; font-weight:400;">-</span>';
+            }},
+            { name: 'saldo', index: 'saldo', width: 100, align: 'right', formatter: function(cv) {
+                if (cv === '-' || cv === null || cv === undefined) return '<span style="color:#94a3b8;">-</span>';
+                var val = parseFloat(cv) || 0;
+                var fmt = val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return '<strong style="color:#1E293B; font-size:12px;">' + fmt + '</strong>';
+            }, classes: 'text-primary' },
+            { name: 'usuario_nombre', index: 'usuario_nombre', width: 150 }
         ],
+        rownumbers: true,
+        rownumWidth: 40,
         pager: '#pagerKardex',
-        rowNum: 999999, // Mostrar todos
-        pgbuttons: false,
-        pgtext: null,
+        rowNum: 50,
+        rowList: [20, 50, 100, 200, 500],
         viewrecords: true,
+        loadonce: true,
         height: 400,
         autowidth: true,
         shrinkToFit: true,
+        gridComplete: function () {
+            $('#gridKardex').jqGrid('setLabel', 'rn', 'N°');
+        },
         loadComplete: function (data) {
+            $('#gridKardex').jqGrid('setLabel', 'rn', 'N°');
             if (data && data.userdata && typeof data.userdata.sum_entradas !== 'undefined') {
                 $('#lbl_Kx_In').text(parseFloat(data.userdata.sum_entradas).toFixed(2));
                 $('#lbl_Kx_Out').text(parseFloat(data.userdata.sum_salidas).toFixed(2));
@@ -1162,13 +1602,13 @@ function inicializarGridKardex() {
     });
     $("#gridKardex").jqGrid('navGrid', '#pagerKardex', { edit: false, add: false, del: false, search: false, refresh: true, view: true })
     .jqGrid('navButtonAdd', '#pagerKardex', {
-        caption: " Excel", title: "Exportar a Excel", buttonicon: "ui-icon-document",
+        caption: " Excel", title: "Exportar a Excel", buttonicon: "fa fa-file-excel-o",
         onClickButton: function () {
             $("#gridKardex").jqGrid('exportGridExcel', { nombre: 'Kardex_Combustible', hoja: 'Datos', footer: false, removeHiddens: true });
         }, position: "last"
     })
     .jqGrid('navButtonAdd', '#pagerKardex', {
-        caption: "", title: "Imprimir Kardex", buttonicon: "ui-icon-print",
+        caption: " Imprimir", title: "Imprimir Kardex", buttonicon: "fa fa-print",
         onClickButton: function () {
             imprimirKardex();
         }, position: "last"
@@ -1176,14 +1616,19 @@ function inicializarGridKardex() {
 }
 
 function consultarKardex() {
-    var Dis_Cod = $('#filtro_Dis_Cod_Kx').val();
-    if (!Dis_Cod) {
-        $.alert('Por favor, seleccione un dispensador para poder calcular el Kardex correctamente.');
-        return;
-    }
+    $('#gridKardex').jqGrid('setGridParam', { datatype: 'json', page: 1 }).trigger('reloadGrid');
+}
 
-    // Cambiar datatype a json para que jqGrid dispare el AJAX nativamente con su propio loader
-    $('#gridKardex').jqGrid('setGridParam', { datatype: 'json' }).trigger('reloadGrid');
+function limpiarFiltrosKardex() {
+    var now = new Date();
+    var firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    var lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    $('#filtro_fec_ini_kx').val(firstDay);
+    $('#filtro_fec_fin_kx').val(lastDay);
+    $('#filtro_Dis_Cod_Kx').val('');
+    $('#filtro_Did_Tip_Kx').val('');
+    $('#filtro_Did_Est_Kx').val('');
+    consultarKardex();
 }
 
 function imprimirKardex() {
@@ -1267,7 +1712,7 @@ function inicializarGridCierres() {
     });
     $("#gridCierre").jqGrid('navGrid', '#pagerCierre', { edit: false, add: false, del: false, search: false, refresh: true, view: true })
     .jqGrid('navButtonAdd', '#pagerCierre', {
-        caption: " Excel", title: "Exportar a Excel", buttonicon: "ui-icon-document",
+        caption: " Excel", title: "Exportar a Excel", buttonicon: "fa fa-file-excel-o",
         onClickButton: function () {
             $("#gridCierre").jqGrid('exportGridExcel', { nombre: 'Cierres_Combustible', hoja: 'Datos', footer: false, removeHiddens: true });
         }, position: "last"

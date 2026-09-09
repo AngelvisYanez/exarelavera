@@ -57,6 +57,15 @@ $(function () {
         }
     });
 
+    // Detectar cuando el usuario termina de escribir la serie para autocompletar maquinaria
+    $('#Maq_Ser').on('blur', function() {
+        var serie = $(this).val().trim().toUpperCase();
+        $(this).val(serie);
+        if (serie.length >= 2) {
+            buscarMaquinariaPorSerie(serie);
+        }
+    });
+
     // Eventos para la búsqueda de Proveedor
     $('#Prv_Ced').on('blur', function() {
         var cedula = $(this).val().trim();
@@ -144,16 +153,7 @@ $(function () {
 
     // Reajustar jqGrid al cambiar de tab
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-        $('.tooltip').remove();
         $(window).trigger('resize');
-    });
-
-    // Limpieza preventiva de tooltips al hacer clic en botones de acción de grids
-    $(document).on('click', '.btn-grid-edit, #gridChoferes button, #gridVehiculos button', function () {
-        $('.tooltip, .ui-tooltip').remove();
-        if ($.fn.tooltip && $(this).data('bs.tooltip')) {
-            $(this).tooltip('hide');
-        }
     });
 });
 
@@ -202,16 +202,30 @@ function buscarVehiculoPorPlaca(placa) {
             if (res.Prv_Nom) {
                 $('#Prv_Nom').val(res.Prv_Nom);
             }
-            if (res.Prs_Ced) {
-                $('#Prv_Ced').val(res.Prs_Ced);
-                $('#iconProveedorStatus').html('<i class="glyphicon glyphicon-ok" style="color: green;"></i>');
-            }
             if (res.Veh_Val !== undefined && res.Veh_Val !== null) {
                 $('#Veh_Val').val(res.Veh_Val);
             }
         }
     }, 'json').fail(function() {
         console.error("Error al buscar vehículo por placa.");
+    });
+}
+
+/**
+ * Busca si una maquinaria existe por su serie y autocompleta el formulario para edición
+ * @param {string} serie 
+ */
+function buscarMaquinariaPorSerie(serie) {
+    $.post('', { buscarMaquinariaPorSerieAjax: 1, serie: serie }, function (res) {
+        if (res && res.success) {
+            $('#Maq_Cod').val(res.Maq_Cod);
+            $('#Maq_Tip').val(res.Maq_Tip);
+            $('#Veh_Mar').val(res.Maq_Mar);
+            $('#Veh_Col').val(res.Maq_Col);
+            $('#Veh_Adi').val(res.Maq_Adi);
+        }
+    }, 'json').fail(function() {
+        console.error("Error al buscar maquinaria por serie.");
     });
 }
 
@@ -240,17 +254,13 @@ function initGrids() {
                 }
                 return v;
             }},
-            { label: 'Acciones', name: 'acciones', width: 60, align: 'center', sortable: false, search: false, formatter: function(cellval, opts, rowObject) {
-                var ced = rowObject.Prs_Ced || '';
-                return '<button type="button" class="btn btn-xs btn-primary btn-grid-edit" onclick="editarChoferDesdeGrid(\'' + ced + '\');" title="Editar"><i class="glyphicon glyphicon-pencil"></i></button>';
+            { label: 'Acciones', name: 'acciones', width: 90, align: 'center', sortable: false, formatter: function(cellvalue, options, rowObject) {
+                var choCod = rowObject.Cho_Cod || options.rowId;
+                var cedula = rowObject.Prs_Ced || '';
+                return '<button type="button" class="btn btn-xs btn-primary" onclick="editarChofer(\'' + choCod + '\', \'' + cedula + '\')" title="Editar Operario" style="margin-right:5px;"><i class="glyphicon glyphicon-pencil"></i></button>' +
+                       '<button type="button" class="btn btn-xs btn-danger" onclick="inactivarChofer(\'' + choCod + '\')" title="Inactivar Operario"><i class="glyphicon glyphicon-trash"></i></button>';
             }}
         ],
-        ondblClickRow: function(rowid) {
-            var rowData = $(this).jqGrid('getRowData', rowid);
-            if (rowData && rowData.Prs_Ced) {
-                editarChoferDesdeGrid(rowData.Prs_Ced);
-            }
-        },
         viewrecords: true,
         jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false }
     }, false, '#pagerChoferes', { refresh: true, view: false });
@@ -263,11 +273,16 @@ function initGrids() {
         rowNum: 50,
         rowList: [10, 25, 50, 100, -1],
         colModel: [
-            { label: 'Código', name: 'Veh_Cod', key: true, hidden: true, width: 50, align: 'center' },
-            { label: 'Placa', name: 'Veh_Pla', width: 100, align: 'center' },
+            { label: 'ID', name: 'Row_Id', key: true, hidden: true, width: 50, align: 'center' },
+            { label: 'Clasificación', name: 'Clasificacion', width: 95, align: 'center', formatter: function(v) {
+                if (v === 'V') return '<span class="label label-primary" style="font-size: 11px;">Vehículo</span>';
+                if (v === 'O') return '<span class="label label-warning" style="font-size: 11px;">Otro (Equipo)</span>';
+                return v || '';
+            }},
+            { label: 'Placa / Serie', name: 'Ide_Pla_Ser', width: 110, align: 'center' },
             { label: 'Marca', name: 'Veh_Mar', width: 130 },
             { label: 'Color', name: 'Veh_Col', width: 90, align: 'center' },
-            { label: 'Tipo', name: 'Veh_Tit', width: 100, align: 'center', formatter: function(v) {
+            { label: 'Tipo', name: 'Veh_Tit', width: 120, align: 'center', formatter: function(v) {
                 if (v === 'V') return 'Volqueta';
                 if (v === 'B') return 'Bus(eta)';
                 if (v === 'C') return 'Camioneta';
@@ -275,48 +290,36 @@ function initGrids() {
                 if (v === 'M') return 'Maquinaria';
                 return v || '';
             }},
-            { label: 'Valor Hora', name: 'Veh_Val', width: 85, align: 'right', formatter: 'number', formatoptions: { decimalSeparator: ".", thousandsSeparator: "", decimalPlaces: 2 } },
-            { label: 'Empresa Transporte', name: 'empresa_transporte', width: 190 },
-            { label: 'Acciones', name: 'acciones', width: 60, align: 'center', sortable: false, search: false, formatter: function(cellval, opts, rowObject) {
-                var pla = rowObject.Veh_Pla || '';
-                return '<button type="button" class="btn btn-xs btn-primary btn-grid-edit" onclick="editarVehiculoDesdeGrid(\'' + pla + '\');" title="Editar"><i class="glyphicon glyphicon-pencil"></i></button>';
+            { label: 'Valor Hora', name: 'Veh_Val', width: 90, align: 'right', formatter: 'number', formatoptions: { decimalSeparator: ".", thousandsSeparator: "", decimalPlaces: 2 } },
+            { label: 'Empresa / Proveedor', name: 'empresa_transporte', width: 190 },
+            { label: 'Acciones', name: 'acciones', width: 90, align: 'center', sortable: false, formatter: function(cellvalue, options, rowObject) {
+                var rowId = rowObject.Row_Id || options.rowId;
+                var clasif = rowObject.Clasificacion || (String(rowId).indexOf('M_') === 0 ? 'O' : 'V');
+                var identificador = rowObject.Ide_Pla_Ser || '';
+                return '<button type="button" class="btn btn-xs btn-primary" onclick="editarVehiculo(\'' + rowId + '\', \'' + clasif + '\', \'' + identificador + '\')" title="Editar" style="margin-right:5px;"><i class="glyphicon glyphicon-pencil"></i></button>' +
+                       '<button type="button" class="btn btn-xs btn-danger" onclick="inactivarVehiculo(\'' + rowId + '\', \'' + clasif + '\')" title="Inactivar"><i class="glyphicon glyphicon-trash"></i></button>';
             }}
         ],
-        ondblClickRow: function(rowid) {
-            var rowData = $(this).jqGrid('getRowData', rowid);
-            if (rowData && rowData.Veh_Pla) {
-                editarVehiculoDesdeGrid(rowData.Veh_Pla);
-            }
-        },
         viewrecords: true,
         jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false }
     }, false, '#pagerVehiculos', { refresh: true, view: false });
 }
 
 /**
- * Abre el formulario en modo edición para un Chofer
- * @param {string} cedula 
+ * Cambia el filtro de clasificación (Todos, Vehículos, Otros) en el Grid
+ * @param {string} clasif '' | 'V' | 'O'
  */
-function editarChoferDesdeGrid(cedula) {
-    if (!cedula) return;
-    $('.tooltip').remove();
-    mostrarFormulario('chofer');
-    $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Editar Operario / Chofer');
-    $('#Cho_Ced').val(cedula);
-    buscarPersonaPorCedula(cedula);
-}
-
-/**
- * Abre el formulario en modo edición para un Vehículo
- * @param {string} placa 
- */
-function editarVehiculoDesdeGrid(placa) {
-    if (!placa) return;
-    $('.tooltip').remove();
-    mostrarFormulario('vehiculo');
-    $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Editar Maquinaria / Vehículo');
-    $('#Veh_Pla').val(placa);
-    buscarVehiculoPorPlaca(placa);
+function cambiarFiltroClasificacion(clasif) {
+    $('#tipoClasificacionGrid').val(clasif);
+    $('#btnClasifTodos, #btnClasifVeh, #btnClasifMaq').removeClass('active').css({'color':'#000','background-color':'#e6e6e6'});
+    if (clasif === 'V') {
+        $('#btnClasifVeh').addClass('active').css({'color':'#e67e22','background-color':'#fff'});
+    } else if (clasif === 'O') {
+        $('#btnClasifMaq').addClass('active').css({'color':'#e67e22','background-color':'#fff'});
+    } else {
+        $('#btnClasifTodos').addClass('active').css({'color':'#e67e22','background-color':'#fff'});
+    }
+    reloadGridVehiculos();
 }
 
 /**
@@ -336,16 +339,18 @@ function reloadGridChoferes() {
 }
 
 /**
- * Recarga el Grid de Vehículos
+ * Recarga el Grid de Vehículos y Maquinarias
  */
 function reloadGridVehiculos() {
     var search = $('#searchVehiculo').val().trim();
     var op_opciones = $('#opVehiculo').val() || 'p';
+    var tipo_clasificacion = $('#tipoClasificacionGrid').val() || '';
     $('#gridVehiculos').jqGrid('setGridParam', {
         postData: {
             listVehiculosGridAjax: 1,
             search: search,
-            op_opciones: op_opciones
+            op_opciones: op_opciones,
+            tipo_clasificacion: tipo_clasificacion
         },
         page: 1
     }).trigger('reloadGrid');
@@ -355,7 +360,6 @@ function reloadGridVehiculos() {
  * Regresa al Ambiente 1 (Listado)
  */
 function mostrarListado() {
-    $('.tooltip').remove();
     // Restaurar título del panel original
     $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Gestión de Operador y Maquinaria');
     $('#divFormulario').hide();
@@ -370,153 +374,178 @@ function mostrarListado() {
  * @param {string} tipo 'chofer' o 'vehiculo'
  */
 function mostrarFormulario(tipo) {
-    $('.tooltip').remove();
     // Resetear formularios
     $('#formChofer')[0].reset();
     $('#formVehiculo')[0].reset();
     $('#Veh_Tit').val('V'); // Volqueta por defecto
+    $('#Maq_Tip').val('GENERADOR');
+    $('#tipoClasificacionForm').val('V');
+    cambiarTipoClasificacionForm('V');
 
     $('#divListado').hide();
     $('#divFormulario').fadeIn();
 
     // Mostrar dinámicamente solo el formulario del tipo seleccionado y cambiar título
     if (tipo === 'chofer') {
-        $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Registrar Nuevo Chofer');
+        $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Registrar Nuevo Operario');
         $('#divFormTabVehiculo').hide();
         $('#divFormTabChofer').show();
     } else {
-        $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Registrar Nuevo Vehículo');
+        $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Registrar Maquinaria / Vehículo');
         $('#divFormTabChofer').hide();
         $('#divFormTabVehiculo').show();
     }
 }
 
 /**
- * Guarda los datos del Chofer
+ * Alterna los campos del formulario según la clasificación elegida:
+ * 'V' = Maquinaria (Vehículos con placa y proveedor)
+ * 'O' = Otros (Equipos / Maquinarias sin placa, con serie obligatoria)
  */
-var isGuardandoChofer = false;
-function guardarChofer() {
-    if (isGuardandoChofer) return;
-    var ced = $('#Cho_Ced').val().trim();
-    var tel = $('#Cho_Tel').val().trim();
-    var nom = $('#Prs_Nom').val().trim();
-    var ape = $('#Prs_Ape').val().trim();
-    var tli = $('#Cho_Tli').val();
-    var cli = $('#Cho_Cli').val().trim();
-    var tsa = $('#Cho_Tsa').val();
-
-    if (!ced || !tel || !nom || !ape || !tli || !cli || !tsa) {
-        $.alert("Todos los campos marcados con asterisco (*) son obligatorios.");
-        return;
-    }
-
-    // Validar Cédula o RUC ecuatoriano
-    if (typeof ValidarCedula === 'function') {
-        if (!ValidarCedula(ced)) {
-            $.alert("La identificación ingresada no es válida.");
-            return;
-        }
+function cambiarTipoClasificacionForm(tipo) {
+    if (tipo === 'O') {
+        // Modo OTROS (Maquinaria / Equipo)
+        $('#legendVehiculo').text('Datos Técnicos del Equipo / Maquinaria');
+        $('#lblTipoElemento').html('Tipo Maquinaria:<span class="text-danger">*</span>');
+        $('.row-vehiculo-only').hide();
+        $('.row-otros-only').show();
+        $('#btnGuardarVehiculo').html('<span class="glyphicon glyphicon-floppy-disk"></span> Guardar Maquinaria / Equipo');
     } else {
-        if (ced.length < 10 || ced.length > 13) {
-            $.alert("La longitud del número de identificación (Cédula o RUC) no es válida.");
-            return;
-        }
+        // Modo VEHICULO (Transporte con placa)
+        $('#legendVehiculo').text('Datos Técnicos del Vehículo');
+        $('#lblTipoElemento').html('Tipo Vehículo:<span class="text-danger">*</span>');
+        $('.row-vehiculo-only').show();
+        $('.row-otros-only').hide();
+        $('#btnGuardarVehiculo').html('<span class="glyphicon glyphicon-floppy-disk"></span> Guardar Vehículo');
     }
-
-    isGuardandoChofer = true;
-    $('#loader').show();
-    $('#formChofer').find('button[onclick="guardarChofer();"]').prop('disabled', true);
-    
-    var formData = $('#formChofer').serialize();
-    formData += '&saveChoferAjax=1';
-
-    $.post('', formData, function (res) {
-        $('#loader').hide();
-        isGuardandoChofer = false;
-        $('#formChofer').find('button[onclick="guardarChofer();"]').prop('disabled', false);
-        if (res && res.success) {
-            $.alert(res.message || "Chofer registrado exitosamente.", function() {
-                mostrarListado();
-                reloadGridChoferes();
-            });
-        } else {
-            $.alert(res.message || "Error al registrar el chofer.");
-        }
-    }, 'json').fail(function() {
-        $('#loader').hide();
-        isGuardandoChofer = false;
-        $('#formChofer').find('button[onclick="guardarChofer();"]').prop('disabled', false);
-        $.alert("Error de comunicación con el servidor.");
-    });
 }
 
 /**
- * Guarda los datos del Vehículo
+ * Abre el mini modal para agregar tipo según la clasificación activa
+ */
+function abrirMiniModalTipoDinamico() {
+    var clasif = $('#tipoClasificacionForm').val();
+    if (clasif === 'O') {
+        abrirMiniModal('Maq_Tip', 'Tipo Maquinaria');
+    } else {
+        abrirMiniModal('Veh_Tit', 'Tipo Vehículo');
+    }
+}
+
+/**
+ * Guarda los datos del Vehículo o de la Maquinaria / Equipo
  */
 var isGuardandoVehiculo = false;
 function guardarVehiculo() {
     if (isGuardandoVehiculo) return;
-    var prv = $('#Prv_Cod').val();
-    var pla = $('#Veh_Pla').val().trim().toUpperCase();
+
+    var clasif = $('#tipoClasificacionForm').val();
     var mar = $('#Veh_Mar').val();
     var col = $('#Veh_Col').val();
-    var tit = $('#Veh_Tit').val();
     var val = $('#Veh_Val').val().trim();
     var adi = $('#Veh_Adi').val().trim();
 
-    // Guardar placa en mayúsculas
-    $('#Veh_Pla').val(pla);
+    if (clasif === 'O') {
+        // ==================== GUARDAR OTROS (MAQUINARIA / EQUIPO) ====================
+        var ser = $('#Maq_Ser').val().trim().toUpperCase();
+        var tip = $('#Maq_Tip').val();
+        $('#Maq_Ser').val(ser);
 
-    if (!prv || !pla || !mar || !col || !tit) {
-        $.alert("Todos los campos marcados con asterisco (*) son obligatorios, incluido el Proveedor.");
-        return;
-    }
-    
-    if (val !== '') {
-        var numVal = parseFloat(val);
-        if (isNaN(numVal) || numVal < 0) {
-            $.alert("El valor pactado por hora debe ser un número mayor o igual a 0.");
+        if (!ser || !tip || !mar || !col) {
+            $.alert("Todos los campos marcados con asterisco (*) son obligatorios (Serie, Tipo, Marca, Color).");
             return;
         }
-        var partes = val.split('.');
-        if (partes[0].length > 10 || (partes[1] && partes[1].length > 2)) {
-            $.alert("El valor pactado por hora no cumple con el formato (máximo 10 enteros y 2 decimales).");
+
+        isGuardandoVehiculo = true;
+        $('#loader').show();
+        $('#btnGuardarVehiculo').prop('disabled', true);
+
+        var dataSend = {
+            saveMaquinariaAjax: 1,
+            Maq_Ser: ser,
+            Maq_Tip: tip,
+            Maq_Mar: mar,
+            Maq_Col: col,
+            Maq_Adi: adi
+        };
+
+        $.post('', dataSend, function (res) {
+            $('#loader').hide();
+            isGuardandoVehiculo = false;
+            $('#btnGuardarVehiculo').prop('disabled', false);
+            if (res && res.success) {
+                $.alert(res.message || "Maquinaria / Equipo registrado exitosamente.", function() {
+                    mostrarListado();
+                    reloadGridVehiculos();
+                });
+            } else {
+                $.alert(res.message || "Error al registrar la maquinaria/equipo.");
+            }
+        }, 'json').fail(function() {
+            $('#loader').hide();
+            isGuardandoVehiculo = false;
+            $('#btnGuardarVehiculo').prop('disabled', false);
+            $.alert("Error de comunicación con el servidor.");
+        });
+
+    } else {
+        // ==================== GUARDAR VEHICULO (CON PLACA Y PROVEEDOR) ====================
+        var prv = $('#Prv_Cod').val();
+        var pla = $('#Veh_Pla').val().trim().toUpperCase();
+        var tit = $('#Veh_Tit').val();
+        $('#Veh_Pla').val(pla);
+
+        if (!prv || !pla || !mar || !col || !tit) {
+            $.alert("Todos los campos marcados con asterisco (*) son obligatorios, incluido el Proveedor.");
             return;
         }
-    }
 
-    // Validar placa (Formato ecuatoriano: AAA-1234 o similar, 7 u 8 caracteres)
-    var placaRegex = /^[A-Z]{3}-\d{3,4}$/i;
-    if (!placaRegex.test(pla)) {
-        $.alert("El formato de la placa no es válido (Ejemplo: ABC-1234 o ABC-123).");
-        return;
-    }
-
-    isGuardandoVehiculo = true;
-    $('#loader').show();
-    $('#formVehiculo').find('button[onclick="guardarVehiculo();"]').prop('disabled', true);
-    
-    var formData = $('#formVehiculo').serialize();
-    formData += '&saveVehiculoAjax=1';
-
-    $.post('', formData, function (res) {
-        $('#loader').hide();
-        isGuardandoVehiculo = false;
-        $('#formVehiculo').find('button[onclick="guardarVehiculo();"]').prop('disabled', false);
-        if (res && res.success) {
-            $.alert(res.message || "Vehículo registrado exitosamente.", function() {
-                mostrarListado();
-                reloadGridVehiculos();
-            });
-        } else {
-            $.alert(res.message || "Error al registrar el vehículo.");
+        if (val !== '') {
+            var numVal = parseFloat(val);
+            if (isNaN(numVal) || numVal < 0) {
+                $.alert("El valor pactado por hora debe ser un número mayor o igual a 0.");
+                return;
+            }
+            var partes = val.split('.');
+            if (partes[0].length > 10 || (partes[1] && partes[1].length > 2)) {
+                $.alert("El valor pactado por hora no cumple con el formato (máximo 10 enteros y 2 decimales).");
+                return;
+            }
         }
-    }, 'json').fail(function() {
-        $('#loader').hide();
-        isGuardandoVehiculo = false;
-        $('#formVehiculo').find('button[onclick="guardarVehiculo();"]').prop('disabled', false);
-        $.alert("Error de comunicación con el servidor.");
-    });
+
+        // Validar placa (Formato ecuatoriano: AAA-1234 o similar, 7 u 8 caracteres)
+        var placaRegex = /^[A-Z]{3}-\d{3,4}$/i;
+        if (!placaRegex.test(pla)) {
+            $.alert("El formato de la placa no es válido (Ejemplo: ABC-1234 o ABC-123).");
+            return;
+        }
+
+        isGuardandoVehiculo = true;
+        $('#loader').show();
+        $('#btnGuardarVehiculo').prop('disabled', true);
+
+        var formData = $('#formVehiculo').serialize();
+        formData += '&saveVehiculoAjax=1';
+
+        $.post('', formData, function (res) {
+            $('#loader').hide();
+            isGuardandoVehiculo = false;
+            $('#btnGuardarVehiculo').prop('disabled', false);
+            if (res && res.success) {
+                $.alert(res.message || "Vehículo registrado exitosamente.", function() {
+                    mostrarListado();
+                    reloadGridVehiculos();
+                });
+            } else {
+                $.alert(res.message || "Error al registrar el vehículo.");
+            }
+        }, 'json').fail(function() {
+            $('#loader').hide();
+            isGuardandoVehiculo = false;
+            $('#btnGuardarVehiculo').prop('disabled', false);
+            $.alert("Error de comunicación con el servidor.");
+        });
+    }
 }
 
 /**
@@ -695,4 +724,116 @@ function generarPlacaProvisional() {
     }
     // Almacenar y forzar el evento blur por si hay un autocompletar adjunto
     $('#Veh_Pla').val(placa).trigger('blur');
+}
+
+/**
+ * Carga un operario/chofer para su edición
+ * @param {string|number} choCod
+ * @param {string} cedula
+ */
+function editarChofer(choCod, cedula) {
+    mostrarFormulario('chofer');
+    $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Editar Operario');
+    if (cedula) {
+        $('#Cho_Ced').val(cedula);
+        buscarPersonaPorCedula(cedula);
+    }
+}
+
+/**
+ * Carga un vehículo o maquinaria para su edición
+ * @param {string|number} rowId
+ * @param {string} clasif 'V' o 'O'
+ * @param {string} identificador Placa o Serie
+ */
+function editarVehiculo(rowId, clasif, identificador) {
+    mostrarFormulario('vehiculo');
+    if (clasif === 'O' || String(rowId).indexOf('M_') === 0) {
+        $('#tipoClasificacionForm').val('O');
+        cambiarTipoClasificacionForm('O');
+        $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Editar Maquinaria / Equipo');
+        if (identificador) {
+            $('#Maq_Ser').val(identificador);
+            buscarMaquinariaPorSerie(identificador);
+        }
+    } else {
+        $('#tipoClasificacionForm').val('V');
+        cambiarTipoClasificacionForm('V');
+        $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Editar Vehículo');
+        if (identificador) {
+            $('#Veh_Pla').val(identificador);
+            buscarVehiculoPorPlaca(identificador);
+        }
+    }
+}
+
+/**
+ * Inactiva un chofer / operario a voluntad del usuario
+ * @param {string|number} choCod
+ */
+function inactivarChofer(choCod) {
+    if (!choCod) return;
+    
+    var msgConfirm = "¿Está seguro de que desea inactivar este operario?";
+    var ejecutarInactivar = function() {
+        $('#loader').show();
+        $.post('', { inactivarChoferAjax: 1, Cho_Cod: choCod }, function(res) {
+            $('#loader').hide();
+            if (res && res.success) {
+                $.alert(res.message || "Operario inactivado correctamente.", function() {
+                    reloadGridChoferes();
+                });
+            } else {
+                $.alert(res.message || "No se pudo inactivar el operario.");
+            }
+        }, 'json').fail(function() {
+            $('#loader').hide();
+            $.alert("Error de comunicación con el servidor.");
+        });
+    };
+
+    if (typeof $.createDialogConfirm === 'function') {
+        $.createDialogConfirm(msgConfirm, null, ejecutarInactivar);
+    } else {
+        if (confirm(msgConfirm)) {
+            ejecutarInactivar();
+        }
+    }
+}
+
+/**
+ * Inactiva un vehículo o maquinaria a voluntad del usuario
+ * @param {string|number} rowId
+ * @param {string} clasif 'V' o 'O'
+ */
+function inactivarVehiculo(rowId, clasif) {
+    if (!rowId) return;
+
+    var tipoDesc = (clasif === 'O' || String(rowId).indexOf('M_') === 0) ? 'esta maquinaria / equipo' : 'este vehículo';
+    var msgConfirm = "¿Está seguro de que desea inactivar " + tipoDesc + "?";
+
+    var ejecutarInactivar = function() {
+        $('#loader').show();
+        $.post('', { inactivarVehiculoAjax: 1, rowId: rowId, clasif: clasif }, function(res) {
+            $('#loader').hide();
+            if (res && res.success) {
+                $.alert(res.message || "Registro inactivado correctamente.", function() {
+                    reloadGridVehiculos();
+                });
+            } else {
+                $.alert(res.message || "No se pudo inactivar el registro.");
+            }
+        }, 'json').fail(function() {
+            $('#loader').hide();
+            $.alert("Error de comunicación con el servidor.");
+        });
+    };
+
+    if (typeof $.createDialogConfirm === 'function') {
+        $.createDialogConfirm(msgConfirm, null, ejecutarInactivar);
+    } else {
+        if (confirm(msgConfirm)) {
+            ejecutarInactivar();
+        }
+    }
 }

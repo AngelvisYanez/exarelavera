@@ -31,6 +31,9 @@ $obBD_con1->utf8_change_param($rs_colores);
 $rs_titulos = $obBD_con1->getArrayConsulta(19, array(), $obBD_conexion);
 $obBD_con1->utf8_change_param($rs_titulos);
 
+$rs_titulos_maq = $obBD_con1->getArrayConsulta(33, array(), $obBD_conexion);
+$obBD_con1->utf8_change_param($rs_titulos_maq);
+
 /* ==================== AJAX HANDLERS ==================== */
 
 // Buscar persona por cédula para autocompletar
@@ -111,17 +114,19 @@ if (isset($_GET['listChoferesGridAjax'])) {
     exit;
 }
 
-// Listar Vehículos para el Grid (Ambiente 1)
+// Listar Vehículos y Maquinarias para el Grid (Ambiente 1)
 if (isset($_GET['listVehiculosGridAjax'])) {
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 50;
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $op_opciones = isset($_GET['op_opciones']) ? trim($_GET['op_opciones']) : 'p';
+    $tipo_clasificacion = isset($_GET['tipo_clasificacion']) ? trim($_GET['tipo_clasificacion']) : '';
 
     $params = array(
         0 => $_SESSION['Ses_Emp_Cod'],
         'search' => $search,
-        'op_opciones' => $op_opciones
+        'op_opciones' => $op_opciones,
+        'tipo_clasificacion' => $tipo_clasificacion
     );
 
     $row_count = $obBD_con1->getRowConsulta(3, $params, $obBD_conexion);
@@ -138,6 +143,28 @@ if (isset($_GET['listVehiculosGridAjax'])) {
         $response['rows'] = array();
     }
     $obBD_con1->echoJson($response);
+    exit;
+}
+
+// Buscar Maquinaria/Equipo por Serie (AJAX)
+if (isset($_POST['buscarMaquinariaPorSerieAjax'])) {
+    $serie = isset($_POST['serie']) ? trim($_POST['serie']) : '';
+    $resp = array('success' => false);
+
+    if (!empty($serie)) {
+        $maq = $obBD_con1->getArrayConsulta(30, array($serie, $_SESSION['Ses_Emp_Cod']), $obBD_conexion);
+        if (!empty($maq)) {
+            $obBD_con1->utf8_change_param($maq);
+            $resp['success'] = true;
+            $resp['Maq_Cod'] = $maq[0]['Maq_Cod'];
+            $resp['Maq_Ser'] = $maq[0]['Maq_Ser'];
+            $resp['Maq_Tip'] = $maq[0]['Maq_Tip'];
+            $resp['Maq_Mar'] = $maq[0]['Maq_Mar'];
+            $resp['Maq_Col'] = $maq[0]['Maq_Col'];
+            $resp['Maq_Adi'] = $maq[0]['Maq_Adi'];
+        }
+    }
+    $obBD_con1->echoJson($resp);
     exit;
 }
 
@@ -278,7 +305,6 @@ if (isset($_POST['buscarVehiculoPorPlacaAjax'])) {
                 $prv = $obBD_con1->getArrayConsulta(13, array($veh[0]['Prv_Cod']), $obBD_conexion);
                 if (!empty($prv)) {
                     $resp['Prv_Nom'] = trim($prv[0]['Prv_Nom']);
-                    $resp['Prs_Ced'] = isset($prv[0]['Prs_Ced']) ? trim($prv[0]['Prs_Ced']) : '';
                 }
             }
         }
@@ -399,6 +425,88 @@ if (isset($_POST['saveVehiculoAjax'])) {
     $obBD_con1->echoJson($resp);
     exit;
 }
+
+// Guardar Maquinaria / Equipo (AJAX)
+if (isset($_POST['saveMaquinariaAjax'])) {
+    $resp = array('success' => false);
+    $obBD_con1->inicio_transaccion($obBD_conexion);
+    try {
+        $Maq_Ser = isset($_POST['Maq_Ser']) ? trim($_POST['Maq_Ser']) : '';
+        $Maq_Tip = isset($_POST['Maq_Tip']) ? trim($_POST['Maq_Tip']) : '';
+        $Maq_Mar = isset($_POST['Maq_Mar']) ? trim($_POST['Maq_Mar']) : '';
+        $Maq_Col = isset($_POST['Maq_Col']) ? trim($_POST['Maq_Col']) : '';
+        $Maq_Adi = isset($_POST['Maq_Adi']) ? trim($_POST['Maq_Adi']) : '';
+
+        if (empty($Maq_Ser) || empty($Maq_Tip) || empty($Maq_Mar) || empty($Maq_Col)) {
+            throw new Exception('Todos los campos marcados con asterisco (*) son obligatorios.');
+        }
+
+        // Buscar si ya existe maquinaria por serie
+        $maq_exist = $obBD_con1->getArrayConsulta(30, array($Maq_Ser, $Ses_Emp_Cod), $obBD_conexion);
+        if (!empty($maq_exist)) {
+            $Maq_Cod = $maq_exist[0]['Maq_Cod'];
+            $obBD_con1->operacionobBD(32, array($Maq_Cod, $Maq_Tip, $Maq_Mar, $Maq_Col, $Maq_Adi), $obBD_conexion);
+        } else {
+            $obBD_con1->operacionobBD(31, array($Ses_Emp_Cod, $Maq_Ser, $Maq_Tip, $Maq_Mar, $Maq_Col, $Maq_Adi), $obBD_conexion);
+            $Maq_Cod = $obBD_con1->insercionid($obBD_conexion);
+        }
+
+        $resp['success'] = true;
+        $resp['message'] = 'Maquinaria / Equipo registrado exitosamente.';
+    } catch (Exception $e) {
+        $obBD_con1->rollBack_nomsn($obBD_conexion);
+        $resp['message'] = $e->getMessage();
+        $obBD_con1->echoJson($resp);
+        exit;
+    }
+    $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
+    $obBD_con1->echoJson($resp);
+    exit;
+}
+
+// Inactivar Chofer / Operario (AJAX)
+if (isset($_POST['inactivarChoferAjax'])) {
+    $Cho_Cod = isset($_POST['Cho_Cod']) ? (int)$_POST['Cho_Cod'] : 0;
+    $resp = array('success' => false);
+    if ($Cho_Cod > 0) {
+        $obBD_con1->operacionobBD(34, array($Cho_Cod, $Ses_Emp_Cod), $obBD_conexion);
+        $resp['success'] = true;
+        $resp['message'] = 'Operario inactivado exitosamente.';
+    } else {
+        $resp['message'] = 'Código de operario no válido.';
+    }
+    $obBD_con1->echoJson($resp);
+    exit;
+}
+
+// Inactivar Vehículo / Maquinaria (AJAX)
+if (isset($_POST['inactivarVehiculoAjax'])) {
+    $rowId = isset($_POST['rowId']) ? trim($_POST['rowId']) : '';
+    $clasif = isset($_POST['clasif']) ? trim($_POST['clasif']) : '';
+    $resp = array('success' => false);
+
+    if ($clasif === 'O' || strpos($rowId, 'M_') === 0) {
+        $maqCod = (int)str_replace('M_', '', $rowId);
+        if ($maqCod > 0) {
+            $obBD_con1->operacionobBD(36, array($maqCod, $Ses_Emp_Cod), $obBD_conexion);
+            $resp['success'] = true;
+            $resp['message'] = 'Maquinaria / Equipo inactivado exitosamente.';
+        } else {
+            $resp['message'] = 'Código de equipo no válido.';
+        }
+    } else {
+        $vehCod = (int)str_replace('V_', '', $rowId);
+        if ($vehCod > 0) {
+            $obBD_con1->operacionobBD(35, array($vehCod, $Ses_Emp_Cod), $obBD_conexion);
+            $resp['success'] = true;
+            $resp['message'] = 'Vehículo inactivado exitosamente.';
+        } else {
+            $resp['message'] = 'Código de vehículo no válido.';
+        }
+    }
+    $obBD_con1->echoJson($resp);
+    exit;
+}
 ?>
 <!DOCTYPE HTML>
 <HTML>
@@ -464,23 +572,33 @@ if (isset($_POST['saveVehiculoAjax'])) {
                             <div id="pagerChoferes"></div>
                         </div>
 
-                        <!-- Grid Vehículos -->
+                        <!-- Grid Vehículos y Maquinarias -->
                         <div role="tabpanel" class="tab-pane" id="tabListVehiculos">
                             <div style="margin-bottom: 15px; background-color: #f9f9f9; padding: 10px; border-radius: 4px; border: 1px solid #eee;">
                                 <div class="form-inline" style="margin-bottom: 10px;">
-                                    <label class="control-label" style="font-weight: bold; width: 70px;">Filtro:</label>
+                                    <label class="control-label" style="font-weight: bold; width: 90px;">Clasificación:</label>
+                                    <input type="hidden" id="tipoClasificacionGrid" value="">
+                                    <div class="btn-group" style="vertical-align: top; margin-right: 15px;">
+                                        <button type="button" class="btn btn-default btn-sm active" onclick="cambiarFiltroClasificacion('');" id="btnClasifTodos" style="color: #e67e22; font-weight: bold; background-color: #fff;">Todos</button>
+                                        <button type="button" class="btn btn-default btn-sm" onclick="cambiarFiltroClasificacion('V');" id="btnClasifVeh" style="color: #000; font-weight: bold; background-color: #e6e6e6;">Vehículos</button>
+                                        <button type="button" class="btn btn-default btn-sm" onclick="cambiarFiltroClasificacion('O');" id="btnClasifMaq" style="color: #000; font-weight: bold; background-color: #e6e6e6;">Otros (Equipos)</button>
+                                    </div>
+
+                                    <label class="control-label" style="font-weight: bold; width: 60px;">Filtro:</label>
                                     <input type="hidden" id="opVehiculo" value="p">
                                     <div class="btn-group" style="vertical-align: top;">
-                                        <button type="button" class="btn btn-default btn-sm active" onclick="document.getElementById('opVehiculo').value='p'; $(this).addClass('active').css({'color':'#e67e22','background-color':'#fff'}).siblings().removeClass('active').css({'color':'#000','background-color':'#e6e6e6'});" style="color: #e67e22; font-weight: bold; background-color: #fff;">Placa</button>
+                                        <button type="button" class="btn btn-default btn-sm active" id="btnFiltroPlaca" onclick="document.getElementById('opVehiculo').value='p'; $(this).addClass('active').css({'color':'#e67e22','background-color':'#fff'}).siblings().removeClass('active').css({'color':'#000','background-color':'#e6e6e6'}); $('#searchVehiculo').attr('placeholder', 'Buscar por placa o serie...');" style="color: #e67e22; font-weight: bold; background-color: #fff;">Placa / Serie</button>
+                                        <button type="button" class="btn btn-default btn-sm" id="btnFiltroMarca" onclick="document.getElementById('opVehiculo').value='m'; $(this).addClass('active').css({'color':'#e67e22','background-color':'#fff'}).siblings().removeClass('active').css({'color':'#000','background-color':'#e6e6e6'}); $('#searchVehiculo').attr('placeholder', 'Buscar por marca...');" style="color: #000; font-weight: bold; background-color: #e6e6e6;">Marca</button>
                                     </div>
+
                                     <!-- Botón que lleva al Ambiente 2 de registro -->
                                     <button type="button" class="btn btn-sm btn-exa-success" style="float: right;" onclick="mostrarFormulario('vehiculo');">
-                                        <i class="glyphicon glyphicon-plus"></i> Registrar Nuevo Vehículo
+                                        <i class="glyphicon glyphicon-plus"></i> Registrar Maquinaria / Vehículo
                                     </button>
                                 </div>
                                 <div class="form-inline">
-                                    <label class="control-label" style="font-weight: bold; width: 70px;">Buscar:</label>
-                                    <input type="text" id="searchVehiculo" class="form-control input-sm" placeholder="Buscar por placa..." style="width: 250px;">
+                                    <label class="control-label" style="font-weight: bold; width: 90px;">Buscar:</label>
+                                    <input type="text" id="searchVehiculo" class="form-control input-sm" placeholder="Buscar por placa o serie..." style="width: 250px;">
                                     <button type="button" class="btn btn-sm btn-primary" id="btnBuscarVehiculo" onclick="reloadGridVehiculos();"><i class="fa fa-search"></i> Buscar</button>
                                 </div>
                             </div>
@@ -601,12 +719,29 @@ if (isset($_POST['saveVehiculoAjax'])) {
                         </form>
                     </div>
 
-                    <!-- Formulario Vehículo Individual -->
+                    <!-- Formulario Vehículo / Maquinaria Individual -->
                     <div id="divFormTabVehiculo" style="display:none;">
                         <form id="formVehiculo" class="form-horizontal" onsubmit="return false;">
                             <fieldset class="exa-fieldset">
-                                <legend>Datos Técnicos del Vehículo</legend>
+                                <legend id="legendVehiculo">Datos Técnicos del Vehículo</legend>
+                                
+                                <!-- Selector de Clasificación (Maquinaria Vehicular vs Otros) -->
                                 <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label label-sm">Clasificación:<span class="text-danger">*</span></label>
+                                            <div class="col-sm-6">
+                                                <select id="tipoClasificacionForm" name="tipoClasificacionForm" class="form-control" onchange="cambiarTipoClasificacionForm(this.value);" style="font-weight: bold; background-color: #fcfcfc;">
+                                                    <option value="V">Maquinaria (Vehículos)</option>
+                                                    <option value="O">Otros (Equipos)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Proveedor (Solo para Vehículos) -->
+                                <div class="row row-vehiculo-only">
                                     <div class="col-sm-12">
                                         <div class="form-group">
                                             <label class="col-sm-4 control-label label-sm">Proveedor (Cédula/RUC):<span class="text-danger">*</span></label>
@@ -623,7 +758,9 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row">
+
+                                <!-- Placa (Solo para Vehículos) -->
+                                <div class="row row-vehiculo-only">
                                     <div class="col-sm-12">
                                         <div class="form-group">
                                             <label class="col-sm-4 control-label label-sm">Placa (Ej: ABC-1234):<span class="text-danger">*</span></label>
@@ -638,6 +775,21 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Serie (Solo para Otros / Equipos) -->
+                                <div class="row row-otros-only" style="display:none;">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label label-sm">Serie:<span class="text-danger">*</span></label>
+                                            <div class="col-sm-6">
+                                                <input id="Maq_Ser" name="Maq_Ser" type="text" class="form-control" placeholder="Número de Serie / Código (Obligatorio)" maxlength="50" />
+                                                <input id="Maq_Cod" name="Maq_Cod" type="hidden" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Marca (Común) -->
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div class="form-group">
@@ -658,6 +810,8 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Color (Común) -->
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div class="form-group">
@@ -679,13 +833,15 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                     </div>
                                 </div>
 
+                                <!-- Tipo Vehículo / Tipo Maquinaria -->
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div class="form-group">
-                                            <label class="col-sm-4 control-label label-sm">Tipo Vehículo:<span class="text-danger">*</span></label>
+                                            <label id="lblTipoElemento" class="col-sm-4 control-label label-sm">Tipo Vehículo:<span class="text-danger">*</span></label>
                                             <div class="col-sm-6">
                                                 <div class="input-group">
-                                                    <select id="Veh_Tit" name="Veh_Tit" class="form-control">
+                                                    <!-- Select para Tipo Vehículo -->
+                                                    <select id="Veh_Tit" name="Veh_Tit" class="form-control row-vehiculo-only">
                                                         <option value="">Seleccione...</option>
                                                         <option value="B">BUS(ETA)</option>
                                                         <option value="C">CAMIONETA</option>
@@ -705,14 +861,44 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                                         }
                                                         ?>
                                                     </select>
+
+                                                    <!-- Select para Tipo Maquinaria / Equipo (Otros) -->
+                                                    <select id="Maq_Tip" name="Maq_Tip" class="form-control row-otros-only" style="display:none;">
+                                                        <option value="">Seleccione...</option>
+                                                        <option value="GENERADOR">GENERADOR</option>
+                                                        <option value="BOMBA">BOMBA</option>
+                                                        <option value="COMPRESOR">COMPRESOR</option>
+                                                        <option value="EXCAVADORA">EXCAVADORA</option>
+                                                        <option value="RETROEXCAVADORA">RETROEXCAVADORA</option>
+                                                        <option value="CARGADOR FRONTAL">CARGADOR FRONTAL</option>
+                                                        <option value="TRITURADORA">TRITURADORA</option>
+                                                        <option value="RODILLO">RODILLO</option>
+                                                        <option value="TORRE DE ILUMINACION">TORRE DE ILUMINACIÓN</option>
+                                                        <?php
+                                                        $tipos_maq_fijos = array('GENERADOR', 'BOMBA', 'COMPRESOR', 'EXCAVADORA', 'RETROEXCAVADORA', 'CARGADOR FRONTAL', 'TRITURADORA', 'RODILLO', 'TORRE DE ILUMINACION');
+                                                        if (isset($rs_titulos_maq) && is_array($rs_titulos_maq)) {
+                                                            foreach ($rs_titulos_maq as $tm) {
+                                                                $t_val = strtoupper(trim($tm['Veh_Tit']));
+                                                                if (!in_array($t_val, $tipos_maq_fijos) && $t_val !== '') {
+                                                        ?>
+                                                                    <option value="<?php echo htmlspecialchars($t_val); ?>"><?php echo htmlspecialchars($t_val); ?></option>
+                                                        <?php
+                                                                }
+                                                            }
+                                                        }
+                                                        ?>
+                                                    </select>
+
                                                     <span class="input-group-btn">
-                                                        <button class="btn btn-default" type="button" onclick="abrirMiniModal('Veh_Tit', 'Tipo Vehículo');"><i class="fa fa-plus"></i></button>
+                                                        <button class="btn btn-default" type="button" onclick="abrirMiniModalTipoDinamico();"><i class="fa fa-plus"></i></button>
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Detalle Adicional -->
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div class="form-group">
@@ -723,7 +909,9 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row">
+
+                                <!-- Valor pactado por hora (Solo para Vehículos) -->
+                                <div class="row row-vehiculo-only">
                                     <div class="col-sm-12">
                                         <div class="form-group">
                                             <label class="col-sm-4 control-label label-sm">Valor pactado por hora:</label>
@@ -735,7 +923,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                 </div>
                             </fieldset>
                             <div class="button-center">
-                                <button type="button" class="btn btn-custom btn-exa-primary" onclick="guardarVehiculo();">
+                                <button type="button" class="btn btn-custom btn-exa-primary" id="btnGuardarVehiculo" onclick="guardarVehiculo();">
                                     <span class="glyphicon glyphicon-floppy-disk"></span> Guardar Vehículo
                                 </button>
                                 <button type="button" class="btn btn-custom btn-default" onclick="mostrarListado();">
@@ -893,7 +1081,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=12"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=9"></script>
 </BODY>
 
 </HTML>

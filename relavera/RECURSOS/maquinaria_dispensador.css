@@ -276,3 +276,23 @@ tr[aria-selected="true"] td {
     width: 33.33% !important;
     text-align: right !important;
 }
+
+/* Iconos para pager de jqGrid (Excel e Imprimir) */
+.ui-jqgrid .ui-jqgrid-pager .ui-pg-div .fa {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+    vertical-align: middle !important;
+    margin-right: 2px !important;
+}
+.ui-icon.fa, .ui-icon.fa-print, .ui-icon.fa-file-excel-o {
+    text-indent: 0 !important;
+    background-image: none !important;
+}
+.ui-icon.ui-icon-print:before, .glyphicon.ui-icon-print:before {
+    content: "\e045";
+    font-family: 'Glyphicons Halflings';
+}
+.ui-icon.ui-icon-print {
+    text-indent: 0 !important;
+    background-image: none !important;
+}

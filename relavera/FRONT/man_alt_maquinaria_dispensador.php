@@ -280,6 +280,7 @@ if (isset($_POST['saveAjax'])) {
     try {
         $Dis_Cod = isset($_POST['Dis_Cod']) ? (int)$_POST['Dis_Cod'] : 0;
         $Dis_Nom = isset($_POST['Dis_Nom']) ? trim($_POST['Dis_Nom']) : '';
+        $Dis_Are = isset($_POST['Dis_Are']) ? trim($_POST['Dis_Are']) : '';
         $Dis_Cap = isset($_POST['Dis_Cap']) ? (float)$_POST['Dis_Cap'] : 0;
         $Dis_Tip = isset($_POST['Dis_Tip']) ? trim($_POST['Dis_Tip']) : '';
         $Dis_Uni = isset($_POST['Dis_Uni']) ? trim($_POST['Dis_Uni']) : '';
@@ -289,11 +290,11 @@ if (isset($_POST['saveAjax'])) {
         }
 
         if ($Dis_Cod == 0) {
-            $params = array($_SESSION['Ses_Emp_Cod'], $_SESSION['Ses_Usu_Cod'], $Dis_Nom, $Dis_Cap, $Dis_Tip, $Dis_Uni);
+            $params = array($_SESSION['Ses_Emp_Cod'], $_SESSION['Ses_Usu_Cod'], $Dis_Nom, $Dis_Cap, $Dis_Tip, $Dis_Uni, $Dis_Are);
             $obBD_con1->operacionobBD(2, $params, $obBD_conexion);
             if ($obBD_con1->Error != 0) throw new Exception("Error BD: " . $obBD_con1->getMsgError());
         } else {
-            $params = array($Dis_Cod, $Dis_Nom, $Dis_Cap, $Dis_Tip, $Dis_Uni);
+            $params = array($Dis_Cod, $Dis_Nom, $Dis_Cap, $Dis_Tip, $Dis_Uni, $Dis_Are);
             $obBD_con1->operacionobBD(3, $params, $obBD_conexion);
             if ($obBD_con1->Error != 0) throw new Exception("Error BD: " . $obBD_con1->getMsgError());
         }
@@ -341,12 +342,18 @@ if (isset($_GET['listIngresosGridAjax'])) {
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 50;
 
+    $did_tip = isset($_GET['Did_Tip']) ? trim(strtoupper($_GET['Did_Tip'])) : '';
+    if (!in_array($did_tip, array('IN', 'IC', 'ET'))) {
+        $did_tip = '';
+    }
+
     $params = array(
         0 => $_SESSION['Ses_Emp_Cod'],
         'fec_ini' => isset($_GET['fec_ini']) ? $_GET['fec_ini'] : '',
         'fec_fin' => isset($_GET['fec_fin']) ? $_GET['fec_fin'] : '',
-        'Dis_Cod' => isset($_GET['Dis_Cod']) ? $_GET['Dis_Cod'] : '',
-        'Prv_Cod' => isset($_GET['Prv_Cod']) ? $_GET['Prv_Cod'] : ''
+        'Dis_Cod' => isset($_GET['Dis_Cod']) ? (int)$_GET['Dis_Cod'] : '',
+        'Prv_Cod' => isset($_GET['Prv_Cod']) ? (int)$_GET['Prv_Cod'] : '',
+        'Did_Tip' => $did_tip
     );
 
     $row_count = $obBD_con1->getRowConsulta(6, $params, $obBD_conexion);
@@ -387,8 +394,11 @@ if (isset($_POST['saveIngresoAjax'])) {
     try {
         $Dis_Cod = isset($_POST['Dis_Cod']) ? (int)$_POST['Dis_Cod'] : 0;
         $Did_Tip = isset($_POST['Did_Tip']) ? trim($_POST['Did_Tip']) : '';
+        $Tip_Ingreso = isset($_POST['Tip_Ingreso']) ? trim($_POST['Tip_Ingreso']) : 'V';
         $Prv_Cod = isset($_POST['Prv_Cod']) ? (int)$_POST['Prv_Cod'] : 0;
         $Veh_Cod = isset($_POST['Veh_Cod']) ? (int)$_POST['Veh_Cod'] : 0;
+        $Did_Otr = isset($_POST['Did_Otr']) ? trim($_POST['Did_Otr']) : '';
+        $Did_Obs = isset($_POST['Did_Obs']) ? trim($_POST['Did_Obs']) : '';
         $Did_Fec = isset($_POST['Did_Fec']) ? trim($_POST['Did_Fec']) : '';
         $Did_Fec = str_replace('T', ' ', $Did_Fec); // Asegurar formato YYYY-MM-DD HH:MM para MySQL
         $Did_Can = isset($_POST['Did_Can']) ? (float)$_POST['Did_Can'] : 0;
@@ -396,10 +406,25 @@ if (isset($_POST['saveIngresoAjax'])) {
 
         if (empty($Dis_Cod) || empty($Did_Tip) || empty($Did_Fec)) throw new Exception('Faltan campos obligatorios.');
         if ($Did_Tip == 'IN' && empty($Prv_Cod)) throw new Exception('El proveedor es obligatorio para compras (IN).');
-        if ($Did_Tip == 'IC' && empty($Veh_Cod)) throw new Exception('El veh&iacute;culo es obligatorio para cargas internas (IC).');
+        if ($Did_Tip == 'IC') {
+            if ($Tip_Ingreso == 'V' && empty($Veh_Cod)) {
+                throw new Exception('El veh&iacute;culo es obligatorio para cargas internas (IC).');
+            }
+            if ($Tip_Ingreso == 'O' && empty($Did_Otr)) {
+                throw new Exception('Debe ingresar o seleccionar el nombre de la maquinaria/equipo en Otros.');
+            }
+            if ($Tip_Ingreso == 'O') {
+                $Veh_Cod = 0;
+            } else {
+                $Did_Otr = '';
+            }
+        }
         if ($Did_Tip != 'IN' && $Did_Tip != 'IC') throw new Exception('Tipo de ingreso no v&aacute;lido.');
 
-        if ($Did_Tip == 'IN') $Veh_Cod = 0;
+        if ($Did_Tip == 'IN') {
+            $Veh_Cod = 0;
+            $Did_Otr = '';
+        }
         if ($Did_Tip == 'IC') $Prv_Cod = 0;
         if ($Did_Can <= 0) throw new Exception('La cantidad debe ser mayor a cero.');
         if ($Did_Pun < 0) throw new Exception('El precio unitario no puede ser negativo.');
@@ -417,8 +442,8 @@ if (isset($_POST['saveIngresoAjax'])) {
             throw new Exception("La cantidad ingresada ($Did_Can) supera la capacidad disponible del dispensador ($capacidad_disponible).");
         }
 
-        // Insertar Ingreso
-        $params_ins = array($Dis_Cod, $Prv_Cod, $_SESSION['Ses_Usu_Cod'], $Did_Can, $Did_Fec, $Did_Pun, $Did_Tip, $Veh_Cod);
+        // Insertar Ingreso (Dis_Cod, Prv_Cod, Usu_Cod, Did_Can, Did_Fec, Did_Pun, Did_Tip, Veh_Cod, Did_Obs, Did_Otr)
+        $params_ins = array($Dis_Cod, $Prv_Cod, $_SESSION['Ses_Usu_Cod'], $Did_Can, $Did_Fec, $Did_Pun, $Did_Tip, $Veh_Cod, $Did_Obs, $Did_Otr);
         $obBD_con1->operacionobBD(10, $params_ins, $obBD_conexion);
         if ($obBD_con1->Error != 0) throw new Exception("Error BD: " . $obBD_con1->getMsgError());
 
@@ -458,6 +483,70 @@ if (isset($_POST['changeEstadoIngresoAjax'])) {
     exit;
 }
 
+if (isset($_POST['acceptTransferenciaAjax'])) {
+    $resp = array('success' => false);
+    $obBD_con1->inicio_transaccion($obBD_conexion);
+    try {
+        $Did_Cod = isset($_POST['Did_Cod']) ? (int)$_POST['Did_Cod'] : 0;
+        if (empty($Did_Cod)) throw new Exception('Registro no v&aacute;lido.');
+
+        // Validar que exista el registro y que el dispensador destino tenga capacidad
+        $det = $obBD_con1->getRowConsultaSql("SELECT * FROM maquinaria_dispensador_det WHERE Did_Cod = $Did_Cod AND Did_Tip = 'ET' AND Did_Est = 'P'", $obBD_conexion);
+        if (!$det) throw new Exception('La transferencia ya fue procesada o no existe.');
+
+        $params_info = array(0 => $_SESSION['Ses_Emp_Cod'], 1 => $det['Dis_Cod']);
+        $info = $obBD_con1->getRowConsulta(9, $params_info, $obBD_conexion);
+        if (!$info) throw new Exception('Dispensador de destino no v&aacute;lido.');
+
+        $capacidad = (float)$info['Dis_Cap'];
+        $existencia = (float)$info['existencia'];
+        $cap_dispo = $capacidad - $existencia;
+
+        if ((float)$det['Did_Can'] > $cap_dispo) {
+            throw new Exception("La cantidad transferida (" . $det['Did_Can'] . ") supera el espacio disponible actual (" . $cap_dispo . ").");
+        }
+
+        // Aceptar transferencia (Case 30: Did_Est = 'A', Did_Fec = NOW(), Usu_Cod)
+        $obBD_con1->operacionobBD(30, array($Did_Cod, $_SESSION['Ses_Usu_Cod']), $obBD_conexion);
+        if ($obBD_con1->Error != 0) throw new Exception("Error al aceptar transferencia: " . $obBD_con1->getMsgError());
+
+        $resp['success'] = true;
+        $resp['message'] = 'Transferencia aceptada exitosamente. El combustible ya se encuentra sumado al dispensador.';
+    } catch (Exception $e) {
+        $obBD_con1->rollBack_nomsn($obBD_conexion);
+        $resp['message'] = $e->getMessage();
+        $obBD_con1->echoJson($resp);
+        exit;
+    }
+    $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
+    $obBD_con1->echoJson($resp);
+    exit;
+}
+
+if (isset($_POST['rechazarTransferenciaAjax'])) {
+    $resp = array('success' => false);
+    $obBD_con1->inicio_transaccion($obBD_conexion);
+    try {
+        $Did_Cod = isset($_POST['Did_Cod']) ? (int)$_POST['Did_Cod'] : 0;
+        if (empty($Did_Cod)) throw new Exception('Registro no v&aacute;lido.');
+
+        // Rechazar transferencia (Case 31: anular ET y ST para retornar combustible al origen)
+        $obBD_con1->operacionobBD(31, array($Did_Cod), $obBD_conexion);
+        if ($obBD_con1->Error != 0) throw new Exception("Error al rechazar transferencia: " . $obBD_con1->getMsgError());
+
+        $resp['success'] = true;
+        $resp['message'] = 'Transferencia rechazada. El combustible ha retornado a la existencia del dispensador de origen.';
+    } catch (Exception $e) {
+        $obBD_con1->rollBack_nomsn($obBD_conexion);
+        $resp['message'] = $e->getMessage();
+        $obBD_con1->echoJson($resp);
+        exit;
+    }
+    $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
+    $obBD_con1->echoJson($resp);
+    exit;
+}
+
 // ======================================================================
 // MANEJO DE PETICIONES AJAX - FASE 3 (DESPACHOS)
 // ======================================================================
@@ -465,13 +554,18 @@ if (isset($_GET['listDespachosGridAjax'])) {
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 50;
 
+    $did_tip = isset($_GET['Did_Tip']) ? trim(strtoupper($_GET['Did_Tip'])) : '';
+    if (!in_array($did_tip, array('SA', 'SC', 'ST'))) {
+        $did_tip = '';
+    }
+
     $params = array(
         0 => $_SESSION['Ses_Emp_Cod'],
         'fec_ini' => isset($_GET['fec_ini']) ? $_GET['fec_ini'] : '',
         'fec_fin' => isset($_GET['fec_fin']) ? $_GET['fec_fin'] : '',
-        'Dis_Cod' => isset($_GET['Dis_Cod']) ? $_GET['Dis_Cod'] : '',
-        'Veh_Cod' => isset($_GET['Veh_Cod']) ? $_GET['Veh_Cod'] : '',
-        'Did_Tip' => isset($_GET['Did_Tip']) ? $_GET['Did_Tip'] : ''
+        'Dis_Cod' => isset($_GET['Dis_Cod']) ? (int)$_GET['Dis_Cod'] : '',
+        'Veh_Cod' => isset($_GET['Veh_Cod']) ? (int)$_GET['Veh_Cod'] : '',
+        'Did_Tip' => $did_tip
     );
 
     $row_count = $obBD_con1->getRowConsulta(13, $params, $obBD_conexion);
@@ -493,48 +587,120 @@ if (isset($_GET['listDespachosGridAjax'])) {
     exit;
 }
 
+if (isset($_GET['getOtrosMaquinariasAjax'])) {
+    $emp_cod = (int)$_SESSION['Ses_Emp_Cod'];
+    $lista = $obBD_con1->getArrayConsulta(33, array(0 => $emp_cod), $obBD_conexion) ?: array();
+    $obBD_con1->utf8_change_param($lista);
+    $obBD_con1->echoJson(array('success' => true, 'rows' => $lista));
+    exit;
+}
+
 if (isset($_POST['saveDespachoAjax'])) {
     $resp = array('success' => false);
     $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
         $Dis_Cod = isset($_POST['Dis_Cod']) ? (int)$_POST['Dis_Cod'] : 0;
         $Did_Tip = isset($_POST['Did_Tip']) ? trim($_POST['Did_Tip']) : '';
+        $Tip_Despacho = isset($_POST['Tip_Despacho']) ? trim($_POST['Tip_Despacho']) : 'V';
         $Veh_Cod = isset($_POST['Veh_Cod']) ? (int)$_POST['Veh_Cod'] : 0;
+        $Did_Otr = isset($_POST['Did_Otr']) ? trim($_POST['Did_Otr']) : '';
         $Did_Obs = isset($_POST['Did_Obs']) ? trim($_POST['Did_Obs']) : '';
         $Did_Fec = isset($_POST['Did_Fec']) ? trim($_POST['Did_Fec']) : '';
         $Did_Fec = str_replace('T', ' ', $Did_Fec);
         $Did_Can = isset($_POST['Did_Can']) ? (float)$_POST['Did_Can'] : 0;
         $Did_Pun = isset($_POST['Did_Pun']) ? (float)$_POST['Did_Pun'] : 0;
+        $Dis_Cod_Des = isset($_POST['Dis_Cod_Des']) ? (int)$_POST['Dis_Cod_Des'] : 0;
 
         if (empty($Dis_Cod) || empty($Did_Tip) || empty($Did_Fec)) throw new Exception('Faltan campos obligatorios.');
-        if ($Did_Tip == 'SA' && empty($Veh_Cod)) throw new Exception('La maquinaria/veh&iacute;culo es obligatorio para abastecimiento (SA).');
-        if ($Did_Tip == 'SC' && empty($Did_Obs)) throw new Exception('Debe ingresar el motivo del ajuste negativo (SC).');
-        if ($Did_Tip != 'SA' && $Did_Tip != 'SC') throw new Exception('Tipo de salida no v&aacute;lido.');
-
+        if ($Did_Tip == 'SA') {
+            if ($Tip_Despacho == 'V' && empty($Veh_Cod)) {
+                throw new Exception('Debe seleccionar la maquinaria/veh&iacute;culo para abastecimiento (SA).');
+            }
+            if ($Tip_Despacho == 'O' && empty($Did_Otr)) {
+                throw new Exception('Debe ingresar o seleccionar el nombre de la maquinaria/equipo en Otros.');
+            }
+            if ($Tip_Despacho == 'O') {
+                $Veh_Cod = 0;
+            } else {
+                $Did_Otr = '';
+            }
+        }
         if ($Did_Tip == 'SC') {
+            if (empty($Did_Obs)) throw new Exception('Debe ingresar el motivo del ajuste negativo (SC).');
             $Veh_Cod = 0;
+            $Did_Otr = '';
             $Did_Pun = 0;
         }
+        if ($Did_Tip == 'ST') {
+            if (empty($Dis_Cod_Des)) throw new Exception('Debe seleccionar el dispensador de destino para la transferencia.');
+            if ($Dis_Cod == $Dis_Cod_Des) throw new Exception('El dispensador de origen y destino no pueden ser el mismo.');
+            $Veh_Cod = 0;
+            $Did_Otr = '';
+            $Did_Pun = 0;
+        }
+        if ($Did_Tip != 'SA' && $Did_Tip != 'SC' && $Did_Tip != 'ST') throw new Exception('Tipo de salida no v&aacute;lido.');
         if ($Did_Can <= 0) throw new Exception('La cantidad debe ser mayor a cero.');
 
-        // Validar existencia
+        // Validar existencia de origen
         $params_info = array(0 => $_SESSION['Ses_Emp_Cod'], 1 => $Dis_Cod);
         $info = $obBD_con1->getRowConsulta(9, $params_info, $obBD_conexion);
-        if (!$info) throw new Exception('Dispensador no v&aacute;lido.');
+        if (!$info) throw new Exception('Dispensador de origen no v&aacute;lido.');
 
         $existencia = (float)$info['existencia'];
-
         if ($Did_Can > $existencia) {
             throw new Exception("No existe suficiente combustible disponible para realizar la salida. (Existencia actual: $existencia)");
         }
 
-        // Insertar Salida (Dis_Cod, Veh_Cod, Usu_Cod, Did_Can, Did_Fec, Did_Pun, Did_Tip, Did_Obs)
-        $params_ins = array($Dis_Cod, $Veh_Cod, $_SESSION['Ses_Usu_Cod'], $Did_Can, $Did_Fec, $Did_Pun, $Did_Tip, $Did_Obs);
-        $obBD_con1->operacionobBD(14, $params_ins, $obBD_conexion);
-        if ($obBD_con1->Error != 0) throw new Exception("Error BD: " . $obBD_con1->getMsgError());
+        if ($Did_Tip == 'ST') {
+            // Validar dispensador de destino
+            $params_dest = array(0 => $_SESSION['Ses_Emp_Cod'], 1 => $Dis_Cod_Des);
+            $info_dest = $obBD_con1->getRowConsulta(9, $params_dest, $obBD_conexion);
+            if (!$info_dest) throw new Exception('Dispensador de destino no v&aacute;lido.');
 
-        $resp['success'] = true;
-        $resp['message'] = 'Salida registrada exitosamente.';
+            if ($info['Dis_Tip'] != $info_dest['Dis_Tip']) {
+                throw new Exception('Los dispensadores deben tener el mismo tipo de combustible para transferir.');
+            }
+
+            $cap_dest = (float)$info_dest['Dis_Cap'];
+            $ext_dest = (float)$info_dest['existencia'];
+            $dispo_dest = $cap_dest - $ext_dest;
+
+            if ($Did_Can > $dispo_dest) {
+                throw new Exception("La cantidad ($Did_Can) supera el espacio disponible del dispensador de destino ($dispo_dest).");
+            }
+
+            $obs_origen = !empty($Did_Obs) ? $Did_Obs : ("Transferencia a: " . $info_dest['Dis_Nom'] . (!empty($info_dest['Dis_Are']) ? " (" . $info_dest['Dis_Are'] . ")" : ""));
+            $obs_destino = !empty($Did_Obs) ? $Did_Obs : ("Transferencia desde: " . $info['Dis_Nom'] . (!empty($info['Dis_Are']) ? " (" . $info['Dis_Are'] . ")" : ""));
+
+            // 1. Insertar Salida por Transferencia (ST) en origen
+            // Par_Sql: 0=>Dis_Cod, 1=>Veh_Cod, 2=>Usu_Cod, 3=>Did_Can, 4=>Did_Fec, 5=>Did_Pun, 6=>Did_Tip, 7=>Did_Obs, 8=>Did_Otr, 9=>Dis_Des, 10=>Did_Rel
+            $params_st = array($Dis_Cod, 0, $_SESSION['Ses_Usu_Cod'], $Did_Can, $Did_Fec, 0, 'ST', $obs_origen, '', $Dis_Cod_Des, 0);
+            $obBD_con1->operacionobBD(14, $params_st, $obBD_conexion);
+            if ($obBD_con1->Error != 0) throw new Exception("Error al registrar salida por transferencia: " . $obBD_con1->getMsgError());
+            $id_st = $obBD_con1->insercionid($obBD_conexion);
+
+            // 2. Insertar Entrada por Transferencia (ET) en destino con estado 'P' (Pendiente de recepción física)
+            // Par_Sql: 0=>Dis_Cod, 1=>Prv_Cod, 2=>Usu_Cod, 3=>Did_Can, 4=>Did_Fec, 5=>Did_Pun, 6=>Did_Tip, 7=>Veh_Cod, 8=>Did_Obs, 9=>Did_Otr, 10=>Dis_Des, 11=>Did_Rel, 12=>Did_Est
+            $params_et = array($Dis_Cod_Des, 0, $_SESSION['Ses_Usu_Cod'], $Did_Can, $Did_Fec, 0, 'ET', 0, $obs_destino, '', $Dis_Cod, $id_st, 'P');
+            $obBD_con1->operacionobBD(10, $params_et, $obBD_conexion);
+            if ($obBD_con1->Error != 0) throw new Exception("Error al registrar entrada por transferencia: " . $obBD_con1->getMsgError());
+            $id_et = $obBD_con1->insercionid($obBD_conexion);
+
+            // 3. Vincular el ID de ET en el registro ST
+            $obBD_con1->operacionobBD(29, array($id_st, $id_et), $obBD_conexion);
+            if ($obBD_con1->Error != 0) throw new Exception("Error al vincular transferencia: " . $obBD_con1->getMsgError());
+
+            $resp['success'] = true;
+            $resp['message'] = 'Transferencia enviada. El dispensador de destino deber&aacute; aceptarla en Cargas para sumar el combustible.';
+        } else {
+            // Insertar Salida SA o SC (Dis_Cod, Veh_Cod, Usu_Cod, Did_Can, Did_Fec, Did_Pun, Did_Tip, Did_Obs, Did_Otr)
+            $params_ins = array($Dis_Cod, $Veh_Cod, $_SESSION['Ses_Usu_Cod'], $Did_Can, $Did_Fec, $Did_Pun, $Did_Tip, $Did_Obs, $Did_Otr);
+            $obBD_con1->operacionobBD(14, $params_ins, $obBD_conexion);
+            if ($obBD_con1->Error != 0) throw new Exception("Error BD: " . $obBD_con1->getMsgError());
+
+            $resp['success'] = true;
+            $resp['message'] = 'Salida registrada exitosamente.';
+        }
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
         $resp['message'] = $e->getMessage();
@@ -681,26 +847,66 @@ if (isset($_POST['changeEstadoAjusteAjax'])) {
 if (isset($_GET['listKardexAjax'])) {
     $resp = array('success' => false);
     try {
+        $did_tip = isset($_GET['Did_Tip']) ? trim(strtoupper($_GET['Did_Tip'])) : '';
+        if (!in_array($did_tip, array('IN', 'IC', 'ET', 'SA', 'SC', 'ST', 'SI'))) {
+            $did_tip = '';
+        }
+
+        $did_est = isset($_GET['Did_Est']) ? trim(strtoupper($_GET['Did_Est'])) : '';
+        if (!in_array($did_est, array('A', 'P', 'I', 'TODOS'))) {
+            $did_est = '';
+        }
+
         $params = array(
             0 => $_SESSION['Ses_Emp_Cod'],
             'fec_ini' => isset($_GET['fec_ini']) ? $_GET['fec_ini'] : '',
             'fec_fin' => isset($_GET['fec_fin']) ? $_GET['fec_fin'] : '',
-            'Dis_Cod' => isset($_GET['Dis_Cod']) ? $_GET['Dis_Cod'] : '',
-            'Did_Tip' => isset($_GET['Did_Tip']) ? $_GET['Did_Tip'] : ''
+            'Dis_Cod' => isset($_GET['Dis_Cod']) ? (int)$_GET['Dis_Cod'] : '',
+            'Did_Tip' => $did_tip,
+            'Did_Est' => $did_est
         );
 
         $records = $obBD_con1->getArrayConsulta(17, $params, $obBD_conexion);
 
-        $saldo_acumulado = 0;
+        $saldo_anterior = 0;
+        if (!empty($params['fec_ini'])) {
+            $row_ant = $obBD_con1->getRowConsulta(32, array(0 => $_SESSION['Ses_Emp_Cod'], 1 => $params['fec_ini'], 2 => $params['Dis_Cod']), $obBD_conexion);
+            if ($row_ant && isset($row_ant['saldo_ant'])) {
+                $saldo_anterior = (float)$row_ant['saldo_ant'];
+            }
+        }
+
+        $saldo_acumulado = $saldo_anterior;
         $sum_entradas = 0;
         $sum_salidas = 0;
         $count_mov = 0;
 
         $processed = array();
 
+        if ($saldo_anterior != 0 && (empty($params['Did_Tip']) || $params['Did_Tip'] == 'SI')) {
+            $nom_dis = 'Saldo General';
+            if (!empty($params['Dis_Cod'])) {
+                $info_d = $obBD_con1->getRowConsulta(5, array(0 => $params['Dis_Cod']), $obBD_conexion);
+                $nom_dis = $info_d ? $info_d['Dis_Nom'] : 'Dispensador';
+            }
+            $processed[] = array(
+                'Did_Fec' => $params['fec_ini'] . ' 00:00:00',
+                'Dis_Nom' => $nom_dis,
+                'Did_Tip' => 'SI',
+                'responsable' => 'SALDO ANTERIOR AL ' . $params['fec_ini'],
+                'entrada' => ($saldo_anterior > 0 ? $saldo_anterior : 0),
+                'salida' => ($saldo_anterior < 0 ? abs($saldo_anterior) : 0),
+                'Did_Pun' => 0,
+                'total_ref' => 0,
+                'saldo' => $saldo_anterior,
+                'usuario_nombre' => '-',
+                'Did_Est' => 'A'
+            );
+        }
+
         if ($records) {
             foreach ($records as $r) {
-                if ($r['Did_Est'] != 'A') continue;
+                $es_activo = ($r['Did_Est'] == 'A');
 
                 $cantidad = (float)$r['Did_Can'];
                 $precio = (float)$r['Did_Pun'];
@@ -713,26 +919,60 @@ if (isset($_GET['listKardexAjax'])) {
                 if ($r['Did_Tip'] == 'IN') {
                     $entrada = $cantidad;
                     $responsable = 'Proveedor: ' . $r['proveedor_nombre'];
-                    $sum_entradas += $cantidad;
-                    $saldo_acumulado += $cantidad;
+                    if ($es_activo) {
+                        $sum_entradas += $cantidad;
+                        $saldo_acumulado += $cantidad;
+                    }
                 } elseif ($r['Did_Tip'] == 'IC') {
                     $entrada = $cantidad;
-                    $responsable = 'Ajuste Positivo - ' . $r['Did_Obs'];
-                    $sum_entradas += $cantidad;
-                    $saldo_acumulado += $cantidad;
+                    $responsable = (!empty($r['Did_Otr']) ? 'Otros: ' . $r['Did_Otr'] : (!empty($r['vehiculo_nombre']) ? 'Veh/Maq: ' . $r['vehiculo_nombre'] : 'Carga Interna')) . (!empty($r['Did_Obs']) ? ' - ' . $r['Did_Obs'] : '');
+                    if ($es_activo) {
+                        $sum_entradas += $cantidad;
+                        $saldo_acumulado += $cantidad;
+                    }
+                } elseif ($r['Did_Tip'] == 'ET') {
+                    $entrada = $cantidad;
+                    $origen_str = !empty($r['dis_rel_nom']) ? $r['dis_rel_nom'] : (!empty($r['destino_nom']) ? $r['destino_nom'] : '');
+                    if (!empty($r['dis_rel_are'])) $origen_str .= ' (' . $r['dis_rel_are'] . ')';
+                    $obs_clean = !empty($r['Did_Obs']) ? trim(preg_replace('/^Transferencia desde:[\s\-]*/i', '', $r['Did_Obs'])) : '';
+                    $responsable = 'Desde: ' . (!empty($origen_str) ? $origen_str : 'Dispensador') . (!empty($obs_clean) ? ' - ' . $obs_clean : '');
+                    if ($es_activo) {
+                        $sum_entradas += $cantidad;
+                        $saldo_acumulado += $cantidad;
+                    }
                 } elseif ($r['Did_Tip'] == 'SA') {
                     $salida = $cantidad;
-                    $responsable = 'Veh/Maq: ' . $r['vehiculo_nombre'] . ' - ' . $r['Did_Obs'];
-                    $sum_salidas += $cantidad;
-                    $saldo_acumulado -= $cantidad;
+                    if (!empty($r['Did_Otr'])) {
+                        $responsable = 'Otros: ' . $r['Did_Otr'] . (!empty($r['Did_Obs']) ? ' - ' . $r['Did_Obs'] : '');
+                    } else {
+                        $responsable = 'Veh/Maq: ' . $r['vehiculo_nombre'] . (!empty($r['Did_Obs']) ? ' - ' . $r['Did_Obs'] : '');
+                    }
+                    if ($es_activo) {
+                        $sum_salidas += $cantidad;
+                        $saldo_acumulado -= $cantidad;
+                    }
                 } elseif ($r['Did_Tip'] == 'SC') {
                     $salida = $cantidad;
                     $responsable = 'Ajuste Negativo - ' . $r['Did_Obs'];
-                    $sum_salidas += $cantidad;
-                    $saldo_acumulado -= $cantidad;
+                    if ($es_activo) {
+                        $sum_salidas += $cantidad;
+                        $saldo_acumulado -= $cantidad;
+                    }
+                } elseif ($r['Did_Tip'] == 'ST') {
+                    $salida = $cantidad;
+                    $dest_str = !empty($r['dis_rel_nom']) ? $r['dis_rel_nom'] : (!empty($r['destino_nom']) ? $r['destino_nom'] : '');
+                    if (!empty($r['dis_rel_are'])) $dest_str .= ' (' . $r['dis_rel_are'] . ')';
+                    $obs_clean = !empty($r['Did_Obs']) ? trim(preg_replace('/^Transferencia a:[\s\-]*/i', '', $r['Did_Obs'])) : '';
+                    $responsable = 'Hacia: ' . (!empty($dest_str) ? $dest_str : 'Dispensador') . (!empty($obs_clean) ? ' - ' . $obs_clean : '');
+                    if ($es_activo) {
+                        $sum_salidas += $cantidad;
+                        $saldo_acumulado -= $cantidad;
+                    }
                 }
 
-                $count_mov++;
+                if ($es_activo) {
+                    $count_mov++;
+                }
 
                 $processed[] = array(
                     'Did_Fec' => $r['Did_Fec'],
@@ -743,7 +983,7 @@ if (isset($_GET['listKardexAjax'])) {
                     'salida' => $salida,
                     'Did_Pun' => $r['Did_Pun'],
                     'total_ref' => $total_ref,
-                    'saldo' => $saldo_acumulado,
+                    'saldo' => $es_activo ? $saldo_acumulado : '-',
                     'usuario_nombre' => $r['usuario_nombre'],
                     'Did_Est' => $r['Did_Est']
                 );
@@ -786,6 +1026,9 @@ $obBD_con1->utf8_change_param($proveedores);
 $vehiculos = $obBD_con1->getArrayConsulta(12, array(0 => $_SESSION['Ses_Emp_Cod']), $obBD_conexion) ?: array();
 $obBD_con1->utf8_change_param($vehiculos);
 
+$maquinarias_equipos = $obBD_con1->getArrayConsulta(33, array(0 => $_SESSION['Ses_Emp_Cod']), $obBD_conexion) ?: array();
+$obBD_con1->utf8_change_param($maquinarias_equipos);
+
 ?>
 <!DOCTYPE html>
 <HTML>
@@ -796,7 +1039,7 @@ $obBD_con1->utf8_change_param($vehiculos);
     <?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
     <?php require_once('../../mascaras/model3/estilos/estilos.php'); ?>
     <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    <link rel="stylesheet" type="text/css" href="../RECURSOS/maquinaria_dispensador.css" />
+    <link rel="stylesheet" type="text/css" href="../RECURSOS/maquinaria_dispensador.css?v=2" />
 
 </HEAD>
 
@@ -1080,7 +1323,7 @@ $obBD_con1->utf8_change_param($vehiculos);
                                     <select id="filtro_Did_Tip_Out" class="form-control input-sm">
                                         <option value="">-- Todos --</option>
                                         <option value="SA">SA - Abastecimiento a Maquinaria</option>
-                                        <option value="SC">SC - Ajuste Negativo</option>
+                                        <option value="ST">ST - Transferencia Salida</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2" style="padding-top: 22px;">
@@ -1154,7 +1397,7 @@ $obBD_con1->utf8_change_param($vehiculos);
                                     <label>Hasta:</label>
                                     <input type="date" id="filtro_fec_fin_kx" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31" required>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label>Dispensador:</label>
                                     <select id="filtro_Dis_Cod_Kx" class="form-control input-sm">
                                         <option value="">-- Todos --</option>
@@ -1163,18 +1406,37 @@ $obBD_con1->utf8_change_param($vehiculos);
                                         } ?>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label>Movimiento:</label>
                                     <select id="filtro_Did_Tip_Kx" class="form-control input-sm">
-                                        <option value="">-- Todos --</option>
-                                        <option value="IN">IN - Compra</option>
-                                        <option value="IC">IC - Ajuste Positivo</option>
-                                        <option value="SA">SA - Abastecimiento</option>
-                                        <option value="SC">SC - Ajuste Negativo</option>
+                                        <option value="">-- Todos los Movimientos --</option>
+                                        <optgroup label="Entradas / Ingresos">
+                                            <option value="IN">IN - Compra a Proveedor</option>
+                                            <option value="IC">IC - Consignado / Carga Interna</option>
+                                            <option value="ET">ET - Transferencia Entrada</option>
+                                        </optgroup>
+                                        <optgroup label="Salidas / Egresos">
+                                            <option value="SA">SA - Abastecimiento a Maquinaria</option>
+                                            <option value="ST">ST - Transferencia Salida</option>
+                                        </optgroup>
+                                        <optgroup label="Saldos">
+                                            <option value="SI">SI - Saldo Inicial</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Estado:</label>
+                                    <select id="filtro_Did_Est_Kx" class="form-control input-sm">
+                                        <option value="" selected>Activos y Pendientes</option>
+                                        <option value="A">Solo Activos</option>
+                                        <option value="P">Solo Pendientes</option>
+                                        <option value="I">Solo Anulados</option>
+                                        <option value="TODOS">Todos (Inc. Anulados)</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2" style="padding-top: 22px;">
                                     <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i> Consultar</button>
+                                    <button type="button" class="btn btn-default btn-sm" onclick="limpiarFiltrosKardex()"><i class="fa fa-eraser"></i> Limpiar</button>
                                 </div>
                             </form>
                         </div>
@@ -1434,7 +1696,7 @@ $obBD_con1->utf8_change_param($vehiculos);
                                     <label>Hasta:</label>
                                     <input type="date" id="filtro_fec_fin" class="form-control input-sm" value="<?php echo date('Y-m-t'); ?>" max="9999-12-31">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label>Dispensador:</label>
                                     <select id="filtro_Dis_Cod_In" class="form-control input-sm">
                                         <option value="">-- Todos --</option>
@@ -1443,8 +1705,17 @@ $obBD_con1->utf8_change_param($vehiculos);
                                         } ?>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
-                                    <label>Proveedor (Ref. Antiguos):</label>
+                                <div class="col-md-2">
+                                    <label>Tipo de Carga:</label>
+                                    <select id="filtro_Did_Tip_In" class="form-control input-sm">
+                                        <option value="">-- Todos --</option>
+                                        <option value="IN">IN - Compra a Proveedor</option>
+                                        <option value="IC">IC - Consignado / Carga Interna</option>
+                                        <option value="ET">ET - Transferencia Entrada</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Proveedor (Ref.):</label>
                                     <select id="filtro_Prv_Cod_In" class="form-control input-sm">
                                         <option value="">-- Todos --</option>
                                         <?php foreach ($proveedores as $p) {
@@ -1485,9 +1756,13 @@ $obBD_con1->utf8_change_param($vehiculos);
                     <form id="formDispensador">
                         <input type="hidden" id="Dis_Cod" name="Dis_Cod" value="0">
                         <div class="row">
-                            <div class="col-md-12 form-group">
+                            <div class="col-md-6 form-group">
                                 <label for="Dis_Nom">Nombre / Identificador <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="Dis_Nom" name="Dis_Nom" maxlength="150" required>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="Dis_Are">&Aacute;rea / Ubicaci&oacute;n</label>
+                                <input type="text" class="form-control" id="Dis_Are" name="Dis_Are" maxlength="150" placeholder="Ej: Taller Mec&aacute;nico, Mina Nivel 2, Campamento...">
                             </div>
                         </div>
                         <div class="row">
@@ -1590,11 +1865,21 @@ $obBD_con1->utf8_change_param($vehiculos);
                             </div>
                         </div>
 
+                        <div class="row" id="div_tipo_origen_in" style="display:none;">
+                            <div class="col-md-12 form-group">
+                                <label for="Tip_Ingreso_In">Tipo de Maquinaria <span class="text-danger">*</span></label>
+                                <select class="form-control" id="Tip_Ingreso_In" name="Tip_Ingreso" onchange="cambiarDestinoIngreso()">
+                                    <option value="V">Maquinaria (Veh&iacute;culos)</option>
+                                    <option value="O">Otros (Equipos)</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="row" id="div_vehiculo" style="display:none;">
                             <div class="col-md-12 form-group">
-                                <label for="Veh_Cod_In">Veh&iacute;culo Consignado <span class="text-danger">*</span></label>
+                                <label for="Veh_Cod_In">Maquinaria / Veh&iacute;culo <span class="text-danger">*</span></label>
                                 <select class="form-control" id="Veh_Cod_In" name="Veh_Cod">
-                                    <option value="">-- Seleccione --</option>
+                                    <option value="">-- Seleccione Veh&iacute;culo / Maquinaria --</option>
                                     <?php foreach ($vehiculos as $v) {
                                         echo "<option value='{$v['Veh_Cod']}'>{$v['vehiculo_nombre']}</option>";
                                     } ?>
@@ -1602,26 +1887,35 @@ $obBD_con1->utf8_change_param($vehiculos);
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-4 form-group">
-                                <label for="Did_Fec">Fecha y Hora de Ingreso <span class="text-danger">*</span></label>
-                                <input type="datetime-local" class="form-control" id="Did_Fec" name="Did_Fec" required value="<?php echo date('Y-m-d\TH:i'); ?>" max="9999-12-31T23:59">
-                            </div>
-                            <div class="col-md-4 form-group">
-                                <label for="Did_Can">Cantidad <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control text-right" id="Did_Can" name="Did_Can" step="0.01" min="0.01" required placeholder="0.00" onkeyup="calcularTotal()">
-                            </div>
-                            <div class="col-md-4 form-group">
-                                <label for="Did_Pun">Precio Unitario <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control text-right" id="Did_Pun" name="Did_Pun" step="0.01" min="0" required placeholder="0.00" onkeyup="calcularTotal()">
+                        <div class="row" id="div_otros_in" style="display:none;">
+                            <div class="col-md-12 form-group">
+                                <label for="Did_Otr_In_Select">Equipo (Otros) <span class="text-danger">*</span></label>
+                                <select class="form-control" id="Did_Otr_In_Select" onchange="seleccionarEquipoOtroIn(this.value)">
+                                    <option value="">-- Seleccione Equipo --</option>
+                                    <?php foreach ($maquinarias_equipos as $m) {
+                                        echo "<option value='{$m['equipo_nombre']}'>{$m['equipo_nombre']}</option>";
+                                    } ?>
+                                    <option value="__MANUAL__">+ Escribir otro equipo manualmente...</option>
+                                </select>
+                                <input type="text" class="form-control" id="Did_Otr_In" name="Did_Otr" maxlength="150" placeholder="Escriba el nombre o serie del equipo..." style="display:none; margin-top: 5px;">
                             </div>
                         </div>
 
                         <div class="row">
-                            <div class="col-md-12 form-group text-right">
-                                <label>Total Visual:</label>
-                                <h3 style="margin: 0; color: #d9534f;">$ <span id="lbl_Total">0.00</span></h3>
+                            <div class="col-md-6 form-group">
+                                <label for="Did_Fec">Fecha y Hora de Ingreso <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="Did_Fec" name="Did_Fec" required value="<?php echo date('Y-m-d\TH:i'); ?>" max="9999-12-31T23:59">
                             </div>
+                            <div class="col-md-6 form-group">
+                                <label for="Did_Can">Cantidad <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control text-right" id="Did_Can" name="Did_Can" step="0.01" min="0.01" required placeholder="0.00" onkeyup="calcularTotal()">
+                            </div>
+                        </div>
+
+                        <!-- Componente de Precio Oculto -->
+                        <div class="row" style="display:none;">
+                            <input type="hidden" id="Did_Pun" name="Did_Pun" value="0.00">
+                            <span id="lbl_Total">0.00</span>
                         </div>
                     </form>
                 </div>
@@ -1651,18 +1945,19 @@ $obBD_con1->utf8_change_param($vehiculos);
                                 <select class="form-control" id="Did_Tip_Out" name="Did_Tip" required onchange="cambiarTipoSalida()">
                                     <option value="">-- Seleccione --</option>
                                     <option value="SA">SA - Abastecimiento a Maquinaria</option>
-                                    <option value="SC">SC - Ajuste Negativo / Correcci&oacute;n</option>
+                                    <option value="ST">ST - Transferencia a otro Dispensador / Caneca</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-12 form-group">
-                                <label for="Dis_Cod_Out">Dispensador <span class="text-danger">*</span></label>
+                                <label for="Dis_Cod_Out">Dispensador Origen <span class="text-danger">*</span></label>
                                 <select class="form-control" id="Dis_Cod_Out" name="Dis_Cod" required onchange="cargarInfoDispensadorOut(this.value)">
                                     <option value="">-- Seleccione --</option>
                                     <?php foreach ($dispensadores as $d) {
-                                        echo "<option value='{$d['Dis_Cod']}'>{$d['Dis_Nom']}</option>";
+                                        $txt_are = !empty($d['Dis_Are']) ? " ({$d['Dis_Are']})" : "";
+                                        echo "<option value='{$d['Dis_Cod']}' data-tip='{$d['Dis_Tip']}'>{$d['Dis_Nom']}{$txt_are}</option>";
                                     } ?>
                                 </select>
                             </div>
@@ -1687,15 +1982,73 @@ $obBD_con1->utf8_change_param($vehiculos);
                             </div>
                         </div>
 
+                        <!-- SECCION PARA TRANSFERENCIAS ENTRE DISPENSADORES (ST) -->
+                        <div class="row" id="div_transferencia_out" style="display:none;">
+                            <div class="col-md-12 form-group">
+                                <label for="Dis_Cod_Des_Out">Dispensador Destino <span class="text-danger">*</span></label>
+                                <select class="form-control" id="Dis_Cod_Des_Out" name="Dis_Cod_Des" onchange="cargarInfoDispensadorDestinoOut(this.value)">
+                                    <option value="">-- Seleccione Destino --</option>
+                                    <?php foreach ($dispensadores as $d) {
+                                        $txt_are = !empty($d['Dis_Are']) ? " ({$d['Dis_Are']})" : "";
+                                        echo "<option value='{$d['Dis_Cod']}' data-tip='{$d['Dis_Tip']}'>{$d['Dis_Nom']}{$txt_are}</option>";
+                                    } ?>
+                                </select>
+                            </div>
+                            <div class="col-md-12" id="infoDispensadorDestBoxOut" style="display:none; margin-bottom:15px;">
+                                <div class="info-box" style="background:#eafaf1; border-color:#a3e4d7;">
+                                    <div class="row">
+                                        <div class="col-xs-6"><span class="info-label">Destino Combustible:</span> <span class="info-value" id="lbl_Dis_Tip_Des_Out"></span></div>
+                                        <div class="col-xs-6"><span class="info-label">Unidad:</span> <span class="info-value" id="lbl_Dis_Uni_Des_Out"></span></div>
+                                    </div>
+                                    <div class="row" style="margin-top: 5px;">
+                                        <div class="col-xs-6"><span class="info-label">Capacidad Total:</span> <span class="info-value text-primary" id="lbl_Dis_Cap_Des_Out">0</span></div>
+                                        <div class="col-xs-6"><span class="info-label">Existencia Actual:</span> <span class="info-value text-warning" id="lbl_Dis_Ext_Des_Out">0</span></div>
+                                    </div>
+                                    <div class="row" style="margin-top: 5px;">
+                                        <div class="col-xs-12"><span class="info-label">Espacio Disponible en Destino:</span> <strong class="info-value text-success" id="lbl_Dis_Dispo_Des_Out">0</strong></div>
+                                    </div>
+                                    <input type="hidden" id="capacidad_disponible_des_out" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-12 form-group">
+                                <label for="Did_Obs_Transf_Out">Detalle / Medio de Traslado (Opcional)</label>
+                                <input type="text" class="form-control" id="Did_Obs_Transf_Out" maxlength="250" placeholder="Ej: Traslado en caneca de 5 galones, bid&oacute;n, manguera...">
+                            </div>
+                        </div>
+
+                        <div class="row" id="div_tipo_destino_out" style="display:none;">
+                            <div class="col-md-12 form-group">
+                                <label for="Tip_Despacho_Out">Tipo de Maquinaria <span class="text-danger">*</span></label>
+                                <select class="form-control" id="Tip_Despacho_Out" name="Tip_Despacho" onchange="cambiarDestinoDespacho()">
+                                    <option value="V">Maquinaria (Veh&iacute;culos)</option>
+                                    <option value="O">Otros (Equipos)</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="row" id="div_vehiculo_out" style="display:none;">
                             <div class="col-md-12 form-group">
                                 <label for="Veh_Cod_Out">Maquinaria / Veh&iacute;culo <span class="text-danger">*</span></label>
                                 <select class="form-control" id="Veh_Cod_Out" name="Veh_Cod">
-                                    <option value="">-- Seleccione --</option>
+                                    <option value="">-- Seleccione Veh&iacute;culo / Maquinaria --</option>
                                     <?php foreach ($vehiculos as $v) {
                                         echo "<option value='{$v['Veh_Cod']}'>{$v['vehiculo_nombre']}</option>";
                                     } ?>
                                 </select>
+                            </div>
+                        </div>
+
+                        <div class="row" id="div_otros_out" style="display:none;">
+                            <div class="col-md-12 form-group">
+                                <label for="Did_Otr_Out_Select">Equipo (Otros) <span class="text-danger">*</span></label>
+                                <select class="form-control" id="Did_Otr_Out_Select" onchange="seleccionarEquipoOtroOut(this.value)">
+                                    <option value="">-- Seleccione Equipo --</option>
+                                    <?php foreach ($maquinarias_equipos as $m) {
+                                        echo "<option value='{$m['equipo_nombre']}'>{$m['equipo_nombre']}</option>";
+                                    } ?>
+                                    <option value="__MANUAL__">+ Escribir otro equipo manualmente...</option>
+                                </select>
+                                <input type="text" class="form-control" id="Did_Otr_Out" name="Did_Otr" maxlength="150" placeholder="Escriba el nombre o serie del equipo..." style="display:none; margin-top: 5px;">
                             </div>
                         </div>
 
@@ -1707,25 +2060,23 @@ $obBD_con1->utf8_change_param($vehiculos);
                         </div>
 
                         <div class="row">
-                            <div class="col-md-4 form-group">
+                            <div class="col-md-6 form-group">
                                 <label for="Did_Fec_Out">Fecha y Hora <span class="text-danger">*</span></label>
                                 <input type="datetime-local" class="form-control" id="Did_Fec_Out" name="Did_Fec" required value="<?php echo date('Y-m-d\TH:i'); ?>" max="9999-12-31T23:59">
                             </div>
-                            <div class="col-md-4 form-group">
+                            <div class="col-md-6 form-group">
                                 <label for="Did_Can_Out">Cantidad <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control text-right" id="Did_Can_Out" name="Did_Can" step="0.01" min="0.01" required placeholder="0.00" onkeyup="calcularExistenciaPosterior()">
                             </div>
-                            <div class="col-md-4 form-group" id="div_precio_out">
-                                <label for="Did_Pun_Out">Precio Referencial</label>
-                                <input type="number" class="form-control text-right" id="Did_Pun_Out" name="Did_Pun" step="0.01" min="0" placeholder="0.00" onkeyup="calcularTotalOut()">
-                            </div>
                         </div>
 
-                        <div class="row" id="div_total_out">
-                            <div class="col-md-12 form-group text-right">
-                                <label>Total Referencial:</label>
-                                <h3 style="margin: 0; color: #d9534f;">$ <span id="lbl_Total_Out">0.00</span></h3>
-                            </div>
+                        <!-- Componente de Precio Oculto -->
+                        <div class="row" style="display:none;" id="div_precio_out">
+                            <input type="hidden" id="Did_Pun_Out" name="Did_Pun" value="0.00">
+                        </div>
+
+                        <div class="row" style="display:none;" id="div_total_out">
+                            <span id="lbl_Total_Out">0.00</span>
                         </div>
                     </form>
                 </div>
@@ -1824,7 +2175,7 @@ $obBD_con1->utf8_change_param($vehiculos);
 
     <!-- Carga de JS -->
     <script language="javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <script src="../VALIDACIONES/man_val_maquinaria_dispensador.js?v=10"></script>
+    <script src="../VALIDACIONES/man_val_maquinaria_dispensador.js?v=22"></script>
 
     <!-- Liberacion y cierre de conexiones -->
     <?php
