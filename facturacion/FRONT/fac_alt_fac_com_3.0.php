@@ -637,11 +637,13 @@ if (isset($saveDocument)) {
                 if ($Retencion && $Ret_Num > 0) {
                     $Com_Con_Ret = "RETENCION DE LA COMPRA NUMERO " . $Cop_Num;
                     $Tia_Asi_Ret = $obBD_con1->getRowConsulta(133, 15, $obBD_conexion);
-                    $meseCom = explode('-', $Com_Fec);
-                    $Com_Num_Ret = $obBD_con1->getComNumPecAuto($Tia_Asi_Ret['Tia_Cod'], $Pec_Cod, $Com_Fec, $obBD_conexion);
+                    // Mismo mes que la compra → fecha retención; mes distinto → fecha compra
+                    $Com_Fec_Ret = (substr($Ret_Fec, 0, 7) === substr($Cop_Fec, 0, 7)) ? $Ret_Fec : $Cop_Fec;
+                    $meseCom = explode('-', $Com_Fec_Ret);
+                    $Com_Num_Ret = $obBD_con1->getComNumPecAuto($Tia_Asi_Ret['Tia_Cod'], $Pec_Cod, $Com_Fec_Ret, $obBD_conexion);
                     $campo = 'Prv_Cod';
                     /* Cabecera del Comprobante */
-                    $obBD_ins1->operacionobBD(14, $Pec_Cod . '*' . $Prv_Cod . '*' . $Com_Num_Ret . '*' . $Ret_Fec . '*' . trim($Com_Con_Ret) . '*' . $Tia_Asi_Ret['Tia_Cod'] . '*' . $Ren_Tot . '*' . 'RETENCION' . '*' . $campo, $obBD_conexionIns);
+                    $obBD_ins1->operacionobBD(14, $Pec_Cod . '*' . $Prv_Cod . '*' . $Com_Num_Ret . '*' . $Com_Fec_Ret . '*' . trim($Com_Con_Ret) . '*' . $Tia_Asi_Ret['Tia_Cod'] . '*' . $Ren_Tot . '*' . 'RETENCION' . '*' . $campo, $obBD_conexionIns);
                     $Com_Cod_Ret = $obBD_ins1->insercionid($obBD_conexionIns);
 
                     foreach ($rets as $ret) {
@@ -655,7 +657,7 @@ if (isset($saveDocument)) {
                     $obBD_ins1->operacionobBD(17, $Com_Cod_Ret . '*' . ('D') . '*' . $Ren_Tot . '*' . '' . '*' . ('Doc.' . $Cop_Num) . '*' . $Pag_Pld, $obBD_conexionIns);
                     $Asi_Cod_Ret = $obBD_ins1->insercionid($obBD_conexionIns);
                     //Crear abono para la CUENTA X PAGAR 
-                    $obBD_ins1->operacionobBD(255, array('Com_Cod' => $Com_Cod_Ret, 'Pag_Cod' => 50, 'Pag_Fec' => $Ret_Fec, 'Pag_Val' => $Ren_Tot, 'Pag_Obs' => "ABONO POR RETENCION", 'Cpp_Cod' => $Cpp_Cod, 'Asi_Cod' => $Asi_Cod_Ret), $obBD_conexionIns);
+                    $obBD_ins1->operacionobBD(255, array('Com_Cod' => $Com_Cod_Ret, 'Pag_Cod' => 50, 'Pag_Fec' => $Com_Fec_Ret, 'Pag_Val' => $Ren_Tot, 'Pag_Obs' => "ABONO POR RETENCION", 'Cpp_Cod' => $Cpp_Cod, 'Asi_Cod' => $Asi_Cod_Ret), $obBD_conexionIns);
                 }
                 //Cuenta proveedores varios con valor completo
                 $obBD_ins1->operacionobBD(17, $Com_Cod . '*' . ('H') . '*' . $totalReal . '*' . '' . '*' . ('Doc.' . $Cop_Num) . '*' . $Pag_Pld, $obBD_conexionIns);
@@ -895,7 +897,7 @@ if (isset($saveDocument)) {
 
         // detalle de la retencion
         if (!empty($Com_Cod_Ret)) {
-            $responce['Com_Data_Ret'] = array('Codigo_Ret' => $Com_Cod_Ret, 'Tia_Des_Ret' => $Tia_Asi_Ret['Tia_Des'], 'Com_Con_Ret' => $Com_Con_Ret, 'Com_Fec_Ret' => $Ret_Fec, 'Com_Val_Ret' => $Ren_Tot);
+            $responce['Com_Data_Ret'] = array('Codigo_Ret' => $Com_Cod_Ret, 'Tia_Des_Ret' => $Tia_Asi_Ret['Tia_Des'], 'Com_Con_Ret' => $Com_Con_Ret, 'Com_Fec_Ret' => (isset($Com_Fec_Ret) ? $Com_Fec_Ret : $Ret_Fec), 'Com_Val_Ret' => $Ren_Tot);
             $responce['Com_Rows_Ret'] = $obBD_con1->getArrayConsulta(27, $Com_Cod_Ret, $obBD_conexion);
             $responce['Com_Link_Ret'] = "" . (!empty($reportes[1]) ? $reportes[1] : baseUrl("../../contabilidad/FRONT/con_pri_compr_2.1.php")) . "?codigo=$Com_Cod_Ret&tabla=proveedore&campo=Prv_Cod&tipo=$Tia_Asi_Ret[Tia_Cod]&Pec_Cod=$Pec_Cop[Pec_Cod]";
         }
