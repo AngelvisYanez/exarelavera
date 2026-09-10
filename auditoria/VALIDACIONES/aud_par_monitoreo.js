@@ -21,8 +21,7 @@ $(function () {
 			org: $('#org').val() || 0,
 			dir: $('#dir').val() || 0,
 			pcs: $('#pcs').val() || 0,
-			eve: $('#eve').val() || 0,
-			q: $.trim($('#fil_q').val() || '')
+			eve: $('#eve').val() || 0
 		};
 		if (hasSucursales) {
 			data.suc = $('#suc').val() || 0;
@@ -56,10 +55,6 @@ $(function () {
 			' · Directorio: <strong>' + $.trim(dirTxt) + '</strong>' +
 			' · Proceso: <strong>' + $.trim(pcsTxt) + '</strong>' +
 			' · Evento: <strong>' + $.trim(eveTxt) + '</strong>';
-		var qTxt = $.trim($('#fil_q').val() || '');
-		if (qTxt) {
-			html += ' · Buscar: <strong>' + $('<div>').text(qTxt).html() + '</strong>';
-		}
 		$('#audSearchHint').html(html);
 	}
 
@@ -159,9 +154,6 @@ $(function () {
 			postData: filtrosPost(),
 			page: 1
 		}).trigger('reloadGrid');
-		if ($('#aud-kpi-panel').is(':visible')) {
-			cargarKpi();
-		}
 	}
 
 	function limpiarFiltros() {
@@ -175,7 +167,6 @@ $(function () {
 			$('#to').datepicker('option', 'minDate', vFrom);
 			$('#from').datepicker('option', 'maxDate', vTo);
 		} catch (eClr) {}
-		$('#fil_q').val('');
 		$('#org').val('0');
 		$('#dir').val('0');
 		$('#eve').val('0');
@@ -223,135 +214,6 @@ $(function () {
 		});
 	}
 	window.audVerDetalle = verDetalle;
-
-	
-	/* ---- Dashboard y Graficos KPI ---- */
-	var kpiStorageKey = 'aud_monitoreo_kpi_open_v1';
-
-	function renderSparkline(fechas) {
-		var $host = $('#chart-fechas-host');
-		if (!fechas || !fechas.length) {
-			$host.html('<p class="text-muted" style="margin:0; font-size:11px; padding:30px 0; text-align:center;">Sin actividad en el periodo</p>');
-			return;
-		}
-		var maxVal = 1;
-		$.each(fechas, function(i, f) {
-			var v = parseInt(f.total, 10) || 0;
-			if (v > maxVal) maxVal = v;
-		});
-
-		var svgWidth = 420;
-		var svgHeight = 90;
-		var padLeft = 10;
-		var padRight = 10;
-		var padTop = 15;
-		var padBottom = 20;
-		var effW = svgWidth - padLeft - padRight;
-		var effH = svgHeight - padTop - padBottom;
-		var step = fechas.length > 1 ? effW / (fechas.length - 1) : effW / 2;
-
-		var points = [];
-		var dots = '';
-		$.each(fechas, function(i, f) {
-			var v = parseInt(f.total, 10) || 0;
-			var x = fechas.length > 1 ? (padLeft + i * step) : (svgWidth / 2);
-			var y = padTop + effH - ((v / maxVal) * effH);
-			points.push(x.toFixed(1) + ',' + y.toFixed(1));
-			dots += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.5" fill="#3b82f6" stroke="#fff" stroke-width="1.5"><title>' + f.fecha + ': ' + v + ' eventos</title></circle>';
-		});
-
-		var polyline = '<polyline fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="' + points.join(' ') + '" />';
-		
-		// Fill area
-		var areaPoints = points.slice();
-		var lastX = fechas.length > 1 ? (padLeft + (fechas.length - 1) * step) : (svgWidth / 2);
-		var firstX = fechas.length > 1 ? padLeft : (svgWidth / 2);
-		areaPoints.push(lastX.toFixed(1) + ',' + (padTop + effH));
-		areaPoints.push(firstX.toFixed(1) + ',' + (padTop + effH));
-		var polygon = '<polygon fill="rgba(59, 130, 246, 0.12)" points="' + areaPoints.join(' ') + '" />';
-
-		// Labels for first and last
-		var firstDate = fechas[0].fecha ? fechas[0].fecha.substring(5) : '';
-		var lastDate = fechas[fechas.length - 1].fecha ? fechas[fechas.length - 1].fecha.substring(5) : '';
-		var lbls = '<text x="' + padLeft + '" y="' + (svgHeight - 4) + '" font-size="9" fill="#94a3b8">' + firstDate + '</text>';
-		if (fechas.length > 1) {
-			lbls += '<text x="' + (svgWidth - padRight) + '" y="' + (svgHeight - 4) + '" text-anchor="end" font-size="9" fill="#94a3b8">' + lastDate + '</text>';
-		}
-
-		var svg = '<svg viewBox="0 0 ' + svgWidth + ' ' + svgHeight + '" class="aud-sparkline-svg" preserveAspectRatio="none">' +
-			polygon + polyline + dots + lbls + '</svg>';
-		$host.html(svg);
-	}
-
-	function renderBarList($host, list, keyName, valColor) {
-		if (!list || !list.length) {
-			$host.html('<p class="text-muted" style="margin:0; font-size:11px; padding:20px 0; text-align:center;">Sin datos disponibles</p>');
-			return;
-		}
-		var maxVal = 1;
-		$.each(list, function(i, item) {
-			var v = parseInt(item.total, 10) || 0;
-			if (v > maxVal) maxVal = v;
-		});
-
-		var html = '';
-		$.each(list.slice(0, 5), function(i, item) {
-			var name = item[keyName] || 'Sin nombre';
-			var v = parseInt(item.total, 10) || 0;
-			var pct = Math.max(4, Math.round((v / maxVal) * 100));
-			html += '<div class="aud-bar-item">' +
-				'<div class="aud-bar-lbl clearfix">' +
-					'<span style="float:left; max-width:70%; overflow:hidden; text-overflow:ellipsis;" title="' + $('<div>').text(name).html() + '">' + $('<div>').text(name).html() + '</span>' +
-					'<span style="float:right; font-weight:700; color:#475569;">' + v + '</span>' +
-				'</div>' +
-				'<div class="aud-bar-track"><div class="aud-bar-fill" style="width:' + pct + '%; background:' + (valColor || '#3b82f6') + ';"></div></div>' +
-			'</div>';
-		});
-		$host.html(html);
-	}
-
-	function cargarKpi() {
-		var postData = filtrosPost();
-		postData.listMonitoreoKpiAjax = 1;
-		delete postData.listMonitoreoGridAjax;
-
-		$.ajax({
-			url: window.location.pathname,
-			type: 'POST',
-			dataType: 'json',
-			data: postData,
-			success: function (res) {
-				if (!res) return;
-				var tot = parseInt(res.total, 10) || 0;
-				$('#kpi-total').text(tot);
-				
-				var ins = 0, upd = 0, del = 0;
-				if (res.eventos && res.eventos.length) {
-					$.each(res.eventos, function (i, ev) {
-						var ini = (ev.Eve_Ini || '').toUpperCase();
-						var cnt = parseInt(ev.total, 10) || 0;
-						if (ini === 'I') ins += cnt;
-						else if (ini === 'U') upd += cnt;
-						else if (ini === 'D') del += cnt;
-					});
-				}
-				$('#kpi-ins').text(ins);
-				$('#kpi-upd').text(upd);
-				$('#kpi-del').text(del);
-
-				var insPct = tot > 0 ? Math.round((ins / tot) * 100) : 0;
-				var updPct = tot > 0 ? Math.round((upd / tot) * 100) : 0;
-				var delPct = tot > 0 ? Math.round((del / tot) * 100) : 0;
-				$('#kpi-ins-pct').text(insPct + '% del total');
-				$('#kpi-upd-pct').text(updPct + '% del total');
-				$('#kpi-del-pct').text(delPct + '% del total');
-
-				renderSparkline(res.fechas || []);
-				renderBarList($('#chart-modulos-host'), res.modulos || [], 'modulo', '#6366f1');
-				renderBarList($('#chart-usuarios-host'), res.usuarios || [], 'usuario', '#0ea5e9');
-			}
-		});
-	}
 
 	/* ---- Calendario (yy-mm-dd; locale es fuerza dd/mm/yy) ---- */
 	function initCalendarios() {
@@ -580,26 +442,6 @@ $(function () {
 		applyCols();
 	});
 
-	$('#btnToggleKpi').on('click', function () {
-		var $p = $('#aud-kpi-panel');
-		if ($p.is(':visible')) {
-			$p.slideUp(180, function () {
-				if (typeof exaUiFitJqGrid === 'function') {
-					exaUiFitJqGrid('#gridMonitoreo', '#lista .exa-ui-grid-host');
-				}
-			});
-			try { localStorage.setItem(kpiStorageKey, '0'); } catch(eKpi) {}
-		} else {
-			$p.slideDown(180, function () {
-				cargarKpi();
-				if (typeof exaUiFitJqGrid === 'function') {
-					exaUiFitJqGrid('#gridMonitoreo', '#lista .exa-ui-grid-host');
-				}
-			});
-			try { localStorage.setItem(kpiStorageKey, '1'); } catch(eKpi) {}
-		}
-	});
-
 	$('#btnBuscar').on('click', function () {
 		buscar();
 	});
@@ -628,7 +470,7 @@ $(function () {
 		cargarProcesos(org, dir, actualizarHint);
 	});
 
-	$('#pcs, #eve, #usu, #from, #to, #fil_q').on('change input', function () {
+	$('#pcs, #eve, #usu, #from, #to').on('change', function () {
 		actualizarHint();
 	});
 
@@ -647,8 +489,7 @@ $(function () {
 		};
 	}
 
-	$('#btnExportCsv, #btnExportExcel').on('click', function (e) {
-		if (e && e.preventDefault) e.preventDefault();
+	$('#btnExportExcel').on('click', function () {
 		var $frm = $('#frmFiltros');
 		if (!$frm.length) {
 			return;
@@ -668,12 +509,7 @@ $(function () {
 		window.location = window.location.pathname + '?' + $frm.serialize() + '&exportMonitoreoCsv=1';
 	});
 
-	$('#btnExportPdf').on('click', function (e) {
-		if (e && e.preventDefault) e.preventDefault();
-		var $frm = $('#frmFiltros');
-		if (!$frm.length) {
-			return;
-		}
+	$('#btnExportPdf').on('click', function () {
 		var total = 0;
 		try {
 			total = parseInt($grid.jqGrid('getGridParam', 'records'), 10) || 0;
@@ -686,17 +522,44 @@ $(function () {
 			}
 			return;
 		}
-		var url = window.location.pathname + '?' + $frm.serialize() + '&exportMonitoreoPdf=1';
-		window.open(url, '_blank');
+		if (typeof $grid.jqGrid === 'function' && typeof $grid.jqGrid('printGrid') === 'function') {
+			$grid.jqGrid('printGrid', {
+				nombre: 'Monitoreo de actividades',
+				removeHiddens: true,
+				removeCols: ['acciones'],
+				caption: true
+			});
+			return;
+		}
+		/* Fallback: ventana imprimible (Guardar como PDF) */
+		try {
+			var html = $grid.jqGrid('exportGridHTML', {
+				caption: true,
+				removeHiddens: true,
+				removeCols: ['acciones'],
+				footer: false,
+				generated: true
+			});
+			var w = window.open('', '_blank');
+			if (!w) {
+				alert('Permita ventanas emergentes para exportar a PDF.');
+				return;
+			}
+			w.document.write('<!DOCTYPE html><html><head><title>Monitoreo de actividades</title>');
+			w.document.write('<style>body{font-family:Arial,sans-serif;font-size:11px;padding:12px;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #999;padding:4px 6px;} th{background:#eef3f8;} h3{margin:0 0 10px 0;}</style>');
+			w.document.write('</head><body>');
+			w.document.write('<h3>Monitoreo de actividades</h3>');
+			w.document.write(html);
+			w.document.write('</body></html>');
+			w.document.close();
+			w.focus();
+			setTimeout(function () { w.print(); }, 300);
+		} catch (ePdf) {
+			alert('No se pudo generar el PDF.');
+		}
 	});
 
 	actualizarHint();
-	try {
-		if (localStorage.getItem(kpiStorageKey) === '1') {
-			$('#aud-kpi-panel').show();
-			cargarKpi();
-		}
-	} catch(eKpiInit) {}
 	setTimeout(function () {
 		if (typeof exaUiAfterViewChange === 'function') {
 			exaUiAfterViewChange('.exa-ui-panel');

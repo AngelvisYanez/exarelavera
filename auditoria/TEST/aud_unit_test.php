@@ -25,10 +25,7 @@ function aud_run_unit_tests()
 		'aud_unit_captura_sin_mysql',
 		'aud_unit_flush_silencioso',
 		'aud_unit_tope_cola',
-		'aud_unit_rendimiento_captura',
-		'aud_unit_transaccion_rollback',
-		'aud_unit_transaccion_commit',
-		'aud_unit_transaccion_anidada'
+		'aud_unit_rendimiento_captura'
 	);
 	foreach ($cases as $fn) {
 		try {
@@ -226,56 +223,4 @@ function aud_unit_rendimiento_captura()
 	aud_assert($ms < 800, '200 capturas < 800 ms (fue ' . $ms . ' ms)');
 	echo "       metricas captura: total=" . $ms . " ms, promedio=" . round($avg, 3) . " ms\n";
 	putenv('AUDIT_MAX_QUEUE=');
-}
-
-function aud_unit_transaccion_rollback()
-{
-	aud_test_putenv('AUDIT_ENABLED', 'true');
-	aud_test_putenv('AUDIT_TABLES', AuditQueue::DEFAULT_TABLES);
-	AuditQueue::resetForTests();
-	aud_assert(!AuditQueue::inTransaction(), 'No inicia en transaccion');
-	AuditQueue::beginTransaction();
-	aud_assert(AuditQueue::inTransaction(), 'inTransaction es true tras beginTransaction');
-	AuditQueue::capture("INSERT INTO clientes (Cli_Nom) VALUES ('TEMP')");
-	AuditQueue::capture("UPDATE facturas SET Fac_Est='A' WHERE Fac_Cod=1");
-	aud_assert(AuditQueue::queueCount() === 0, 'Eventos en transaccion no estan en cola publica');
-	aud_assert(AuditQueue::stagedCount() === 2, 'Staging contiene 2 eventos');
-	AuditQueue::rollback();
-	aud_assert(!AuditQueue::inTransaction(), 'inTransaction es false tras rollback');
-	aud_assert(AuditQueue::queueCount() === 0, 'Rollback descarta eventos en cola');
-	aud_assert(AuditQueue::stagedCount() === 0, 'Rollback vacia staging');
-}
-
-function aud_unit_transaccion_commit()
-{
-	aud_test_putenv('AUDIT_ENABLED', 'true');
-	aud_test_putenv('AUDIT_TABLES', AuditQueue::DEFAULT_TABLES);
-	AuditQueue::resetForTests();
-	AuditQueue::beginTransaction();
-	AuditQueue::capture("INSERT INTO clientes (Cli_Nom) VALUES ('COMMIT1')");
-	AuditQueue::capture("UPDATE facturas SET Fac_Est='A' WHERE Fac_Cod=2");
-	aud_assert(AuditQueue::queueCount() === 0, 'Eventos en transaccion esperan en staging');
-	aud_assert(AuditQueue::stagedCount() === 2, 'Staging contiene 2 eventos');
-	AuditQueue::commit();
-	aud_assert(!AuditQueue::inTransaction(), 'inTransaction es false tras commit');
-	aud_assert(AuditQueue::queueCount() === 2, 'Commit promueve eventos a la cola principal');
-	aud_assert(AuditQueue::stagedCount() === 0, 'Staging vacio tras commit');
-}
-
-function aud_unit_transaccion_anidada()
-{
-	aud_test_putenv('AUDIT_ENABLED', 'true');
-	aud_test_putenv('AUDIT_TABLES', AuditQueue::DEFAULT_TABLES);
-	AuditQueue::resetForTests();
-	AuditQueue::beginTransaction();
-	AuditQueue::capture("INSERT INTO clientes (Cli_Nom) VALUES ('N1')");
-	AuditQueue::beginTransaction();
-	AuditQueue::capture("INSERT INTO clientes (Cli_Nom) VALUES ('N2')");
-	aud_assert(AuditQueue::stagedCount() === 2, 'Ambos niveles en staging');
-	AuditQueue::rollback();
-	aud_assert(AuditQueue::inTransaction(), 'Nivel padre sigue activo');
-	aud_assert(AuditQueue::stagedCount() === 1, 'Hijo descartado, queda N1');
-	AuditQueue::commit();
-	aud_assert(!AuditQueue::inTransaction(), 'Transaccion finalizada');
-	aud_assert(AuditQueue::queueCount() === 1, 'Solo N1 llego a la cola principal');
 }

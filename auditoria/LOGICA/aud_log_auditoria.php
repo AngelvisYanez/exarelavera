@@ -3,35 +3,6 @@ require_once(__DIR__."/../../DATA/MysqlConexion.php");
 require_once(__DIR__."/../../DATA/MysqlDatos.php");
 // require_once("../../DATA/MysqlConexion.php");
 // require_once("../../DATA/MysqlDatos.php");
-/** Base maestra de catalogo (usuarios, persona, empresas, sucursal, procesos). */
-if (!function_exists('aud_master_db')) {
-	function aud_master_db()
-	{
-		if (session_id() !== '' && !empty($_SESSION['Ses_Dat_Dis'])) {
-			$db = preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']);
-			if ($db !== '' && $db !== 'exa_master') {
-				return $db;
-			}
-		}
-		if (!empty($GLOBALS['Ses_Dat_Dis'])) {
-			$db = preg_replace('/[^a-zA-Z0-9_]/', '', $GLOBALS['Ses_Dat_Dis']);
-			if ($db !== '' && $db !== 'exa_master') {
-				return $db;
-			}
-		}
-		if (class_exists('Env')) {
-			$db = \Env::get('DB_DATABASE_CORP', '');
-			if (is_string($db) && $db !== '' && $db !== 'exa_master') {
-				return preg_replace('/[^a-zA-Z0-9_]/', '', $db);
-			}
-			$db2 = \Env::get('DB_DATABASE', '');
-			if (is_string($db2) && $db2 !== '' && $db2 !== 'exa_master') {
-				return preg_replace('/[^a-zA-Z0-9_]/', '', $db2);
-			}
-		}
-		return 'exa';
-	}
-}
 /**
  * Clase para acceder a los datos
  * @author car.87cod :)
@@ -354,19 +325,20 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 	 * @param Class_Log_Conexion $obBD_conexion
 	 * @return number
 	 */
-	function guardarInicioSesion($Ses_Int, $Ses_Usu_Cod,$obBD_conexion){
+	
+	 function guardarInicioSesion($Ses_Int, $Ses_Usu_Cod,$obBD_conexion){
 		try {
 			$this->inicio_transaccion($obBD_conexion->conexion);
 			/**
 			 * Obtener la ultima secuencia
 			 */
 			$row = $this->getRowConsulta($this->sentencias(6, $this->parametros($Ses_Usu_Cod)), $obBD_conexion);
-			$Ses_Cod = !empty($row['Ses_Cod']) && $row['Ses_Cod'] > 0 ? $row['Ses_Cod'] : 1;
+			$Ses_Cod = !empty($row['Ses_Cod']) && $row['Ses_Cod'] > 0 ? $row['Ses_Cod'] : 1; 
 			$this->grabarv_registros($this->sentencias(7, $this->parametros($Ses_Cod.'*'.$Ses_Usu_Cod.'*'.$Ses_Int)),$obBD_conexion->conexion);
 			$this->fin_transaccion_nomsn($obBD_conexion->conexion);
 			$this->registrarLogSesion($obBD_conexion, $Ses_Usu_Cod, 'I', 'Ses_Cod', (string)$Ses_Cod, 'Ses_Cod='.$Ses_Cod);
 			return $Ses_Cod;
-		} catch (\Exception $e) {
+		} catch (Throwable $e) {
 			if (class_exists('DebugBar')) {
 				DebugBar::addException($e);
 			}
@@ -402,128 +374,228 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 	function GuardarSesionError($Ses_Out, $Usu_Ced, $Usu_Pas, $Emp_Cod){
 		try {
 			$obBD_conexion = new MysqlConexion;
-
+			
 			$row_ = $this->getRowConsulta($this->sentencias(12, $this->parametros($Usu_Ced.'*'.$Emp_Cod)), $obBD_conexion);
-
+			
 			if(!empty($row_['Usu_Cod']) && $row_['Usu_Cod'] > 0){
-
+			
 				$this->inicio_transaccion($obBD_conexion->conexion);
-
+			
 				/**
 				 * Obtener la ultima secuencia
 				 */
 				$row = $this->getRowConsulta($this->sentencias(6, $this->parametros($row_['Usu_Cod'])), $obBD_conexion);
-				$Ses_Cod = !empty($row['Ses_Cod']) && $row['Ses_Cod'] > 0 ? $row['Ses_Cod'] : 1;
-				$this->grabarv_registros($this->sentencias(13, $this->parametros($Ses_Cod.'*'.$row_['Usu_Cod'].'*'.$Ses_Out.'*'.'INTENTO FALLIDO'.' - clave: '.$Usu_Pas)),$obBD_conexion->conexion);
-
+				
+				$Ses_Cod = !empty($row['Ses_Cod']) && $row['Ses_Cod'] > 0 ? $row['Ses_Cod'] : 1; 
+				
+				$this->grabarv_registros($this->sentencias(13, $this->parametros($Ses_Cod.'*'.$row_['Usu_Cod'].'*'.$Ses_Out.'*'.$Ses_Out)),$obBD_conexion->conexion);
+				
+				/**
+				 * Guardado en la tabla log
+				 * Tener constancia de la clave que estuvo intentando ingresar
+				 * Codigo de evento -> $Row_Evn
+				 * Codigo del proceso -> $row_pcs
+				 */
+				$Row_Evn = $this->getRowConsulta($this->sentencias(9, $this->parametros('F')), $obBD_conexion);
+				$row_pcs = $this->getRowConsulta($this->sentencias(2,$this->parametros('exa*index.php')), $obBD_conexion);
+				$row_tab = $this->getRowConsulta($this->sentencias(1, $this->parametros('usuarios')), $obBD_conexion);
+				if (!empty($Row_Evn['Eve_Cod']) && !empty($row_pcs['Pcs_Cod']) && !empty($row_tab['Tab_Cod'])) {
+					$Log_Cam = 'Usu_Pal';
+					$Log_Val = $Usu_Pas;
+					$Log_Int = '';
+					
+					$this->grabarv_registros($this->sentencias(3, $this->parametros($row_['Usu_Cod'].'*'.$row_pcs['Pcs_Cod'].'*'.$row_tab['Tab_Cod'].'*'.$Ses_Out.'*'.$Row_Evn['Eve_Cod'].'*'.$Log_Cam.'*'.$Log_Val.'*'.$Log_Int)),$obBD_conexion->conexion);
+				}
+				
 				$this->fin_transaccion_nomsn($obBD_conexion->conexion);
-				$this->registrarLogSesion($obBD_conexion, (int)$row_['Usu_Cod'], 'I', 'Ses_Cod', (string)$Ses_Cod, 'FALLO Ses_Cod='.$Ses_Cod);
 			}
-
 			$this->liberar();
 			$obBD_conexion->cerrar();
-
-			return $this->Error;
-		} catch (\Exception $e) {
+		} catch (Throwable $e) {
 			if (class_exists('DebugBar')) {
 				DebugBar::addException($e);
 			}
-			return 0;
 		}
+		
+		return $this->Error;
 	}
 
 	/**
-	 * Registra el evento de sesion directamente en auditoria.logs
-	 * para que sea visible en la pantalla de monitoreo.
+	 * Escribe login/logout en auditoria.logs sin tumbar la sesion si falla.
 	 */
-	private function registrarLogSesion($obBD_conexion, $usuCod, $eventoLetra, $campo, $valor, $detalle)
+	function registrarLogSesion($obBD_conexion, $Ses_Usu_Cod, $eveIni, $Log_Cam, $Log_Val, $Log_Int)
 	{
-		$rowPcs = $this->getRowConsulta("SELECT Pcs_Cod FROM `".aud_master_db()."`.procesos WHERE Pcs_Nom LIKE '%login%' OR Pcs_Nom LIKE '%index%' OR Pcs_Lin LIKE '%seguridad%' LIMIT 1", $obBD_conexion);
-		$pcsCod = !empty($rowPcs['Pcs_Cod']) ? (int)$rowPcs['Pcs_Cod'] : 0;
-
-		$rowEve = $this->getRowConsulta($this->sentencias(9, $this->parametros($eventoLetra)), $obBD_conexion);
-		$eveCod = !empty($rowEve['Eve_Cod']) ? (int)$rowEve['Eve_Cod'] : 1;
-
-		$rowTab = $this->getRowConsulta($this->sentencias(1, $this->parametros('sesion')), $obBD_conexion);
-		$tabCod = !empty($rowTab['Tab_Cod']) ? (int)$rowTab['Tab_Cod'] : 0;
-
-		$hoy = date('Y-m-d H:i:s');
-		$sql = $this->sentencias(3, $this->parametros(
-			(int)$usuCod . '*' .
-			$pcsCod . '*' .
-			$tabCod . '*' .
-			$hoy . '*' .
-			$eveCod . '*' .
-			$campo . '*' .
-			$valor . '*' .
-			$detalle
-		));
-		$this->consulta($sql, $obBD_conexion->conexion);
-	}
-
-	function sentencias($id, $Par_Sql){
-		$mdb = aud_master_db();
-		switch($id){
-			/**
-			 * Obtener el codigo de la tabla
-			 */
-			case 1:
-				$sql = "SELECT Tab_Cod FROM `auditoria`.`tablas` WHERE Tab_Nom = '".$Par_Sql[0]."'";
-				return $sql;
-				break;
-			case 2:
-				$sql = "SELECT Pcs_Cod FROM `{$mdb}`.`procesos` WHERE Pcs_Nom = '".$Par_Sql[1]."'";
-				return $sql;
-				break;
-			case 3:
-				$sql = "INSERT INTO `auditoria`.`logs` (Usu_Cod, Pcs_Cod, Tab_Cod, Log_Fec, Eve_Cod, Log_Cam, Log_Val, Log_Int)
-							VALUES(".$Par_Sql[0].",".$Par_Sql[1].",".$Par_Sql[2].",'".$Par_Sql[3]."',".$Par_Sql[4].",'".$Par_Sql[5]."','".$Par_Sql[6]."','".$Par_Sql[7]."')";
-				return $sql;
-				break;
-			case 4:
-				$sql = "SHOW TABLE STATUS FROM `{$mdb}`";
-				return $sql;
-				break;
-			case 5:
-				$sql = "INSERT INTO `auditoria`.`tablas` (Tab_Nom, Tab_Des) VALUES ('".$Par_Sql[0]."','".$Par_Sql[1]."')";
-				return $sql;
-				break;
-			case 6:
-				$sql = "SELECT IFNULL(MAX(Ses_Cod),0)+1 AS Ses_Cod FROM `auditoria`.`sesion` WHERE Usu_Cod = ".$Par_Sql[0];
-				return $sql;
-				break;
-			case 7:
-				$sql = "INSERT INTO `auditoria`.`sesion` (Ses_Cod, Usu_Cod, Ses_Int) VALUES (".$Par_Sql[0].",".$Par_Sql[1].",'".$Par_Sql[2]."')";
-				return $sql;
-				break;
-			case 8:
-				$sql = "UPDATE `auditoria`.`sesion` SET Ses_Out = '".$Par_Sql[0]."' WHERE Ses_Cod = ".$Par_Sql[1]." AND Usu_Cod = ".$Par_Sql[2];
-				return $sql;
-				break;
-			case 9:
-				$sql = "SELECT Eve_Cod FROM `auditoria`.`eventos` WHERE Eve_Ide = '".$Par_Sql[0]."'";
-				return $sql;
-				break;
-			case 10:
-				$sql = "SELECT COLUMN_NAME, COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '".$Par_Sql[0]."' AND TABLE_SCHEMA = '{$mdb}'";
-				return $sql;
-				break;
-			case 11:
-				$sql = "INSERT INTO `auditoria`.`campos` (Tab_Cod, Cam_Nom, Cam_Des) VALUES (".$Par_Sql[0].",'".$Par_Sql[1]."','".$Par_Sql[2]."')";
-				return $sql;
-				break;
-			case 12:
-				$sql = "SELECT u.Usu_Cod FROM `{$mdb}`.usuarios u
-						INNER JOIN `{$mdb}`.persona p ON p.Per_Cod = u.Per_Cod
-						WHERE p.Per_Ced = '".$Par_Sql[0]."' AND u.Emp_Cod = ".$Par_Sql[1];
-				return $sql;
-				break;
-			case 13:
-				$sql = "INSERT INTO `auditoria`.`sesion` (Ses_Cod, Usu_Cod, Ses_Int, Ses_Obs) VALUES (".$Par_Sql[0].",".$Par_Sql[1].",'".$Par_Sql[2]."','".$Par_Sql[3]."')";
-				return $sql;
-				break;
+		try {
+			if (!is_object($obBD_conexion) || empty($obBD_conexion->conexion)) {
+				return;
+			}
+			$this->grabarv_registros($this->sentencias(16, array()), $obBD_conexion->conexion);
+			$row_tab = $this->getRowConsulta($this->sentencias(1, $this->parametros('sesion')), $obBD_conexion);
+			$tab = !empty($row_tab['Tab_Cod']) ? (int)$row_tab['Tab_Cod'] : 0;
+			$Row_Evn = $this->getRowConsulta($this->sentencias(9, $this->parametros($eveIni)), $obBD_conexion);
+			$eve = !empty($Row_Evn['Eve_Cod']) ? (int)$Row_Evn['Eve_Cod'] : ($eveIni === 'I' ? 2 : 3);
+			$row_pcs = $this->getRowConsulta($this->sentencias(2, $this->parametros('exa*index.php')), $obBD_conexion);
+			$pcs = !empty($row_pcs['Pcs_Cod']) ? (int)$row_pcs['Pcs_Cod'] : 0;
+			if ($pcs <= 0) {
+				$Log_Int = 'Pcs_Nom=index.php || '.$Log_Int;
+			}
+			$hoy = date('Y-m-d H:i:s');
+			$emp = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
+			$suc = isset($_SESSION['Ses_Suc_Cod']) ? (int)$_SESSION['Ses_Suc_Cod'] : 0;
+			$cam = str_replace('*', ' ', (string)$Log_Cam);
+			$val = str_replace('*', ' ', (string)$Log_Val);
+			$int = str_replace('*', ' ', (string)$Log_Int);
+			$this->grabarv_registros($this->sentencias(3, $this->parametros(((int)$Ses_Usu_Cod).'*'.$pcs.'*'.$tab.'*'.$hoy.'*'.$eve.'*'.$cam.'*'.$val.'*'.$int.'*'.$emp.'*'.$suc)), $obBD_conexion->conexion);
+		} catch (Throwable $e) {
+			if (class_exists('DebugBar')) {
+				DebugBar::addException($e);
+			}
 		}
 	}
 	
+	/**
+	 * Obtener una sql para ejecutar
+	 * @param number $id codigo de la sql
+	 * @param array $Par_Sql parametros de la sql
+	 * @return string sentencia sql completa
+	 */
+	function sentencias($id, $Par_Sql){
+		switch($id){
+			/**
+			 * Obtener el codigo de la tabla por el nombre
+			 */
+			case 1:
+				$sql = "SELECT `Tab_Cod` FROM `auditoria`.`tablas` WHERE `Tab_Nom` = '$Par_Sql[0]'";
+                                //echo $sql;
+				return $sql;
+			break;
+
+			/**
+			 * buscar codigo del proceso por el nombre de la pagina
+			 */
+			case 2:
+				$sql = "SELECT `Pcs_Cod` FROM `$Par_Sql[0]`.`procesos` WHERE `Pcs_Nom` = '$Par_Sql[1]'";
+                                //echo $sql;
+				return $sql;
+			break;
+
+			/**
+			 * para insertar los valores en la auditoria
+			 */
+			case 3:
+				$empCod = isset($Par_Sql[8]) ? $Par_Sql[8] : (isset($_SESSION['Ses_Emp_Cod']) ? $_SESSION['Ses_Emp_Cod'] : 0);
+				$sucCod = isset($Par_Sql[9]) ? $Par_Sql[9] : (isset($_SESSION['Ses_Suc_Cod']) ? $_SESSION['Ses_Suc_Cod'] : 0);
+				$sql = "INSERT INTO `auditoria`.`logs`(`Usu_Cod`,`Pcs_Cod`,`Tab_Cod`,`Log_Fec`,`Eve_Cod`,`Log_Cam`,`Log_Val`,`Log_Int`,`Emp_Cod`,`Suc_Cod`)
+				VALUES('$Par_Sql[0]','$Par_Sql[1]','$Par_Sql[2]','$Par_Sql[3]','$Par_Sql[4]','$Par_Sql[5]','$Par_Sql[6]','$Par_Sql[7]','$empCod','$sucCod')";
+				//echo $sql;
+                                return $sql;
+			break;
+					
+			/**
+			 * Obtener todos los nombres de la base de datos
+			 */
+			case 4:
+				$sql = "SHOW TABLE STATUS";
+				return $sql;
+			break;
+					
+			/**
+			 * Insertar datos
+			 */
+			case 5:
+				$sql = "INSERT INTO `auditoria`.`tablas`(`Tab_Nom`,`Tab_Des`)VALUES('$Par_Sql[0]','$Par_Sql[1]')";
+				return $sql;
+			break;
+					
+			/**
+			 * obtener el ultimo codigo secuencial unico para el nuevo insertado
+			 */
+			case 6:
+				$sql = "SELECT (`Ses_Cod` + 1) AS 'Ses_Cod' FROM `auditoria`.`sesion` WHERE `Usu_Cod` = '$Par_Sql[0]' ORDER BY `Ses_Cod` DESC LIMIT 0,1";
+				return $sql;
+			break;
+					
+			/**
+			 * Insertado de nuevo registro en la tabla sesion
+			 */
+			case 7:
+				$sql = "INSERT INTO `auditoria`.`sesion` (`Ses_Cod`,`Usu_Cod`,`Ses_Int`)VALUES($Par_Sql[0], $Par_Sql[1], '$Par_Sql[2]')";
+				return $sql;
+			break;
+					
+			/**
+			 * Actualizar cierre de sesion en la base auditoria
+			 */
+			case 8:
+				$sql = "UPDATE `auditoria`.`sesion` SET `Ses_Out` = '$Par_Sql[0]' WHERE `Ses_Cod` = $Par_Sql[1] AND `Usu_Cod` = $Par_Sql[2]";
+				//echo $sql;
+                                return $sql;
+			break;
+			
+			/**
+			 * Obtener el codigo del evento
+			 */
+			case 9:
+				$sql = "SELECT `Eve_Cod` FROM `auditoria`.`eventos` WHERE `Eve_Ini` = '$Par_Sql[0]'";
+                                //echo $sql;
+				return $sql;
+			break;
+			
+			/**
+			 * Obtener el nombre de la columa y su comentario segun nombre de la tabla
+			 */
+			case 10:
+				$sql = "SELECT COLUMN_NAME, COLUMN_COMMENT FROM information_schema.COLUMNS WHERE table_name='$Par_Sql[0]'";
+				return $sql;
+			break;
+			
+			/**
+			 * Insertar los campos de la base de datos
+			 */
+			case 11:
+				$sql = "INSERT INTO `auditoria`.`campos` (`Tab_Cod`,`Cam_Atr`,`Cam_Des`)VALUES('$Par_Sql[0]','$Par_Sql[1]','$Par_Sql[2]')";
+				return $sql;
+			break;
+			
+			/**
+			 * Obtener codigo de usuario por cedula o por empresa
+			 */
+			case 12:
+				$sql = "SELECT `usuarios`.`Usu_Cod`
+				FROM `exa`.`usuarios`
+				INNER JOIN `exa`.`sucursal` ON `usuarios`.`Suc_Cod` = `sucursal`.`Suc_Cod`
+				INNER JOIN `exa`.`empresas` ON `sucursal`.`Emp_Cod` = `empresas`.`Emp_Cod`
+				WHERE
+				`usuarios`.`Usu_Ced` = '$Par_Sql[0]' AND `empresas`.`Emp_Cod` = '$Par_Sql[1]'";
+				return $sql;
+			break;
+			
+			/**
+			 * Insertado de nuevo registro en la tabla sesion
+			 */
+			case 13:
+				$sql = "INSERT INTO `auditoria`.`sesion` (`Ses_Cod`,`Usu_Cod`,`Ses_Int`,`Ses_Out`)VALUES($Par_Sql[0], $Par_Sql[1], '$Par_Sql[2]','$Par_Sql[3]')";
+				return $sql;
+			break;
+			
+			/**
+			 * Obtener las palabras reservadas  
+			 */
+			case 14:
+				$sql = "SELECT `Res_Nom` FROM `auditoria`.`reservadas` WHERE `Res_Est`='A'";
+				return $sql;
+			break;
+
+			/** Semilla de catalogo sesion (login/logout en el historial) */
+			case 16:
+				$sql = "INSERT INTO `auditoria`.`tablas` (`Tab_Nom`,`Tab_Des`,`Tab_Ali`)
+				SELECT 'sesion','Sesiones de usuario','Sesion'
+				FROM DUAL WHERE NOT EXISTS (
+					SELECT 1 FROM `auditoria`.`tablas` WHERE `Tab_Nom`='sesion'
+				)";
+				return $sql;
+			break;
+		}
+	}
 }
 ?>

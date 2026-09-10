@@ -130,7 +130,7 @@ if (!empty($req_avance['guardarAvance'])) {
     if (!$resp['success']) {
         $resp['message'] = $obBD_con1->MsgError;
     }
-    } catch (\Exception $e) {
+    } catch (Throwable $e) {
         $resp['message'] = 'Error: ' . $e->getMessage();
     }
     header('Content-Type: application/json; charset=UTF-8');
@@ -145,7 +145,7 @@ if (!empty($_REQUEST['listarAdjuntosTarea'])) {
     if ($tarCod > 0) {
         try {
             $arr = $obBD_con1->getArrayConsulta(43, array('Tar_Cod' => $tarCod), $obBD_conexion);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             $arr = array();
         }
         if (!is_array($arr)) $arr = array();
@@ -163,7 +163,7 @@ if (!empty($_REQUEST['listarAdjuntosAvance'])) {
     if ($avaCod > 0) {
         try {
             $arr = $obBD_con1->getArrayConsulta(41, array('Ava_Cod' => $avaCod), $obBD_conexion);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             $arr = array();
         }
         if (!is_array($arr)) $arr = array();
@@ -369,7 +369,7 @@ if (!empty($_REQUEST['crearTareaAdicional'])) {
         } else {
             $resp['message'] = $obBD_con1->MsgError;
         }
-    } catch (\Exception $e) {
+    } catch (Throwable $e) {
         $resp['message'] = 'Error: ' . $e->getMessage();
     }
     header('Content-Type: application/json; charset=UTF-8');

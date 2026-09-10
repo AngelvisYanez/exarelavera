@@ -1,6 +1,6 @@
 <?php
 
-use \Exception;
+// use \Exception; // Not needed in PHP 8.x without namespace
 
 /**
  *  Clase para conexion con MySql
@@ -10,6 +10,9 @@ use \Exception;
  */
 if (isset($APP_REAL_PATH)) {
     if (file_exists($APP_REAL_PATH . "/auditoria/LOGICA/aud_log_auditoria.php")) require_once($APP_REAL_PATH . "/auditoria/LOGICA/aud_log_auditoria.php");
+}
+if (file_exists(dirname(__FILE__) . "/../auditoria/LOGICA/aud_log_queue.php")) {
+    require_once(dirname(__FILE__) . "/../auditoria/LOGICA/aud_log_queue.php");
 }
 class MysqlDatos
 {
@@ -140,7 +143,7 @@ class MysqlDatos
     {
         if (is_bool($con) && $con) {
             $this->startConnection();
-        } else if (!is_null($con)) $this->con = is_subclass_of($con, 'MysqlConexion') ? $con->conexion : get_class($con) == 'mysqli' ? $con : null;
+        } else if (!is_null($con)) $this->con = is_subclass_of($con, 'MysqlConexion') ? $con->conexion : (get_class($con) == 'mysqli' ? $con : null);
     }
     function setConn($con)
     {
@@ -190,7 +193,28 @@ class MysqlDatos
     {
         $this->utf8_change_param($a);
         $c = json_encode($a);
+        if ($c === false) {
+            $c = '{"success":false,"message":"No se pudo generar la respuesta"}';
+        }
         if ($b == true) {
+            @ini_set('display_errors', '0');
+            if (class_exists('AuditQueue')) {
+                $lvl = ob_get_level();
+                @ob_start();
+                try {
+                    AuditQueue::flush(false);
+                } catch (Exception $eFlush) {
+                }
+                while (ob_get_level() > $lvl) {
+                    @ob_end_clean();
+                }
+            }
+            while (ob_get_level() > 0) {
+                @ob_end_clean();
+            }
+            if (!headers_sent()) {
+                @header('Content-Type: application/json; charset=utf-8');
+            }
             echo $c;
             exit();
         }
@@ -297,8 +321,20 @@ class MysqlDatos
         if (empty($sql)) return $this->setErrorEmpty($this->getDB($conexion));
         DebugBar::startQueryMeasure();
         $con = $this->getMyCon($conexion);
+        if (is_string($sql) && class_exists('AuditQueue') && preg_match('/^\s*(UPDATE|DELETE)\b/i', $sql)) {
+            try {
+                AuditQueue::captureBefore($sql, $con);
+            } catch (Exception $eAudit) {
+            }
+        }
         $this->rs_cargar = @mysqli_query($con, $sql); /* ejecutamos la consulta */
         if (!$this->rs_cargar) $this->setError(@mysqli_errno($con), @mysqli_error($con));
+        else if (is_string($sql) && class_exists('AuditQueue') && preg_match('/^\s*(INSERT|UPDATE|DELETE)\b/i', $sql)) {
+            try {
+                AuditQueue::capture($sql, $con);
+            } catch (Exception $eAudit) {
+            }
+        }
         DebugBar::addQuery($sql, $this->getDB($conexion) + $this->getErrorData() + $this->getRowCount($this->rs_cargar, $sql, $con));
         return $this->rs_cargar; /* Si hubo �xito devuelve el identificador de la conexi�n, sino devuelve 0  */
     }
@@ -312,8 +348,20 @@ class MysqlDatos
             $this->beforeLastSqlQuery = $this->insercionid($con) . " -> " . $this->lastSqlQuery;
             $this->lastNumSql = $num;
             $this->lastSqlQuery = $sql;
+            if (class_exists('AuditQueue') && preg_match('/^\s*(UPDATE|DELETE)\b/i', $sql)) {
+                try {
+                    AuditQueue::captureBefore($sql, $con);
+                } catch (Exception $eAudit) {
+                }
+            }
             $result = @mysqli_query($con, $sql);
             $this->setError(@mysqli_errno($con), @mysqli_error($con));
+            if ($result && class_exists('AuditQueue')) {
+                try {
+                    AuditQueue::capture($sql, $con);
+                } catch (Exception $eAudit) {
+                }
+            }
         } else $result = false;
         DebugBar::addQuery($sql, $this->getDB($conexion) + $this->getErrorData() + $this->getRowCount($this->rs_cargar, $sql, $con));
         return $result;
@@ -652,7 +700,8 @@ class MysqlDatos
     function fetch_assoc($rs_consulta)
     {
         if (is_bool($rs_consulta)||is_null($rs_consulta))return array();
-        return @mysqli_fetch_assoc($rs_consulta);
+        $row = @mysqli_fetch_assoc($rs_consulta);
+        return is_array($row) ? $row : array();
     }
     /* Desvuelve el total de datos consultados en base a un rs */
     function num_rows($rs_consulta)
@@ -667,7 +716,7 @@ class MysqlDatos
             // Si es un recurso v�lido, lo liberamos
             try{
                 $ban = @mysqli_free_result($rs_consulta);
-            } catch (\Exception $e){}
+            } catch (Exception $e){}
             $rs_consulta = null; // Evita reutilizaci�n accidental
         }
 

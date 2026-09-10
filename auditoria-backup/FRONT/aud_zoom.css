@@ -1,0 +1,84 @@
+/**
+ * Zoom 90% - El contenido se muestra como si el navegador estuviera al 90%
+ * para que al 100% se vea cómodo sin necesidad de reducir el zoom manualmente.
+ */
+html {
+    zoom: 0.9;
+}
+
+/* Botón Editar/Modificar - estilo verde con icono lápiz (Despacho Contable) */
+/* Icono lápiz: usar sprite Bootstrap 2 (glyphicons-halflings-white) o icon-pencil */
+.btn-editar-modificar .glyphicon-pencil,
+.btn-editar-modificar .icon-pencil,
+.btn-editar-modificar [class*="glyphicon-pencil"],
+.btn-editar-modificar [class*="icon-pencil"] {
+    display: inline-block !important;
+    width: 14px !important;
+    height: 14px !important;
+    margin: 0 !important;
+    vertical-align: middle !important;
+    background: url("../../mascaras/model1/imagenes/32x32/glyphicons-halflings-white.png") 0 -72px no-repeat !important;
+    font-size: 0 !important;
+    line-height: 14px !important;
+    color: transparent !important;
+}
+.btn-editar-modificar,
+.aud-tabla .btn-editar-modificar,
+.btn-modificar-contrato.btn-editar-modificar,
+.btnModificarAsig.btn-editar-modificar,
+.btn-editar-avance.btn-editar-modificar {
+    background: linear-gradient(180deg, #5cb85c 0%, #6fc76f 50%, #4cae4c 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
+    padding: 0 !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+    transition: all 0.2s ease;
+}
+.btn-editar-modificar:hover,
+.aud-tabla .btn-editar-modificar:hover,
+.btn-modificar-contrato.btn-editar-modificar:hover,
+.btnModificarAsig.btn-editar-modificar:hover,
+.btn-editar-avance.btn-editar-modificar:hover {
+    background: linear-gradient(180deg, #4cae4c 0%, #5cb85c 50%, #449d44 100%) !important;
+    color: white !important;
+    box-shadow: 0 3px 8px rgba(76, 175, 80, 0.4);
+    transform: translateY(-1px);
+}
+/* Icono dentro del botón editar - Bootstrap 2 (icon-*) y Bootstrap 3 (glyphicon) */
+.btn-editar-modificar .glyphicon,
+.btn-editar-modificar .glyphicon-pencil,
+.btn-editar-modificar i.glyphicon,
+.btn-editar-modificar .icon-pencil,
+.btn-editar-modificar .icon-edit { color: white !important; }
+
+/* Botón eliminar (X) - mismo tamaño que editar para columna ACCIÓN */
+.aud-tabla .col-accion .btn-danger.eliminar-actividad,
+.aud-tabla .col-acciones .btn-danger.btn-eliminar-contrato,
+.aud-tabla .col-accion .btn-danger.btn-eliminar-contrato,
+.aud-tabla .col-acciones .btn-danger[title="Eliminar"],
+.aud-tabla .col-accion .btn-danger[title="Eliminar"],
+.aud-tabla .btn-danger.btn-quitar-servicio {
+    padding: 0 !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 6px !important;
+}
+.aud-tabla .col-accion .btn-danger span[aria-hidden="true"],
+.aud-tabla .col-acciones .btn-danger span[aria-hidden="true"] {
+    font-size: 18px !important;
+    line-height: 1 !important;
+    font-weight: 300 !important;
+}

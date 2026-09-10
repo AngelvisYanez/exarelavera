@@ -27,8 +27,7 @@ foreach ($argv as $a) {
 aud_test_putenv('AUDIT_ENABLED', 'true');
 aud_test_putenv('AUDIT_TABLES', AuditQueue::DEFAULT_TABLES);
 $usuCod = 900000 + $user;
-$empCod = 999000 + $user;
-aud_session_user($usuCod, $empCod);
+aud_session_user($usuCod);
 AuditQueue::resetForTests();
 
 $err = '';

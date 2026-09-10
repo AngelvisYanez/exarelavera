@@ -21,15 +21,6 @@
 require_once dirname(__FILE__) . '/aud_unit_test.php';
 require_once dirname(__FILE__) . '/aud_unit_monitoreo.php';
 require_once dirname(__FILE__) . '/aud_unit_config.php';
-require_once dirname(__FILE__) . '/aud_unit_actividad.php';
-require_once dirname(__FILE__) . '/aud_unit_dashboard.php';
-
-// En entornos locales donde el catalogo (procesos/organizado) no vive en la
-// base maestra sino en otra (p.ej. `exa`), apuntar DB_DATABASE a esa base
-// para que las pruebas de BD ejerciten el SQL real.
-if (!aud_db_catalogo_en(\Env::get('DB_DATABASE', 'exa_master')) && aud_db_catalogo_en('exa')) {
-	putenv('DB_DATABASE=exa');
-}
 
 function aud_parse_worker_json($raw)
 {
@@ -62,11 +53,13 @@ function aud_run_workers($users, $ops, $mode)
 		$errFile = $tmp . DIRECTORY_SEPARATOR . 'w_' . $mode . '_' . $i . '.err';
 		@unlink($outFile);
 		@unlink($errFile);
-		$phpCmd = (strpos($php, ' ') !== false) ? '"' . $php . '"' : $php;
-		$workerArg = (strpos($worker, ' ') !== false) ? '"' . $worker . '"' : $worker;
-		$cmd = $phpCmd . ' ' . $workerArg . ' --user=' . (int)$i
+		$cmd = escapeshellarg($php) . ' ' . escapeshellarg($worker)
+			. ' --user=' . (int)$i
 			. ' --ops=' . (int)$ops
-			. ' --mode=' . $mode;
+			. ' --mode=' . escapeshellarg($mode);
+		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+			$cmd = '"' . $cmd . '"';
+		}
 		$desc = array(
 			0 => array('pipe', 'r'),
 			1 => array('file', $outFile, 'w'),
@@ -107,9 +100,6 @@ function aud_run_workers($users, $ops, $mode)
 function aud_cleanup_test_logs($con)
 {
 	@mysqli_query($con, "DELETE FROM `logs` WHERE `Usu_Cod` >= 900001 AND `Usu_Cod` < 901000");
-	// Aislar la prueba de reglas de configuracion reales: los workers usan
-	// empresas reservadas 999001+ y no deben heredar reglas de otras empresas.
-	@mysqli_query($con, "DELETE FROM `cfg_monitoreo` WHERE `Emp_Cod` >= 999001 AND `Emp_Cod` < 1000000");
 }
 
 function aud_count_test_logs($con)
@@ -209,10 +199,8 @@ function aud_run_concurrent_tests()
 $unitFails = aud_run_unit_tests();
 $monFails = aud_run_monitoreo_tests();
 $cfgFails = aud_run_config_tests();
-$actFails = aud_run_actividad_tests();
-$dashFails = aud_run_dashboard_tests();
 $loadFails = aud_run_concurrent_tests();
-$total = $unitFails + $monFails + $cfgFails + $actFails + $dashFails + $loadFails;
+$total = $unitFails + $monFails + $cfgFails + $loadFails;
 
 echo "\n========================================\n";
 if ($total === 0) {

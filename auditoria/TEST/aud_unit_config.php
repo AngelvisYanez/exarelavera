@@ -24,8 +24,6 @@ function aud_run_config_tests()
 		'aud_unit_cfg_parse_items',
 		'aud_unit_cfg_marcar_todos_compacta',
 		'aud_unit_cfg_traza_y_banner',
-		'aud_unit_cfg_permiso_admin_sistemas',
-		'aud_unit_cfg_sql_filtros_rol_usuario',
 		'aud_unit_db_cfg_arbol_facturacion',
 		'aud_unit_db_cfg_filtra_por_nivel',
 		'aud_unit_db_cfg_captura_fuera_whitelist',
@@ -188,64 +186,6 @@ function aud_unit_cfg_traza_y_banner()
 	aud_assert(strpos($aud, 'registrarLogSesion') !== false, 'Login y logout se escriben en el historial');
 }
 
-/**
- * Prueba de permisos de Administrador de Sistemas
- */
-function aud_unit_cfg_permiso_admin_sistemas()
-{
-	$_SESSION['Ses_Per_Des'] = array('Administrador de Sistemas');
-	$_SESSION['Ses_Lis_Per'] = array(1);
-	aud_assert(aud_cfg_es_admin_sistemas(1) === true, 'Admin detectado por descripcion del perfil');
-
-	$_SESSION['Ses_Per_Des'] = array('ADMINISTRADOR');
-	$_SESSION['Ses_Lis_Per'] = array(1);
-	aud_assert(aud_cfg_es_admin_sistemas(2) === true, 'Admin detectado por nombre ADMINISTRADOR');
-
-	$_SESSION['Ses_Per_Des'] = array('Contador', 'Vendedor');
-	$_SESSION['Ses_Lis_Per'] = array(5, 8);
-	aud_assert(aud_cfg_es_admin_sistemas(99) === false, 'Contador o vendedor no son Administrador de Sistemas');
-}
-
-/**
- * Prueba de sentencias SQL para filtros de Rol, Usuario y Modo Estricto
- */
-function aud_unit_cfg_sql_filtros_rol_usuario()
-{
-	// Case 9: Roles activos de la empresa
-	$sqlRoles = sentencias_cfg_monitoreo(9, array(1));
-	aud_assert(strpos($sqlRoles, 'perfiles') !== false, 'SQL case 9 consulta la tabla perfiles');
-	aud_assert(strpos($sqlRoles, 'Emp_Cod') !== false, 'SQL case 9 filtra por empresa activa');
-
-	// Case 10: Usuarios activos de la empresa
-	$sqlUsuarios = sentencias_cfg_monitoreo(10, array(1));
-	aud_assert(strpos($sqlUsuarios, 'usuarios') !== false, 'SQL case 10 consulta la tabla usuarios');
-	aud_assert(strpos($sqlUsuarios, 'Usu_Nom') !== false, 'SQL case 10 concatena nombre de usuario');
-
-	// Case 11: Procesos de un Rol
-	$sqlRolPcs = sentencias_cfg_monitoreo(11, array(2));
-	aud_assert(strpos($sqlRolPcs, 'perfiorgan') !== false, 'SQL case 11 consulta la tabla perfiorgan');
-	aud_assert(strpos($sqlRolPcs, 'Per_Cod') !== false && strpos($sqlRolPcs, '2') !== false, 'SQL case 11 filtra por Per_Cod del rol');
-
-	// Case 12: Procesos de un Usuario
-	$sqlUsuPcs = sentencias_cfg_monitoreo(12, array(15));
-	aud_assert(strpos($sqlUsuPcs, 'perfiorgan') !== false, 'SQL case 12 consulta perfiorgan');
-	aud_assert(strpos($sqlUsuPcs, 'usuarperfi') !== false, 'SQL case 12 hace join con usuarperfi');
-	aud_assert(strpos($sqlUsuPcs, 'Usu_Cod') !== false && strpos($sqlUsuPcs, '15') !== false, 'SQL case 12 filtra por Usu_Cod');
-
-	// Case 13: Verificacion de Administrador en DB
-	$sqlAdminCheck = sentencias_cfg_monitoreo(13, array(5));
-	aud_assert(strpos($sqlAdminCheck, 'Administrador de Sistemas') !== false, 'SQL case 13 valida perfil Administrador de Sistemas');
-
-	// Case 14: Arbol filtrado por Rol o Usuario (Modo Estricto)
-	$sqlTreeRol = sentencias_cfg_monitoreo(14, array(0, 4));
-	aud_assert(strpos($sqlTreeRol, 'perfiorgan') !== false, 'SQL case 14 consulta perfiorgan para filtrar arbol');
-	aud_assert(strpos($sqlTreeRol, 'Per_Cod') !== false && strpos($sqlTreeRol, '4') !== false, 'SQL case 14 filtra arbol por Per_Cod');
-
-	$sqlTreeUsu = sentencias_cfg_monitoreo(14, array(10, 0));
-	aud_assert(strpos($sqlTreeUsu, 'usuarperfi') !== false, 'SQL case 14 consulta usuarperfi para filtrar arbol por usuario');
-	aud_assert(strpos($sqlTreeUsu, 'Usu_Cod') !== false && strpos($sqlTreeUsu, '10') !== false, 'SQL case 14 filtra arbol por Usu_Cod');
-}
-
 function aud_cfg_buscar_proceso($con, $needle)
 {
 	$sql = sentencias_cfg_monitoreo(7, array());
@@ -348,7 +288,18 @@ function aud_unit_db_cfg_filtra_por_nivel()
 	}
 	$emp = 999001;
 	$usu = 900091;
-	@mysqli_query($con, "CREATE TABLE IF NOT EXISTS `cfg_monitoreo` (\n		`Cfg_Cod` INT(11) NOT NULL AUTO_INCREMENT,\n		`Emp_Cod` INT(11) NOT NULL,\n		`Org_Cod` INT(11) NOT NULL,\n		`Pcs_Cod` INT(11) NOT NULL DEFAULT 0,\n		`Cfg_Est` CHAR(1) NOT NULL DEFAULT 'A',\n		`Cfg_Fec` DATETIME DEFAULT NULL,\n		`Usu_Cod` INT(11) DEFAULT NULL,\n		PRIMARY KEY (`Cfg_Cod`),\n		UNIQUE KEY `uk_emp_org_pcs` (`Emp_Cod`,`Org_Cod`,`Pcs_Cod`),\n		KEY `idx_emp_est` (`Emp_Cod`,`Cfg_Est`)\n	) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+	@mysqli_query($con, "CREATE TABLE IF NOT EXISTS `cfg_monitoreo` (
+		`Cfg_Cod` INT(11) NOT NULL AUTO_INCREMENT,
+		`Emp_Cod` INT(11) NOT NULL,
+		`Org_Cod` INT(11) NOT NULL,
+		`Pcs_Cod` INT(11) NOT NULL DEFAULT 0,
+		`Cfg_Est` CHAR(1) NOT NULL DEFAULT 'A',
+		`Cfg_Fec` DATETIME DEFAULT NULL,
+		`Usu_Cod` INT(11) DEFAULT NULL,
+		PRIMARY KEY (`Cfg_Cod`),
+		UNIQUE KEY `uk_emp_org_pcs` (`Emp_Cod`,`Org_Cod`,`Pcs_Cod`),
+		KEY `idx_emp_est` (`Emp_Cod`,`Cfg_Est`)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 	@mysqli_query($con, "DELETE FROM `cfg_monitoreo` WHERE `Emp_Cod`={$emp}");
 	@mysqli_query($con, "DELETE FROM `logs` WHERE `Usu_Cod`={$usu} AND `Emp_Cod`={$emp}");
 
@@ -427,7 +378,18 @@ function aud_unit_db_cfg_captura_fuera_whitelist()
 	}
 	$emp = 999002;
 	$usu = 900092;
-	@mysqli_query($con, "CREATE TABLE IF NOT EXISTS `cfg_monitoreo` (\n		`Cfg_Cod` INT(11) NOT NULL AUTO_INCREMENT,\n		`Emp_Cod` INT(11) NOT NULL,\n		`Org_Cod` INT(11) NOT NULL,\n		`Pcs_Cod` INT(11) NOT NULL DEFAULT 0,\n		`Cfg_Est` CHAR(1) NOT NULL DEFAULT 'A',\n		`Cfg_Fec` DATETIME DEFAULT NULL,\n		`Usu_Cod` INT(11) DEFAULT NULL,\n		PRIMARY KEY (`Cfg_Cod`),\n		UNIQUE KEY `uk_emp_org_pcs` (`Emp_Cod`,`Org_Cod`,`Pcs_Cod`),\n		KEY `idx_emp_est` (`Emp_Cod`,`Cfg_Est`)\n	) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+	@mysqli_query($con, "CREATE TABLE IF NOT EXISTS `cfg_monitoreo` (
+		`Cfg_Cod` INT(11) NOT NULL AUTO_INCREMENT,
+		`Emp_Cod` INT(11) NOT NULL,
+		`Org_Cod` INT(11) NOT NULL,
+		`Pcs_Cod` INT(11) NOT NULL DEFAULT 0,
+		`Cfg_Est` CHAR(1) NOT NULL DEFAULT 'A',
+		`Cfg_Fec` DATETIME DEFAULT NULL,
+		`Usu_Cod` INT(11) DEFAULT NULL,
+		PRIMARY KEY (`Cfg_Cod`),
+		UNIQUE KEY `uk_emp_org_pcs` (`Emp_Cod`,`Org_Cod`,`Pcs_Cod`),
+		KEY `idx_emp_est` (`Emp_Cod`,`Cfg_Est`)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 	@mysqli_query($con, "DELETE FROM `cfg_monitoreo` WHERE `Emp_Cod`={$emp}");
 	@mysqli_query($con, "DELETE FROM `logs` WHERE `Usu_Cod`={$usu} AND `Emp_Cod`={$emp}");
 	$mod = (int)$venta['Mod_Cod'];
@@ -497,7 +459,18 @@ function aud_unit_db_cfg_guardar_todos_y_registra()
 
 	$emp = 999003;
 	$usu = 900093;
-	@mysqli_query($con, "CREATE TABLE IF NOT EXISTS `cfg_monitoreo` (\n		`Cfg_Cod` INT(11) NOT NULL AUTO_INCREMENT,\n		`Emp_Cod` INT(11) NOT NULL,\n		`Org_Cod` INT(11) NOT NULL,\n		`Pcs_Cod` INT(11) NOT NULL DEFAULT 0,\n		`Cfg_Est` CHAR(1) NOT NULL DEFAULT 'A',\n		`Cfg_Fec` DATETIME DEFAULT NULL,\n		`Usu_Cod` INT(11) DEFAULT NULL,\n		PRIMARY KEY (`Cfg_Cod`),\n		UNIQUE KEY `uk_emp_org_pcs` (`Emp_Cod`,`Org_Cod`,`Pcs_Cod`),\n		KEY `idx_emp_est` (`Emp_Cod`,`Cfg_Est`)\n	) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+	@mysqli_query($con, "CREATE TABLE IF NOT EXISTS `cfg_monitoreo` (
+		`Cfg_Cod` INT(11) NOT NULL AUTO_INCREMENT,
+		`Emp_Cod` INT(11) NOT NULL,
+		`Org_Cod` INT(11) NOT NULL,
+		`Pcs_Cod` INT(11) NOT NULL DEFAULT 0,
+		`Cfg_Est` CHAR(1) NOT NULL DEFAULT 'A',
+		`Cfg_Fec` DATETIME DEFAULT NULL,
+		`Usu_Cod` INT(11) DEFAULT NULL,
+		PRIMARY KEY (`Cfg_Cod`),
+		UNIQUE KEY `uk_emp_org_pcs` (`Emp_Cod`,`Org_Cod`,`Pcs_Cod`),
+		KEY `idx_emp_est` (`Emp_Cod`,`Cfg_Est`)
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 	@mysqli_query($con, "DELETE FROM `cfg_monitoreo` WHERE `Emp_Cod`={$emp}");
 	@mysqli_query($con, "DELETE FROM `logs` WHERE `Usu_Cod`={$usu} AND `Emp_Cod`={$emp}");
 

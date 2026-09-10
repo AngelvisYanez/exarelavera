@@ -5,22 +5,20 @@
  * @package auditoria.TEST
  */
 
+if (!ini_get('date.timezone')) {
+	@date_default_timezone_set('America/Guayaquil');
+}
+
 if (!class_exists('DebugBar')) {
 	class DebugBar {
 		public static function startQueryMeasure() {}
 		public static function addQuery($sql, $data) {}
 		public static function addException($e) {}
-		public static function addTransactionEvent($n, $d = array()) {}
-		public static function __callStatic($name, $arguments) {
-			if ($name == 'measure' && isset($arguments[1]) && is_callable($arguments[1])) $arguments[1]();
-			return null;
-		}
 	}
 }
 if (!class_exists('Debugbar')) {
 	class Debugbar {
 		public static function addException($e) {}
-		public static function __callStatic($name, $arguments) { return null; }
 	}
 }
 
@@ -29,8 +27,6 @@ require_once dirname(__FILE__) . '/../LOGICA/aud_log_queue.php';
 function aud_test_putenv($key, $value)
 {
 	putenv($key . '=' . $value);
-	$_ENV[$key] = $value;
-	$_SERVER[$key] = $value;
 }
 
 function aud_test_sqls()
@@ -82,19 +78,7 @@ function aud_php_bin()
 	return 'php';
 }
 
-function aud_db_catalogo_en($db)
-{
-	$con = aud_db_connect();
-	if (!$con) {
-		return null;
-	}
-	$db = preg_replace('/[^a-zA-Z0-9_]/', '', (string)$db);
-	$r = @mysqli_query($con, "SELECT 1 FROM `{$db}`.`procesos` LIMIT 1");
-	@mysqli_close($con);
-	return (bool)$r;
-}
-
-function aud_session_user($usuCod, $empCod = 1)
+function aud_session_user($usuCod, $empCod = 999900)
 {
 	if (function_exists('session_id') && session_id() === '') {
 		@session_start();
