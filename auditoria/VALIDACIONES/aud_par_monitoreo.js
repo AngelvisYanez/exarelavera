@@ -46,15 +46,15 @@ $(function () {
 		var eveTxt = $('#eve option:selected').text() || 'Todos';
 		var periodo = (from && to) ? (from + ' a ' + to) : 'sin periodo';
 		var html = 'Filtros activos: <strong>' + periodo + '</strong>' +
-			' · Usuario: <strong>' + $.trim(usuTxt) + '</strong>';
+			' &middot; Usuario: <strong>' + $.trim(usuTxt) + '</strong>';
 		if (hasSucursales) {
 			var sucTxt = $('#suc option:selected').text() || 'Todas';
-			html += ' · Sucursal: <strong>' + $.trim(sucTxt) + '</strong>';
+			html += ' &middot; Sucursal: <strong>' + $.trim(sucTxt) + '</strong>';
 		}
-		html += ' · Modulo: <strong>' + $.trim(orgTxt) + '</strong>' +
-			' · Directorio: <strong>' + $.trim(dirTxt) + '</strong>' +
-			' · Proceso: <strong>' + $.trim(pcsTxt) + '</strong>' +
-			' · Evento: <strong>' + $.trim(eveTxt) + '</strong>';
+		html += ' &middot; Modulo: <strong>' + $.trim(orgTxt) + '</strong>' +
+			' &middot; Directorio: <strong>' + $.trim(dirTxt) + '</strong>' +
+			' &middot; Proceso: <strong>' + $.trim(pcsTxt) + '</strong>' +
+			' &middot; Evento: <strong>' + $.trim(eveTxt) + '</strong>';
 		$('#audSearchHint').html(html);
 	}
 
@@ -127,10 +127,16 @@ $(function () {
 			} else {
 				$usu.val('0');
 			}
+			if ($.fn.chosen) {
+				$usu.trigger('chosen:updated');
+			}
 			if (typeof done === 'function') {
 				done();
 			}
 		}).fail(function () {
+			if ($.fn.chosen) {
+				$usu.trigger('chosen:updated');
+			}
 			if (typeof done === 'function') {
 				done();
 			}
@@ -171,6 +177,9 @@ $(function () {
 		$('#dir').val('0');
 		$('#eve').val('0');
 		$('#usu').val('0');
+		if ($.fn.chosen) {
+			$('#usu').trigger('chosen:updated');
+		}
 		if (hasSucursales) {
 			$('#suc').val('0');
 		}
@@ -278,6 +287,24 @@ $(function () {
 	}
 	initCalendarios();
 
+	/* ---- Chosen buscador para usuario ---- */
+	function initChosen() {
+		var $usu = $('#usu');
+		if (!$usu.length || !$.fn.chosen) {
+			return;
+		}
+		try {
+			$usu.chosen('destroy');
+		} catch (e) {}
+
+		$usu.chosen({
+			width: '100%',
+			search_contains: true,
+			no_results_text: 'No se encontraron usuarios'
+		});
+	}
+	initChosen();
+
 	/* ---- Filtro de columnas (localStorage) ---- */
 	function applyCols() {
 		$('.aud-col-toggle').each(function () {
@@ -366,17 +393,17 @@ $(function () {
 
 	var colNames = ['Id', 'Fecha', 'Hora', 'Empresa', 'Sucursal', 'Usuario', 'Modulo', 'Directorio', 'Proceso', 'Actividad', 'Detalle', ''];
 	var colModel = [
-		{ name: 'Log_Cod', index: 'Log_Cod', width: 55, align: 'center', sorttype: 'int' },
-		{ name: 'Fecha', index: 'Fecha', width: 90, align: 'center' },
-		{ name: 'Hora', index: 'Hora', width: 70, align: 'center' },
-		{ name: 'Empresa', index: 'Empresa', width: 120, align: 'left' },
-		{ name: 'Sucursal', index: 'Sucursal', width: 110, align: 'left', hidden: !hasSucursales },
-		{ name: 'Usuario', index: 'Usuario', width: 120, align: 'left' },
-		{ name: 'Modulo', index: 'Modulo', width: 100, align: 'left' },
-		{ name: 'Directorio', index: 'Directorio', width: 110, align: 'left' },
-		{ name: 'Proceso', index: 'Proceso', width: 110, align: 'left' },
-		{ name: 'Actividad', index: 'Actividad', width: 150, align: 'left' },
-		{ name: 'Detalle', index: 'Detalle', width: 200, align: 'left' },
+		{ name: 'Log_Cod', index: 'Log_Cod', width: 55, align: 'center', sortable: false },
+		{ name: 'Fecha', index: 'Fecha', width: 90, align: 'center', sortable: false },
+		{ name: 'Hora', index: 'Hora', width: 70, align: 'center', sortable: false },
+		{ name: 'Empresa', index: 'Empresa', width: 120, align: 'left', sortable: false },
+		{ name: 'Sucursal', index: 'Sucursal', width: 110, align: 'left', hidden: !hasSucursales, sortable: false },
+		{ name: 'Usuario', index: 'Usuario', width: 120, align: 'left', sortable: false },
+		{ name: 'Modulo', index: 'Modulo', width: 100, align: 'left', sortable: false },
+		{ name: 'Directorio', index: 'Directorio', width: 110, align: 'left', sortable: false },
+		{ name: 'Proceso', index: 'Proceso', width: 110, align: 'left', sortable: false },
+		{ name: 'Actividad', index: 'Actividad', width: 150, align: 'left', sortable: false },
+		{ name: 'Detalle', index: 'Detalle', width: 200, align: 'left', sortable: false },
 		{
 			name: 'acciones',
 			index: 'acciones',
@@ -391,6 +418,21 @@ $(function () {
 		}
 	];
 
+	function ajustarPaginacion() {
+		var curRows = parseInt($grid.jqGrid('getGridParam', 'rowNum'), 10) || 0;
+		if (curRows <= 0) {
+			var selVal = $('#gridMonitoreoPager .ui-pg-selbox').val();
+			curRows = parseInt(selVal, 10) || 0;
+		}
+		var $pgCenter = $('#gridMonitoreoPager_center');
+		if (curRows >= 10000000) {
+			// Modo "Todos": se quita la paginacion
+			$pgCenter.css('visibility', 'hidden');
+		} else {
+			$pgCenter.css('visibility', 'visible');
+		}
+	}
+
 	$grid.jqGrid({
 		url: window.location.pathname,
 		mtype: 'POST',
@@ -398,6 +440,8 @@ $(function () {
 		postData: filtrosPost(),
 		colNames: colNames,
 		colModel: colModel,
+		cmTemplate: { sortable: false },
+		viewsortcols: [false, 'vertical', false],
 		jsonReader: {
 			root: 'rows',
 			page: 'page',
@@ -407,10 +451,10 @@ $(function () {
 			id: 'Log_Cod'
 		},
 		pager: '#gridMonitoreoPager',
-		rowNum: 25,
-		rowList: [10, 25, 50, 100],
-		sortname: 'Log_Cod',
-		sortorder: 'desc',
+		rowNum: 250,
+		rowList: [250, 500, 1000, 5000, '10000000:Todos'],
+		sortname: '',
+		sortorder: '',
 		viewrecords: true,
 		rownumbers: false,
 		autowidth: true,
@@ -420,6 +464,7 @@ $(function () {
 		caption: 'Resultados de la busqueda',
 		loadComplete: function () {
 			applyCols();
+			ajustarPaginacion();
 			if (typeof exaUiFitJqGrid === 'function') {
 				exaUiFitJqGrid('#gridMonitoreo', '#lista .exa-ui-grid-host');
 			}
@@ -433,6 +478,10 @@ $(function () {
 
 	$grid.jqGrid('navGrid', '#gridMonitoreoPager', {
 		edit: false, add: false, del: false, search: false, refresh: true, view: false
+	});
+
+	$(document).on('change', '#gridMonitoreoPager .ui-pg-selbox', function () {
+		ajustarPaginacion();
 	});
 
 	applyCols();

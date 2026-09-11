@@ -964,6 +964,12 @@ function aud_html_detalle($row, $pares)
  */
 function aud_estado_captura($empCod, $cfgCount = -1)
 {
+	if (!class_exists('AuditQueue')) {
+		$queueFile = dirname(__FILE__) . '/aud_log_queue.php';
+		if (file_exists($queueFile)) {
+			require_once($queueFile);
+		}
+	}
 	$enabled = class_exists('AuditQueue') && AuditQueue::enabled();
 	$emp = (int)$empCod;
 	$cfg = (int)$cfgCount;

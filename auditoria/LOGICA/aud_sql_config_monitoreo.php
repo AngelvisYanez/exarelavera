@@ -3,15 +3,28 @@
  * SQL configuracion de monitoreo (modulos/procesos a auditar).
  * @package auditoria.LOGICA
  */
+if (!function_exists('aud_sql_db_dis')) {
+	function aud_sql_db_dis()
+	{
+		$db = isset($_SESSION['Ses_Dat_Dis']) ? trim((string)$_SESSION['Ses_Dat_Dis']) : '';
+		if ($db === '' && isset($GLOBALS['Ses_Dat_Dis'])) {
+			$db = trim((string)$GLOBALS['Ses_Dat_Dis']);
+		}
+		$db = preg_replace('/[^a-zA-Z0-9_]/', '', $db);
+		return ($db !== '') ? "`{$db}`" : "`servicios`";
+	}
+}
+
 function sentencias_cfg_monitoreo($id, $Par_Sql)
 {
+	$dbDis = aud_sql_db_dis();
 	switch ($id) {
 		/** Modulos con procesos activos */
 		case 1:
 			$sql = "SELECT o.`Org_Cod`, o.`Org_Des`, o.`Org_Ord`, o.`Org_Niv`
-			FROM `exa`.`organizado` o
+			FROM {$dbDis}.`organizado` o
 			WHERE EXISTS (
-				SELECT 1 FROM `exa`.`procesos` p
+				SELECT 1 FROM {$dbDis}.`procesos` p
 				WHERE p.`Org_Cod` = o.`Org_Cod` AND IFNULL(p.`Pcs_Est`,'A') = 'A'
 			)
 			ORDER BY o.`Org_Niv` ASC, o.`Org_Ord` ASC, o.`Org_Des` ASC";
@@ -22,7 +35,7 @@ function sentencias_cfg_monitoreo($id, $Par_Sql)
 		case 2:
 			$org = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
 			$sql = "SELECT p.`Pcs_Cod`, p.`Pcs_Lin`, p.`Pcs_Nom`, p.`Pcs_Det`, p.`Org_Cod`
-			FROM `exa`.`procesos` p
+			FROM {$dbDis}.`procesos` p
 			WHERE p.`Org_Cod` = {$org} AND IFNULL(p.`Pcs_Est`,'A') = 'A'
 			ORDER BY p.`Pcs_Ord` ASC, IFNULL(p.`Pcs_Lin`, p.`Pcs_Nom`) ASC";
 			return $sql;
@@ -88,11 +101,11 @@ function sentencias_cfg_monitoreo($id, $Par_Sql)
 						WHEN IFNULL(ob.`Org_Niv`,0) = 0 THEN ob.`Org_Des`
 						ELSE NULL
 					END AS `Mod_Des`
-				FROM `exa`.`procesos` p
-				LEFT JOIN `exa`.`organizado` o ON p.`Org_Cod` = o.`Org_Cod`
-				LEFT JOIN `exa`.`organizado` op ON op.`Org_Cod` = o.`Org_Niv`
-				LEFT JOIN `exa`.`organizado` oa ON oa.`Org_Cod` = op.`Org_Niv`
-				LEFT JOIN `exa`.`organizado` ob ON ob.`Org_Cod` = oa.`Org_Niv`
+				FROM {$dbDis}.`procesos` p
+				LEFT JOIN {$dbDis}.`organizado` o ON p.`Org_Cod` = o.`Org_Cod`
+				LEFT JOIN {$dbDis}.`organizado` op ON op.`Org_Cod` = o.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` oa ON oa.`Org_Cod` = op.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` ob ON ob.`Org_Cod` = oa.`Org_Niv`
 				WHERE IFNULL(p.`Pcs_Est`,'A') = 'A'
 			) t
 			WHERE t.`Mod_Cod` IS NOT NULL
@@ -110,7 +123,7 @@ function sentencias_cfg_monitoreo($id, $Par_Sql)
 			$sql = "INSERT INTO `auditoria`.`logs`
 				(`Usu_Cod`,`Pcs_Cod`,`Tab_Cod`,`Log_Fec`,`Eve_Cod`,`Log_Cam`,`Log_Val`,`Log_Int`,`Emp_Cod`,`Suc_Cod`)
 				SELECT {$usu},
-					IFNULL((SELECT `Pcs_Cod` FROM `exa`.`procesos` WHERE `Pcs_Nom` LIKE '%aud_adm_config_monitoreo%' LIMIT 1), 0),
+					IFNULL((SELECT `Pcs_Cod` FROM {$dbDis}.`procesos` WHERE `Pcs_Nom` LIKE '%aud_adm_config_monitoreo%' LIMIT 1), 0),
 					IFNULL((SELECT `Tab_Cod` FROM `auditoria`.`tablas` WHERE `Tab_Nom`='cfg_monitoreo' LIMIT 1), 0),
 					'{$fec}',
 					IFNULL((SELECT `Eve_Cod` FROM `auditoria`.`eventos` WHERE `Eve_Ini`='U' LIMIT 1), 3),

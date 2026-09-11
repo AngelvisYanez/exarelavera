@@ -82,19 +82,31 @@ if (isset($_REQUEST['listMonitoreoGridAjax'])) {
 		$fil_from = date('Y-m-d', strtotime('-30 days'));
 	}
 	$page = isset($_REQUEST['page']) ? max(1, (int)$_REQUEST['page']) : 1;
-	$pageSize = isset($_REQUEST['rows']) ? (int)$_REQUEST['rows'] : 25;
-	if (!in_array($pageSize, array(10, 25, 50, 100, 200))) {
-		$pageSize = 25;
+	$pageSize = isset($_REQUEST['rows']) ? (int)$_REQUEST['rows'] : 250;
+	$allowedPageSizes = array(250, 500, 1000, 5000, 10000000);
+	if (!in_array($pageSize, $allowedPageSizes)) {
+		if ($pageSize <= 0 || (isset($_REQUEST['rows']) && (string)$_REQUEST['rows'] === 'Todos')) {
+			$pageSize = 10000000;
+		} else {
+			$pageSize = 250;
+		}
 	}
 	// 0 emp,1 from,2 to,3 eve,4 mod,5 pcs,6 tab,7 usu,8 limit,9 offset,10 suc,11 dir
 	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, $pageSize, 0, $fil_suc, $fil_dir);
 	$rowCount = $obBD_con1->getRowConsulta(13, $filtros, $obBD_conexion);
 	$total = isset($rowCount['count']) ? (int)$rowCount['count'] : 0;
-	$totalPages = $total > 0 ? (int)ceil($total / $pageSize) : 1;
-	if ($page > $totalPages) {
-		$page = $totalPages > 0 ? $totalPages : 1;
+	if ($pageSize >= 10000000) {
+		$totalPages = 1;
+		$page = 1;
+		$offset = 0;
+	} else {
+		$totalPages = $total > 0 ? (int)ceil($total / $pageSize) : 1;
+		if ($page > $totalPages) {
+			$page = $totalPages > 0 ? $totalPages : 1;
+		}
+		$offset = ($page - 1) * $pageSize;
 	}
-	$offset = ($page - 1) * $pageSize;
+	$filtros[8] = $pageSize;
 	$filtros[9] = $offset;
 	$Arr_Resultado = $obBD_con1->getArrayConsulta(12, $filtros, $obBD_conexion);
 	if (!is_array($Arr_Resultado)) {
@@ -391,261 +403,16 @@ if (!is_array($Arr_Directorios)) $Arr_Directorios = array();
 if (!is_array($Arr_Procesos)) $Arr_Procesos = array();
 if (!is_array($Arr_Usuarios)) $Arr_Usuarios = array();
 if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
-?><!DOCTYPE html>
+?>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 	<title><?php echo isset($Ses_Sys_Nom) ? $Ses_Sys_Nom : 'Auditoria'; ?></title>
 	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
 	<?php require_once("../../mascaras/model3/estilos/estilos.php"); ?>
+	<link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
 	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
-	<style type="text/css">
-		/* Buscar por - fila compacta model3 */
-		.aud-search-fieldset { margin-bottom: 8px; }
-		.aud-search-row {
-			display: table;
-			width: 100%;
-			table-layout: fixed;
-			border-collapse: separate;
-			border-spacing: 8px 0;
-			margin: 0 -8px;
-		}
-		.aud-search-cell {
-			display: table-cell;
-			vertical-align: bottom;
-			padding: 0;
-		}
-		.aud-search-cell-date { width: 118px; }
-		.aud-search-cell-usu { width: 13%; }
-		.aud-search-cell-suc { width: 12%; }
-		.aud-search-cell-mod { width: 11%; }
-		.aud-search-cell-dir { width: 11%; }
-		.aud-search-cell-pcs { width: 12%; }
-		.aud-search-cell-eve { width: 10%; }
-		.aud-search-cell-actions {
-			width: 148px;
-			white-space: nowrap;
-			text-align: left;
-		}
-		.aud-search-cell > label {
-			display: block;
-			margin: 0 0 3px 0;
-			padding: 0;
-			font-size: 10px;
-			font-weight: 700;
-			letter-spacing: 0.04em;
-			text-transform: uppercase;
-			color: #5b6f88;
-			line-height: 1.2;
-		}
-		.aud-search-cell .form-control,
-		.aud-search-cell select.form-control {
-			width: 100%;
-			height: 22px;
-			padding: 2px 6px;
-			font-size: 12px;
-			line-height: 1.35;
-		}
-		.aud-search-cell .input-group {
-			display: table;
-			width: 100%;
-			border-collapse: separate;
-		}
-		.aud-search-cell .input-group > .form-control {
-			display: table-cell;
-			width: 100%;
-		}
-		.aud-search-cell .input-group-addon {
-			cursor: pointer;
-			width: 1%;
-			padding: 2px 8px;
-			line-height: 18px;
-			vertical-align: middle;
-		}
-		.aud-search-actions {
-			padding-top: 0;
-		}
-		.aud-search-actions .btn {
-			margin: 0 4px 0 0;
-			vertical-align: middle;
-		}
-		.aud-search-hint {
-			margin: 8px 0 0 0;
-			padding: 0;
-			font-size: 11px;
-			color: #7a8b9e;
-			line-height: 1.35;
-		}
-		.aud-search-hint strong { color: #445566; font-weight: 600; }
-		.aud-captura-banner {
-			margin: 0 0 10px 0;
-			padding: 8px 12px;
-			border-radius: 4px;
-			font-size: 12px;
-			line-height: 1.45;
-		}
-		.aud-captura-ok {
-			background: #eef7f1;
-			border: 1px solid #c5e3d0;
-			color: #1f6b3a;
-		}
-		.aud-captura-off {
-			background: #fdf2f0;
-			border: 1px solid #f0c9c2;
-			color: #a12b22;
-		}
-
-		.aud-toolbar-actions { margin: 0 0 8px 0; overflow: visible; position: relative; z-index: 20; }
-		.aud-toolbar-right { float: right; white-space: nowrap; }
-		.aud-toolbar-right > .btn { margin-left: 4px; vertical-align: middle; }
-		.aud-col-wrap { position: relative; display: inline-block; margin-left: 4px; z-index: 10000; vertical-align: middle; }
-		.aud-col-panel {
-			display: none;
-			position: absolute;
-			right: 0;
-			top: 100%;
-			z-index: 10001;
-			background: #fff;
-			border: 1px solid #778899;
-			padding: 8px 12px;
-			min-width: 200px;
-			text-align: left;
-			box-shadow: 0 2px 8px rgba(0,0,0,.15);
-		}
-		.aud-col-panel label { display: block; margin: 4px 0; cursor: pointer; white-space: nowrap; font-weight: normal; font-size: 12px; }
-		#ui-datepicker-div { z-index: 99999 !important; }
-
-		@media (max-width: 1100px) {
-			.aud-search-row,
-			.aud-search-cell {
-				display: block;
-				width: 100% !important;
-			}
-			.aud-search-cell {
-				margin-bottom: 8px;
-			}
-			.aud-search-cell-actions { width: 100% !important; }
-		}
-
-		/* Detalle modal - orden y densidad */
-		.aud-detalle { padding: 2px 2px 6px; }
-		.aud-det-head {
-			display: table;
-			width: 100%;
-			margin: 0 0 12px 0;
-			padding-bottom: 10px;
-			border-bottom: 1px solid #d9e2ec;
-		}
-		.aud-det-head > * { display: table-cell; vertical-align: middle; }
-		.aud-det-when { text-align: right; color: #5b6f88; font-size: 12px; white-space: nowrap; }
-		.aud-det-when-main { font-weight: 600; color: #2f3b4c; }
-		.aud-det-hora { font-weight: 500; color: #5b6f88; margin-left: 4px; }
-		.aud-det-id {
-			display: inline-block;
-			margin-left: 10px;
-			padding: 1px 7px;
-			border-radius: 3px;
-			background: #eef3f8;
-			color: #5b6f88;
-			font-size: 11px;
-			font-weight: 600;
-		}
-		.aud-det-badge {
-			display: inline-block;
-			padding: 4px 10px;
-			border-radius: 3px;
-			font-size: 11px;
-			font-weight: 700;
-			letter-spacing: 0.04em;
-			text-transform: uppercase;
-			background: #e8eef5;
-			color: #445566;
-			border: 1px solid #c5d2e0;
-		}
-		.aud-det-badge-i { background: #e7f6ed; color: #1f7a45; border-color: #b7e0c6; }
-		.aud-det-badge-u { background: #eaf2fb; color: #1f5f9a; border-color: #b7d0ea; }
-		.aud-det-badge-d { background: #fdecea; color: #a12b22; border-color: #f0c2bd; }
-		.aud-det-badge-f { background: #fff6e5; color: #8a5a00; border-color: #f0d7a0; }
-		.aud-det-summary { margin: 0 0 14px 0; }
-		.aud-det-title {
-			margin: 0 0 6px 0;
-			font-size: 14px;
-			line-height: 1.35;
-			color: #243447;
-		}
-		.aud-det-lead {
-			margin: 0;
-			font-size: 12px;
-			line-height: 1.45;
-			color: #5b6f88;
-		}
-		.aud-det-context { margin-bottom: 10px !important; }
-		.aud-det-meta {
-			display: table;
-			width: 100%;
-			border-collapse: separate;
-			border-spacing: 10px 8px;
-			margin: -4px -10px 0;
-		}
-		.aud-det-meta-item {
-			display: inline-block;
-			vertical-align: top;
-			width: 48%;
-			box-sizing: border-box;
-			padding: 8px 10px;
-			background: #f7f9fc;
-			border: 1px solid #e3eaf2;
-			border-radius: 4px;
-			margin: 0 1% 8px 0;
-		}
-		.aud-det-meta-wide { width: 98%; }
-		.aud-det-label {
-			display: block;
-			font-size: 10px;
-			font-weight: 700;
-			letter-spacing: 0.05em;
-			text-transform: uppercase;
-			color: #7a8b9e;
-			margin-bottom: 3px;
-		}
-		.aud-det-value {
-			display: block;
-			font-size: 13px;
-			font-weight: 600;
-			color: #243447;
-			word-break: break-word;
-		}
-		.aud-det-datos { margin-bottom: 0 !important; }
-		.aud-det-empty {
-			margin: 4px 0 0 0;
-			padding: 10px 12px;
-			background: #f7f9fc;
-			border: 1px dashed #cfd9e6;
-			border-radius: 4px;
-			color: #6a7c90;
-			font-size: 12px;
-		}
-		.aud-det-table { margin-bottom: 0 !important; font-size: 12px; }
-		.aud-det-table > thead > tr > th {
-			background: #eef3f8;
-			color: #445566;
-			font-size: 11px;
-			text-transform: uppercase;
-			letter-spacing: 0.03em;
-			border-bottom-width: 1px !important;
-		}
-		.aud-det-col-dato { width: 38%; font-weight: 600; color: #334455; }
-		.ui-dialog.exa-ui-dialog .ui-dialog-content { padding: 12px 14px 8px; }
-		.ui-dialog.exa-ui-dialog .ui-dialog-buttonpane {
-			margin-top: 0;
-			padding: 8px 12px;
-			border-top: 1px solid #d9e2ec;
-			background: #f7f9fc;
-		}
-		.ui-dialog.exa-ui-dialog .ui-dialog-buttonpane .btn,
-		.ui-dialog.exa-ui-dialog .ui-dialog-buttonset button {
-			min-width: 88px;
-		}
-	</style>
+	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260910_v4" />
 </head>
 <body>
 <div class="panel panel-default panel-main exa-ui-panel exa-ui-fill-page">
@@ -808,7 +575,8 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 var AUD_HAS_SUCURSALES = <?php echo $hasSucursales ? 'true' : 'false'; ?>;
 </script>
 <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-<script type="text/javascript" src="../VALIDACIONES/aud_par_monitoreo.js?v=20260817c"></script>
+<script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
+<script type="text/javascript" src="../VALIDACIONES/aud_par_monitoreo.js?v=20260910_v4"></script>
 </body>
 </html>
 <?php
