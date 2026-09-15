@@ -3,8 +3,6 @@ var Lista_Anticipos;
 var list_facturas_cruze;
 var pendingAntPago = null;
 var anticiposEstado = { prvCod: null, seleccion: {}, cargado: false };
-var comprobantesCcpp = {};
-var comprobanteCcppActual = null;
 $(function () {
     Lista_Anticipos = $("#Lista_Anticipos");
     list_facturas_cruze = $("#lista_facturas_cruze");
@@ -26,7 +24,6 @@ $(function () {
     $("#altr_ant").createDialog({ width: 420, height: 150, icon: 'info' });
     $("#anular_abo_dialog").createDialog({ width: 300, height: 150, icon: 'warning-sign' });
     $("#verPagosDialogMod").createDialog({ width: 700, height: 435, icon: 'info-sign' });
-    $("#comprobanteCcppDialog").createDialog({ width: 760, height: 540, icon: 'picture' });
     $('#agregar_anticipos').appendTo('body').createDialog({
         width: Math.min($(window).width() - 40, 900),
         height: Math.min($(window).height() - 80, 500),
@@ -343,8 +340,6 @@ $(function () {
         onSelectRow: function (rowid, e) { $(this).resetSelection(); },
         colModel: [
             { label: 'index', name: 'index', hidden: true, classes: 'bgNoRight' },
-            { label: '', name: 'Pag_Abr', hidden: true },
-            { label: '', name: 'Pag_img', hidden: true },
             { label: 'Codigo', name: 'Pld_Cdc', width: 10, align: "left" },
             { label: 'Cuenta', name: 'Pld_Des', width: 30, align: "left" },
             { label: 'Glosa', name: 'Glosa', width: 25, align: "left" },
@@ -375,20 +370,6 @@ $(function () {
                     decimalSeparator: '.',
                     defaultValue: ''
                 }
-            },
-            {
-                label: '<center><span class="glyphicon glyphicon-picture"></span></center>',
-                name: 'Pag_img_accion',
-                width: 8,
-                align: 'center',
-                viewable: false,
-                formatter: function (cellvalue, options, rowObject) {
-                    if (rowObject.Pag_Abr === 'TRF' && rowObject.Pag_img && String(rowObject.Pag_img).trim() !== '') {
-                        return $.getGridButton(verComprobanteCcppGuardado, rowObject, 'Ver comprobante', 'eye-open', '', 'info');
-                    }
-                    return '-';
-                },
-                title: false
             }
         ]
     }, true, '', { view: false });
@@ -528,7 +509,6 @@ function createPagosGrid() {
         { label: 'Asi_Cod', name: 'Asi_Cod', hidden: true, classes: 'bgNoRight' },
         { label: 'Pag_Cod', name: 'Pag_Cod', hidden: true, classes: 'bgNoRight' },
         { label: 'Pag_Abr', name: 'Pag_Abr', hidden: true, classes: 'bgNoRight' },
-        { label: 'Pag_img_token', name: 'Pag_img_token', hidden: true, classes: 'bgNoRight' },
         { label: 'Tipo', name: 'Pag_Des', width: 10, align: "center", classes: 'bgNoRight' },
         { label: 'Ban_Cod', name: 'Ban_Cod', hidden: true, classes: 'bgNoRight' },
         { label: 'No. che.', name: 'Che_Num', width: 10, classes: 'bgNoRight' },
@@ -643,9 +623,7 @@ function verAbono(row) {
                     Pld_Des: responce['data'][i].Pld_Des,
                     Glosa: responce['data'][i].Asi_Glo,
                     Debe: a_deb,
-                    Haber: a_hab,
-                    Pag_Abr: responce['data'][i].Pag_Abr || '',
-                    Pag_img: responce['data'][i].Pag_img || ''
+                    Haber: a_hab
                 }, "last");
             }
 
@@ -743,13 +721,6 @@ function enableDisableCampos() {
 
     $("#cont_anticipo_info").attr("hidden", "");
     $("#cont_ccc_info").attr("hidden", "");
-    var tipoPagoAbr = $("#Pag_Cod option:selected").attr("data-abr");
-    if (tipoPagoAbr === 'TRF') {
-        $("#grupoPagImg").removeAttr("hidden");
-    } else {
-        $("#grupoPagImg").attr("hidden", "");
-        quitarComprobanteCcpp();
-    }
 
     if ($("#Pag_Cod option:selected").attr("data-abr") === 'ANT') {
 
@@ -793,95 +764,6 @@ function enableDisableCampos() {
     } else {
         $("#Com_Val_pago").val(getRestanteHaber().toFixed(2));
     }
-}
-
-function seleccionarComprobanteCcpp(input) {
-    var archivo = input && input.files && input.files[0] ? input.files[0] : null;
-    if (!archivo) {
-        quitarComprobanteCcpp();
-        return;
-    }
-    var tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (tiposPermitidos.indexOf(archivo.type) === -1) {
-        $.alert('Seleccione una imagen JPG, PNG, WEBP o GIF.');
-        quitarComprobanteCcpp();
-        return;
-    }
-    if (archivo.size > 5242880) {
-        $.alert('La imagen no puede superar los 5 MB.');
-        quitarComprobanteCcpp();
-        return;
-    }
-    comprobanteCcppActual = archivo;
-    $('#Pag_img_nombre').text(archivo.name).attr('title', archivo.name);
-    var lector = new FileReader();
-    lector.onload = function (evento) {
-        if (comprobanteCcppActual === archivo) {
-            $('#Pag_img_preview').attr('src', evento.target.result).show();
-        }
-    };
-    lector.readAsDataURL(archivo);
-    $('#Pag_img_ver, #Pag_img_quitar').show();
-}
-
-function quitarComprobanteCcpp() {
-    comprobanteCcppActual = null;
-    $('#Pag_img_archivo').val('');
-    $('#Pag_img_nombre').text('Ningún archivo').removeAttr('title');
-    $('#Pag_img_preview').removeAttr('src').hide();
-    $('#Pag_img_ver, #Pag_img_quitar').hide();
-}
-
-function abrirComprobanteCcpp(archivo) {
-    if (!archivo) {
-        return $.alert('No existe una imagen para visualizar.');
-    }
-    var lector = new FileReader();
-    lector.onload = function (evento) {
-        $('#comprobanteCcppGrande').attr('src', evento.target.result);
-        $('#comprobanteCcppDescargar').attr({
-            href: evento.target.result,
-            download: archivo.name || 'comprobante_transferencia.jpg'
-        });
-        $('#comprobanteCcppDialog').dialog('open');
-    };
-    lector.readAsDataURL(archivo);
-}
-
-function verComprobanteCcppActual() {
-    abrirComprobanteCcpp(comprobanteCcppActual);
-}
-
-function verComprobanteCcppPago(row) {
-    var archivo = row && row.Pag_img_token ? comprobantesCcpp[row.Pag_img_token] : null;
-    abrirComprobanteCcpp(archivo);
-}
-
-function verComprobanteCcppGuardado(row) {
-    var ruta = row && row.Pag_img ? String(row.Pag_img).trim().replace(/\\/g, '/') : '';
-    if (!ruta) {
-        return $.alert('Este pago no tiene un comprobante registrado.');
-    }
-    if (!/^(https?:\/\/|\/)/i.test(ruta) && ruta.indexOf('../../') !== 0) {
-        ruta = '../../' + ruta.replace(/^\.?\//, '');
-    }
-    $('#comprobanteCcppGrande').attr('src', ruta);
-    $('#comprobanteCcppDescargar').attr({
-        href: ruta,
-        download: ruta.split('/').pop() || 'comprobante_transferencia'
-    });
-    $('#comprobanteCcppDialog').dialog('open');
-}
-
-function agregarDatoFormData(formData, clave, valor) {
-    if (valor !== null && typeof valor === 'object' && !(valor instanceof File)) {
-        $.each(valor, function (subClave, subValor) {
-            var claveCompleta = clave ? clave + '[' + subClave + ']' : subClave;
-            agregarDatoFormData(formData, claveCompleta, subValor);
-        });
-        return;
-    }
-    formData.append(clave, valor == null ? '' : valor);
 }
 
 function cambioValPago(elemento) {
@@ -995,9 +877,8 @@ function incrementarSaldoInfo(monto) {
 
 function addPagoConSaldo(prm_array) {
     if (incrementarSaldoInfo()) {
-        return addPago(prm_array);
+        addPago(prm_array);
     }
-    return false;
 }
 
 function getMontoTotalAnt() {
@@ -1238,10 +1119,6 @@ function preAddPago() {
         }
     }
     if ($("#Pag_Cod option:selected").attr("data-abr") === "TDC" || $("#Pag_Cod option:selected").attr("data-abr") === "TRF" || $("#Pag_Cod option:selected").attr("data-abr") === "NDD") {
-        var comprobanteToken = '';
-        if ($("#Pag_Cod option:selected").attr("data-abr") === "TRF" && comprobanteCcppActual) {
-            comprobanteToken = 'pag_img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-        }
         prm_array = [
             "H", "pago", "", "",
             $("#Pag_Cod").val(),
@@ -1254,15 +1131,10 @@ function preAddPago() {
             $("#Ban_Cod option:selected").attr("data-des"),
             "",
             $("#Com_Val_pago").val(),
-            $("#Com_Con").val(),
-            "last", "",
-            "",
-            comprobanteToken
+            $("#Com_Con").val()
         ],
             "last", "";
-        if (addPagoConSaldo(prm_array) && comprobanteToken) {
-            comprobantesCcpp[comprobanteToken] = comprobanteCcppActual;
-        }
+        addPagoConSaldo(prm_array);
     }
 }
 
@@ -1305,8 +1177,7 @@ function addPago(prm_array) {
         Haber: prm_array[16],
         Pag_Item: "",
         Che_Est: prm_array[19],
-        Cop_Cod: prm_array[20],
-        Pag_img_token: prm_array[21] || ''
+        Cop_Cod: prm_array[20]
     }, "" + prm_array[18]);
     // $("#1_Debe").trigger("onChange");
     $('#pagosGrid').startGridEdit();
@@ -1314,12 +1185,18 @@ function addPago(prm_array) {
     if (prm_array[0] === 'D') $("#" + ids_pagos + "_Debe").prop('readonly', true);
     totalPagos();
     disableDebe();
-    return true;
 }
 
-function guardarPago() {
+function parseMontoGrid(val) {
+    if (val == null || val === '') return 0;
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    var n = parseFloat(String(val).replace(/[^\d.-]/g, ''));
+    return isNaN(n) ? 0 : n;
+}
+
+function preGuardarPago() {
     let tots = totalPagos();
-    console.log(parseFloat(tots.debe).toFixed(2) + "===" + parseFloat(tots.haber).toFixed(2));
+    //console.log(parseFloat(tots.debe).toFixed(2) + "===" + parseFloat(tots.haber).toFixed(2));
 
     if (parseFloat(tots.haber).toFixed(2) > parseFloat(tots.debe).toFixed(2)) {
         $.alert("El total de abonos ($ " + parseFloat(tots.haber).toFixed(2) + ") supera la sumatoria del DEBE ($ " + parseFloat(tots.debe).toFixed(2) + ")");
@@ -1344,36 +1221,21 @@ function guardarPago() {
 
                 data["save_cp"] = obj_ccpp;
                 data["save_p"] = $('#pagosGrid').getGridBatch();
-                //  console.log($('#pagosGrid').getGridBatch());
+                $('#pagosGrid').startGridEdit();
+                disableDebe();
                 data["savePago"] = true;
-                data["save_pago_anticipos"] = $('#Lista_Anticipos').getGridBatch();
-                
-                
-                // Para obtener el valor del input con id="sg_pago_undefined", se puede usar:
-                var valor_tota_pago = $("#sg_pago_undefined").val();
+                data["save_pago_anticipos"] = ($('#Lista_Anticipos')[0] && $('#Lista_Anticipos')[0].grid)
+                    ? $('#Lista_Anticipos').getGridBatch()
+                    : [];
 
-             
-               /* alert(valor_tota_pago);
-                return false;*/
-                
-               
-                
-                
-                data["valor_tota_pago"] = parseFloat($('td[aria-describedby="Lista_Anticipos_saldo_pagar"].columnDisabled').text().replace(/[^\d.-]/g, ''));
-                
-                console.log("SALDO A PAGAR::" + data["valor_tota_pago"]);
-                
-                
+                var saldoAntTxt = $('td[aria-describedby="Lista_Anticipos_saldo_pagar"].columnDisabled').text() || '';
+                var saldoAnt = parseFloat(String(saldoAntTxt).replace(/[^\d.-]/g, ''));
+                data["valor_tota_pago"] = isNaN(saldoAnt) ? 0 : saldoAnt;
                 for (let i = 0; i < data["save_pago_anticipos"].length; i++) {
                     let item = data["save_pago_anticipos"][i];
                     let saldo_pagar = $('#sg_pago_' + item.Atp_Cod).val();
                     data["save_pago_anticipos"][i].saldo_pagar = saldo_pagar;
                 }
-
-                
-                console.log("save_pago_anticipos:" + data["save_pago_anticipos"]);
-
-
                 var selected = $("#Pag_Cod option:selected");
                 var tipo_pago = selected.data("abr"); // Obtienes "CDC"
                 var pago_cdc = 0;
@@ -1385,50 +1247,12 @@ function guardarPago() {
                         data["ccc_cnt"][i].saldo_pagar = saldo_pagar;
                         pago_cdc += saldo_pagar;
                     }
-                    //if (    tots.debe != pago_cdc   ) {
                     if (Number(tots.debe.toFixed(4)) !== Number(pago_cdc.toFixed(4))) {
                         return $.alert("Ingrese todas las facturas para cubrir el valor de pago.");
                     }
                 }
                 console.log(data);
-                var formData = new FormData();
-                agregarDatoFormData(formData, '', data);
-                $.each(data.save_p || [], function (indice, pago) {
-                    if (pago.Pag_img_token && comprobantesCcpp[pago.Pag_img_token]) {
-                        formData.append('Pag_img_archivos[' + indice + ']', comprobantesCcpp[pago.Pag_img_token]);
-                    }
-                });
-                $.ajax({
-                    url: '',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: 'json'
-                }).done(function (responce) {
-                    if (responce['success'] === true) {
-                        if (responce['bnd_che'] === true) {
-                            $("#successDialog").dialog({ width: 500, height: 355 });
-                            $("#siche").removeAttr("hidden");
-                            $("#Che_imp option").remove();
-                            for (i = 0; i < responce['arrayche'].length; i++) {
-                                $("#Che_imp").append("<option value='" + i + "' data-link='" + responce['arrayche'][i].link + "'>" + responce['arrayche'][i].che + "</option>");
-                            }
-                            $("#Che_imp").trigger("onchange");
-                        } else {
-                            $("#successDialog").dialog({ width: 500, height: 200 });
-                        }
-                        $('#impCompr').attr('href', responce['link']);
-                        $('#successDialog').dialog('open');
-                        limpiarPagos();
-                        moveToList();
-                        $("#searchGrid").trigger("reloadGrid");
-                    } else {
-                        $.alert(responce['message']);
-                    }
-                }).fail(function (error) {
-                        $.alert("El Servidor ha fallado en responder!");
-                    });
+                $.createDialogConfirm('¿Est&aacute; seguro que desea guardar los datos?', data, guardarPago);
             }
 
         } else {
@@ -1438,6 +1262,46 @@ function guardarPago() {
         $.alert("Los totales no coinciden");
     }
 }
+var guardandoPagoLotes = false;
+function guardarPago(data) {
+    // Evita doble clic / doble confirmación (crea 2 comprobantes con los mismos cheques)
+    if (guardandoPagoLotes) {
+        return;
+    }
+    guardandoPagoLotes = true;
+    $('#loader').show();
+    $.post("", data, function (responce) {
+        if (responce['success'] === true) {
+            if (responce['bnd_che'] === true) {
+                $("#successDialog").dialog({ width: 500, height: 355 });
+                $("#siche").removeAttr("hidden");
+                $("#Che_imp option").remove();
+                for (i = 0; i < responce['arrayche'].length; i++) {
+                    $("#Che_imp").append("<option value='" + i + "' data-link='" + responce['arrayche'][i].link + "'>" + responce['arrayche'][i].che + "</option>");
+                }
+                $("#Che_imp").trigger("onchange");
+            } else {
+                $("#successDialog").dialog({ width: 500, height: 200 });
+            }
+            $('#impCompr').attr('href', responce['link']);
+            $('#successDialog').dialog('open');
+            limpiarPagos();
+            moveToList();
+            $("#searchGrid").trigger("reloadGrid");
+            guardandoPagoLotes = false;
+        } else {
+            guardandoPagoLotes = false;
+            $.alert(responce['message']);
+        }
+    }, 'json')
+        .fail(function (error) {
+            guardandoPagoLotes = false;
+            $.alert("El Servidor ha fallado en responder!");
+        })
+        .always(function () {
+            $("#loader").fadeOut("slow");
+        });
+}
 
 function setFecPeriodoCom() {
     $("#Com_Fec").dateLimits($("#Pec_Cod option:selected").attr("data-pec-fei"), $("#Pec_Cod option:selected").attr("data-pec-fef"));
@@ -1445,9 +1309,6 @@ function setFecPeriodoCom() {
 
 // borra el pago seleccionado y actualiza los totales AbrirCuentas
 function delPago(row) {
-    if (row.Pag_img_token && comprobantesCcpp[row.Pag_img_token]) {
-        delete comprobantesCcpp[row.Pag_img_token];
-    }
     // $('#protAnuChe').dialog('open');
     let saldo_info = parseFloat($("#saldo_info2").text());
     saldo_info = saldo_info - parseFloat(row.Haber);
@@ -1479,10 +1340,6 @@ function ActualizarSaldoInfo() {
 }
 
 function totalPagos() {
-    let total = parseFloat($("#Atp_Val").val());
-    total += parseFloat($("#Pap_Val").val());
-
-    //obtener todos los ids para buscar valores de debe y haber
     let ids = $('#pagosGrid').jqGrid('getDataIDs');
     let tot_obj = new Object();
     let debe = 0.00;
@@ -1490,12 +1347,10 @@ function totalPagos() {
     for (let i = 0; i < ids.length; i++) {
         let reg_pagot = $('#pagosGrid').jqGrid('getRowData', ids[i]);
         if (reg_pagot.Che_Est !== 'P') {
-            if ($('#' + ids[i] + '_Debe').val() != undefined) {
-                debe += parseFloat($('#' + ids[i] + '_Debe').val());
-            }
-            if ($('#' + ids[i] + '_Haber').val() != undefined) {
-                haber += parseFloat($('#' + ids[i] + '_Haber').val());
-            }
+            var vDebe = $('#' + ids[i] + '_Debe').length ? $('#' + ids[i] + '_Debe').val() : reg_pagot.Debe;
+            var vHaber = $('#' + ids[i] + '_Haber').length ? $('#' + ids[i] + '_Haber').val() : reg_pagot.Haber;
+            debe += parseMontoGrid(vDebe);
+            haber += parseMontoGrid(vHaber);
         }
     }
     tot_obj['debe'] = debe;
@@ -1559,9 +1414,6 @@ function limpiarPagos() {
 
     $("#cont_anticipo_info").attr("hidden", "");
     $("#cont_ccc_info").attr("hidden", "");
-    $("#grupoPagImg").attr("hidden", "");
-    comprobantesCcpp = {};
-    quitarComprobanteCcpp();
 
     $("#lim_val_pago").val("none");
     $("#lim_val_pago_cc").val("none");
@@ -1576,27 +1428,28 @@ function gestionarPago() {
         if (actualizarTotalesSG() !== 0) {
             $("#Pec_Cod").trigger("onchange");
             createPagosGrid();
-            var fechas=[];
+            var fechas = [];
             let ids = $('#searchGrid').jqGrid('getDataIDs'),
                 str_con = "ABONO FACTS. ";
             let val_pagar = 0, Conc_Cop_Cod = 0,
                 cop_observa = '';
-            for (let i = 0; i < ids.length; i++) {                
+            for (let i = 0; i < ids.length; i++) {
                 if ($("#sg_act_" + ids[i]).prop('checked')) {
-                    fechas[ids[i]] = $('#searchGrid').jqGrid('getCell', ids[i], 'Cop_Fec');
+                    fechas.push($('#searchGrid').jqGrid('getCell', ids[i], 'Cop_Fec'));
                     let reg_pago = $('#searchGrid').jqGrid('getRowData', ids[i]);
                     str_con += "/" + reg_pago.Cop_Num;
-                    val_pagar += parseFloat($('#sg_pago_' + ids[i]).val());
-                    cop_observa += reg_pago.Cop_Obs + ", ";
-                    //Cop_Cod += reg_pago.Cop_Cod;
-                    //  Conc_Cop_Cod += reg_pago.Cop_Cod + ",";
-                    // console.log( "coge el codigo de compra::: "+ Conc_Cop_Cod);
+                    val_pagar += parseMontoGrid($('#sg_pago_' + ids[i]).val());
+                    cop_observa += (reg_pago.Cop_Obs || '') + ", ";
                 }
             }
-            let fechaMayor = fechas.reduce((max, actual) => {
+            let fechaMayor = fechas.reduce(function (max, actual) {
+                if (!actual) return max;
+                if (!max) return actual;
                 return new Date(actual) > new Date(max) ? actual : max;
-              });  
-            $("#Com_Fec").dateLimits(fechaMayor, $("#Pec_Cod option:selected").attr("data-pec-fef"));
+            }, null);
+            if (fechaMayor) {
+                $("#Com_Fec").dateLimits(fechaMayor, $("#Pec_Cod option:selected").attr("data-pec-fef"));
+            }
             $("#Che_Ben_N").val($("#nombre").val());
             $("#Com_Val").val(parseFloat(val_pagar).toFixed(2));
             $("#Com_Val_pago").val(parseFloat(val_pagar).toFixed(2));
@@ -1863,10 +1716,7 @@ function loadAnticipos() {
                 if (rowObject.grid_tipp === 'inicial' || rowObject.Che_Est === "P") {
                     return "-";
                 } else {
-                    var botonImagen = rowObject.Pag_Abr === 'TRF' && rowObject.Pag_img_token
-                        ? $.getGridButton(verComprobanteCcppPago, rowObject, 'Ver comprobante', 'eye-open', '', 'info') + '&nbsp;'
-                        : '';
-                    return botonImagen + $.getGridButton(delPago, rowObject, 'Borrar pago', 'remove', '', 'danger');
+                    return $.getGridButton(delPago, rowObject, 'Borrar pago', 'remove', '', 'danger');
                 }
             },
             title: false

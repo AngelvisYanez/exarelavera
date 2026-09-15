@@ -920,13 +920,13 @@ if (isset($migrado)) {
 <html>
 
 <head>
-	<!--TITLE><?php echo $Ses_Sys_Nom; ?></TITLE-->
-	<TITLE><?php echo "Ccxpp Modificar [EXA] "; ?></TITLE>
+	<!--TITLE><?Php echo $Ses_Sys_Nom; ?></TITLE-->
+	<TITLE><?Php echo "Ccxpp Modificar [EXA] "; ?></TITLE>
 	<meta charset="UTF-8">
 	<link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
-	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
+	<?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>
 	<script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-	<script src="../VALIDACIONES/tes_val_mod_ccpp_lotes.js?a=41"></script>
+	<script src="../VALIDACIONES/tes_val_mod_ccpp_lotes.js?a=39"></script>
 	<script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.js"></script>
 	<script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
 	<script type="text/javascript" src="../../framework//jquery/jquery.plugins/MaskedInput//jquery.maskedinput.1.4.1.min.js"></script>
@@ -1022,7 +1022,7 @@ if (isset($migrado)) {
 												<input type="checkbox" id="f_periodo" name="f_periodo" onchange="cambiarFiltro()">
 											</span>
 											<select class="form-control input-xs" name="sel_per" id="sel_per" onchange="cambioPreiodoSearch('peri')" disabled>
-												<?php
+												<?
 												$periodos_rows = $obBD_con1->getArrayConsulta(45, "", $obBD_conexion);
 												if (count($periodos_rows) > 0) {
 													foreach ($periodos_rows as $row) {
@@ -1106,7 +1106,7 @@ if (isset($migrado)) {
 														if (count($rows_periodos) > 0) {
 															foreach ($rows_periodos as $row) {
 														?>
-																<?php echo "<option value='$row[Pec_Cod]' data-pla-cod='$row[Pla_Cod]' data-pec-fei='$row[Pec_Fei]' data-pec-fef='$row[Pec_Fef]'  data-periodo='$row[priodo_m]'>$row[priodo_m]</option>"; ?>
+																<? echo "<option value='$row[Pec_Cod]' data-pla-cod='$row[Pla_Cod]' data-pec-fei='$row[Pec_Fei]' data-pec-fef='$row[Pec_Fef]'  data-periodo='$row[priodo_m]'>$row[priodo_m]</option>"; ?>
 
 														<?php }
 														} ?>
@@ -1126,7 +1126,7 @@ if (isset($migrado)) {
 													<input name="Com_Num" id="Com_Num" type="text" style="display:none;" />
 
 													<select id="Tia_Cod" name="Tia_Cod" class="form-control input-xs" required="" onchange="">
-														<?php
+														<?Php
 														$row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(4, "ALL", $obBD_conexion);
 														foreach ($row_rs_tipo_asien2 as $row) { ?>
 															<option value="<?php echo $row['Tia_Cod']; ?>">
@@ -1188,7 +1188,7 @@ if (isset($migrado)) {
 												<label class="col-sm-3 control-label label-sm required" for="Pag_Cod">Tipo de pago:</label>
 												<div class="col-sm-3">
 													<select id="Pag_Cod" name="Pag_Cod" class="form-control input-xs" required="" onchange="enableDisableCampos()">
-														<?php
+														<?Php
 														$row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(5, "", $obBD_conexion);
 														foreach ($row_rs_tipo_asien2 as $row) {
 															/*if ($row['Pag_Abr'] != 'ANT') {*/ ?>
@@ -1218,7 +1218,7 @@ if (isset($migrado)) {
 												<label class="col-sm-3 control-label label-sm required" for="Ban_Cod">Banco:</label>
 												<div class="col-sm-4">
 													<select id="Ban_Cod" name="Ban_Cod" class="form-control input-xs ed_element ed_CHE ed_TRF ed_TDC" required="" onchange="" disabled>
-														<?php
+														<?Php
 														$row_rs_tipo_asien2 = $obBD_con1->getArrayConsulta(9, array('Ban_Tip' => 'B'), $obBD_conexion);
 														foreach ($row_rs_tipo_asien2 as $row) { ?>
 
@@ -1331,15 +1331,6 @@ if (isset($migrado)) {
 	</div>
 	<div id="proveedoresDialog" title="B&uacute;squeda de Proveedores">
 		<form class="form-horizontal normal"> </form>
-	</div>
-
-	<div id="comprobanteCcppModDialog" title="Comprobante de transferencia">
-		<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;padding:12px;background:#f3f5f7;border-radius:6px;">
-			<img id="comprobanteCcppModImagen" alt="Comprobante de transferencia" style="display:block;max-width:100%;max-height:72vh;border-radius:5px;box-shadow:0 5px 20px rgba(0,0,0,.2);">
-			<a id="comprobanteCcppModDescargar" class="btn btn-success btn-sm" href="#" download style="margin-top:12px;">
-				<span class="glyphicon glyphicon-download-alt"></span> Descargar imagen
-			</a>
-		</div>
 	</div>
 
 	<div id="successDialog" title="Mensaje del Sistema">
@@ -1574,7 +1565,7 @@ if (isset($migrado)) {
 					</td>
 					<td>
 						<span>
-							<?php echo $Ses_Emp_Nom; ?>
+							<? echo $Ses_Emp_Nom; ?>
 						</span>
 					</td>
 				</tr>
@@ -1584,7 +1575,7 @@ if (isset($migrado)) {
 					</td>
 					<td>
 						<span>
-							<?php $fecha = explode('-', $hoy);
+							<? $fecha = explode('-', $hoy);
 							echo dias(calcula_numero_dia_semana($fecha[2], $fecha[1], $fecha[0]), 1) . ', ' . $fecha[2] . ' de ' . mes($fecha[1], 1) . ' de ' . $fecha[0]; ?>
 						</span>
 					</td>
