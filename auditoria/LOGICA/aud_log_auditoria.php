@@ -328,15 +328,17 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 	
 	 function guardarInicioSesion($Ses_Int, $Ses_Usu_Cod,$obBD_conexion){
 		try {
-			$this->inicio_transaccion($obBD_conexion->conexion);
-			/**
-			 * Obtener la ultima secuencia
-			 */
-			$row = $this->getRowConsulta($this->sentencias(6, $this->parametros($Ses_Usu_Cod)), $obBD_conexion);
-			$Ses_Cod = !empty($row['Ses_Cod']) && $row['Ses_Cod'] > 0 ? $row['Ses_Cod'] : 1; 
-			$this->grabarv_registros($this->sentencias(7, $this->parametros($Ses_Cod.'*'.$Ses_Usu_Cod.'*'.$Ses_Int)),$obBD_conexion->conexion);
-			$this->fin_transaccion_nomsn($obBD_conexion->conexion);
-			$this->registrarLogSesion($obBD_conexion, $Ses_Usu_Cod, 'I', 'Ses_Cod', (string)$Ses_Cod, 'Ses_Cod='.$Ses_Cod);
+			if (!function_exists('aud_ses_registrar_inicio')) {
+				require_once __DIR__.'/aud_log_actividad_sesion.php';
+			}
+			$Ses_Usu_Cod = (int)$Ses_Usu_Cod;
+			$emp = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
+			$suc = isset($_SESSION['Ses_Suc_Cod']) ? (int)$_SESSION['Ses_Suc_Cod'] : 0;
+			$con = (is_object($obBD_conexion) && !empty($obBD_conexion->conexion)) ? $obBD_conexion->conexion : null;
+			$Ses_Cod = aud_ses_registrar_inicio($Ses_Usu_Cod, $emp, $suc, $con);
+			if ($Ses_Cod > 0) {
+				$this->registrarLogSesion($obBD_conexion, $Ses_Usu_Cod, 'I', 'Ses_Cod', (string)$Ses_Cod, 'Ses_Cod='.$Ses_Cod);
+			}
 			return $Ses_Cod;
 		} catch (Throwable $e) {
 			if (class_exists('DebugBar')) {
@@ -355,19 +357,26 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 	 * @return number
 	 */
 	function GuardarCierreSesion($Ses_Cod, $Ses_Out, $Ses_Usu_Cod){
-		
-		$obBD_conexion = new MysqlConexion;
-		
-		$this->inicio_transaccion($obBD_conexion->conexion);
-		
-		$this->grabarv_registros($this->sentencias(8, $this->parametros($Ses_Out.'*'.$Ses_Cod.'*'.$Ses_Usu_Cod)),$obBD_conexion->conexion);
-		
-		$this->fin_transaccion_nomsn($obBD_conexion->conexion);
-		$this->registrarLogSesion($obBD_conexion, $Ses_Usu_Cod, 'U', 'Ses_Out', (string)$Ses_Out, 'Ses_Cod='.$Ses_Cod);
-		
-		$this->liberar();
-		$obBD_conexion->cerrar();
-		
+		$Ses_Cod = (int)$Ses_Cod;
+		$Ses_Usu_Cod = (int)$Ses_Usu_Cod;
+		if ($Ses_Cod <= 0) {
+			return $this->Error;
+		}
+		try {
+			if (!function_exists('sentencias_actividad_sesion')) {
+				require_once __DIR__.'/aud_sql_actividad_sesion.php';
+			}
+			$obBD_conexion = new MysqlConexion;
+			$sql = sentencias_actividad_sesion(6, array($Ses_Cod, $Ses_Usu_Cod));
+			$this->grabarv_registros($sql, $obBD_conexion->conexion);
+			$this->registrarLogSesion($obBD_conexion, $Ses_Usu_Cod, 'U', 'Ses_Out', (string)$Ses_Out, 'Ses_Cod='.$Ses_Cod);
+			$this->liberar();
+			$obBD_conexion->cerrar();
+		} catch (Throwable $e) {
+			if (class_exists('DebugBar')) {
+				DebugBar::addException($e);
+			}
+		}
 		return $this->Error;
 	}
 	

@@ -91,6 +91,27 @@ $procs = array(
 		'det' => 'Configura que modulos, directorios y procesos se registran en el monitoreo de actividades',
 		'ord' => 2,
 		'ico' => 'fa fa-cogs'
+	),
+	array(
+		'nom' => 'aud_con_actividad_usuarios_1.0.php',
+		'lin' => 'Actividad de Usuarios',
+		'det' => 'Monitor en vivo de usuarios conectados, tiempos de uso, equipos y cierre forzado de sesiones',
+		'ord' => 3,
+		'ico' => 'fa fa-users'
+	),
+	array(
+		'nom' => 'aud_con_dashboard_monitoreo_1.0.php',
+		'lin' => 'Panel Estadistico',
+		'det' => 'Tablero ejecutivo con metricas y graficos interactivos de la actividad de auditoria',
+		'ord' => 4,
+		'ico' => 'fa fa-tachometer'
+	),
+	array(
+		'nom' => 'aud_con_dashboard_comparativo_1.0.php',
+		'lin' => 'Panel Comparativo',
+		'det' => 'Tablero estadistico comparativo de la actividad de auditoria entre dos periodos con PDF',
+		'ord' => 5,
+		'ico' => 'fa fa-chart-line'
 	)
 );
 

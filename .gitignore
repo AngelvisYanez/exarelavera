@@ -90,3 +90,6 @@ $RECYCLE.BIN/
 
 # imagenes de vouchers de relavera evitan que se suban al repositorio
 relavera/FRONT/620/
+# respaldos de base de datos locales
+db/*.gz
+

@@ -1166,15 +1166,44 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
         // nuevo bloque de codigo para Select2
         $(document).ready(function() {
             // 1. Inicialización de Select2
+            // 0. Listener reactivo para cédula de usuario
+            $('#user_name').on('input change blur', function() {
+                var val = $.trim($(this).val());
+                if (val !== '' && $(this).data('last_loaded_ced') !== val) {
+                    $(this).data('last_loaded_ced', val);
+                    loadEmp(val);
+                }
+            });
+            if ($.trim($('#user_name').val()) !== '') {
+                loadEmp($.trim($('#user_name').val()));
+            }
+
+            // 1. Inicialización de Select2
             $('#Emp_Cod').select2({
-            width: '100%',
-            placeholder: "Seleccione Empresa...",
-            templateResult: formatOption,
-            templateSelection: formatSelection,
-            escapeMarkup: function(m) { return m; },
-            minimumInputLength: 0,
-            dropdownParent: $('body'),
-            dropdownCssClass: 'select2-dropdown-below select2-rcet-empresa'
+                width: '100%',
+                placeholder: "Seleccione Empresa...",
+                templateResult: formatOption,
+                templateSelection: formatSelection,
+                escapeMarkup: function(m) { return m; },
+                matcher: function(params, data) {
+                    if ($.trim(params.term) === '') {
+                        return data;
+                    }
+                    if (typeof data.text === 'undefined') {
+                        return null;
+                    }
+                    var term = params.term.toLowerCase();
+                    var text = data.text.toLowerCase();
+                    var $el = $(data.element);
+                    var empNom = ($el.data('empNom') || $el.data('emp_nom') || $el.attr('data-emp-nom') || '').toLowerCase();
+                    if (text.indexOf(term) > -1 || empNom.indexOf(term) > -1) {
+                        return data;
+                    }
+                    return null;
+                },
+                minimumInputLength: 0,
+                dropdownParent: $('body'),
+                dropdownCssClass: 'select2-dropdown-below select2-rcet-empresa'
             });
 
             // 2. Sobrescribir posición del dropdown (siempre abajo)
@@ -1273,14 +1302,14 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                 if (r['success'] && r['conteo'] > 1) {
                     $('#div_empresas').show();
                     // Actualizar Select2 después de cambiar las opciones
-                    $('#Emp_Cod').trigger('change.select2');
+                    $('#Emp_Cod').trigger('change');
                 } else {
                     $('#div_empresas').hide();
                 }
             }, 'json').fail(function() {
                 $('#Emp_Cod').html('<option value=""></option>');
                 $('#div_empresas').hide();
-                $('#Emp_Cod').trigger('change.select2');
+                $('#Emp_Cod').trigger('change');
             });
         }
     </script>

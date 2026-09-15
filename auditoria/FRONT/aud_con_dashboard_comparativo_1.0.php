@@ -1,0 +1,1314 @@
+<?php
+/**
+ * Dashboard Estadistico Comparativo de Auditoria con Emision de Reportes PDF
+ * y Envio Directo a Correo y WhatsApp (API ERP + Web).
+ *
+ * @package auditoria.FRONT
+ */
+
+if (session_id() === '' && !headers_sent()) {
+	@session_start();
+}
+
+$audEmpCod = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 1;
+$audEmpNom = isset($_SESSION['Ses_Emp_Nom']) ? $_SESSION['Ses_Emp_Nom'] : 'Empresa Principal';
+$audUsuNom = isset($_SESSION['Ses_Usu_Nom']) ? $_SESSION['Ses_Usu_Nom'] : 'Administrador';
+
+// Valores por defecto: Ultimo mes vs mes previo
+$defaultPaIni = date('Y-m-d 00:00:00', strtotime('-60 days'));
+$defaultPaFin = date('Y-m-d 23:59:59', strtotime('-31 days'));
+$defaultPbIni = date('Y-m-d 00:00:00', strtotime('-30 days'));
+$defaultPbFin = date('Y-m-d 23:59:59');
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<title>Tablero Analitico Comparativo - ExaContable</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+
+	<!-- Estilos Oficiales ExaContable ERP -->
+	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
+	<?php require_once("../../mascaras/model3/estilos/estilos.php"); ?>
+	<script type="text/javascript" src="../../framework/jquery/apexcharts/apexcharts.min.js"></script>
+
+	<style>
+		/* Estilos armonizados con el tema visual de ExaContable */
+		body {
+			background-color: #f1f5f9;
+		}
+
+		/* Regla visual ERP: Si el fondo donde estan los titulos es azul, el titulo debe ser blanco */
+		.panel-heading.exa-header, .exa-header {
+			background-color: #254463 !important;
+			color: #ffffff !important;
+		}
+		.panel-heading.exa-header .panel-title, .exa-header .panel-title,
+		.panel-heading.exa-header h3, .exa-header h3 {
+			color: #ffffff !important;
+			font-weight: 700 !important;
+		}
+		.panel-heading.exa-header .panel-title i, .exa-header .panel-title i,
+		.panel-heading.exa-header .panel-title span, .exa-header .panel-title span {
+			color: #ffffff !important;
+		}
+
+		/* Card de Control de Periodos */
+		.period-control-card {
+			background: #ffffff;
+			border-radius: 4px;
+			padding: 12px 16px;
+			border: 1px solid #d0dbe5;
+			margin-bottom: 12px;
+			box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+		}
+		.preset-btn {
+			font-size: 11px;
+			padding: 3px 9px;
+			font-weight: 600;
+			border-radius: 3px;
+			margin-right: 3px;
+			margin-bottom: 3px;
+			transition: all 0.15s;
+		}
+
+		/* Barra de herramientas compartida: filtros juntos + Acciones a la derecha */
+		.aud-toolbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 10px;
+			padding: 10px 14px;
+		}
+		.aud-toolbar-left {
+			flex: 1 1 auto;
+			min-width: 0;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+		.aud-toolbar-presets {
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 8px;
+		}
+		.aud-toolbar-label {
+			font-weight: 700;
+			font-size: 12px;
+			color: #334155;
+		}
+		.aud-toolbar-dates {
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 10px;
+		}
+		.aud-toolbar-dates .period-box-a,
+		.aud-toolbar-dates .period-box-b {
+			width: 300px;
+			max-width: 100%;
+			margin-bottom: 0;
+		}
+		.aud-toolbar-right {
+			flex: 0 0 auto;
+		}
+		.aud-acciones-menu {
+			min-width: 210px;
+			font-size: 12px;
+		}
+		.aud-acciones-menu li a {
+			padding: 7px 14px;
+		}
+		.aud-acciones-menu li a i {
+			width: 20px;
+			text-align: center;
+			margin-right: 4px;
+		}
+		@media (max-width: 767px) {
+			.aud-toolbar-right { width: 100%; }
+			.aud-toolbar-right .dropdown { float: right; }
+			.aud-toolbar-dates .period-box-a,
+			.aud-toolbar-dates .period-box-b { width: 100%; }
+		}
+
+		.period-box-a {
+			background: #f8fafc;
+			border: 1px solid #e2e8f0;
+			border-left: 4px solid #64748b;
+			border-radius: 4px;
+			padding: 10px 12px;
+		}
+		.period-box-b {
+			background: #f0f7ff;
+			border: 1px solid #dbeafe;
+			border-left: 4px solid #2563eb;
+			border-radius: 4px;
+			padding: 10px 12px;
+		}
+		.dash-vs-pill {
+			display: inline-block;
+			background: #e2e8f0;
+			color: #475569;
+			font-size: 11px;
+			font-weight: 800;
+			padding: 3px 8px;
+			border-radius: 12px;
+			letter-spacing: 0.5px;
+		}
+
+		#ui-datepicker-div {
+			z-index: 99999 !important;
+			box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+			border: 1px solid #cbd5e1;
+			border-radius: 4px;
+			padding: 6px;
+			background: #ffffff;
+		}
+
+		/* Grid de KPIs */
+		.kpi-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+			gap: 10px;
+			margin-bottom: 14px;
+		}
+		.kpi-card {
+			background: #ffffff;
+			border-radius: 4px;
+			padding: 12px 14px;
+			box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+			border: 1px solid #d0dbe5;
+			position: relative;
+			border-left: 4px solid #2563eb;
+			transition: transform 0.15s ease, box-shadow 0.15s ease;
+		}
+		.kpi-card:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+		}
+		.kpi-title {
+			font-size: 11px;
+			font-weight: 700;
+			text-transform: uppercase;
+			color: #64748b;
+			margin-bottom: 4px;
+			letter-spacing: 0.4px;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		.kpi-values-row {
+			display: flex;
+			align-items: baseline;
+			justify-content: space-between;
+			margin-bottom: 2px;
+		}
+		.kpi-main-val {
+			font-size: 22px;
+			font-weight: 800;
+			color: #0f172a;
+			line-height: 1.1;
+		}
+		.kpi-sub-val {
+			font-size: 11px;
+			color: #94a3b8;
+			margin-top: 2px;
+		}
+		.kpi-badge {
+			font-size: 11px;
+			font-weight: 700;
+			padding: 2px 7px;
+			border-radius: 3px;
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+		}
+		.badge-up { background: #dcfce7; color: #15803d; }
+		.badge-down { background: #fee2e2; color: #b91c1c; }
+		.badge-neutral { background: #f1f5f9; color: #64748b; }
+
+		/* Paneles de graficos */
+		.chart-panel {
+			background: #ffffff;
+			border-radius: 4px;
+			padding: 12px 14px;
+			box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+			border: 1px solid #d0dbe5;
+			margin-bottom: 12px;
+		}
+		.chart-panel h4 {
+			margin: 0 0 10px 0;
+			font-size: 13px;
+			font-weight: 700;
+			color: #1e3a5f;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			border-bottom: 1px solid #f1f5f9;
+			padding-bottom: 8px;
+		}
+
+		/* Banner de Observaciones */
+		.obs-card {
+			background: #f0f7ff;
+			border: 1px solid #bfdbfe;
+			border-left: 4px solid #2563eb;
+			border-radius: 4px;
+			padding: 10px 14px;
+			margin-bottom: 12px;
+		}
+		.obs-card h4 {
+			margin: 0 0 6px 0;
+			font-size: 13px;
+			font-weight: 700;
+			color: #1e40af;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+		.obs-list {
+			margin: 0;
+			padding-left: 18px;
+			font-size: 12px;
+			color: #1e3a8a;
+			line-height: 1.5;
+		}
+
+		/* Tablas resumen */
+		.table-comp {
+			margin-bottom: 0;
+			font-size: 12px;
+		}
+		.table-comp th {
+			background: #f8fafc;
+			color: #475569;
+			font-weight: 700;
+			font-size: 11px;
+			text-transform: uppercase;
+			letter-spacing: 0.3px;
+			border-bottom: 2px solid #e2e8f0 !important;
+			padding: 6px 10px;
+		}
+		.table-comp td {
+			vertical-align: middle !important;
+			border-top: 1px solid #f1f5f9 !important;
+			padding: 6px 10px;
+		}
+		.badge-eve-ins { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 11px; }
+		.badge-eve-upd { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 11px; }
+		.badge-eve-del { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 11px; }
+
+		/* Modales ERP */
+		.modal-header.exa-modal-header {
+			background-color: #254463 !important;
+			color: #ffffff !important;
+			padding: 12px 16px;
+		}
+		.modal-header.exa-modal-header .modal-title {
+			color: #ffffff !important;
+			font-size: 14px;
+			font-weight: 700;
+		}
+		.modal-header.exa-modal-header .close {
+			color: #ffffff !important;
+			opacity: 0.85;
+		}
+	</style>
+</head>
+<body>
+
+<div class="panel panel-default panel-main exa-ui-panel exa-ui-fill-page" style="margin-top: 0;">
+	<div class="panel-body exa-body" style="padding: 10px 14px;">
+
+		<!-- Barra de herramientas: filtros juntos + Acciones a la derecha -->
+		<div class="period-control-card" style="padding: 0;">
+			<div class="aud-toolbar">
+
+				<div class="aud-toolbar-left">
+					<div class="aud-toolbar-presets">
+						<span class="aud-toolbar-label">
+							<i class="fa fa-calendar-check-o text-primary"></i> Rango Temporal de Comparaci&oacute;n:
+						</span>
+						<span id="dashPresetCustomBadge" class="label label-info" style="display:none; font-size:10px; padding: 2px 6px;">Personalizado</span>
+						<div class="btn-group btn-group-xs" id="dashPeriodoPresets">
+							<button type="button" class="btn btn-default preset-btn" data-preset="hoy">Hoy</button>
+							<button type="button" class="btn btn-default preset-btn" data-preset="ayer">Ayer</button>
+							<button type="button" class="btn btn-default preset-btn" data-preset="1semana">1 Semana</button>
+							<button type="button" class="btn btn-primary preset-btn active" data-preset="1mes">1 Mes</button>
+							<button type="button" class="btn btn-default preset-btn" data-preset="3meses">3 Meses</button>
+						</div>
+					</div>
+
+					<div class="aud-toolbar-dates">
+						<!-- Periodo A (Base) -->
+						<div class="period-box-a">
+							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+								<strong style="font-size: 11px; color: #475569; text-transform: uppercase;">
+									<i class="fa fa-history text-muted"></i> Per&iacute;odo A (Base Hist&oacute;rica)
+								</strong>
+								<span class="label label-default" style="background:#64748b; font-size:9px;">Base</span>
+							</div>
+							<div class="row" style="margin-left:-4px; margin-right:-4px;">
+								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
+									<div class="input-group input-group-sm">
+										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Desde</span>
+										<input type="text" id="pa_ini" class="form-control text-center" value="<?php echo substr($defaultPaIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pa_ini').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+									</div>
+								</div>
+								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
+									<div class="input-group input-group-sm">
+										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Hasta</span>
+										<input type="text" id="pa_fin" class="form-control text-center" value="<?php echo substr($defaultPaFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pa_fin').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Separador VS -->
+						<span class="dash-vs-pill"><i class="fa fa-exchange"></i> VS</span>
+
+						<!-- Periodo B (Comparado) -->
+						<div class="period-box-b">
+							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+								<strong style="font-size: 11px; color: #1e40af; text-transform: uppercase;">
+									<i class="fa fa-line-chart text-primary"></i> Per&iacute;odo B (Evaluado / Actual)
+								</strong>
+								<span class="label label-primary" style="background:#2563eb; font-size:9px;">Comparado</span>
+							</div>
+							<div class="row" style="margin-left:-4px; margin-right:-4px;">
+								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
+									<div class="input-group input-group-sm">
+										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Desde</span>
+										<input type="text" id="pb_ini" class="form-control text-center" value="<?php echo substr($defaultPbIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pb_ini').focus().datepicker('show');"><i class="fa fa-calendar text-primary"></i></span>
+									</div>
+								</div>
+								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
+									<div class="input-group input-group-sm">
+										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Hasta</span>
+										<input type="text" id="pb_fin" class="form-control text-center" value="<?php echo substr($defaultPbFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pb_fin').focus().datepicker('show');"><i class="fa fa-calendar text-primary"></i></span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="aud-toolbar-right">
+					<div class="dropdown">
+						<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Acciones">
+							<i class="fa fa-sliders"></i> Acciones <span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu dropdown-menu-right aud-acciones-menu">
+							<li><a href="javascript:void(0);" id="btnRecargarDash" title="Actualizar metricas"><i class="fa fa-refresh"></i> Actualizar Datos</a></li>
+							<li class="divider"></li>
+							<li><a href="javascript:void(0);" id="btnDescargarPdf" title="Generar reporte formal PDF"><i class="fa fa-file-pdf-o text-danger"></i> Exportar PDF</a></li>
+							<li><a href="javascript:void(0);" id="btnModalCorreo" title="Enviar reporte por email"><i class="fa fa-envelope-o text-info"></i> Enviar Correo</a></li>
+							<li><a href="javascript:void(0);" id="btnModalWhatsApp" title="Compartir informe por WhatsApp"><i class="fa fa-whatsapp text-success"></i> WhatsApp</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Banner de Observaciones y Alertas Inteligentes -->
+		<div class="obs-card" id="boxObservaciones">
+			<h4><i class="fa fa-shield"></i> Diagn&oacute;stico Automatizado y Observaciones de Auditor&iacute;a</h4>
+			<ul class="obs-list" id="listaObservaciones">
+				<li><i class="fa fa-spinner fa-spin"></i> Cargando diagn&oacute;stico comparativo...</li>
+			</ul>
+		</div>
+
+		<!-- KPIs Comparativos -->
+		<div class="kpi-grid" id="kpiContainer">
+			<!-- Inyectado dinamicamente por JavaScript -->
+			<div class="text-center text-muted" style="grid-column: 1 / -1; padding: 20px 0;">
+				<i class="fa fa-spinner fa-spin fa-2x"></i>
+				<div style="margin-top: 6px; font-size: 12px;">Cargando indicadores comparativos...</div>
+			</div>
+		</div>
+
+		<!-- 1. Tendencia y Evolucion Diaria Comparativa -->
+		<div class="row">
+			<div class="col-xs-12">
+				<div class="chart-panel">
+					<h4>
+						<span><i class="fa fa-area-chart text-primary"></i> Tendencia y Evoluci&oacute;n Diaria de Actividad (Per&iacute;odo A vs Per&iacute;odo B)</span>
+						<small style="font-size: 11px; font-weight: normal; color: #64748b;">Movimientos por d&iacute;a</small>
+					</h4>
+					<div id="chartTendencia" style="min-height: 260px;"></div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 2. Comparativa por Modulo y Operaciones (Ingresar, Actualizar, Eliminar) -->
+		<div class="row">
+			<div class="col-xs-12 col-md-7">
+				<div class="chart-panel">
+					<h4>
+						<span><i class="fa fa-cubes text-primary"></i> Comparativa de Actividad por M&oacute;dulo</span>
+						<small style="font-size: 11px; font-weight: normal; color: #64748b;">Top m&oacute;dulos con mayor concurrencia</small>
+					</h4>
+					<div id="chartModulos" style="min-height: 260px;"></div>
+				</div>
+			</div>
+			<div class="col-xs-12 col-md-5">
+				<div class="chart-panel">
+					<h4>
+						<span><i class="fa fa-bar-chart text-success"></i> Comparativa de Operaciones (Ingresar / Actualizar / Eliminar)</span>
+						<small style="font-size: 11px; font-weight: normal; color: #64748b;">Distribuci&oacute;n de eventos</small>
+					</h4>
+					<div id="chartEventos" style="min-height: 260px;"></div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 3. Franja Horaria y Metricas de Sesiones/Seguridad -->
+		<div class="row">
+			<div class="col-xs-12 col-md-6">
+				<div class="chart-panel">
+					<h4>
+						<span><i class="fa fa-clock-o text-warning"></i> Distribuci&oacute;n por Franja Horaria (00:00 a 23:00)</span>
+						<small style="font-size: 11px; font-weight: normal; color: #64748b;">24 Horas</small>
+					</h4>
+					<div id="chartHorarios" style="min-height: 250px;"></div>
+				</div>
+			</div>
+			<div class="col-xs-12 col-md-6">
+				<div class="chart-panel">
+					<h4>
+						<span><i class="fa fa-user-secret text-danger"></i> Comparativa de Sesiones y Seguridad</span>
+						<small style="font-size: 11px; font-weight: normal; color: #64748b;">Tiempos y cierres forzados/inactividad</small>
+					</h4>
+					<div id="chartSesiones" style="min-height: 250px;"></div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 4. Tablas Desglosadas: Top Modulos y Top Usuarios -->
+		<div class="row">
+			<div class="col-xs-12 col-md-6">
+				<div class="chart-panel">
+					<h4>
+						<span><i class="fa fa-table text-primary"></i> Detalle de Variaci&oacute;n por M&oacute;dulo</span>
+					</h4>
+					<div class="table-responsive">
+						<table class="table table-hover table-comp">
+							<thead>
+								<tr>
+									<th>M&oacute;dulo</th>
+									<th style="text-align: right;">Base (A)</th>
+									<th style="text-align: right;">Comp (B)</th>
+									<th style="text-align: right;">Variaci&oacute;n</th>
+								</tr>
+							</thead>
+							<tbody id="tbodyModulos">
+								<tr><td colspan="4" class="text-center text-muted"><i class="fa fa-spinner fa-spin"></i> Cargando datos...</td></tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-xs-12 col-md-6">
+				<div class="chart-panel">
+					<h4>
+						<span><i class="fa fa-users text-info"></i> Usuarios M&aacute;s Activos (Per&iacute;odo B)</span>
+					</h4>
+					<div class="table-responsive">
+						<table class="table table-hover table-comp">
+							<thead>
+								<tr>
+									<th>Usuario</th>
+									<th style="text-align: right;">Total</th>
+									<th style="text-align: right;">Ingresar</th>
+									<th style="text-align: right;">Actualizar</th>
+									<th style="text-align: right;">Eliminar</th>
+								</tr>
+							</thead>
+							<tbody id="tbodyUsuarios">
+								<tr><td colspan="5" class="text-center text-muted"><i class="fa fa-spinner fa-spin"></i> Cargando datos...</td></tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<!-- Modal Envio Correo -->
+<div id="modalEnvioCorreo" class="modal fade" tabindex="-1" role="dialog">
+	<div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+		<div class="modal-content" style="border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1;">
+			<div class="modal-header exa-modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">
+					<i class="fa fa-envelope-o"></i> Enviar Reporte por Correo Electr&oacute;nico
+				</h4>
+			</div>
+			<div class="modal-body" style="padding: 16px;">
+				<div class="form-group">
+					<label style="font-weight: 600; font-size: 12px; color: #334155;">Correo Electr&oacute;nico Destinatario:</label>
+					<input type="email" id="mailDestinatario" class="form-control" placeholder="ejemplo@empresa.com" required />
+				</div>
+				<div class="form-group">
+					<label style="font-weight: 600; font-size: 12px; color: #334155;">Nombre del Destinatario (Opcional):</label>
+					<input type="text" id="mailNombre" class="form-control" placeholder="Ej: Gerencia General" />
+				</div>
+				<div class="form-group">
+					<label style="font-weight: 600; font-size: 12px; color: #334155;">Asunto del Mensaje:</label>
+					<input type="text" id="mailAsunto" class="form-control" value="Informe Estadistico Comparativo de Auditoria" />
+				</div>
+				<div class="alert alert-info" style="margin-bottom: 0; font-size: 11px; padding: 8px 12px;">
+					<i class="fa fa-info-circle"></i> El reporte comparativo generado se adjuntar&aacute; autom&aacute;ticamente en formato <strong>PDF</strong> oficial.
+				</div>
+			</div>
+			<div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 10px 18px;">
+				<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cancelar</button>
+				<button type="button" id="btnEnviarCorreoConfirm" class="btn btn-primary btn-sm" style="font-weight: 600;">
+					<i class="fa fa-paper-plane"></i> Enviar Documento
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal Envio WhatsApp -->
+<div id="modalEnvioWhatsApp" class="modal fade" tabindex="-1" role="dialog">
+	<div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+		<div class="modal-content" style="border-radius: 6px; overflow: hidden; border: 1px solid #cbd5e1;">
+			<div class="modal-header exa-modal-header" style="background-color: #15803d !important;">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">
+					<i class="fa fa-whatsapp"></i> Compartir Informe por WhatsApp
+				</h4>
+			</div>
+			<div class="modal-body" style="padding: 16px;">
+				<div class="form-group">
+					<label style="font-weight: 600; font-size: 12px; color: #334155;">N&uacute;mero de Tel&eacute;fono (con c&oacute;digo de pa&iacute;s):</label>
+					<div class="input-group">
+						<span class="input-group-addon"><i class="fa fa-phone"></i></span>
+						<input type="text" id="waTelefono" class="form-control" placeholder="Ej: 593987654321" required />
+					</div>
+					<span class="help-block" style="font-size: 11px; margin-bottom: 0;">Ingrese el n&uacute;mero sin espacios ni s&iacute;mbolo '+'.</span>
+				</div>
+				<div class="form-group">
+					<label style="font-weight: 600; font-size: 12px; color: #334155;">Vista Previa del Mensaje Resumido:</label>
+					<textarea id="waPreviewMensaje" class="form-control" rows="5" readonly style="font-size: 11px; background: #f8fafc; font-family: monospace;"></textarea>
+				</div>
+				<div style="display: flex; gap: 8px;">
+					<button type="button" id="btnEnviarWaApi" class="btn btn-success btn-block" style="font-weight: 700; margin-top: 0;">
+						<i class="fa fa-paper-plane"></i> Enviar V&iacute;a API ERP
+					</button>
+					<button type="button" id="btnAbrirWaWeb" class="btn btn-default btn-block" style="font-weight: 700; color: #16a34a; border-color: #86efac; margin-top: 0;">
+						<i class="fa fa-external-link"></i> Abrir WhatsApp Web
+					</button>
+				</div>
+			</div>
+			<div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 10px 18px;">
+				<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+(function (window, $) {
+	'use strict';
+
+	var chartTendenciaInstance = null;
+	var chartModulosInstance = null;
+	var chartEventosInstance = null;
+	var chartHorariosInstance = null;
+	var chartSesionesInstance = null;
+	var cacheDatosComparativa = null;
+
+	function fmt(d) {
+		var m = '' + (d.getMonth() + 1), dia = '' + d.getDate(), y = d.getFullYear();
+		if (m.length < 2) m = '0' + m;
+		if (dia.length < 2) dia = '0' + dia;
+		return [y, m, dia].join('-');
+	}
+
+	function calcularRangoPresetDash(preset) {
+		var hoy = new Date();
+		var pa_ini, pa_fin, pb_ini, pb_fin;
+
+		if (preset === 'hoy') {
+			var dHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+			var dAyer = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1);
+			pa_ini = fmt(dAyer);
+			pa_fin = fmt(dAyer);
+			pb_ini = fmt(dHoy);
+			pb_fin = fmt(dHoy);
+		} else if (preset === 'ayer') {
+			var dAyer = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1);
+			var dAnteayer = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 2);
+			pa_ini = fmt(dAnteayer);
+			pa_fin = fmt(dAnteayer);
+			pb_ini = fmt(dAyer);
+			pb_fin = fmt(dAyer);
+		} else if (preset === '1semana') {
+			var s1 = new Date(); s1.setDate(hoy.getDate() - 14);
+			var s2 = new Date(); s2.setDate(hoy.getDate() - 8);
+			var s3 = new Date(); s3.setDate(hoy.getDate() - 7);
+			pa_ini = fmt(s1);
+			pa_fin = fmt(s2);
+			pb_ini = fmt(s3);
+			pb_fin = fmt(hoy);
+		} else if (preset === '1mes') {
+			var m1 = new Date(); m1.setDate(hoy.getDate() - 60);
+			var m2 = new Date(); m2.setDate(hoy.getDate() - 31);
+			var m3 = new Date(); m3.setDate(hoy.getDate() - 30);
+			pa_ini = fmt(m1);
+			pa_fin = fmt(m2);
+			pb_ini = fmt(m3);
+			pb_fin = fmt(hoy);
+		} else if (preset === '3meses') {
+			var q1 = new Date(); q1.setDate(hoy.getDate() - 180);
+			var q2 = new Date(); q2.setDate(hoy.getDate() - 91);
+			var q3 = new Date(); q3.setDate(hoy.getDate() - 90);
+			pa_ini = fmt(q1);
+			pa_fin = fmt(q2);
+			pb_ini = fmt(q3);
+			pb_fin = fmt(hoy);
+		} else {
+			return null;
+		}
+
+		return { pa_ini: pa_ini, pa_fin: pa_fin, pb_ini: pb_ini, pb_fin: pb_fin };
+	}
+
+	function sincronizarPresetActivoDash() {
+		var pa_ini = $('#pa_ini').val();
+		var pa_fin = $('#pa_fin').val();
+		var pb_ini = $('#pb_ini').val();
+		var pb_fin = $('#pb_fin').val();
+
+		var presets = ['hoy', 'ayer', '1semana', '1mes', '3meses'];
+		var coincidencia = null;
+		for (var i = 0; i < presets.length; i++) {
+			var r = calcularRangoPresetDash(presets[i]);
+			if (r && r.pa_ini === pa_ini && r.pa_fin === pa_fin && r.pb_ini === pb_ini && r.pb_fin === pb_fin) {
+				coincidencia = presets[i];
+				break;
+			}
+		}
+
+		$('.preset-btn').removeClass('btn-primary active').addClass('btn-default');
+		if (coincidencia) {
+			$('.preset-btn[data-preset="' + coincidencia + '"]').removeClass('btn-default').addClass('btn-primary active');
+			$('#dashPresetCustomBadge').hide();
+		} else {
+			$('#dashPresetCustomBadge').show();
+		}
+	}
+
+	function initCalendariosDash() {
+		if (!$.fn.datepicker) return;
+		if ($.datepicker) {
+			$.datepicker.regional['es'] = {
+				closeText: 'Cerrar',
+				prevText: '&#x3C;Ant',
+				nextText: 'Sig&#x3E;',
+				currentText: 'Hoy',
+				monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+				monthNamesShort: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+				dayNames: ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],
+				dayNamesShort: ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
+				dayNamesMin: ['Do','Lu','Ma','Mi','Ju','Vi','Sá'],
+				weekHeader: 'Sm',
+				dateFormat: 'yy-mm-dd',
+				firstDay: 1,
+				isRTL: false,
+				showMonthAfterYear: false,
+				yearSuffix: ''
+			};
+			$.datepicker.setDefaults($.datepicker.regional['es']);
+		}
+
+		var baseOpts = {
+			dateFormat: 'yy-mm-dd',
+			changeMonth: true,
+			changeYear: true,
+			showButtonPanel: true,
+			firstDay: 1,
+			monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+			monthNamesShort: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+			dayNamesMin: ['Do','Lu','Ma','Mi','Ju','Vi','Sá']
+		};
+
+		$('#pa_ini').datepicker($.extend({}, baseOpts, {
+			onClose: function (selectedDate) {
+				if (selectedDate) {
+					try { $('#pa_fin').datepicker('option', 'minDate', selectedDate); } catch(e) {}
+				}
+			},
+			onSelect: function () {
+				sincronizarPresetActivoDash();
+				consultarDashboard();
+			}
+		}));
+
+		$('#pa_fin').datepicker($.extend({}, baseOpts, {
+			onClose: function (selectedDate) {
+				if (selectedDate) {
+					try { $('#pa_ini').datepicker('option', 'maxDate', selectedDate); } catch(e) {}
+				}
+			},
+			onSelect: function () {
+				sincronizarPresetActivoDash();
+				consultarDashboard();
+			}
+		}));
+
+		$('#pb_ini').datepicker($.extend({}, baseOpts, {
+			onClose: function (selectedDate) {
+				if (selectedDate) {
+					try { $('#pb_fin').datepicker('option', 'minDate', selectedDate); } catch(e) {}
+				}
+			},
+			onSelect: function () {
+				sincronizarPresetActivoDash();
+				consultarDashboard();
+			}
+		}));
+
+		$('#pb_fin').datepicker($.extend({}, baseOpts, {
+			onClose: function (selectedDate) {
+				if (selectedDate) {
+					try { $('#pb_ini').datepicker('option', 'maxDate', selectedDate); } catch(e) {}
+				}
+			},
+			onSelect: function () {
+				sincronizarPresetActivoDash();
+				consultarDashboard();
+			}
+		}));
+	}
+
+	function obtenerFechasInput() {
+		return {
+			pa_ini: $('#pa_ini').val() + ' 00:00:00',
+			pa_fin: $('#pa_fin').val() + ' 23:59:59',
+			pb_ini: $('#pb_ini').val() + ' 00:00:00',
+			pb_fin: $('#pb_fin').val() + ' 23:59:59'
+		};
+	}
+
+	function consultarDashboard() {
+		var fechas = obtenerFechasInput();
+		fechas.action = 'consultar';
+
+		$('#listaObservaciones').html('<li><i class="fa fa-spinner fa-spin"></i> Calculando diagn&oacute;stico comparativo...</li>');
+
+		$.ajax({
+			url: '../LOGICA/aud_log_dashboard.php',
+			type: 'GET',
+			dataType: 'json',
+			data: fechas,
+			success: function (res) {
+				if (res && res.success && res.data) {
+					cacheDatosComparativa = res.data;
+					renderizarKPIs(res.data.kpis_comparativa || []);
+					renderizarObservaciones(res.data.observaciones || []);
+					renderizarGraficoTendencia(res.data.temporal_comparativa || {});
+					renderizarGraficoModulos(res.data.modulos_comparativa || []);
+					renderizarGraficoEventosComp(res.data.eventos_comparativa || {});
+					renderizarGraficoHorarios(res.data.horarios_comparativa || []);
+					renderizarGraficoSesiones(res.data.sesiones_comparativa || {});
+					renderizarTablaModulos(res.data.modulos_comparativa || []);
+					renderizarTablaUsuarios(res.data.usuarios_top_b || []);
+				} else {
+					alert('Error al consultar datos comparativos.');
+				}
+			},
+			error: function () {
+				alert('No se pudo conectar con el servicio de estadisticas.');
+			}
+		});
+	}
+
+	function numFmt(x, maxDecs) {
+		maxDecs = (maxDecs === undefined) ? 0 : maxDecs;
+		var n = parseFloat(x) || 0;
+		return n.toLocaleString(undefined, { maximumFractionDigits: maxDecs });
+	}
+
+	function renderizarKPIs(kpis) {
+		var html = '';
+		kpis.forEach(function (k) {
+			var pct = (typeof k.pct_cambio === 'number' && !isNaN(k.pct_cambio)) ? k.pct_cambio : null;
+			var favor = k.favorable_subida !== false;
+			var badgeClass = 'badge-neutral';
+			var icono = 'fa-minus';
+			var txtPct = 'N/D';
+
+			if (pct === 0) {
+				txtPct = '0%';
+			} else if (pct !== null) {
+				var sube = pct > 0;
+				var bueno = favor ? sube : !sube;
+				badgeClass = bueno ? 'badge-up' : 'badge-down';
+				icono = sube ? 'fa-arrow-up' : 'fa-arrow-down';
+				txtPct = (sube ? '+' : '') + pct.toFixed(1) + '%';
+			}
+
+			var borderCol = '#2563eb';
+			if (k.color === 'success') borderCol = '#10b981';
+			else if (k.color === 'warning') borderCol = '#f59e0b';
+			else if (k.color === 'danger') borderCol = '#ef4444';
+			else if (k.color === 'info') borderCol = '#0284c7';
+			else if (k.color === 'purple') borderCol = '#8b5cf6';
+			else if (k.color === 'orange') borderCol = '#ea580c';
+
+			var tituloTip = k.titulo;
+			if (k.dias_a && k.dias_b) tituloTip += ' (A: ' + k.dias_a + ' d&iacute;as · B: ' + k.dias_b + ' d&iacute;as)';
+
+			html += '<div class="kpi-card" style="border-left-color: ' + borderCol + ';">';
+			html += '  <div class="kpi-title" title="' + tituloTip + '"><i class="fa ' + k.icono + '"></i> ' + k.titulo + '</div>';
+			html += '  <div class="kpi-values-row">';
+			html += '    <div class="kpi-main-val">' + numFmt(k.valor_b) + '</div>';
+			html += '    <span class="kpi-badge ' + badgeClass + '"><i class="fa ' + icono + '"></i> ' + txtPct + '</span>';
+			html += '  </div>';
+			html += '  <div class="kpi-sub-val">Base (A): <strong>' + numFmt(k.valor_a) + '</strong> &middot; ritmo ' + numFmt(k.promedio_diario_a, 1) + '/d&iacute;a</div>';
+			html += '  <div class="kpi-sub-val">Comparado (B): <strong>' + numFmt(k.valor_b) + '</strong> &middot; ritmo ' + numFmt(k.promedio_diario_b, 1) + '/d&iacute;a</div>';
+			html += '</div>';
+		});
+		$('#kpiContainer').html(html);
+	}
+
+	function renderizarObservaciones(obs) {
+		var html = '';
+		if (!obs || obs.length === 0) {
+			html = '<li><i class="fa fa-check-circle text-success" style="margin-right:4px;"></i> No se registraron anomal&iacute;as o variaciones cr&iacute;ticas en este per&iacute;odo.</li>';
+		} else {
+			obs.forEach(function (o) {
+				var iconBullet = 'fa-info-circle text-primary';
+				if (o.indexOf('incremento') !== -1 || o.indexOf('aumento') !== -1) {
+					iconBullet = 'fa-arrow-circle-up text-warning';
+				} else if (o.indexOf('cerraron') !== -1 || o.indexOf('inactividad') !== -1) {
+					iconBullet = 'fa-clock-o text-muted';
+				} else if (o.indexOf('forzado') !== -1 || o.indexOf('alerta') !== -1) {
+					iconBullet = 'fa-exclamation-triangle text-danger';
+				}
+				html += '<li><i class="fa ' + iconBullet + '" style="margin-right:4px;"></i> ' + o + '</li>';
+			});
+		}
+		$('#listaObservaciones').html(html);
+	}
+
+	// Grafico 1: Tendencia Diaria Comparativa
+	function renderizarGraficoTendencia(tempComp) {
+		var cats = tempComp.categorias || [];
+		var sA = tempComp.serie_a || [];
+		var sB = tempComp.serie_b || [];
+
+		if (cats.length === 0) {
+			cats = ['Día 1'];
+			sA = [0];
+			sB = [0];
+		}
+
+		var options = {
+			series: [
+				{ name: 'Período A (Base)', data: sA },
+				{ name: 'Período B (Comparado)', data: sB }
+			],
+			chart: {
+				type: 'area',
+				height: 260,
+				fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+				toolbar: { show: false }
+			},
+			colors: ['#94a3b8', '#2563eb'],
+			stroke: { curve: 'smooth', width: 2.5 },
+			fill: {
+				type: 'gradient',
+				gradient: { opacityFrom: 0.45, opacityTo: 0.05 }
+			},
+			dataLabels: { enabled: false },
+			xaxis: { categories: cats },
+			yaxis: { title: { text: 'Movimientos' } },
+			tooltip: { shared: true, intersect: false },
+			grid: { borderColor: '#f1f5f9' }
+		};
+
+		if (chartTendenciaInstance) chartTendenciaInstance.destroy();
+		chartTendenciaInstance = new ApexCharts(document.querySelector("#chartTendencia"), options);
+		chartTendenciaInstance.render();
+	}
+
+	// Grafico 2: Modulos Comparativo
+	function renderizarGraficoModulos(modulos) {
+		var topM = modulos.slice(0, 8);
+		var categorias = topM.map(function (m) { return m.modulo; });
+		var serieA = topM.map(function (m) { return m.total_a; });
+		var serieB = topM.map(function (m) { return m.total_b; });
+
+		var options = {
+			series: [
+				{ name: 'Período A (Base)', data: serieA },
+				{ name: 'Período B (Comparado)', data: serieB }
+			],
+			chart: {
+				type: 'bar',
+				height: 260,
+				fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+				toolbar: { show: false }
+			},
+			plotOptions: {
+				bar: { horizontal: false, columnWidth: '45%', borderRadius: 3 }
+			},
+			dataLabels: { enabled: false },
+			colors: ['#94a3b8', '#3b82f6'],
+			xaxis: { categories: categorias },
+			yaxis: { title: { text: 'Movimientos' } },
+			tooltip: { shared: true, intersect: false },
+			grid: { borderColor: '#f1f5f9' }
+		};
+
+		if (chartModulosInstance) chartModulosInstance.destroy();
+		chartModulosInstance = new ApexCharts(document.querySelector("#chartModulos"), options);
+		chartModulosInstance.render();
+	}
+
+	// Grafico 3: Comparativa de Operaciones (Ingresar, Actualizar, Eliminar)
+	function renderizarGraficoEventosComp(eveComp) {
+		var cats = eveComp.categorias || ['Ingresar', 'Actualizar', 'Eliminar', 'Otros / Consultas'];
+		var sA = eveComp.serie_a || [0, 0, 0, 0];
+		var sB = eveComp.serie_b || [0, 0, 0, 0];
+
+		var options = {
+			series: [
+				{ name: 'Período A (Base)', data: sA },
+				{ name: 'Período B (Comparado)', data: sB }
+			],
+			chart: {
+				type: 'bar',
+				height: 260,
+				fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+				toolbar: { show: false }
+			},
+			plotOptions: {
+				bar: { horizontal: false, columnWidth: '45%', borderRadius: 3 }
+			},
+			colors: ['#94a3b8', '#10b981'],
+			dataLabels: { enabled: false },
+			xaxis: { categories: cats },
+			yaxis: { title: { text: 'Operaciones' } },
+			tooltip: { shared: true, intersect: false },
+			grid: { borderColor: '#f1f5f9' }
+		};
+
+		if (chartEventosInstance) chartEventosInstance.destroy();
+		chartEventosInstance = new ApexCharts(document.querySelector("#chartEventos"), options);
+		chartEventosInstance.render();
+	}
+
+	// Grafico 4: Horarios Comparativo
+	function renderizarGraficoHorarios(horarios) {
+		var categorias = horarios.map(function (h) { return h.hora; });
+		var serieA = horarios.map(function (h) { return h.total_a; });
+		var serieB = horarios.map(function (h) { return h.total_b; });
+
+		var options = {
+			series: [
+				{ name: 'Período A (Base)', data: serieA },
+				{ name: 'Período B (Comparado)', data: serieB }
+			],
+			chart: {
+				type: 'area',
+				height: 250,
+				fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+				toolbar: { show: false }
+			},
+			colors: ['#94a3b8', '#f59e0b'],
+			stroke: { curve: 'smooth', width: 2 },
+			fill: {
+				type: 'gradient',
+				gradient: { opacityFrom: 0.35, opacityTo: 0.05 }
+			},
+			dataLabels: { enabled: false },
+			xaxis: { categories: categorias },
+			yaxis: { title: { text: 'Operaciones' } },
+			tooltip: { shared: true, intersect: false },
+			grid: { borderColor: '#f1f5f9' }
+		};
+
+		if (chartHorariosInstance) chartHorariosInstance.destroy();
+		chartHorariosInstance = new ApexCharts(document.querySelector("#chartHorarios"), options);
+		chartHorariosInstance.render();
+	}
+
+	// Grafico 5: Metricas de Sesiones y Seguridad
+	function renderizarGraficoSesiones(sesComp) {
+		var cats = sesComp.categorias || [];
+		var sA = sesComp.serie_a || [];
+		var sB = sesComp.serie_b || [];
+
+		var options = {
+			series: [
+				{ name: 'Período A (Base)', data: sA },
+				{ name: 'Período B (Comparado)', data: sB }
+			],
+			chart: {
+				type: 'bar',
+				height: 250,
+				fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+				toolbar: { show: false }
+			},
+			plotOptions: {
+				bar: { horizontal: true, barHeight: '50%', borderRadius: 3 }
+			},
+			colors: ['#94a3b8', '#ef4444'],
+			dataLabels: { enabled: false },
+			xaxis: { categories: cats },
+			tooltip: { shared: true, intersect: false },
+			grid: { borderColor: '#f1f5f9' }
+		};
+
+		if (chartSesionesInstance) chartSesionesInstance.destroy();
+		chartSesionesInstance = new ApexCharts(document.querySelector("#chartSesiones"), options);
+		chartSesionesInstance.render();
+	}
+
+	function renderizarTablaModulos(modulos) {
+		var html = '';
+		if (!modulos || modulos.length === 0) {
+			html = '<tr><td colspan="4" class="text-center text-muted">Sin datos de m&oacute;dulos en los per&iacute;odos seleccionados.</td></tr>';
+		} else {
+			modulos.forEach(function (m) {
+				var diff = (m.total_b - m.total_a);
+				var color = diff > 0 ? '#166534' : (diff < 0 ? '#991b1b' : '#64748b');
+				var pref = diff > 0 ? '+' : '';
+				html += '<tr>';
+				html += '  <td><strong>' + m.modulo + '</strong></td>';
+				html += '  <td style="text-align: right; color:#64748b;">' + Number(m.total_a).toLocaleString() + '</td>';
+				html += '  <td style="text-align: right; font-weight: 700; color:#1e293b;">' + Number(m.total_b).toLocaleString() + '</td>';
+				html += '  <td style="text-align: right; color: ' + color + '; font-weight: 700;">' + pref + Number(diff).toLocaleString() + '</td>';
+				html += '</tr>';
+			});
+		}
+		$('#tbodyModulos').html(html);
+	}
+
+	function renderizarTablaUsuarios(usuarios) {
+		var html = '';
+		if (!usuarios || usuarios.length === 0) {
+			html = '<tr><td colspan="5" class="text-center text-muted">Sin datos de usuarios en este per&iacute;odo.</td></tr>';
+		} else {
+			usuarios.forEach(function (u) {
+				var nom = u.UsuarioNombre ? (u.UsuarioNombre + ' ' + (u.UsuarioApellido || '')) : ('Usuario #' + u.Usuario_Id);
+				html += '<tr>';
+				html += '  <td><strong>' + nom + '</strong></td>';
+				html += '  <td style="text-align: right; font-weight: 700;">' + Number(u.Total_Operaciones).toLocaleString() + '</td>';
+				html += '  <td style="text-align: right;"><span class="badge-eve-ins">' + Number(u.Total_Inserciones).toLocaleString() + '</span></td>';
+				html += '  <td style="text-align: right;"><span class="badge-eve-upd">' + Number(u.Total_Modificaciones).toLocaleString() + '</span></td>';
+				html += '  <td style="text-align: right;"><span class="badge-eve-del">' + Number(u.Total_Eliminaciones).toLocaleString() + '</span></td>';
+				html += '</tr>';
+			});
+		}
+		$('#tbodyUsuarios').html(html);
+	}
+
+	// Descargar PDF
+	$('#btnDescargarPdf').on('click', function () {
+		var f = obtenerFechasInput();
+		var url = '../LOGICA/aud_log_dashboard.php?action=exportar_pdf&pa_ini=' + encodeURIComponent(f.pa_ini) +
+			'&pa_fin=' + encodeURIComponent(f.pa_fin) +
+			'&pb_ini=' + encodeURIComponent(f.pb_ini) +
+			'&pb_fin=' + encodeURIComponent(f.pb_fin);
+		window.open(url, '_blank');
+	});
+
+	// Modal Envio Correo
+	$('#btnModalCorreo').on('click', function () {
+		$('#modalEnvioCorreo').modal('show');
+	});
+
+	$('#btnEnviarCorreoConfirm').on('click', function () {
+		var correo = $('#mailDestinatario').val().trim();
+		if (!correo) {
+			alert('Por favor ingrese el correo de destino.');
+			return;
+		}
+		var f = obtenerFechasInput();
+		var $btn = $(this);
+		$btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Enviando...');
+
+		$.ajax({
+			url: '../LOGICA/aud_log_dashboard.php',
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				action: 'enviar_correo',
+				correo: correo,
+				nombre: $('#mailNombre').val().trim(),
+				asunto: $('#mailAsunto').val().trim(),
+				pa_ini: f.pa_ini,
+				pa_fin: f.pa_fin,
+				pb_ini: f.pb_ini,
+				pb_fin: f.pb_fin
+			},
+			success: function (res) {
+				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar Documento');
+				if (res && res.success) {
+					$('#modalEnvioCorreo').modal('hide');
+					alert(res.message || 'Reporte enviado exitosamente.');
+				} else {
+					alert('Error: ' + (res.message || 'No se pudo enviar el correo'));
+				}
+			},
+			error: function () {
+				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar Documento');
+				alert('Fallo de conexión al enviar correo.');
+			}
+		});
+	});
+
+	// Modal WhatsApp
+	$('#btnModalWhatsApp').on('click', function () {
+		if (cacheDatosComparativa) {
+			var preview = "*INFORME COMPARATIVO DE AUDITORÍA ERP*\n" +
+				"Empresa: " + cacheDatosComparativa.empresa_nombre + "\n" +
+				"Base (A): " + cacheDatosComparativa.periodo_a_label + "\n" +
+				"Comparado (B): " + cacheDatosComparativa.periodo_b_label + "\n" +
+				"Días analizados: A (" + (cacheDatosComparativa.periodo_a_dias || '?') + ") → B (" + (cacheDatosComparativa.periodo_b_dias || '?') + ")\n\n";
+			if (cacheDatosComparativa.kpis_comparativa) {
+				cacheDatosComparativa.kpis_comparativa.forEach(function (k) {
+					var pctV = (typeof k.pct_cambio === 'number' && !isNaN(k.pct_cambio)) ? k.pct_cambio : null;
+					var sPct = (pctV === null) ? 'N/D (sin base)' : ((pctV > 0 ? '+' : '') + pctV.toFixed(1) + '%');
+					preview += "• " + k.titulo + ": " + Number(k.valor_b).toLocaleString() + " (" + sPct + ")\n";
+				});
+			}
+			$('#waPreviewMensaje').text(preview);
+		}
+		$('#modalEnvioWhatsApp').modal('show');
+	});
+
+	// Cerrar el dropdown de Acciones al seleccionar una opcion
+	$(document).on('click', '.aud-acciones-menu a', function () {
+		var $dd = $(this).closest('.dropdown');
+		$dd.removeClass('open');
+		$dd.find('.dropdown-toggle').attr('aria-expanded', 'false');
+	});
+
+	$('#btnEnviarWaApi').on('click', function () {
+		var tel = $('#waTelefono').val().trim();
+		if (!tel) {
+			alert('Por favor ingrese el número de teléfono destinatario.');
+			return;
+		}
+		var f = obtenerFechasInput();
+		var $btn = $(this);
+		$btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Enviando...');
+
+		$.ajax({
+			url: '../LOGICA/aud_log_dashboard.php',
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				action: 'enviar_whatsapp',
+				telefono: tel,
+				pa_ini: f.pa_ini,
+				pa_fin: f.pa_fin,
+				pb_ini: f.pb_ini,
+				pb_fin: f.pb_fin
+			},
+			success: function (res) {
+				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar Vía API ERP');
+				if (res && res.success) {
+					alert('Se generó el despacho para WhatsApp.');
+					if (res.url_whatsapp) {
+						window.open(res.url_whatsapp, '_blank');
+					}
+					$('#modalEnvioWhatsApp').modal('hide');
+				} else {
+					alert('Error: ' + (res.message || 'No se pudo procesar WhatsApp'));
+				}
+			},
+			error: function () {
+				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar Vía API ERP');
+				alert('Fallo de conexión al enviar WhatsApp.');
+			}
+		});
+	});
+
+	$('#btnAbrirWaWeb').on('click', function () {
+		var tel = $('#waTelefono').val().trim();
+		var f = obtenerFechasInput();
+
+		$.ajax({
+			url: '../LOGICA/aud_log_dashboard.php',
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				action: 'enviar_whatsapp',
+				telefono: tel,
+				pa_ini: f.pa_ini,
+				pa_fin: f.pa_fin,
+				pb_ini: f.pb_ini,
+				pb_fin: f.pb_fin
+			},
+			success: function (res) {
+				if (res && res.url_whatsapp) {
+					window.open(res.url_whatsapp, '_blank');
+				}
+			}
+		});
+	});
+
+	// Manejo de presets
+	$('.preset-btn').on('click', function (e) {
+		e.preventDefault();
+		var preset = $(this).data('preset');
+		var r = calcularRangoPresetDash(preset);
+		if (r) {
+			$('.preset-btn').removeClass('btn-primary active').addClass('btn-default');
+			$(this).removeClass('btn-default').addClass('btn-primary active');
+			$('#dashPresetCustomBadge').hide();
+
+			$('#pa_ini').val(r.pa_ini);
+			$('#pa_fin').val(r.pa_fin);
+			$('#pb_ini').val(r.pb_ini);
+			$('#pb_fin').val(r.pb_fin);
+
+			try {
+				$('#pa_ini').datepicker('setDate', r.pa_ini);
+				$('#pa_fin').datepicker('setDate', r.pa_fin);
+				$('#pb_ini').datepicker('setDate', r.pb_ini);
+				$('#pb_fin').datepicker('setDate', r.pb_fin);
+			} catch(eSet) {}
+
+			consultarDashboard();
+		}
+	});
+
+	$('#btnRecargarDash').on('click', function () {
+		consultarDashboard();
+	});
+
+	$('#pa_ini, #pa_fin, #pb_ini, #pb_fin').on('change', function () {
+		sincronizarPresetActivoDash();
+		consultarDashboard();
+	});
+
+	$(document).ready(function () {
+		initCalendariosDash();
+		sincronizarPresetActivoDash();
+		consultarDashboard();
+	});
+
+})(window, window.jQuery);
+</script>
+</body>
+</html>

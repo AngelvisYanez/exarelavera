@@ -270,7 +270,7 @@ function aud_cfg_guardar($obBD_con1, $obBD_conexion, $emp, $usu, $items)
 		'saved' => $count,
 		'message' => $count > 0
 			? ('Configuracion guardada ('.$count.' reglas). El monitor registrara la actividad de estos modulos, directorios y procesos.')
-			: 'Configuracion vacia: se registraran los eventos de las tablas por defecto (AUDIT_TABLES).'
+			: 'Configuracion vacia: no se registrara actividad de monitoreo hasta que marque los modulos en el arbol.'
 	);
 }
 
@@ -335,5 +335,14 @@ function aud_cfg_compactar_reglas($arbol, $modFull, $dirFull, $pcsChecked)
 		}
 	}
 	return $items;
+}
+
+/**
+ * Verifica si el usuario tiene perfil "Administrador de Sistemas" (para editar reglas).
+ */
+function aud_cfg_es_admin_sistemas($obBD_con1, $obBD_conexion, $usuCod)
+{
+	$row = $obBD_con1->getRowConsulta(13, array((int)$usuCod), $obBD_conexion);
+	return !empty($row['is_admin']);
 }
 ?>

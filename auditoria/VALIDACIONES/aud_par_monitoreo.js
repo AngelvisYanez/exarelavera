@@ -21,12 +21,39 @@ $(function () {
 			org: $('#org').val() || 0,
 			dir: $('#dir').val() || 0,
 			pcs: $('#pcs').val() || 0,
-			eve: $('#eve').val() || 0
+			eve: $('#eve').val() || 0,
+			pla: ($('#filPlanta').length && $('#audFilPlantaWrap').is(':visible')) ? ($('#filPlanta').val() || 0) : 0
 		};
 		if (hasSucursales) {
 			data.suc = $('#suc').val() || 0;
 		}
 		return data;
+	}
+
+	/** Muestra el filtro de Planta solo si el proceso seleccionado tiene que ver con plantas */
+	function actualizarPlantaSelect() {
+		var $wrap = $('#audFilPlantaWrap');
+		var $sel = $('#filPlanta');
+		if (!$wrap.length || !$sel.length) {
+			return;
+		}
+		var pcs = parseInt($('#pcs').val(), 10) || 0;
+		if (pcs <= 0) {
+			$wrap.hide();
+			$sel.val('0');
+			return;
+		}
+		$.getJSON(window.location.pathname, { plantaProcesoAjax: 1, pcs: pcs }, function (resp) {
+			if (resp && resp.success && resp.tiene) {
+				$wrap.show();
+			} else {
+				$wrap.hide();
+				$sel.val('0');
+			}
+		}).fail(function () {
+			$wrap.hide();
+			$sel.val('0');
+		});
 	}
 
 	function fmtYmd(d) {
@@ -119,7 +146,10 @@ $(function () {
 			$usu.empty().append('<option value="0">Todos</option>');
 			if (data && data.rows) {
 				$.each(data.rows, function (i, r) {
-					$usu.append($('<option/>').val(r.Usu_Cod).text(r.Usu_Nom));
+					var val = ($.trim(r.Usu_Cods || '') !== '')
+						? r.Usu_Cods
+						: (r.Usu_Cod || '0');
+					$usu.append($('<option/>').val(val).text(r.Usu_Nom));
 				});
 			}
 			if (cur && $usu.find('option[value="' + cur + '"]').length) {
@@ -177,6 +207,8 @@ $(function () {
 		$('#dir').val('0');
 		$('#eve').val('0');
 		$('#usu').val('0');
+		$('#audFilPlantaWrap').hide();
+		$('#filPlanta').val('0');
 		if ($.fn.chosen) {
 			$('#usu').trigger('chosen:updated');
 		}
@@ -509,18 +541,27 @@ $(function () {
 	$('#org').on('change', function () {
 		var org = $(this).val() || 0;
 		cargarDirectorios(org, function () {
-			cargarProcesos(org, $('#dir').val() || 0, actualizarHint);
+			cargarProcesos(org, $('#dir').val() || 0, function () {
+				actualizarHint();
+				actualizarPlantaSelect();
+			});
 		});
 	});
 
 	$('#dir').on('change', function () {
 		var org = $('#org').val() || 0;
 		var dir = $(this).val() || 0;
-		cargarProcesos(org, dir, actualizarHint);
+		cargarProcesos(org, dir, function () {
+			actualizarHint();
+			actualizarPlantaSelect();
+		});
 	});
 
 	$('#pcs, #eve, #usu, #from, #to').on('change', function () {
 		actualizarHint();
+		if (this.id === 'pcs') {
+			actualizarPlantaSelect();
+		}
 	});
 
 	$('#suc').on('change', function () {
@@ -559,6 +600,10 @@ $(function () {
 	});
 
 	$('#btnExportPdf').on('click', function () {
+		var $frm = $('#frmFiltros');
+		if (!$frm.length) {
+			return;
+		}
 		var total = 0;
 		try {
 			total = parseInt($grid.jqGrid('getGridParam', 'records'), 10) || 0;
@@ -567,48 +612,16 @@ $(function () {
 			if (typeof $.alert === 'function') {
 				$.alert('No hay datos para exportar. Realice una busqueda primero.');
 			} else {
-				alert('No hay datos para exportar.');
+				alert('No hay datos para exportar. Realice una busqueda primero.');
 			}
 			return;
 		}
-		if (typeof $grid.jqGrid === 'function' && typeof $grid.jqGrid('printGrid') === 'function') {
-			$grid.jqGrid('printGrid', {
-				nombre: 'Monitoreo de actividades',
-				removeHiddens: true,
-				removeCols: ['acciones'],
-				caption: true
-			});
-			return;
-		}
-		/* Fallback: ventana imprimible (Guardar como PDF) */
-		try {
-			var html = $grid.jqGrid('exportGridHTML', {
-				caption: true,
-				removeHiddens: true,
-				removeCols: ['acciones'],
-				footer: false,
-				generated: true
-			});
-			var w = window.open('', '_blank');
-			if (!w) {
-				alert('Permita ventanas emergentes para exportar a PDF.');
-				return;
-			}
-			w.document.write('<!DOCTYPE html><html><head><title>Monitoreo de actividades</title>');
-			w.document.write('<style>body{font-family:Arial,sans-serif;font-size:11px;padding:12px;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #999;padding:4px 6px;} th{background:#eef3f8;} h3{margin:0 0 10px 0;}</style>');
-			w.document.write('</head><body>');
-			w.document.write('<h3>Monitoreo de actividades</h3>');
-			w.document.write(html);
-			w.document.write('</body></html>');
-			w.document.close();
-			w.focus();
-			setTimeout(function () { w.print(); }, 300);
-		} catch (ePdf) {
-			alert('No se pudo generar el PDF.');
-		}
+		/* Informe PDF generado en servidor (FPDF): descarga directa */
+		window.location = window.location.pathname + '?' + $frm.serialize() + '&exportMonitoreoPdf=1';
 	});
 
 	actualizarHint();
+	actualizarPlantaSelect();
 	setTimeout(function () {
 		if (typeof exaUiAfterViewChange === 'function') {
 			exaUiAfterViewChange('.exa-ui-panel');

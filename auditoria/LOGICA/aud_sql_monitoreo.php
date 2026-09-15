@@ -403,6 +403,8 @@ function sentencias($id,$Par_Sql){
 
 		/**
 		 * Usuarios de la empresa activa (combo filtro).
+		 * Agrupa cuentas por persona (nombre) para no mostrar repetidos;
+		 * las cuentas de la misma persona van en Usu_Cods y N_Ctas.
 		 * 0 emp, 1 suc (opcional: si >0 lista solo usuarios de esa sucursal)
 		 */
 		case 27:
@@ -410,13 +412,18 @@ function sentencias($id,$Par_Sql){
 			$suc = isset($Par_Sql[1]) ? (int)$Par_Sql[1] : 0;
 			$empF = $emp > 0 ? " AND s.`Emp_Cod`={$emp}" : ' AND 1=0';
 			$sucF = $suc > 0 ? " AND u.`Suc_Cod`={$suc}" : '';
-			$sql = "SELECT DISTINCT u.`Usu_Cod`,
-				TRIM(CONCAT(IFNULL(`persona`.`Prs_Ape`,''),' ',IFNULL(`persona`.`Prs_Nom`,''))) AS `Usu_Nom`
+			$apeNom = "TRIM(CONCAT(IFNULL(`persona`.`Prs_Ape`,''),' ',IFNULL(`persona`.`Prs_Nom`,'')))";
+			$grupoUsu = "IF({$apeNom}='', -u.`Usu_Cod`, {$apeNom})";
+			$sql = "SELECT MIN(u.`Usu_Cod`) AS `Usu_Cod`,
+				GROUP_CONCAT(DISTINCT u.`Usu_Cod` ORDER BY u.`Usu_Cod` SEPARATOR ',') AS `Usu_Cods`,
+				COUNT(DISTINCT u.`Usu_Cod`) AS `N_Ctas`,
+				IFNULL(NULLIF({$apeNom},''), CONCAT('Usuario #', MIN(u.`Usu_Cod`))) AS `Usu_Nom`
 			FROM {$dbDis}.`usuarios` u
 			INNER JOIN {$dbDis}.`sucursal` s ON u.`Suc_Cod` = s.`Suc_Cod`
 			LEFT JOIN {$dbDis}.`persona` ON u.`Prs_Cod` = `persona`.`Prs_Cod`
 			WHERE u.`Usu_Cod` > 0 {$empF} {$sucF}
-			ORDER BY `Usu_Nom` ASC, u.`Usu_Cod` ASC";
+			GROUP BY {$grupoUsu}
+			ORDER BY `Usu_Nom` ASC, `Usu_Cod` ASC";
 			return $sql;
 		break;
 
@@ -484,6 +491,51 @@ function sentencias($id,$Par_Sql){
 			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
 			$sql = "SELECT COUNT(*) AS `count` FROM `auditoria`.`cfg_monitoreo`
 			WHERE `Emp_Cod`={$emp} AND `Cfg_Est`='A'";
+			return $sql;
+		break;
+
+		/**
+		 * Plantas de manifiesto (Pla_Cod -> Pla_Nom) para la columna Planta del informe
+		 */
+		case 33:
+			$sql = "SELECT `Pla_Cod`, `Pla_Nom` FROM {$dbDis}.`manifiesto_plantas` ORDER BY `Pla_Nom` ASC";
+			return $sql;
+		break;
+
+		/**
+		 * Alcance de la auditoria: reglas cfg_monitoreo activas con nombres resueltos.
+		 * 0 emp
+		 */
+		case 34:
+			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$sql = "SELECT c.`Org_Cod`, c.`Pcs_Cod`, o.`Org_Des`, o.`Org_Niv`, p.`Pcs_Lin`, p.`Pcs_Nom`
+			FROM `auditoria`.`cfg_monitoreo` c
+			LEFT JOIN {$dbDis}.`organizado` o ON o.`Org_Cod` = c.`Org_Cod`
+			LEFT JOIN {$dbDis}.`procesos` p ON p.`Pcs_Cod` = c.`Pcs_Cod`
+			WHERE c.`Emp_Cod`={$emp} AND c.`Cfg_Est`='A'
+			ORDER BY o.`Org_Des` ASC, p.`Pcs_Lin` ASC";
+			return $sql;
+		break;
+
+		/**
+		 * Un proceso tiene que ver con plantas si alguna de sus tablas registradas
+		 * tiene columna Pla_Cod o algun log suyo incluyo el campo Pla_Cod.
+		 * 0 pcs
+		 */
+		case 35:
+			$pcs = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$dbSchema = trim($dbDis, '`');
+			$sql = "SELECT COUNT(*) AS `count`
+			FROM `auditoria`.`logs` l
+			INNER JOIN `auditoria`.`tablas` t ON t.`Tab_Cod` = l.`Tab_Cod`
+			WHERE l.`Pcs_Cod` = {$pcs}
+			AND (
+				l.`Log_Cam` LIKE '%Pla_Cod%'
+				OR EXISTS (
+					SELECT 1 FROM `information_schema`.`columns` c
+					WHERE c.`table_schema` = '{$dbSchema}' AND c.`table_name` = t.`Tab_Nom` COLLATE utf8mb3_general_ci AND c.`column_name` = 'Pla_Cod'
+				)
+			)";
 			return $sql;
 		break;
 	}
@@ -633,8 +685,19 @@ function aud_logs_filtro($Par_Sql){
 	if (isset($Par_Sql[6]) && $Par_Sql[6] !== '' && (int)$Par_Sql[6] > 0) {
 		$w .= ' AND `logs`.`Tab_Cod`='.(int)$Par_Sql[6];
 	}
-	if (isset($Par_Sql[7]) && $Par_Sql[7] !== '' && (int)$Par_Sql[7] > 0) {
-		$w .= ' AND `logs`.`Usu_Cod`='.(int)$Par_Sql[7];
+	if (isset($Par_Sql[7]) && trim((string)$Par_Sql[7]) !== '') {
+		$usus = array();
+		foreach (explode(',', trim((string)$Par_Sql[7])) as $us) {
+			$us = (int)$us;
+			if ($us > 0) {
+				$usus[] = $us;
+			}
+		}
+		if (count($usus) === 1) {
+			$w .= ' AND `logs`.`Usu_Cod`='.$usus[0];
+		} elseif (count($usus) > 1) {
+			$w .= ' AND `logs`.`Usu_Cod` IN ('.implode(',', $usus).')';
+		}
 	}
 	// Par_Sql[10]: Suc_Cod (sucursal)
 	if (isset($Par_Sql[10]) && $Par_Sql[10] !== '' && (int)$Par_Sql[10] > 0) {
@@ -643,6 +706,13 @@ function aud_logs_filtro($Par_Sql){
 	// Par_Sql[11]: Directorio (organizado inmediato del proceso)
 	if (isset($Par_Sql[11]) && $Par_Sql[11] !== '' && (int)$Par_Sql[11] > 0) {
 		$w .= ' AND `procesos`.`Org_Cod`='.(int)$Par_Sql[11];
+	}
+	// Par_Sql[12]: Planta (valor de Pla_Cod en la posicion del par Log_Cam/Log_Val)
+	if (isset($Par_Sql[12]) && $Par_Sql[12] !== '' && (int)$Par_Sql[12] > 0) {
+		$pla = (int)$Par_Sql[12];
+		$posPla = "LENGTH(SUBSTRING_INDEX(`logs`.`Log_Cam`, 'Pla_Cod', 1)) - LENGTH(REPLACE(SUBSTRING_INDEX(`logs`.`Log_Cam`, 'Pla_Cod', 1), ',', '')) + 1";
+		$valPla = "REPLACE(TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(`logs`.`Log_Val`, ',', {$posPla}), ',', -1)), '~', '')";
+		$w .= " AND `logs`.`Log_Cam` LIKE '%Pla_Cod%' AND CAST({$valPla} AS UNSIGNED) = {$pla}";
 	}
 	return $w;
 }

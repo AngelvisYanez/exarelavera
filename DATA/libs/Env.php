@@ -24,6 +24,11 @@ class Env {
 
     public static function get($key, $default = null) {
         self::load(); // Asegúrate de que los valores estén cargados
+        // Prioriza variables de entorno del sistema/Docker sobre .env
+        $env = getenv($key);
+        if ($env !== false && $env !== '') {
+            return $env;
+        }
         // return self::$values[$key] ?? $default; // PHP 5.6 no tiene ??, usar ternario
         return isset(self::$values[$key]) ? self::$values[$key] : $default;
     }
@@ -37,7 +42,7 @@ class Env {
             $linea = trim($linea);
             if($linea === '' || strpos($linea, '#') === 0 || strpos($linea, ';') === 0 || strpos($linea, '=') === false)continue;
             list($clave, $val) = explode('=', $linea, 2);
-            $valor = trim(preg_replace('/^((?:[^"\'#]*(?:(["\'])(?:(?!\2).)*\2[^"\'#]*)*)*)(?:#.*)?$/s', '$1', $val) ?: $val);
+            $valor = trim(preg_replace('/^((?:[^"\'#]*(?:(["\'])(?:(?!\\2).)*\\2[^"\'#]*)*)*)(?:#.*)?$/s', '$1', $val) ?: $val);
             if( // Verifica si el valor está entre comillas (simples o dobles)
                 (substr($valor, 0, 1) === '"' && substr($valor, -1) === '"') ||
                 (substr($valor, 0, 1) === "'" && substr($valor, -1) === "'")

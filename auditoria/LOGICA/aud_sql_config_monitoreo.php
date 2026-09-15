@@ -134,6 +134,123 @@ function sentencias_cfg_monitoreo($id, $Par_Sql)
 					{$suc}";
 			return $sql;
 		break;
+
+		/** Roles / Perfiles de la empresa (filtro de validacion) */
+		case 9:
+			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$filtroEmp = $emp > 0 ? "WHERE (p.`Emp_Cod` = {$emp} OR p.`Emp_Cod` IS NULL OR p.`Emp_Cod` = 0)" : '';
+			$sql = "SELECT p.`Per_Cod`, p.`Per_Des`
+				FROM {$dbDis}.`perfiles` p
+				{$filtroEmp}
+				ORDER BY p.`Per_Des` ASC";
+			return $sql;
+		break;
+
+		/** Usuarios activos de la empresa (con roles asociados).
+		 *  Filtra por empresa y agrupa cuentas por persona (nombre) para no
+		 *  mostrar repetidos; las cuentas de la misma persona van en Usu_Cods y N_Ctas. */
+		case 10:
+			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$empF = $emp > 0 ? " AND s.`Emp_Cod`={$emp}" : ' AND 1=0';
+			$nombre = "TRIM(CONCAT(IFNULL(pr.`Prs_Nom`,''),' ',IFNULL(pr.`Prs_Ape`,'')))";
+			$grupoUsu = "IF({$nombre}='', -u.`Usu_Cod`, {$nombre})";
+			$sql = "SELECT MIN(u.`Usu_Cod`) AS `Usu_Cod`,
+					GROUP_CONCAT(DISTINCT u.`Usu_Cod` ORDER BY u.`Usu_Cod` SEPARATOR ',') AS `Usu_Cods`,
+					COUNT(DISTINCT u.`Usu_Cod`) AS `N_Ctas`,
+					IFNULL(NULLIF({$nombre},''), CONCAT('Usuario #', MIN(u.`Usu_Cod`))) AS `Usu_Nom`,
+					GROUP_CONCAT(DISTINCT pf.`Per_Des` ORDER BY pf.`Per_Des` SEPARATOR ', ') AS `Roles`
+				FROM {$dbDis}.`usuarios` u
+				INNER JOIN {$dbDis}.`sucursal` s ON u.`Suc_Cod` = s.`Suc_Cod`
+				LEFT JOIN {$dbDis}.`persona` pr ON u.`Prs_Cod` = pr.`Prs_Cod`
+				LEFT JOIN {$dbDis}.`usuarperfi` up ON u.`Usu_Cod` = up.`Usu_Cod`
+				LEFT JOIN {$dbDis}.`perfiles` pf ON pf.`Per_Cod` = up.`Per_Cod`
+				WHERE IFNULL(u.`Usu_Est`, 'A') = 'A' {$empF}
+				GROUP BY {$grupoUsu}
+				ORDER BY `Usu_Nom` ASC, `Usu_Cod` ASC";
+			return $sql;
+		break;
+
+		/** Procesos asignados a un Rol / Perfil */
+		case 11:
+			$per = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$sql = "SELECT DISTINCT po.`Pcs_Cod`
+				FROM {$dbDis}.`perfiorgan` po
+				WHERE po.`Per_Cod` = {$per}";
+			return $sql;
+		break;
+
+		/** Procesos asignados a un Usuario por sus roles */
+		case 12:
+			$usu = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$sql = "SELECT DISTINCT po.`Pcs_Cod`
+				FROM {$dbDis}.`perfiorgan` po
+				INNER JOIN {$dbDis}.`usuarperfi` up ON po.`Per_Cod` = up.`Per_Cod`
+				WHERE up.`Usu_Cod` = {$usu}";
+			return $sql;
+		break;
+
+		/** Verificar si un usuario tiene perfil Administrador de Sistemas */
+		case 13:
+			$usu = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$sql = "SELECT 1 AS `is_admin`
+				FROM {$dbDis}.`usuarperfi` up
+				INNER JOIN {$dbDis}.`perfiles` p ON up.`Per_Cod` = p.`Per_Cod`
+				WHERE up.`Usu_Cod` = {$usu}
+				  AND (p.`Per_Des` LIKE '%Administrador de Sistemas%' OR UPPER(TRIM(p.`Per_Des`)) = 'ADMINISTRADOR' OR p.`Per_Des` LIKE '%Sistemas%' OR p.`Per_Cod` = 1)
+				LIMIT 1";
+			return $sql;
+		break;
+
+		/** Arbol filtrado por permisos de un Usuario o Rol especifico */
+		case 14:
+			$usu = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$per = isset($Par_Sql[1]) ? (int)$Par_Sql[1] : 0;
+			if ($per > 0) {
+				$permFilter = "INNER JOIN (
+					SELECT DISTINCT po.`Pcs_Cod`
+					FROM {$dbDis}.`perfiorgan` po
+					WHERE po.`Per_Cod` = {$per}
+				) perm ON p.`Pcs_Cod` = perm.`Pcs_Cod`";
+			} else {
+				$permFilter = "INNER JOIN (
+					SELECT DISTINCT po.`Pcs_Cod`
+					FROM {$dbDis}.`perfiorgan` po
+					INNER JOIN {$dbDis}.`usuarperfi` up ON po.`Per_Cod` = up.`Per_Cod`
+					WHERE up.`Usu_Cod` = {$usu}
+				) perm ON p.`Pcs_Cod` = perm.`Pcs_Cod`";
+			}
+			$sql = "SELECT t.* FROM (
+				SELECT p.`Pcs_Cod`, p.`Pcs_Lin`, p.`Pcs_Nom`, p.`Pcs_Ord`,
+					o.`Org_Cod` AS `Dir_Cod`,
+					o.`Org_Des` AS `Dir_Des`,
+					o.`Org_Niv` AS `Dir_Niv`,
+					o.`Org_Ord` AS `Dir_Ord`,
+					CASE
+						WHEN IFNULL(o.`Org_Niv`,0) = 0 THEN o.`Org_Cod`
+						WHEN IFNULL(op.`Org_Niv`,0) = 0 THEN op.`Org_Cod`
+						WHEN IFNULL(oa.`Org_Niv`,0) = 0 THEN oa.`Org_Cod`
+						WHEN IFNULL(ob.`Org_Niv`,0) = 0 THEN ob.`Org_Cod`
+						ELSE NULL
+					END AS `Mod_Cod`,
+					CASE
+						WHEN IFNULL(o.`Org_Niv`,0) = 0 THEN o.`Org_Des`
+						WHEN IFNULL(op.`Org_Niv`,0) = 0 THEN op.`Org_Des`
+						WHEN IFNULL(oa.`Org_Niv`,0) = 0 THEN oa.`Org_Des`
+						WHEN IFNULL(ob.`Org_Niv`,0) = 0 THEN ob.`Org_Des`
+						ELSE NULL
+					END AS `Mod_Des`
+				FROM {$dbDis}.`procesos` p
+				{$permFilter}
+				LEFT JOIN {$dbDis}.`organizado` o ON p.`Org_Cod` = o.`Org_Cod`
+				LEFT JOIN {$dbDis}.`organizado` op ON op.`Org_Cod` = o.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` oa ON oa.`Org_Cod` = op.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` ob ON ob.`Org_Cod` = oa.`Org_Niv`
+				WHERE IFNULL(p.`Pcs_Est`,'A') = 'A'
+			) t
+			WHERE t.`Mod_Cod` IS NOT NULL
+			ORDER BY t.`Mod_Des` ASC, t.`Dir_Ord` ASC, t.`Dir_Des` ASC, t.`Pcs_Ord` ASC, IFNULL(t.`Pcs_Lin`, t.`Pcs_Nom`) ASC";
+			return $sql;
+		break;
 	}
 	return '';
 }

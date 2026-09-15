@@ -65,6 +65,19 @@ if (isset($_POST['ajax']) && (string)$_POST['ajax'] === '1') {
 	exit();
 }
 
+/** Filtro de usuarios: acepta "123" o CSV de cuentas de una persona (dedupe). */
+function aud_usu_list($v)
+{
+	$out = array();
+	foreach (explode(',', trim((string)$v)) as $x) {
+		$x = (int)$x;
+		if ($x > 0) {
+			$out[] = $x;
+		}
+	}
+	return implode(',', $out);
+}
+
 /** Listado jqGrid JSON */
 if (isset($_REQUEST['listMonitoreoGridAjax'])) {
 	@ini_set('display_errors', '0');
@@ -75,8 +88,9 @@ if (isset($_REQUEST['listMonitoreoGridAjax'])) {
 	$fil_org = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
 	$fil_dir = isset($_REQUEST['dir']) ? (int)$_REQUEST['dir'] : 0;
 	$fil_pcs = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
-	$fil_usu = isset($_REQUEST['usu']) ? (int)$_REQUEST['usu'] : 0;
+	$fil_usu = aud_usu_list(isset($_REQUEST['usu']) ? $_REQUEST['usu'] : 0);
 	$fil_suc = isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0;
+	$fil_pla = isset($_REQUEST['pla']) ? (int)$_REQUEST['pla'] : 0;
 	if ($fil_from === '' && $fil_to === '') {
 		$fil_to = date('Y-m-d');
 		$fil_from = date('Y-m-d', strtotime('-30 days'));
@@ -91,8 +105,8 @@ if (isset($_REQUEST['listMonitoreoGridAjax'])) {
 			$pageSize = 250;
 		}
 	}
-	// 0 emp,1 from,2 to,3 eve,4 mod,5 pcs,6 tab,7 usu,8 limit,9 offset,10 suc,11 dir
-	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, $pageSize, 0, $fil_suc, $fil_dir);
+	// 0 emp,1 from,2 to,3 eve,4 mod,5 pcs,6 tab,7 usu,8 limit,9 offset,10 suc,11 dir,12 pla
+	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, $pageSize, 0, $fil_suc, $fil_dir, $fil_pla);
 	$rowCount = $obBD_con1->getRowConsulta(13, $filtros, $obBD_conexion);
 	$total = isset($rowCount['count']) ? (int)$rowCount['count'] : 0;
 	if ($pageSize >= 10000000) {
@@ -183,6 +197,18 @@ if (isset($_REQUEST['listProcesosAjax'])) {
 	exit();
 }
 
+/** Verifica si un proceso tiene que ver con plantas (muestra el filtro Planta) */
+if (isset($_REQUEST['plantaProcesoAjax'])) {
+	@ini_set('display_errors', '0');
+	@header('Content-Type: application/json; charset=utf-8');
+	$fil_pcsPla = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
+	$rowPlaTiene = $fil_pcsPla > 0 ? $obBD_con1->getRowConsulta(35, array($fil_pcsPla), $obBD_conexion) : array();
+	aud_json_out(array('success' => true, 'tiene' => !empty($rowPlaTiene['count'])));
+	$obBD_con1->liberar();
+	$obBD_conexion->cerrar();
+	exit();
+}
+
 /** Usuarios de la empresa / sucursal (combo filtro) */
 if (isset($_REQUEST['listUsuariosAjax'])) {
 	@ini_set('display_errors', '0');
@@ -195,10 +221,15 @@ if (isset($_REQUEST['listUsuariosAjax'])) {
 	$out = array();
 	foreach ($Arr_Usu as $u) {
 		$un = trim(isset($u['Usu_Nom']) ? $u['Usu_Nom'] : '');
+		$nct = isset($u['N_Ctas']) ? (int)$u['N_Ctas'] : 0;
 		if ($un === '') {
 			$un = 'Usuario '.(int)$u['Usu_Cod'];
 		}
-		$out[] = array('Usu_Cod' => (int)$u['Usu_Cod'], 'Usu_Nom' => $un);
+		if ($nct > 1) {
+			$un .= ' ('.$nct.' cuentas)';
+		}
+		$usus = (isset($u['Usu_Cods']) && $u['Usu_Cods'] !== '') ? $u['Usu_Cods'] : (string)(int)$u['Usu_Cod'];
+		$out[] = array('Usu_Cod' => (int)$u['Usu_Cod'], 'Usu_Cods' => $usus, 'Usu_Nom' => $un);
 	}
 	aud_json_out(array('rows' => $out));
 	$obBD_con1->liberar();
@@ -215,13 +246,14 @@ if (isset($_REQUEST['exportMonitoreoCsv'])) {
 	$fil_org = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
 	$fil_dir = isset($_REQUEST['dir']) ? (int)$_REQUEST['dir'] : 0;
 	$fil_pcs = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
-	$fil_usu = isset($_REQUEST['usu']) ? (int)$_REQUEST['usu'] : 0;
+	$fil_usu = aud_usu_list(isset($_REQUEST['usu']) ? $_REQUEST['usu'] : 0);
 	$fil_suc = isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0;
+	$fil_pla = isset($_REQUEST['pla']) ? (int)$_REQUEST['pla'] : 0;
 	if ($fil_from === '' && $fil_to === '') {
 		$fil_to = date('Y-m-d');
 		$fil_from = date('Y-m-d', strtotime('-30 days'));
 	}
-	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, 5000, 0, $fil_suc, $fil_dir);
+	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, 5000, 0, $fil_suc, $fil_dir, $fil_pla);
 	$Arr_Resultado = $obBD_con1->getArrayConsulta(31, $filtros, $obBD_conexion);
 	if (!is_array($Arr_Resultado)) {
 		$Arr_Resultado = array();
@@ -257,6 +289,142 @@ if (isset($_REQUEST['exportMonitoreoCsv'])) {
 	exit();
 }
 
+/** Export PDF del listado filtrado (tope 5000, FPDF) */
+if (isset($_REQUEST['exportMonitoreoPdf'])) {
+	@ini_set('display_errors', '0');
+	require_once('../LOGICA/aud_rep_monitoreo_pdf.php');
+	$fil_from = isset($_REQUEST['from']) ? trim($_REQUEST['from']) : '';
+	$fil_to = isset($_REQUEST['to']) ? trim($_REQUEST['to']) : '';
+	$fil_eve = isset($_REQUEST['eve']) ? (int)$_REQUEST['eve'] : 0;
+	$fil_org = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
+	$fil_dir = isset($_REQUEST['dir']) ? (int)$_REQUEST['dir'] : 0;
+	$fil_pcs = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
+	$fil_usu = aud_usu_list(isset($_REQUEST['usu']) ? $_REQUEST['usu'] : 0);
+	$fil_suc = isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0;
+	$fil_pla = isset($_REQUEST['pla']) ? (int)$_REQUEST['pla'] : 0;
+	if ($fil_from === '' && $fil_to === '') {
+		$fil_to = date('Y-m-d');
+		$fil_from = date('Y-m-d', strtotime('-30 days'));
+	}
+	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, 5000, 0, $fil_suc, $fil_dir, $fil_pla);
+	$Arr_Resultado = $obBD_con1->getArrayConsulta(31, $filtros, $obBD_conexion);
+	if (!is_array($Arr_Resultado)) {
+		$Arr_Resultado = array();
+	}
+
+	// Mapa de plantas (Pla_Cod -> Pla_Nom) para la columna Planta
+	$Arr_Plantas = $obBD_con1->getArrayConsulta(33, array(), $obBD_conexion);
+	$mapaPlantas = array();
+	if (is_array($Arr_Plantas)) {
+		foreach ($Arr_Plantas as $pl) {
+			$mapaPlantas[(string)(int)$pl['Pla_Cod']] = isset($pl['Pla_Nom']) ? trim($pl['Pla_Nom']) : '';
+		}
+	}
+
+	// Alcance de la auditoria (reglas cfg_monitoreo activas)
+	$Arr_Alcance = $obBD_con1->getArrayConsulta(34, array($audEmpCod), $obBD_conexion);
+	$alcance = array();
+	if (is_array($Arr_Alcance)) {
+		foreach ($Arr_Alcance as $a) {
+			$orgDes = isset($a['Org_Des']) ? trim($a['Org_Des']) : '';
+			$pcsLin = isset($a['Pcs_Lin']) ? trim($a['Pcs_Lin']) : '';
+			if ($pcsLin === '' && isset($a['Pcs_Nom'])) {
+				$pcsLin = trim($a['Pcs_Nom']);
+			}
+			if ((int)$a['Pcs_Cod'] > 0) {
+				$nombre = ($orgDes !== '' ? $orgDes . ' > ' : '') . ($pcsLin !== '' ? $pcsLin : ('Proceso ' . (int)$a['Pcs_Cod']));
+				$alcance[] = array('nivel' => 'Proceso', 'nombre' => $nombre);
+			} elseif ((int)$a['Org_Niv'] === 0) {
+				$alcance[] = array('nivel' => 'Modulo completo', 'nombre' => ($orgDes !== '' ? $orgDes : ('Modulo ' . (int)$a['Org_Cod'])));
+			} else {
+				$alcance[] = array('nivel' => 'Directorio completo', 'nombre' => ($orgDes !== '' ? $orgDes : ('Directorio ' . (int)$a['Org_Cod'])));
+			}
+		}
+	}
+
+	// Filas del informe
+	$filas = array();
+	foreach ($Arr_Resultado as $row) {
+		$arr = explode(' ', isset($row['Log_Fec']) ? $row['Log_Fec'] : '');
+		$pares = aud_pares_interpretados($row, null, null);
+
+		// Planta: buscar el campo Pla_Cod en los pares y resolver su nombre
+		$planta = '';
+		$paresRaw = aud_parse_cam_val(isset($row['Log_Cam']) ? $row['Log_Cam'] : '', isset($row['Log_Val']) ? $row['Log_Val'] : '');
+		if (is_array($paresRaw)) {
+			foreach ($paresRaw as $p) {
+				if (isset($p['atr']) && strcasecmp(trim($p['atr']), 'Pla_Cod') === 0 && isset($p['val']) && $p['val'] !== '') {
+					$planta = isset($mapaPlantas[(string)(int)$p['val']]) ? $mapaPlantas[(string)(int)$p['val']] : '';
+					break;
+				}
+			}
+		}
+
+		$filas[] = array(
+			'fecha' => isset($arr[0]) ? $arr[0] : '',
+			'hora' => isset($arr[1]) ? $arr[1] : '',
+			'usuario' => aud_nombre_usuario($row),
+			'modulo' => aud_nombre_modulo($row),
+			'proceso' => aud_nombre_proceso($row),
+			'actividad' => aud_resumen_actividad($row),
+			'planta' => $planta,
+			'detalle' => aud_resumen_detalle($row, $pares)
+		);
+	}
+
+	// Texto de filtros aplicados
+	$bitFiltros = array();
+	$bitFiltros[] = 'Período: ' . $fil_from . ' a ' . $fil_to;
+	if ($fil_eve > 0) {
+		$Arr_Eve = $obBD_con1->getArrayConsulta(17, array(), $obBD_conexion);
+		if (is_array($Arr_Eve)) {
+			foreach ($Arr_Eve as $e) {
+				if ((int)$e['Eve_Cod'] === $fil_eve) {
+					$bitFiltros[] = 'Evento: ' . trim($e['Eve_Des']);
+					break;
+				}
+			}
+		}
+	}
+	if ($fil_usu !== '') {
+		$bitFiltros[] = 'Usuario: ' . $fil_usu;
+	}
+	if ($fil_suc > 0) {
+		$bitFiltros[] = 'Sucursal: ' . $fil_suc;
+	}
+	if ($fil_org > 0 || $fil_dir > 0 || $fil_pcs > 0) {
+		$bitFiltros[] = 'Módulo/Proceso: ' . $fil_org . '/' . $fil_dir . '/' . $fil_pcs;
+	}
+	if ($fil_pla > 0) {
+		$bitFiltros[] = 'Planta: ' . (isset($mapaPlantas[(string)$fil_pla]) ? $mapaPlantas[(string)$fil_pla] : ('Planta ' . $fil_pla));
+	}
+
+	// Empresa y emisor del informe
+	$empNombre = 'EXACONTABLE ERP';
+	if (!empty($Arr_Resultado) && isset($Arr_Resultado[0]['Emp_Nom']) && trim($Arr_Resultado[0]['Emp_Nom']) !== '') {
+		$empNombre = trim($Arr_Resultado[0]['Emp_Nom']);
+	}
+	$emisorNombre = 'Usuario #' . $audUsuCod;
+	$rowEmisor = $audUsuCod > 0 ? $obBD_con1->getRowConsulta(3, array($audUsuCod), $obBD_conexion) : array();
+	if (!empty($rowEmisor['Prs_Nom']) || !empty($rowEmisor['Prs_Ape'])) {
+		$emisorNombre = trim($rowEmisor['Prs_Ape'] . ' ' . $rowEmisor['Prs_Nom']);
+	}
+
+	$datos = array(
+		'empresa_nombre' => $empNombre,
+		'usuario_emisor' => $emisorNombre,
+		'periodo_texto' => $fil_from . ' a ' . $fil_to,
+		'filtros_texto' => implode(' | ', $bitFiltros),
+		'alcance' => $alcance,
+		'filas' => $filas,
+		'total_registros' => count($filas)
+	);
+	aud_generar_reporte_monitoreo_pdf($datos, 'D');
+	$obBD_con1->liberar();
+	$obBD_conexion->cerrar();
+	exit();
+}
+
 $pcsSim = array();
 foreach (aud_sim_casos() as $cSim) {
 	$pcsSim[$cSim['id']] = 0;
@@ -275,6 +443,13 @@ $pcsVis = isset($pcsSim['visitantes']) ? (int)$pcsSim['visitantes'] : 0;
 $pcsEve = isset($pcsSim['eventos']) ? (int)$pcsSim['eventos'] : 0;
 $pcsVen = isset($pcsSim['ventas']) ? (int)$pcsSim['ventas'] : 0;
 $pcsCaj = isset($pcsSim['caja']) ? (int)$pcsSim['caja'] : 0;
+$pcsAnt = isset($pcsSim['anticipos']) ? (int)$pcsSim['anticipos'] : 0;
+$pcsCon = isset($pcsSim['contratos']) ? (int)$pcsSim['contratos'] : 0;
+$pcsMaq = isset($pcsSim['maquinaria']) ? (int)$pcsSim['maquinaria'] : 0;
+$pcsTec = isset($pcsSim['tecnicos']) ? (int)$pcsSim['tecnicos'] : 0;
+$pcsOpe = isset($pcsSim['operario_vehiculos']) ? (int)$pcsSim['operario_vehiculos'] : 0;
+$pcsInv = isset($pcsSim['inventario']) ? (int)$pcsSim['inventario'] : 0;
+$pcsCob = isset($pcsSim['cobranzas']) ? (int)$pcsSim['cobranzas'] : 0;
 $paramsDemo = array($audUsuCod, $audEmpCod, $audSucCod, $pcsDemo);
 if (isset($_POST['simular']) && $_POST['simular'] == '1') {
 	$obBD_con1->grabarv_registros("INSERT IGNORE INTO `auditoria`.`eventos` (`Eve_Cod`,`Eve_Ini`,`Eve_Des`) VALUES (1,'F','Fallido'),(2,'I','Insertar'),(3,'U','Actualizar'),(4,'D','Eliminar')", $obBD_conexion);
@@ -288,7 +463,32 @@ if (isset($_POST['simular']) && $_POST['simular'] == '1') {
 		array('manifiesto_evento', 'Eventos Relavera', 'Eventos'),
 		array('ventas', 'Facturas de venta', 'Facturas de venta'),
 		array('ventas_det', 'Detalle de facturas de venta', 'Detalle de venta'),
-		array('caja_aper', 'Apertura y cierre de caja', 'Caja')
+		array('caja_aper', 'Apertura y cierre de caja', 'Caja'),
+		array('anticipos_clientes', 'Anticipos de clientes Relavera', 'Anticipos de clientes'),
+		array('det_ant_cccc', 'Detalle de anticipos Relavera', 'Detalle de anticipos'),
+		array('manifiesto_anticipo', 'Anticipos de manifiesto Relavera', 'Anticipos de manifiesto'),
+		array('pag_anticipo_cli', 'Pagos de anticipo Relavera', 'Pagos de anticipo'),
+		array('manifiesto_contratos', 'Contratos con plantas Relavera', 'Contratos con plantas'),
+		array('manifiesto_contratos_docu', 'Documentos de contratos Relavera', 'Documentos de contratos'),
+		array('param_manifiesto', 'Parametros de manifiesto Relavera', 'Parametros de manifiesto'),
+		array('maquinaria_alimentacion', 'Alimentacion de maquinaria Relavera', 'Alimentacion de maquinaria'),
+		array('maquinaria_dispensador', 'Dispensadores de gasolina Relavera', 'Dispensadores de gasolina'),
+		array('maquinaria_dispensador_det', 'Detalle de dispensadores Relavera', 'Detalle de dispensadores'),
+		array('maquinaria_dispensador_cierre', 'Cierres de dispensadores Relavera', 'Cierres de dispensadores'),
+		array('maquinaria_equipo', 'Equipos de maquinaria Relavera', 'Equipos de maquinaria'),
+		array('maquinaria_horometro', 'Horometros de maquinaria Relavera', 'Horometros de maquinaria'),
+		array('manifiesto_liquidacion_maq', 'Liquidacion de maquinaria Relavera', 'Liquidacion de maquinaria'),
+		array('manifiesto_tecnico', 'Tecnicos asignados Relavera', 'Tecnicos asignados'),
+		array('manifiesto_mensajes', 'Mensajes Relavera', 'Mensajes'),
+		array('chofer', 'Choferes Relavera', 'Choferes'),
+		array('vehiculo', 'Vehiculos Relavera', 'Vehiculos'),
+		array('personal', 'Personal Relavera', 'Personal'),
+		array('inventario_dispositivos', 'Inventario de dispositivos Relavera', 'Inventario de dispositivos'),
+		array('usuario_inventario', 'Usuarios de inventario Relavera', 'Usuarios de inventario'),
+		array('ccpp_cobrar', 'Cuentas por cobrar Relavera', 'Cuentas por cobrar'),
+		array('det_ccpp_c', 'Detalle de cuentas por cobrar Relavera', 'Detalle de cuentas por cobrar'),
+		array('pago_venta', 'Pagos de venta Relavera', 'Pagos de venta'),
+		array('ventas_compr', 'Comprobantes de venta Relavera', 'Comprobantes de venta')
 	);
 	foreach ($seedTabs as $st) {
 		$tn = addslashes($st[0]);
@@ -330,15 +530,15 @@ if (isset($_POST['simular']) && $_POST['simular'] == '1') {
 		array($pcsMan, 'manifiesto', 'U',
 			'Man_Pes,Man_Pun,Man_Obe',
 			'13200,3.50,~AJUSTE DEMO RELAVERA~',
-			'Man_Cod=DEMO-M-1001', 20),
+			'Man_Cod=DEMO-M-1001 || OLD:Man_Pes=12500,Man_Pun=3.00', 20),
 		array($pcsTur, 'manifiesto_turnos_det', 'U',
 			'Tud_Cup,Tud_Est',
 			'12,~A~',
-			'Tud_Cod=DEMO-TUD-1', 10),
+			'Tud_Cod=DEMO-TUD-1 || OLD:Tud_Cup=15,Tud_Est=A', 10),
 		array($pcsVis, 'manifiesto_visitante', 'U',
 			'MVis_Est,MVis_Obs',
 			'~I~,~ANULACION DEMO VISITANTE~',
-			'MVis_Cod=DEMO-VIS-1', 5),
+			'MVis_Cod=DEMO-VIS-1 || OLD:MVis_Est=A,MVis_Obs=INGRESO DEMO VISITANTE', 5),
 		array($pcsVen, 'ventas', 'I',
 			'Tic_Cod,Cli_Cod,Vet_Num,Vet_Des,Vet_Hor',
 			'1,1,~001-001-000000001~,~'.$hoy.'~,~08:30:00~',
@@ -354,7 +554,47 @@ if (isset($_POST['simular']) && $_POST['simular'] == '1') {
 		array($pcsCaj, 'caja_aper', 'U',
 			'Caj_Fef,Caj_Hof,Caj_Est',
 			'~'.$hoy.'~,~17:00:00~,~C~',
-			'Caj_Cod=DEMO-CAJ-1', 6)
+			'Caj_Cod=DEMO-CAJ-1 || OLD:Caj_Est=A,Caj_Gen=N', 6),
+		array($pcsAnt, 'anticipos_clientes', 'I',
+			'Ant_Cod,Ant_Mon,Ant_Est,Ant_Obs',
+			'~DEMO-ANT-1~,250.00,~A~,~ANTICIPO DEMO~',
+			'Ant_Cod=DEMO-ANT-1', 28),
+		array($pcsCon, 'manifiesto_contratos', 'I',
+			'MC_Cod,Pla_Cod,MC_Fei,MC_Fef,MC_Est',
+			'~DEMO-MC-1~,1,~'.$hoy.'~,~'.$finTur.'~,~A~',
+			'MC_Cod=DEMO-MC-1', 26),
+		array($pcsMaq, 'maquinaria_horometro', 'I',
+			'Maq_Cod,MHor_Fec,MHor_Val',
+			'1,~'.$hoy.'~,1250.00',
+			'MHor_Cod=DEMO-HOR-1', 24),
+		array($pcsMaq, 'maquinaria_horometro', 'U',
+			'MHor_Val,MHor_Est',
+			'1310.00,~A~',
+			'MHor_Cod=DEMO-HOR-1 || OLD:MHor_Val=1250.00,MHor_Est=A', 18),
+		array($pcsTec, 'manifiesto_tecnico', 'I',
+			'MT_Cod,Tec_Cod,MT_Fec,MT_Obs',
+			'~DEMO-MT-1~,1,~'.$hoy.'~,~ASIGNACION TECNICO DEMO~',
+			'MT_Cod=DEMO-MT-1', 22),
+		array($pcsOpe, 'vehiculo', 'I',
+			'Veh_Ope,Veh_Placa,Veh_Est',
+			'1,~PBA-1234~,~A~',
+			'Veh_Cod=DEMO-VEH-1', 20),
+		array($pcsInv, 'inventario_dispositivos', 'I',
+			'Inv_Ser,Inv_Est,Inv_Fec',
+			'~SN-DEMO-1~,~A~,~'.$hoy.'~',
+			'Inv_Cod=DEMO-INV-1', 16),
+		array($pcsInv, 'inventario_dispositivos', 'U',
+			'Inv_Est,Inv_Obs',
+			'~I~,~BAJA DEMO DISPOSITIVO~',
+			'Inv_Cod=DEMO-INV-1 || OLD:Inv_Est=A', 9),
+		array($pcsCob, 'ccpp_cobrar', 'I',
+			'Ccp_Cod,Cli_Cod,Ccp_Mon,Ccp_Est',
+			'~DEMO-CCP-1~,1,120.00,~A~',
+			'Ccp_Cod=DEMO-CCP-1', 14),
+		array($pcsCob, 'pago_venta', 'U',
+			'Pag_Mon,Pay_Est',
+			'120.00,~C~',
+			'Pag_Cod=DEMO-PAG-1 || OLD:Pag_Mon=120.00,Pay_Est=A', 7)
 	);
 	foreach ($demosRelavera as $d) {
 		if ((int)$d[0] <= 0) {
@@ -378,8 +618,9 @@ $fil_eve = isset($_GET['eve']) ? (int)$_GET['eve'] : 0;
 $fil_org = isset($_GET['org']) ? (int)$_GET['org'] : 0;
 $fil_dir = isset($_GET['dir']) ? (int)$_GET['dir'] : 0;
 $fil_pcs = isset($_GET['pcs']) ? (int)$_GET['pcs'] : 0;
-$fil_usu = isset($_GET['usu']) ? (int)$_GET['usu'] : 0;
+$fil_usu = aud_usu_list(isset($_GET['usu']) ? $_GET['usu'] : 0);
 $fil_suc = isset($_GET['suc']) ? (int)$_GET['suc'] : 0;
+$fil_pla = isset($_GET['pla']) ? (int)$_GET['pla'] : 0;
 // Al entrar: ultimas actividades (ultimos 30 dias)
 if ($fil_from === '' && $fil_to === '' && !isset($_GET['from']) && !isset($_GET['to'])) {
 	$fil_to = date('Y-m-d');
@@ -392,6 +633,10 @@ $Arr_Directorios = $obBD_con1->getArrayConsulta(30, array($audEmpCod, $fil_org),
 $Arr_Procesos = $obBD_con1->getArrayConsulta(26, array($audEmpCod, $fil_dir, $fil_org), $obBD_conexion);
 $Arr_Usuarios = $obBD_con1->getArrayConsulta(27, array($audEmpCod, $fil_suc), $obBD_conexion);
 $Arr_Sucursales = $obBD_con1->getArrayConsulta(28, array($audEmpCod), $obBD_conexion);
+$Arr_PlantasFiltro = $obBD_con1->getArrayConsulta(33, array(), $obBD_conexion);
+if (!is_array($Arr_PlantasFiltro)) {
+	$Arr_PlantasFiltro = array();
+}
 $rowSucCount = $obBD_con1->getRowConsulta(29, array($audEmpCod), $obBD_conexion);
 $hasSucursales = (!empty($rowSucCount['count']) && (int)$rowSucCount['count'] > 1);
 $rowCfgCount = $obBD_con1->getRowConsulta(32, array($audEmpCod), $obBD_conexion);
@@ -412,7 +657,7 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 	<?php require_once("../../mascaras/model3/estilos/estilos.php"); ?>
 	<link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
 	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
-	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260910_v4" />
+	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260915_v1" />
 </head>
 <body>
 <div class="panel panel-default panel-main exa-ui-panel exa-ui-fill-page">
@@ -450,8 +695,13 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 										if ($un === '') {
 											$un = 'Usuario '.(int)$u['Usu_Cod'];
 										}
+										$nc = isset($u['N_Ctas']) ? (int)$u['N_Ctas'] : 0;
+										if ($nc > 1) {
+											$un .= ' ('.$nc.' cuentas)';
+										}
+										$usus = (isset($u['Usu_Cods']) && $u['Usu_Cods'] !== '') ? $u['Usu_Cods'] : (string)(int)$u['Usu_Cod'];
 									?>
-									<option value="<?php echo (int)$u['Usu_Cod']; ?>"<?php echo $fil_usu==(int)$u['Usu_Cod']?' selected="selected"':''; ?>><?php echo aud_h($un); ?></option>
+									<option value="<?php echo aud_h($usus); ?>"<?php echo $fil_usu === $usus ? ' selected="selected"':''; ?>><?php echo aud_h($un); ?></option>
 									<?php } ?>
 								</select>
 							</div>
@@ -484,17 +734,26 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 									<?php } ?>
 								</select>
 							</div>
-							<div class="aud-search-cell aud-search-cell-pcs">
-								<label for="pcs">Proceso</label>
-								<select name="pcs" id="pcs" class="form-control input-xs" title="Filtrar por proceso">
-									<option value="0">Todos</option>
-									<?php foreach ($Arr_Procesos as $p) {
-										$pl = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : ('Proceso '.$p['Pcs_Cod']));
-									?>
-									<option value="<?php echo (int)$p['Pcs_Cod']; ?>"<?php echo $fil_pcs==(int)$p['Pcs_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl); ?></option>
-									<?php } ?>
-								</select>
-							</div>
+						<div class="aud-search-cell aud-search-cell-pcs">
+							<label for="pcs">Proceso</label>
+							<select name="pcs" id="pcs" class="form-control input-xs" title="Filtrar por proceso">
+								<option value="0">Todos</option>
+								<?php foreach ($Arr_Procesos as $p) {
+									$pl = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : ('Proceso '.$p['Pcs_Cod']));
+								?>
+								<option value="<?php echo (int)$p['Pcs_Cod']; ?>"<?php echo $fil_pcs==(int)$p['Pcs_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl); ?></option>
+								<?php } ?>
+							</select>
+						</div>
+						<div class="aud-search-cell aud-search-cell-pla" id="audFilPlantaWrap" style="display:none;">
+							<label for="filPlanta">Planta</label>
+							<select name="pla" id="filPlanta" class="form-control input-xs" title="Filtrar por planta del proceso">
+								<option value="0">Todas</option>
+								<?php foreach ($Arr_PlantasFiltro as $pl2) { ?>
+								<option value="<?php echo (int)$pl2['Pla_Cod']; ?>"<?php echo $fil_pla==(int)$pl2['Pla_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl2['Pla_Nom']); ?></option>
+								<?php } ?>
+							</select>
+						</div>
 							<div class="aud-search-cell aud-search-cell-eve">
 								<label for="eve">Evento</label>
 								<select name="eve" id="eve" class="form-control input-xs" title="Filtrar por tipo de evento">
@@ -531,8 +790,8 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 						<button type="button" id="btnExportExcel" class="btn btn-success btn-xs" title="Exportar a Excel">
 							<span class="glyphicon glyphicon-download-alt"></span> Excel
 						</button>
-						<button type="button" id="btnExportPdf" class="btn btn-danger btn-xs" title="Exportar a PDF / Imprimir">
-							<span class="glyphicon glyphicon-file"></span> PDF
+						<button type="button" id="btnExportPdf" class="btn btn-default btn-xs" title="Generar reporte formal PDF">
+							<i class="fa fa-file-pdf-o text-danger"></i> Exportar PDF
 						</button>
 						<div class="aud-col-wrap" id="aud-col-wrap">
 							<button type="button" id="aud-col-btn" class="btn btn-default btn-xs" title="Columnas visibles">
@@ -576,7 +835,7 @@ var AUD_HAS_SUCURSALES = <?php echo $hasSucursales ? 'true' : 'false'; ?>;
 </script>
 <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
 <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-<script type="text/javascript" src="../VALIDACIONES/aud_par_monitoreo.js?v=20260910_v4"></script>
+<script type="text/javascript" src="../VALIDACIONES/aud_par_monitoreo.js?v=20260915_v7"></script>
 </body>
 </html>
 <?php

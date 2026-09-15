@@ -326,14 +326,18 @@ async function main() {
       assert(delta >= 1, `Se esperaba al menos 1 log nuevo (delta=${delta})`);
       console.log('  OK  Actividad persistida segun cfg_monitoreo');
     } else {
-      console.log('  INFO  Sin reglas cfg_monitoreo: solo tablas AUDIT_TABLES generan logs');
-      assert(delta >= 1, `Se esperaba al menos 1 log en AUDIT_TABLES (delta=${delta})`);
-      console.log('  OK  Logs en tablas AUDIT_TABLES');
+      console.log('  INFO  Sin reglas cfg_monitoreo: no se registra actividad hasta marcar modulos');
+      assert(delta === 0, `Con 0 reglas no deben persistirse logs (delta=${delta})`);
+      console.log('  OK  Sin reglas, ninguna actividad persiste');
     }
 
     assert(!grid.parseError, 'Grid monitoreo no devolvio JSON (permiso o error PHP)');
-    assert(records >= 1, 'Grid monitoreo no muestra actividad (records=' + records + ')');
-    console.log('  OK  Grid monitoreo con registros visibles');
+    if (before.cfg_rules > 0) {
+      assert(records >= 1, 'Grid monitoreo no muestra actividad (records=' + records + ')');
+      console.log('  OK  Grid monitoreo con registros visibles');
+    } else {
+      console.log(`  INFO  Grid monitoreo sin reglas: registros=${records} (no se espera actividad)`);
+    }
   } catch (e) {
     failed++;
     console.error('\nFAIL ', e.message || e);

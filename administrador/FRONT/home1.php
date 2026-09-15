@@ -1,7 +1,7 @@
 <?php 
 /**
-Descripción: Página de inicio del sistema informático EXA
-Fecha de creación:	2016-12-28
+Descripciï¿½n: Pï¿½gina de inicio del sistema informï¿½tico EXA
+Fecha de creaciï¿½n:	2016-12-28
 Desarrollador:	Erik Niebla
 */
 require_once('../../Librerias/procedimientos/almacenados_standar.php'); 
@@ -69,7 +69,19 @@ if(isset($loginAjax)){
 	$_SESSION['Ses_Dat_Dis'] = $row_data['Dat_Dis']; //Base de datos distribuida local
 	$_SESSION['Ses_Dat_Aut'] = $row_data['Dat_Aut']; //Base de datos auditoria
 	$_SESSION['Ses_Dat_Stg'] = $row_data['Dat_Stg']; //Base de datos storage
+        if (class_exists('Class_Log_Datos_Aud')) {
+            $objAudCerrar = new Class_Log_Datos_Aud;
+            if (!empty($_SESSION['Ses_Ses_Cod']) && !empty($_SESSION['Ses_Usu_Cod'])) {
+                $objAudCerrar->GuardarCierreSesion((int)$_SESSION['Ses_Ses_Cod'], date('Y-m-d H:i:s'), (int)$_SESSION['Ses_Usu_Cod']);
+            }
+            $objAudCerrar->liberar();
+        }
         $responce['success']=true;
+        if (class_exists('Class_Log_Datos_Aud')) {
+            $objAudAbrir = new Class_Log_Datos_Aud;
+            $_SESSION['Ses_Ses_Cod'] = $objAudAbrir->guardarInicioSesion(date('Y-m-d H:i:s'), $_SESSION['Ses_Usu_Cod'], $obBD_conexion);
+            $objAudAbrir->liberar();
+        }
     }else{ $responce['success']=false; }
     echo json_encode($responce); exit();
 }
@@ -77,7 +89,7 @@ $apellido = explode(' ', $_SESSION['Ses_Prs_Ape']);
 $nombre = explode(' ', $_SESSION['Ses_Prs_Nom']); 
 
 $obBD_conexion1 = new Class_Log_Conexion_Adm; //Creacion del Objeto de conexion 
-$obBD_con1 =  new Class_Log_Datos_Adm; //Creación del objeto mysql para las consultas 
+$obBD_con1 =  new Class_Log_Datos_Adm; //Creaciï¿½n del objeto mysql para las consultas 
 $rs_empresas = $obBD_con1->getArrayConsulta(213, trim($Ses_Usu_Ced), $obBD_conexion1); //consulta empresas
 $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced, $obBD_conexion1);
 ?>
@@ -151,17 +163,17 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
                                                 <li class="red-social r4" data-tooltip="tooltip" data-placement="bottom" title="Instagram"><a href="https://www.instagram.com/ofsercontsa/" target="blank"><i class="ace-icon fa fa-instagram"></i></a></li>
                                                 <li class="red-social r3" data-tooltip="tooltip" data-placement="bottom" title="Youtube"><a href="https://www.youtube.com/channel/UCM85YafBv-1PZZ5FkzTxZbw?disable_polymer=true" target="blank"><i class="ace-icon fa fa-youtube"></i></a></li>
                                                 <li class="red-social r2" data-tooltip="tooltip" data-placement="bottom" title="Twitter"><a href="https://twitter.com/OFSERCONTSA1?lang=es" target="blank"><i class="ace-icon fa fa-twitter"></i></a></li>
-                                                <li class="red-social r1 grey" data-tooltip="tooltip" data-placement="bottom" title="¿Quienes somos?"><a href="../../skins/html/ACERCA-DE-EXA1.html" target="contenido"><i class="ace-icon fa fa-suitcase"></i></a></li>
+                                                <li class="red-social r1 grey" data-tooltip="tooltip" data-placement="bottom" title="ï¿½Quienes somos?"><a href="../../skins/html/ACERCA-DE-EXA1.html" target="contenido"><i class="ace-icon fa fa-suitcase"></i></a></li>
 						<li class="light-blue user-links">
 							<a data-toggle="dropdown" href="#" class="dropdown-toggle"><!--<img class="nav-user-photo" src="../../skins/avatars/user.jpg" alt="Jason's Photo" />-->
 								<span class="user-info"><small>Bienvenido,</small> <?Php echo $nombre[0].' '.$apellido[0]; ?></span><i class="ace-icon fa fa-caret-down"></i>
 							</a>
 							<ul class="user-menu dropdown-menu-right dropdown-menu dropdown-yellow dropdown-caret dropdown-close">
-								<li><a class="ace-settings-btn" ><i class="ace-icon fa fa-cog"></i>Configuración</a></li>
+								<li><a class="ace-settings-btn" ><i class="ace-icon fa fa-cog"></i>Configuraciï¿½n</a></li>
                                                                 <li><a href="./adm_pas_usuarios_1.0.php" target="contenido" class="menu-link"><i class="ace-icon fa fa-key"></i>Cambiar Clave</a></li>
                                                                 <?php if(count($rs_empresas)>1){ ?><li><a data-toggle="modal" data-target="#myModal"><i class="ace-icon fa fa-user"></i>Cambiar Empresa</a></li><?php } ?>
 								<li class="divider"></li>
-								<li><a href="../LOGICA/logout.php"><i class="ace-icon fa fa fa-sign-out"></i>Cerrar Sesión</a></li>
+								<li><a href="../LOGICA/logout.php"><i class="ace-icon fa fa fa-sign-out"></i>Cerrar Sesiï¿½n</a></li>
 							</ul>
 						</li><!-- /section:basics/navbar.user_menu -->
 					</ul>
@@ -235,7 +247,7 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
 
 									<div class="ace-settings-item ace-settings-con">
 										<input type="checkbox" class="ace ace-checkbox-2" id="ace-settings-compact" checked=""  style="margin-right: 6px;margin-left: 4px;"/>
-										<label class="lbl" for="ace-settings-compact"> Menú Compacto</label>
+										<label class="lbl" for="ace-settings-compact"> Menï¿½ Compacto</label>
 									</div>
 
                                                                         <div class="ace-settings-item ace-settings-con" style="display:none;">
@@ -344,7 +356,7 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
                         </div>
                         <!-- Prepended text-->
                         <div class="form-group">
-                          <label class="col-sm-2 control-label" for="Usu_Pas">Contraseña:</label>
+                          <label class="col-sm-2 control-label" for="Usu_Pas">Contraseï¿½a:</label>
                           <div class="col-sm-5">
                               <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-key"></i></span>

@@ -86,6 +86,8 @@ body, html {
 	border-collapse: separate;
 	border-spacing: 8px 0;
 	margin: 0 -8px;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
 }
 
 .aud-search-cell {
@@ -101,6 +103,7 @@ body, html {
 .aud-search-cell-mod { width: 11%; }
 .aud-search-cell-dir { width: 11%; }
 .aud-search-cell-pcs { width: 11%; }
+.aud-search-cell-pla { width: 11%; min-width: 130px; }
 .aud-search-cell-eve { width: 10%; }
 .aud-search-cell-actions {
 	width: 148px;
@@ -712,6 +715,53 @@ body, html {
 	margin-left: 4px;
 }
 
+.aud-cfg-count-on {
+	color: var(--aud-success);
+	font-weight: 700;
+}
+
+.aud-cfg-count-part {
+	color: var(--aud-warning);
+	font-weight: 700;
+}
+
+/* Aviso de cambios sin guardar */
+.aud-cfg-dirty {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 12px;
+	background: #fff7ed;
+	border: 1px solid #fcd9a2;
+	color: #b45309;
+	font-size: 11px;
+	font-weight: 700;
+	vertical-align: middle;
+	margin: 0 8px 0 0;
+}
+
+#btnCfgGuardar.btn-warning,
+#btnCfgGuardar.btn-warning:hover,
+#btnCfgGuardar.btn-warning:focus,
+#btnCfgGuardar.btn-warning:active {
+	background: var(--aud-warning);
+	border-color: #b45309;
+	color: #FFFFFF;
+}
+
+#btnCfgGuardar.btn-warning:disabled {
+	background: var(--aud-warning);
+	border-color: #b45309;
+	color: #FFFFFF;
+	opacity: 0.65;
+}
+
+/* Mensaje cuando la busqueda o los filtros no arrojan resultados */
+#audCfgList .aud-cfg-empty-filter {
+	background: #f8fafc;
+	border: 1px dashed #cfd9e6;
+	margin: 10px;
+}
+
 .aud-cfg-empty {
 	padding: 24px;
 	color: #7a8b9e;
@@ -723,6 +773,224 @@ body, html {
 	margin-top: 10px;
 	font-size: 12px;
 	color: #5b6f88;
+}
+
+/* Switches de activacion (modulo/directorio/proceso) */
+.aud-cfg-switch {
+	display: inline-block;
+	vertical-align: middle;
+	cursor: pointer;
+	margin: 0;
+}
+
+.aud-cfg-sw-ctrl {
+	position: relative;
+	display: inline-block;
+	width: 34px;
+	height: 20px;
+	margin-right: 6px;
+	vertical-align: -4px;
+}
+
+.aud-cfg-sw-ctrl input {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	opacity: 0;
+	z-index: 3;
+	cursor: pointer;
+}
+
+.aud-cfg-sw-ctrl input:disabled {
+	cursor: default;
+}
+
+.aud-cfg-sw-track {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	margin-top: -9px;
+	width: 34px;
+	height: 18px;
+	border-radius: 9px;
+	background: #cbd5e1;
+	transition: background 0.15s ease;
+}
+
+.aud-cfg-sw-thumb {
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #FFFFFF;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+	transition: left 0.15s ease;
+}
+
+.aud-cfg-switch input:checked + .aud-cfg-sw-track {
+	background: var(--aud-success);
+}
+
+.aud-cfg-switch input:checked + .aud-cfg-sw-track .aud-cfg-sw-thumb {
+	left: 19px;
+}
+
+.aud-cfg-switch.aud-cfg-sw-part input + .aud-cfg-sw-track {
+	background: var(--aud-warning);
+}
+
+.aud-cfg-switch.aud-cfg-sw-part input + .aud-cfg-sw-track .aud-cfg-sw-thumb {
+	left: 11px;
+}
+
+.aud-cfg-switch input:disabled + .aud-cfg-sw-track {
+	opacity: 0.55;
+}
+
+/* Vista GRID (tabla plana por modulo) */
+.aud-cfg-vista-sep {
+	display: inline-block;
+	width: 1px;
+	height: 16px;
+	background: #d0d7e0;
+	vertical-align: middle;
+	margin: 0 6px;
+}
+
+#btnCfgVistaLista.active,
+#btnCfgVistaGrid.active {
+	background: var(--aud-primary);
+	border-color: var(--aud-primary);
+	color: #FFFFFF;
+}
+
+.aud-cfg-view-grid {
+	display: block;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod {
+	border-bottom: 1px solid #e8eef5;
+	padding: 0;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod:last-child {
+	border-bottom: none;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod-head {
+	padding: 8px 10px !important;
+	font-size: 13px;
+	font-weight: 700;
+	color: #243447;
+	white-space: nowrap;
+	margin-bottom: 0 !important;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod-head .aud-cfg-switch,
+.aud-cfg-view-grid .aud-cfg-dir-head .aud-cfg-switch {
+	display: inline-block;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod-body {
+	display: table;
+	width: 100%;
+	margin: 0;
+	border-collapse: collapse;
+}
+
+.aud-cfg-view-grid .aud-cfg-grid-head,
+.aud-cfg-view-grid .aud-cfg-grid-row {
+	display: table-row;
+}
+
+.aud-cfg-view-grid .aud-cfg-grid-head > span,
+.aud-cfg-view-grid .aud-cfg-grid-row > span {
+	display: table-cell;
+	padding: 5px 8px;
+	border-top: 1px solid #eef1f5;
+	vertical-align: middle;
+}
+
+.aud-cfg-view-grid .aud-cfg-grid-head {
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #7a8b9e;
+	background: #f4f7fb;
+}
+
+.aud-cfg-view-grid .aud-cfg-g-dircell {
+	width: 26%;
+	color: #345;
+	font-weight: 600;
+	font-size: 12px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.aud-cfg-view-grid .aud-cfg-g-pcscell {
+	width: auto;
+	font-size: 12px;
+	color: #334455;
+}
+
+.aud-cfg-view-grid .aud-cfg-g-statecell {
+	width: 110px;
+	text-align: right;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.aud-cfg-view-grid .aud-cfg-g-statecell.on {
+	color: #0f7b3d;
+}
+
+.aud-cfg-view-grid .aud-cfg-g-statecell.off {
+	color: #9aa6b5;
+}
+
+.aud-cfg-view-grid .aud-cfg-grid-dir {
+	margin: 0;
+}
+
+.aud-cfg-view-grid .aud-cfg-grid-dir .aud-cfg-dir-head {
+	border-top: 1px solid #f0f3f7;
+	padding: 6px 10px !important;
+	font-size: 12px;
+	font-weight: 600;
+	color: #345;
+	white-space: nowrap;
+	margin-bottom: 0 !important;
+}
+
+.aud-cfg-view-grid .aud-cfg-dir-body {
+	margin: 0;
+}
+
+.aud-cfg-view-grid .aud-cfg-pcs {
+	margin: 0;
+}
+
+.aud-cfg-view-grid .aud-cfg-pcs-label {
+	display: inline;
+}
+
+.aud-cfg-view-grid .aud-cfg-collapsed > .aud-cfg-mod-body,
+.aud-cfg-view-grid .aud-cfg-collapsed > .aud-cfg-dir-body {
+	display: table-row-group !important;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod.aud-cfg-collapsed,
+.aud-cfg-view-grid .aud-cfg-dir.aud-cfg-collapsed {
+	display: block;
 }
 
 /* =========================================================================

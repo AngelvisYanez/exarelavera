@@ -112,7 +112,19 @@ if(isset($loginAjax)){
 	$_SESSION['Ses_Dat_Dis'] = $row_data['Dat_Dis']; //Base de datos distribuida local
 	$_SESSION['Ses_Dat_Aut'] = $row_data['Dat_Aut']; //Base de datos auditoria
 	$_SESSION['Ses_Dat_Stg'] = $row_data['Dat_Stg']; //Base de datos storage
+        if (class_exists('Class_Log_Datos_Aud')) {
+            $objAudCerrar = new Class_Log_Datos_Aud;
+            if (!empty($_SESSION['Ses_Ses_Cod']) && !empty($_SESSION['Ses_Usu_Cod'])) {
+                $objAudCerrar->GuardarCierreSesion((int)$_SESSION['Ses_Ses_Cod'], date('Y-m-d H:i:s'), (int)$_SESSION['Ses_Usu_Cod']);
+            }
+            $objAudCerrar->liberar();
+        }
         $responce['success']=true;
+        if (class_exists('Class_Log_Datos_Aud')) {
+            $objAudAbrir = new Class_Log_Datos_Aud;
+            $_SESSION['Ses_Ses_Cod'] = $objAudAbrir->guardarInicioSesion(date('Y-m-d H:i:s'), $_SESSION['Ses_Usu_Cod'], $obBD_conexion);
+            $objAudAbrir->liberar();
+        }
     }else{
         $responce['success']=false;
     }
@@ -459,7 +471,7 @@ if(isset($loginAjax)){
 
 <!-- Prepended text-->
 <div class="control-group">
-  <label class="control-label" for="Usu_Pas">Contraseña:</label>
+  <label class="control-label" for="Usu_Pas">Contraseï¿½a:</label>
   <div class="controls">
     <div class="input-prepend">
       <span class="add-on"><i class="icon-lock"></i></span>
