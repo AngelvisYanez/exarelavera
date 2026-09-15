@@ -1,9 +1,10 @@
 <?php
 /**
- * Cola de auditora diferida: captura I/U/D de cualquier mdulo/proceso
- * y persiste despus de responder. Si hay reglas en cfg_monitoreo, solo
- * se graban los mdulos, directorios y procesos marcados (cualquier tabla
- * que toquen). Sin reglas, aplica el fallback AUDIT_TABLES.
+ * Cola de auditorï¿½a diferida: captura I/U/D de cualquier mï¿½dulo/proceso
+ * y persiste despuï¿½s de responder. Si hay reglas en cfg_monitoreo, solo
+ * se graban los mï¿½dulos, directorios y procesos marcados (cualquier tabla
+ * que toquen). Sin reglas, no se registra actividad: la cobertura total se
+ * logra marcando los mï¿½dulos en Configuracion de monitoreo.
  *
  * @package auditoria.LOGICA
  */
@@ -544,7 +545,7 @@ class AuditQueue
         if (!self::isProcessEnabled($con, $emp, $pcsCod, isset($evento['dat_dis']) ? $evento['dat_dis'] : '')) {
             return;
         }
-        if (!self::hasCfgRules($con, $emp) && !self::isWhitelistedTable($evento['table'])) {
+        if (!self::hasCfgRules($con, $emp)) {
             return;
         }
         $eveCod = self::lookupEveCod($con, $evento['eve']);
@@ -738,7 +739,7 @@ class AuditQueue
 
     /**
      * Si la empresa tiene reglas en cfg_monitoreo, solo persiste procesos/modulos habilitados.
-     * Sin reglas: permite el proceso (el fallback AUDIT_TABLES se aplica en persistOne).
+     * Sin reglas: persistOne descarta el evento (no se registra actividad).
      */
     private static function cfgCount($con, $emp)
     {

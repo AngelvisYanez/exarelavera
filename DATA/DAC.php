@@ -368,7 +368,9 @@ function consulta($sql = "",$conexion/* Parametro enviado externamente */){
 	}
 
 	/*ejecutamos la consulta*/
+	$this->capAuditoria($sql, $conexion, true);
 	$this->rs_cargar = @mysqli_query($conexion,$sql);
+	$this->capAuditoria($sql, $conexion, false);
 
 	if (!$this->rs_cargar) {
 		$this->Errno = @mysqli_errno($conexion);
@@ -383,6 +385,19 @@ function consulta($sql = "",$conexion/* Parametro enviado externamente */){
 /* Libera la memoria ram de los datos cargados */
 function liberar(){
 	return @mysqli_free_result($this->rs_cargar);
+}
+
+/* Avisa a la auditoria antes/despues de ejecutar una sentencia.
+* Antes del cambio captura los valores viejos (OLD) y despues encola el movimiento. */
+function capAuditoria($sql, $conexion, $antes){
+	if (!class_exists('AuditQueue')) {
+		return;
+	}
+	if ($antes) {
+		@AuditQueue::captureBefore($sql, $conexion);
+	} else {
+		@AuditQueue::capture($sql, $conexion);
+	}
 }
 
 /* Crea un arrgleo en base a los parametros concatenados */
@@ -482,7 +497,10 @@ function inicio_transaccion($conexion)
 /* Graba varios registros en una transaccion */
 function grabarv_registros($sql = "",$conexion)
 	{
-		return mysqli_query($conexion,$sql);
+		$this->capAuditoria($sql, $conexion, true);
+		$ret = mysqli_query($conexion,$sql);
+		$this->capAuditoria($sql, $conexion, false);
+		return $ret;
 	}
 
 

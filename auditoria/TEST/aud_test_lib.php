@@ -14,6 +14,7 @@ if (!class_exists('DebugBar')) {
 		public static function startQueryMeasure() {}
 		public static function addQuery($sql, $data) {}
 		public static function addException($e) {}
+		public static function addTransactionEvent($name, $data) {}
 	}
 }
 if (!class_exists('Debugbar')) {

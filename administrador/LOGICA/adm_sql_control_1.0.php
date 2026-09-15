@@ -28,9 +28,10 @@
 			* Consulta la base de datos
 			*/
 			case 2:
+			$emp_cod = (!empty($Par_Sql[0]) && is_numeric($Par_Sql[0])) ? (int)$Par_Sql[0] : 0;
+			$usr = isset($Par_Sql[1]) ? $Par_Sql[1] : '';
 			$sql="SELECT `data`.Dat_Dis, `data`.Dat_Aut, `data`.Dat_Stg FROM
-			  access INNER JOIN `data` ON (access.Dat_Cod = `data`.Dat_Cod) WHERE data.`Emp_Cod`=$Par_Sql[0] AND `access`.`Acc_Usr`='$Par_Sql[1]'";
-//echo $sql;
+			  access INNER JOIN `data` ON (access.Dat_Cod = `data`.Dat_Cod) WHERE data.`Emp_Cod`=$emp_cod AND `access`.`Acc_Usr`='$usr'";
 			return $sql;
 			break;
 

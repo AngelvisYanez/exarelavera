@@ -1,7 +1,5 @@
 <?php
 
-// use \Exception; // Not needed in PHP 8.x without namespace
-
 /**
  *  Clase para conexion con MySql
  *  @author Lewis
@@ -143,7 +141,7 @@ class MysqlDatos
     {
         if (is_bool($con) && $con) {
             $this->startConnection();
-        } else if (!is_null($con)) $this->con = is_subclass_of($con, 'MysqlConexion') ? $con->conexion : (get_class($con) == 'mysqli' ? $con : null);
+        } else if (!is_null($con)) $this->con = ($con instanceof MysqlConexion) ? $con->conexion : (($con instanceof mysqli) ? $con : null);
     }
     function setConn($con)
     {
@@ -160,7 +158,7 @@ class MysqlDatos
     }
     function getMyCon($c = null)
     {
-        return is_null($c) || is_bool($c) ? (!is_null($this->con) ? $this->getMyCon($this->con) : null) : (is_subclass_of($c, 'MysqlConexion') ? $c->conexion : $c);
+        return is_null($c) || is_bool($c) ? (!is_null($this->con) ? $this->getMyCon($this->con) : null) : (($c instanceof MysqlConexion ? $c->conexion : (($c instanceof mysqli) ? $c : null)));
     }
     function getMyCharacterSet($c = null)
     {
@@ -170,7 +168,7 @@ class MysqlDatos
     }
     function getConn($c = null)
     {
-        return $this->getMyCon(c);
+        return $this->getMyCon($c);
     }
     function mensajes($param)
     {
@@ -194,7 +192,7 @@ class MysqlDatos
         $this->utf8_change_param($a);
         $c = json_encode($a);
         if ($c === false) {
-            $c = '{"success":false,"message":"No se pudo generar la respuesta"}';
+            $c = '{\"success\":false,\"message\":\"No se pudo generar la respuesta\"}';
         }
         if ($b == true) {
             @ini_set('display_errors', '0');
@@ -203,7 +201,7 @@ class MysqlDatos
                 @ob_start();
                 try {
                     AuditQueue::flush(false);
-                } catch (Exception $eFlush) {
+                } catch (\Exception $eFlush) {
                 }
                 while (ob_get_level() > $lvl) {
                     @ob_end_clean();
@@ -324,7 +322,7 @@ class MysqlDatos
         if (is_string($sql) && class_exists('AuditQueue') && preg_match('/^\s*(UPDATE|DELETE)\b/i', $sql)) {
             try {
                 AuditQueue::captureBefore($sql, $con);
-            } catch (Exception $eAudit) {
+            } catch (\Exception $eAudit) {
             }
         }
         $this->rs_cargar = @mysqli_query($con, $sql); /* ejecutamos la consulta */
@@ -332,11 +330,11 @@ class MysqlDatos
         else if (is_string($sql) && class_exists('AuditQueue') && preg_match('/^\s*(INSERT|UPDATE|DELETE)\b/i', $sql)) {
             try {
                 AuditQueue::capture($sql, $con);
-            } catch (Exception $eAudit) {
+            } catch (\Exception $eAudit) {
             }
         }
         DebugBar::addQuery($sql, $this->getDB($conexion) + $this->getErrorData() + $this->getRowCount($this->rs_cargar, $sql, $con));
-        return $this->rs_cargar; /* Si hubo �xito devuelve el identificador de la conexi�n, sino devuelve 0  */
+        return $this->rs_cargar; /* Si hubo xito devuelve el identificador de la conexin, sino devuelve 0  */
     }
     /* Ejecuta Insert/Update/Delete */
     function grabarv_registros($sql, $conexion = null, $num = 0)
@@ -351,7 +349,7 @@ class MysqlDatos
             if (class_exists('AuditQueue') && preg_match('/^\s*(UPDATE|DELETE)\b/i', $sql)) {
                 try {
                     AuditQueue::captureBefore($sql, $con);
-                } catch (Exception $eAudit) {
+                } catch (\Exception $eAudit) {
                 }
             }
             $result = @mysqli_query($con, $sql);
@@ -359,7 +357,7 @@ class MysqlDatos
             if ($result && class_exists('AuditQueue')) {
                 try {
                     AuditQueue::capture($sql, $con);
-                } catch (Exception $eAudit) {
+                } catch (\Exception $eAudit) {
                 }
             }
         } else $result = false;
@@ -382,7 +380,7 @@ class MysqlDatos
             require_once dirname(__file__) . "/libs/AbstractModel.php";
             $m = new AbstractModel($model[0]);
         }
-        return $m->getSqlString(is_numeric($model[1]) ? ($m->sqlByNumero($model[1], $Par_Sql)) : (isset($model[2]) ? $m->sqlByNombre($model[2], $Par_Sql) : $m->$model[1]($Par_Sql)));
+        return $m->getSqlString(is_numeric($model[1]) ? ($m->sqlByNumero($model[1], $Par_Sql)) : (isset($model[2]) ? $m->sqlByNombre($model[2], $Par_Sql) : $m->{$model[1]}($Par_Sql)));
     }
     /* sentncias internas o externas */
     function executeSentencias($sen_sql, $par)
@@ -596,7 +594,7 @@ class MysqlDatos
     {
         mysqli_commit($this->getMyCon($conexion));
         DebugBar::addTransactionEvent('Commit Transaction', $this->getDB($conexion));
-        if (!$msge) return; ?><script type="text/javascript">alert("La transacción se ha realizado con Éxito!");</script><?php
+        if (!$msge) return; ?><script type="text/javascript">alert("La transaccin se ha realizado con xito!");</script><?php
     }
     function commit_nomsn($c = null)
     {
@@ -611,7 +609,7 @@ class MysqlDatos
     {
         mysqli_rollback($this->getMyCon($conexion));
         DebugBar::addTransactionEvent('RollBack Transaction', $this->getDB($conexion)+$this->getErrorData());
-        if (!$msge) return; ?><script type="text/javascript">alert("< < < !!! A l e r ta !!!: NO se ha podido completar con Éxito la transacción > > >");</script><?php
+        if (!$msge) return; ?><script type="text/javascript">alert("< < < !!! A l e r ta !!!: NO se ha podido completar con xito la transaccin > > >");</script><?php
     }
     function rollBack_nomsn($c = null, $m = null, &$r = array())
     {
@@ -700,8 +698,7 @@ class MysqlDatos
     function fetch_assoc($rs_consulta)
     {
         if (is_bool($rs_consulta)||is_null($rs_consulta))return array();
-        $row = @mysqli_fetch_assoc($rs_consulta);
-        return is_array($row) ? $row : array();
+        return @mysqli_fetch_assoc($rs_consulta);
     }
     /* Desvuelve el total de datos consultados en base a un rs */
     function num_rows($rs_consulta)
@@ -713,11 +710,11 @@ class MysqlDatos
     {
         $ban = true;
         if ($rs_consulta instanceof mysqli_result) {
-            // Si es un recurso v�lido, lo liberamos
+            // Si es un recurso vlido, lo liberamos
             try{
                 $ban = @mysqli_free_result($rs_consulta);
-            } catch (Exception $e){}
-            $rs_consulta = null; // Evita reutilizaci�n accidental
+            } catch (\Throwable $e){}
+            $rs_consulta = null; // Evita reutilizacin accidental
         }
 
         return $ban;
@@ -849,13 +846,13 @@ class MysqlDatosContab extends MysqlDatos
     /* numero de comprobante automatico */
     function getComNumAuto($Emp_Cod, $Tia_Cod, $Fecha, $obBD = null)
     {
-        $c = $this->getMyCon($obBD); /* Codificaci�n numerica en base al periodo contable y mensualmente  */
+        $c = $this->getMyCon($obBD); /* Codificacin numerica en base al periodo contable y mensualmente  */
         $row_rs_perio =  $this->getPerioCont($Emp_Cod, $Fecha, $c);
         $result1 = $this->getRowConsultaSql("SELECT COALESCE(MAX(Com_Num),0)+1 AS Com_Num  FROM comprobantes WHERE Tia_Cod=$Tia_Cod AND Pec_Cod=$row_rs_perio[Pec_Cod] AND MONTH(Com_Fec)=" . (strlen($Fecha) > 2 ? "MONTH('$Fecha')" : $Fecha), $c);
         return $result1['Com_Num'];
     }
     function getComNumPecAuto($Tia_Cod, $Pec_Cod, $Fecha, $obBD = null)
-    { /* Codificaci�n numerica en base al periodo contable y mensualmente  */
+    { /* Codificacin numerica en base al periodo contable y mensualmente  */
         $result1 = $this->getRowConsultaSql("SELECT COALESCE(MAX(Com_Num),0)+1 AS Com_Num  FROM comprobantes WHERE Tia_Cod=$Tia_Cod AND Pec_Cod=$Pec_Cod AND MONTH(Com_Fec)=" . (strlen($Fecha) > 2 ? "MONTH('$Fecha')" : $Fecha), $this->getMyCon($obBD));
         return $result1['Com_Num'];
     }

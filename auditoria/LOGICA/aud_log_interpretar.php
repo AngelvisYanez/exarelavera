@@ -125,7 +125,32 @@ function aud_modulos_tabla()
 		'manifiesto_turnos_cab' => 'Relavera / Turnos',
 		'manifiesto_turnos_det' => 'Relavera / Turnos',
 		'manifiesto_visitante' => 'Relavera / Visitantes',
-		'manifiesto_evento' => 'Relavera / Visitantes'
+		'manifiesto_evento' => 'Relavera / Visitantes',
+		'anticipos_clientes' => 'Relavera / Anticipos',
+		'det_ant_cccc' => 'Relavera / Anticipos',
+		'manifiesto_anticipo' => 'Relavera / Anticipos',
+		'pag_anticipo_cli' => 'Relavera / Anticipos',
+		'manifiesto_contratos' => 'Relavera / Contratos',
+		'manifiesto_contratos_docu' => 'Relavera / Contratos',
+		'param_manifiesto' => 'Relavera / Contratos',
+		'maquinaria_alimentacion' => 'Relavera / Maquinaria',
+		'maquinaria_dispensador' => 'Relavera / Maquinaria',
+		'maquinaria_dispensador_det' => 'Relavera / Maquinaria',
+		'maquinaria_dispensador_cierre' => 'Relavera / Maquinaria',
+		'maquinaria_equipo' => 'Relavera / Maquinaria',
+		'maquinaria_horometro' => 'Relavera / Maquinaria',
+		'manifiesto_liquidacion_maq' => 'Relavera / Maquinaria',
+		'manifiesto_tecnico' => 'Relavera / Tecnicos',
+		'manifiesto_mensajes' => 'Relavera / Tecnicos',
+		'chofer' => 'Relavera / Operario y Vehiculos',
+		'vehiculo' => 'Relavera / Operario y Vehiculos',
+		'personal' => 'Relavera / Operario y Vehiculos',
+		'inventario_dispositivos' => 'Relavera / Inventario',
+		'usuario_inventario' => 'Relavera / Inventario',
+		'ccpp_cobrar' => 'Relavera / Cobranzas',
+		'det_ccpp_c' => 'Relavera / Cobranzas',
+		'pago_venta' => 'Relavera / Cobranzas',
+		'ventas_compr' => 'Relavera / Cobranzas'
 	);
 }
 
@@ -191,6 +216,62 @@ function aud_sim_casos()
 			'mod_re' => '/facturaci/i',
 			'mod_not_re' => '/auditoria|contabilid|relavera/i',
 			'tabs' => array('caja_aper')
+		),
+		array(
+			'id' => 'anticipos',
+			'pcs_noms' => array('man_ant_1.0', 'man_est_cuenta_1.0'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|anticipo/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('anticipos_clientes', 'det_ant_cccc', 'manifiesto_anticipo', 'pag_anticipo_cli')
+		),
+		array(
+			'id' => 'contratos',
+			'pcs_noms' => array('man_alt_contratos', 'man_con_planta', 'man_alt_param'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|contrato|planta/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('manifiesto_contratos', 'manifiesto_contratos_docu', 'param_manifiesto')
+		),
+		array(
+			'id' => 'maquinaria',
+			'pcs_noms' => array('man_alt_maquinaria_dispensador', 'man_alt_maquinaria_horometro', 'man_alt_maquinaria_preliquidacion', 'man_alt_alimentacion'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|maquinaria|dispensador|horometro|alimentacion/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('maquinaria_alimentacion', 'maquinaria_dispensador', 'maquinaria_dispensador_det', 'maquinaria_dispensador_cierre', 'maquinaria_equipo', 'maquinaria_horometro', 'manifiesto_liquidacion_maq')
+		),
+		array(
+			'id' => 'tecnicos',
+			'pcs_noms' => array('man_tec_1.0', 'man_tec_camp_1.0'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|tecnico/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('manifiesto_tecnico', 'manifiesto_mensajes')
+		),
+		array(
+			'id' => 'operario_vehiculos',
+			'pcs_noms' => array('man_alt_vehiculos_choferes', 'man_alt_datos_choferes_vehiculos'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|vehiculo|chofer|operario/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('chofer', 'vehiculo', 'personal')
+		),
+		array(
+			'id' => 'inventario',
+			'pcs_noms' => array('inventario_dispositivos', 'man_adm_usuarios', 'man_adm_notificacion'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|inventario|dispositivo/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('inventario_dispositivos', 'usuario_inventario')
+		),
+		array(
+			'id' => 'cobranzas',
+			'pcs_noms' => array('man_est_cuenta_1.0', 'man_fac_man', 'man_alt_fac'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|cobranza|cuenta|pago/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('ccpp_cobrar', 'det_ccpp_c', 'pago_venta', 'ventas_compr')
 		)
 	);
 }
@@ -266,7 +347,32 @@ function aud_nombre_registro($tabNom, $tabAli, $tabDes)
 		'manifiesto_turnos_cab' => 'turno',
 		'manifiesto_turnos_det' => 'detalle de turno',
 		'manifiesto_visitante' => 'visitante',
-		'manifiesto_evento' => 'evento'
+		'manifiesto_evento' => 'evento',
+		'anticipos_clientes' => 'anticipo de cliente',
+		'det_ant_cccc' => 'detalle de anticipo',
+		'manifiesto_anticipo' => 'anticipo',
+		'pag_anticipo_cli' => 'pago de anticipo',
+		'manifiesto_contratos' => 'contrato con planta',
+		'manifiesto_contratos_docu' => 'documento de contrato',
+		'param_manifiesto' => 'parametro de manifiesto',
+		'maquinaria_alimentacion' => 'alimentacion de maquinaria',
+		'maquinaria_dispensador' => 'dispensador de gasolina',
+		'maquinaria_dispensador_det' => 'detalle de dispensador',
+		'maquinaria_dispensador_cierre' => 'cierre de dispensador',
+		'maquinaria_equipo' => 'equipo de maquinaria',
+		'maquinaria_horometro' => 'horometro de maquinaria',
+		'manifiesto_liquidacion_maq' => 'liquidacion de maquinaria',
+		'manifiesto_tecnico' => 'asignacion de tecnico',
+		'manifiesto_mensajes' => 'mensaje',
+		'chofer' => 'chofer',
+		'vehiculo' => 'vehiculo',
+		'personal' => 'personal',
+		'inventario_dispositivos' => 'dispositivo de inventario',
+		'usuario_inventario' => 'usuario de inventario',
+		'ccpp_cobrar' => 'cuenta por cobrar',
+		'det_ccpp_c' => 'detalle de cuenta por cobrar',
+		'pago_venta' => 'pago de venta',
+		'ventas_compr' => 'comprobante de venta'
 	);
 	$k = strtolower(trim((string)$tabNom));
 	if (isset($map[$k])) {
@@ -984,7 +1090,8 @@ function aud_estado_captura($empCod, $cfgCount = -1)
 	} elseif ($cfg > 0) {
 		$msg = 'Captura activa: se registra la actividad de los '.$cfg.' modulo(s)/directorio(s)/proceso(s) marcados en configuracion.';
 	} else {
-		$msg = 'Captura activa con tablas por defecto (AUDIT_TABLES). Marque modulos en Configuracion de monitoreo para cubrir todo el sistema.';
+		$ok = false;
+		$msg = 'Captura activa pero sin reglas: no se registrara actividad. Marque modulos en Configuracion de monitoreo para cubrir el sistema.';
 	}
 	return array('ok' => $ok, 'enabled' => $enabled, 'cfg' => $cfg, 'message' => $msg);
 }

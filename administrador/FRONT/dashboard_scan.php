@@ -112,7 +112,7 @@ function dashboard_resolve_scan_path($rawPath, $allowFile) {
         return '';
     }
     if (dashboard_is_absolute_path($path)) {
-        if (is_dir($path)) {
+        if (is_dir($path) || is_file($path)) {
             $rp = realpath($path);
             return ($rp !== false) ? $rp : $path;
         }
@@ -122,10 +122,10 @@ function dashboard_resolve_scan_path($rawPath, $allowFile) {
     foreach ($bases as $base) {
         $candidate = $base . DIRECTORY_SEPARATOR . $path;
         $rp = @realpath($candidate);
-        if ($rp !== false && is_dir($rp)) {
+        if ($rp !== false && (is_dir($rp) || is_file($rp))) {
             return $rp;
         }
-        if (is_dir($candidate)) {
+        if (is_dir($candidate) || is_file($candidate)) {
             $rp2 = @realpath($candidate);
             return ($rp2 !== false) ? $rp2 : $candidate;
         }
@@ -221,6 +221,225 @@ if (isset($_GET['action']) && $_GET['action'] === 'list_allowed') {
         'projects' => $projects,
         'restrictScanToAllowFile' => $restrict,
         'supportsRelativePaths' => true
+    ));
+    exit;
+}
+
+function dashboard_collect_files_in_dir($dir, $baseDir, $exts, $skipDirs, $max = 1500) {
+    $results = array();
+    $items = @scandir($dir);
+    if (!$items) return $results;
+
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') continue;
+        $full = $dir . DIRECTORY_SEPARATOR . $item;
+        if (is_dir($full)) {
+            if (in_array(strtolower($item), $skipDirs)) continue;
+            $sub = dashboard_collect_files_in_dir($full, $baseDir, $exts, $skipDirs, $max - count($results));
+            $results = array_merge($results, $sub);
+            if (count($results) >= $max) break;
+        } else {
+            $ext = strtolower(pathinfo($item, PATHINFO_EXTENSION));
+            if (!in_array($ext, $exts)) continue;
+            $rel = str_replace($baseDir, '', $full);
+            $rel = ltrim(str_replace('\\', '/', $rel), '/');
+            $relFolder = dirname($rel);
+            if ($relFolder === '.' || $relFolder === '') $relFolder = 'ROOT';
+
+            $results[] = array(
+                'path' => str_replace('\\', '/', $full),
+                'name' => $item,
+                'relative' => $rel,
+                'folder' => $relFolder,
+                'type' => ($ext === 'htm') ? 'html' : $ext,
+                'size' => @filesize($full) ?: 0
+            );
+            if (count($results) >= $max) break;
+        }
+    }
+    return $results;
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'list_folder_files') {
+    $folder = isset($_GET['folder']) ? trim($_GET['folder']) : '';
+    if ($folder === '') {
+        echo json_encode(array('success' => false, 'error' => 'Carpeta no especificada'));
+        exit;
+    }
+    $resolved = dashboard_resolve_scan_path($folder, $allowFile);
+    if ($resolved === '' || !is_dir($resolved)) {
+        echo json_encode(array('success' => false, 'error' => 'Carpeta no valida o no encontrada: ' . $folder));
+        exit;
+    }
+    $exts = array('php', 'js', 'html', 'htm', 'css', 'sql');
+    $skip = array('node_modules', 'vendor', '.git', 'cache', 'tmp', 'assets', 'img', 'fonts', '.gemini', '.agents');
+    $files = dashboard_collect_files_in_dir($resolved, $resolved, $exts, $skip, 1500);
+    echo json_encode(array(
+        'success' => true,
+        'folder' => $folder,
+        'resolved' => str_replace('\\', '/', $resolved),
+        'label' => basename($resolved),
+        'files' => $files,
+        'total' => count($files)
+    ));
+    exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'search_files') {
+    $q = isset($_GET['q']) ? strtolower(trim($_GET['q'])) : '';
+    if ($q === '') {
+        echo json_encode(array('success' => true, 'files' => array(), 'total' => 0));
+        exit;
+    }
+    $currentProjRoot = dirname(dirname(__DIR__));
+    $baseFolder = isset($_GET['folder']) && trim($_GET['folder']) !== '' ? trim($_GET['folder']) : $currentProjRoot;
+    $resolved = dashboard_resolve_scan_path($baseFolder, $allowFile);
+    if ($resolved === '' || !is_dir($resolved)) {
+        $resolved = $currentProjRoot;
+    }
+    $exts = array('php', 'js', 'html', 'htm', 'css', 'sql');
+    $skip = array('node_modules', 'vendor', '.git', 'cache', 'tmp', 'assets', 'img', 'fonts', '.gemini', '.agents');
+    $all = dashboard_collect_files_in_dir($resolved, $resolved, $exts, $skip, 2500);
+    $matches = array();
+    foreach ($all as $f) {
+        if (strpos(strtolower($f['name']), $q) !== false || strpos(strtolower($f['relative']), $q) !== false) {
+            $matches[] = $f;
+            if (count($matches) >= 150) break;
+        }
+    }
+    echo json_encode(array(
+        'success' => true,
+        'query' => $q,
+        'folder' => str_replace('\\', '/', $resolved),
+        'files' => $matches,
+        'total' => count($matches)
+    ));
+    exit;
+}
+
+function dashboard_get_git_root() {
+    $cur = __DIR__;
+    for ($i = 0; $i < 6; $i++) {
+        if (is_dir($cur . DIRECTORY_SEPARATOR . '.git')) {
+            return $cur;
+        }
+        $parent = dirname($cur);
+        if ($parent === $cur) break;
+        $cur = $parent;
+    }
+    return false;
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'git_commits') {
+    $gitRoot = dashboard_get_git_root();
+    if (!$gitRoot) {
+        echo json_encode(array('success' => false, 'error' => 'No se encontro repositorio Git'));
+        exit;
+    }
+
+    $branch = 'origin/desarrollo';
+    exec('git -C "' . $gitRoot . '" rev-parse --verify origin/desarrollo 2>nul', $tOut, $rOut);
+    if ($rOut !== 0) {
+        $branch = 'desarrollo';
+        exec('git -C "' . $gitRoot . '" rev-parse --verify desarrollo 2>nul', $tOut2, $rOut2);
+        if ($rOut2 !== 0) {
+            $branch = 'HEAD';
+        }
+    }
+
+    $cmd = 'git -C "' . $gitRoot . '" log -n 40 --pretty=format:"%h|%s|%an|%ad" --date=short ' . escapeshellarg($branch) . ' 2>nul';
+    $rawLines = array();
+    exec($cmd, $rawLines);
+    $commits = array();
+    foreach ($rawLines as $l) {
+        $parts = explode('|', trim($l));
+        if (count($parts) >= 4) {
+            $commits[] = array(
+                'hash' => $parts[0],
+                'subject' => $parts[1],
+                'author' => $parts[2],
+                'date' => $parts[3]
+            );
+        }
+    }
+
+    echo json_encode(array(
+        'success' => true,
+        'gitRoot' => str_replace('\\', '/', $gitRoot),
+        'branch' => $branch,
+        'commits' => $commits
+    ));
+    exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'git_compare') {
+    $gitRoot = dashboard_get_git_root();
+    if (!$gitRoot) {
+        echo json_encode(array('success' => false, 'error' => 'No se encontro repositorio Git'));
+        exit;
+    }
+
+    $rawInput = json_decode(file_get_contents('php://input'), true);
+    $ref = isset($rawInput['commit']) ? trim($rawInput['commit']) : (isset($_GET['commit']) ? trim($_GET['commit']) : '');
+    if ($ref === '') {
+        $ref = 'origin/desarrollo';
+    }
+
+    // Sanitize commit / ref
+    $refClean = escapeshellarg($ref);
+
+    $infoLines = array();
+    exec('git -C "' . $gitRoot . '" log -n 1 --pretty=format:"%h|%s|%an|%ad" --date=short ' . $refClean . ' 2>nul', $infoLines);
+    $commitInfo = array('hash' => $ref, 'subject' => '', 'author' => '', 'date' => '');
+    if (!empty($infoLines)) {
+        $cp = explode('|', trim($infoLines[0]));
+        if (count($cp) >= 4) {
+            $commitInfo = array(
+                'hash' => $cp[0],
+                'subject' => $cp[1],
+                'author' => $cp[2],
+                'date' => $cp[3]
+            );
+        }
+    }
+
+    $diffLines = array();
+    exec('git -C "' . $gitRoot . '" diff --numstat ' . $refClean . ' 2>nul', $diffLines);
+
+    $statusLines = array();
+    exec('git -C "' . $gitRoot . '" diff --name-status ' . $refClean . ' 2>nul', $statusLines);
+
+    $diffMap = array();
+    foreach ($diffLines as $line) {
+        $p = preg_split('/\s+/', trim($line), 3);
+        if (count($p) === 3) {
+            $added = is_numeric($p[0]) ? (int)$p[0] : 0;
+            $deleted = is_numeric($p[1]) ? (int)$p[1] : 0;
+            $normP = str_replace('\\', '/', $p[2]);
+            $diffMap[$normP] = array(
+                'added' => $added,
+                'deleted' => $deleted,
+                'delta' => $added - $deleted
+            );
+        }
+    }
+
+    $statusMap = array();
+    foreach ($statusLines as $line) {
+        $p = preg_split('/\s+/', trim($line), 2);
+        if (count($p) === 2) {
+            $normP = str_replace('\\', '/', $p[1]);
+            $statusMap[$normP] = $p[0];
+        }
+    }
+
+    echo json_encode(array(
+        'success' => true,
+        'gitRoot' => str_replace('\\', '/', $gitRoot),
+        'ref' => $ref,
+        'commitInfo' => $commitInfo,
+        'diffMap' => $diffMap,
+        'statusMap' => $statusMap
     ));
     exit;
 }
@@ -515,14 +734,83 @@ foreach ($targets as $t) {
         )));
     }
 
-    $label = basename($resolved);
     $mode = $t['mode'];
-    $files = escanearDirectorio($resolved, $resolved, $exts, $skip, $skipFiles, $rates, $mode);
+    if (is_file($resolved)) {
+        $fileName = basename($resolved);
+        $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $lin = cntLines($resolved, $mode, $ext);
+        $typ = ($ext === 'htm') ? 'html' : $ext;
+        $cmp = getComp($lin, $typ);
+        $hrs = round($lin / $rates[$cmp], 2);
+        $dir = dirname($resolved);
+        $label = basename($dir);
+        $relFolder = basename($dir);
+        $files = array(array(
+            'name' => $fileName,
+            'folder' => $relFolder ? $relFolder : 'ROOT',
+            'type' => $typ,
+            'lines' => $lin,
+            'complexity' => $cmp,
+            'suggestedComplexity' => $cmp,
+            'hours' => $hrs
+        ));
+    } elseif (isset($t['files']) && is_array($t['files']) && !empty($t['files'])) {
+        $label = basename($resolved);
+        $files = array();
+        foreach ($t['files'] as $fItem) {
+            $fRel = is_string($fItem) ? $fItem : (isset($fItem['path']) ? $fItem['path'] : '');
+            $fFull = dashboard_resolve_scan_path($fRel, $allowFile);
+            if ($fFull === '' || !is_file($fFull)) {
+                $candidate = $resolved . DIRECTORY_SEPARATOR . dashboard_normalize_input_path($fRel);
+                if (is_file($candidate)) {
+                    $fFull = realpath($candidate) ?: $candidate;
+                }
+            }
+            if (is_file($fFull)) {
+                $fileName = basename($fFull);
+                $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+                $lin = cntLines($fFull, $mode, $ext);
+                $typ = ($ext === 'htm') ? 'html' : $ext;
+                $cmp = getComp($lin, $typ);
+                $hrs = round($lin / $rates[$cmp], 2);
+                $rel = str_replace($resolved, '', $fFull);
+                $rel = ltrim(str_replace('\\', '/', $rel), '/');
+                $relFolder = dirname($rel);
+                if ($relFolder === '.' || $relFolder === '') $relFolder = 'ROOT';
+                $files[] = array(
+                    'name' => $fileName,
+                    'folder' => $relFolder,
+                    'type' => $typ,
+                    'lines' => $lin,
+                    'complexity' => $cmp,
+                    'suggestedComplexity' => $cmp,
+                    'hours' => $hrs
+                );
+            }
+        }
+    } else {
+        $label = basename($resolved);
+        $files = escanearDirectorio($resolved, $resolved, $exts, $skip, $skipFiles, $rates, $mode);
+    }
+
+    $gitRoot = dashboard_get_git_root();
+    $normGitRoot = $gitRoot ? str_replace('\\', '/', $gitRoot) : '';
 
     foreach ($files as &$f) {
         $f['project'] = $label;
         $f['projectPath'] = str_replace('\\', '/', $resolved);
         $f['scanMode'] = $mode;
+
+        // Path relativo al repositorio Git para comparaciones instantaneas
+        if ($normGitRoot !== '') {
+            $origFolder = ($f['folder'] === 'ROOT' || $f['folder'] === '') ? '' : $f['folder'];
+            $fullFilePath = $resolved . DIRECTORY_SEPARATOR . ($origFolder === '' ? '' : ($origFolder . DIRECTORY_SEPARATOR)) . $f['name'];
+            $normFull = str_replace('\\', '/', $fullFilePath);
+            if (strpos($normFull, $normGitRoot . '/') === 0) {
+                $f['repoPath'] = substr($normFull, strlen($normGitRoot) + 1);
+            }
+        }
+
         if ($multi) {
             $rel = ($f['folder'] === 'ROOT' || $f['folder'] === '') ? '' : $f['folder'];
             $f['folder'] = $rel === '' ? $label : ($label . '/' . str_replace('\\', '/', $rel));
@@ -553,5 +841,6 @@ echo json_encode(array(
         return $rt['path'];
     }, $resolvedTargets),
     'targets' => $resolvedTargets,
-    'multi' => $multi
+    'multi' => $multi,
+    'gitAvailable' => ($gitRoot !== false)
 ));

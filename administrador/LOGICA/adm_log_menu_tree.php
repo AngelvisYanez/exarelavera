@@ -4,15 +4,21 @@
 * Fecha de actualización:	2016-12-25
 * Desarrollador:	 Erik Niebla
 */
-require_once ('../../auditoria/LOGICA/aud_log_auditoria.php');
-require_once ('../../skins/php/TreeMenu.php');
+require_once (__DIR__ . '/../../auditoria/LOGICA/aud_log_auditoria.php');
+require_once (__DIR__ . '/../../skins/php/TreeMenu.php');
 
 class Class_Sys_Menu extends MysqlDatos{  
     function __construct() {
         $this->setSentencias('sentencias_men');
     }
     function getMenuContainer($Perfiles,$obBD){ 
-        $mperf=''; foreach($Perfiles as $item) $mperf=$mperf." "."perfiorgan.Per_Cod=".$item." OR"; $mperf1=trim(substr($mperf,1,count($mperf)-3));
+        $mperfArr = array();
+        if (is_array($Perfiles)) {
+            foreach ($Perfiles as $item) {
+                if (!empty($item)) $mperfArr[] = "perfiorgan.Per_Cod=" . intval($item);
+            }
+        }
+        $mperf1 = !empty($mperfArr) ? implode(" OR ", $mperfArr) : "1=0";
         $menu=new TreeMenu();
         $menu->setPages($this->getMenuPages(0,$mperf1,$obBD));
         return $menu;
@@ -33,7 +39,13 @@ class Class_Sys_Menu extends MysqlDatos{
         return $pages;
     }
     function getMenuContainer2($Perfiles,$obBD){
-        $mperf=''; foreach($Perfiles as $item) $mperf=$mperf." "."perfiorgan.Per_Cod=".$item." OR"; $mperf1=trim(substr($mperf,1,count($mperf)-3));
+        $mperfArr = array();
+        if (is_array($Perfiles)) {
+            foreach ($Perfiles as $item) {
+                if (!empty($item)) $mperfArr[] = "perfiorgan.Per_Cod=" . intval($item);
+            }
+        }
+        $mperf1 = !empty($mperfArr) ? implode(" OR ", $mperfArr) : "1=0";
         $Organiza=groupBy($this->getArrayConsulta(2,'*'.$mperf1, $obBD),'Org_Niv');
         $Procesos=groupBy($this->getArrayConsulta(3,'*'.$mperf1.'*P', $obBD),'Org_Cod');
         $menu=new TreeMenu();

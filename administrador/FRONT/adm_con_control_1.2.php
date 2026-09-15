@@ -12,7 +12,7 @@ require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/config.php/register_globals.php');
 require_once('../LOGICA/adm_log_control.php');
 
-if(!isset($Emp_Cod)||!isset($user_name)) {
+if(empty($Emp_Cod)||empty($user_name)) {
     header(isset($Browser)&&$Browser =="WML"?"Location: ../../movil/FRONT/index_m.php?errorsistema=si":"Location: ../../index.php?errorsistema=si");
     exit();
 }
@@ -39,7 +39,7 @@ if (!empty($row_data)) {
     * Consulta que realiza la autenticacion del usuario
     */
     $row_rs_control = $obBD_con1->getRowConsulta(16, trim($user_name).'*'.trim($encryptor).'*'.$Emp_Cod.'*'.$Suc_Cod, $obBD_conexion);
-    $total_rs_control = count($row_rs_control);
+    $total_rs_control = (!empty($row_rs_control) && is_array($row_rs_control)) ? count($row_rs_control) : 0;
 } else $total_rs_control = 0;
 
 /**
@@ -122,7 +122,7 @@ if ($total_rs_control !=0)
 	$_SESSION['Ses_Prs_Ape']=$row_rs_control['Prs_Ape'];
 	$_SESSION['Ses_Prs_Ced']=$row_rs_control['Prs_Ced'];
 	$_SESSION['Ses_Prs_Sex']=$row_rs_control['Prs_Sex'];
-	$_SESSION['Ses_Per_Fot']=$row_rs_foto['Per_Fot'];
+	$_SESSION['Ses_Per_Fot']=isset($row_rs_foto['Per_Fot']) ? $row_rs_foto['Per_Fot'] : '';
 
 	$apellido = explode(' ', $_SESSION['Ses_Prs_Ape']);
 	$nombre = explode(' ', $_SESSION['Ses_Prs_Nom']);
@@ -132,13 +132,13 @@ if ($total_rs_control !=0)
 	/**
 	* Variables para la informacion del sistema
 	*/
-	$_SESSION['Ses_Sys_Sitio']=$row_rs_system['Sys_Nom'];//Nombre del sitio
-	$_SESSION['Ses_Sys_Nom']=$row_rs_system['Sys_Nom']." [".$row_rs_system['Sys_Des']."]";//Nombre del sistema
-	$_SESSION['Ses_Sys_Ver']=$row_rs_system['Sys_Ver'];//Version del sistema
+	$_SESSION['Ses_Sys_Sitio']=isset($row_rs_system['Sys_Nom']) ? $row_rs_system['Sys_Nom'] : '';//Nombre del sitio
+	$_SESSION['Ses_Sys_Nom']=isset($row_rs_system['Sys_Nom']) ? $row_rs_system['Sys_Nom']. (isset($row_rs_system['Sys_Des']) ? " [".$row_rs_system['Sys_Des']."]" : "") : '';//Nombre del sistema
+	$_SESSION['Ses_Sys_Ver']=isset($row_rs_system['Sys_Ver']) ? $row_rs_system['Sys_Ver'] : '';//Version del sistema
 	$_SESSION['Ses_Sys_Tim']=date("Y-m-d H:i:s");
 	$_SESSION['Ses_Sys_Dat']=date("Y-m-d");
 	$_SESSION['Ses_Sys_Sit']="inside"; //Indica si esta dentro o fuera del sitio
-	$_SESSION['Ses_Sys_Cor']=$row_rs_system['Sys_Cor'];	//Correo del sistema
+	$_SESSION['Ses_Sys_Cor']=isset($row_rs_system['Sys_Cor']) ? $row_rs_system['Sys_Cor'] : '';	//Correo del sistema
 
 	/**
 	* Variable para la base de datos del sistema local

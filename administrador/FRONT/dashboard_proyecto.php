@@ -161,8 +161,8 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                     <button type="button" class="compare-tab-btn active" id="tabCompareFile" onclick="setCompareMode('file')">
                         <i class="fas fa-file-upload"></i> Subir Archivo (JSON / PDF)
                     </button>
-                    <button type="button" class="compare-tab-btn" id="tabComparePeriod" onclick="setCompareMode('period')">
-                        <i class="fas fa-calendar-alt"></i> Filtro por Per&iacute;odo de D&iacute;as
+                    <button type="button" class="compare-tab-btn" id="tabCompareGit" onclick="setCompareMode('git')">
+                        <i class="fab fa-git-alt"></i> Comparativa por Git (Rama Desarrollo)
                     </button>
                 </div>
                 <div class="baseline-toolbar" id="compareFileToolbar">
@@ -176,34 +176,30 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                     </button>
                     <button type="button" class="btn btn-outline no-print" onclick="limpiarReferenciaCliente()"><i class="fas fa-times"></i> Quitar referencia</button>
                 </div>
-                <div class="period-filter-box no-print" id="comparePeriodBox" style="display:none;">
-                    <div style="font-size:12px;font-weight:700;color:var(--dark);margin-bottom:8px;">
-                        <i class="fas fa-clock-rotate-left" style="color:var(--copper);"></i> Seleccionar Per&iacute;odo de An&aacute;lisis:
+                <div class="period-filter-box no-print" id="compareGitBox" style="display:none;">
+                    <div style="font-size:12px;font-weight:700;color:var(--dark);margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <span><i class="fab fa-git-alt" style="color:var(--copper);"></i> Comparar diferencias de l&iacute;neas y horas frente a la rama <strong>desarrollo</strong>:</span>
+                        <span id="gitBranchBadge" class="badge" style="background:#e0f2fe;color:#0369a1;font-weight:600;font-size:11px;padding:3px 8px;border-radius:12px;">origin/desarrollo</span>
                     </div>
-                    <div class="period-presets">
-                        <button type="button" class="period-chip active" onclick="seleccionarPeriodoRapido(7, this)">7 d&iacute;as</button>
-                        <button type="button" class="period-chip" onclick="seleccionarPeriodoRapido(15, this)">15 d&iacute;as</button>
-                        <button type="button" class="period-chip" onclick="seleccionarPeriodoRapido(30, this)">30 d&iacute;as</button>
-                        <button type="button" class="period-chip" onclick="seleccionarPeriodoRapido(60, this)">60 d&iacute;as</button>
-                        <button type="button" class="period-chip" onclick="seleccionarPeriodoRapido('all', this)">Todo el historial</button>
-                    </div>
-                    <div class="period-dates-row">
-                        <label><i class="fas fa-calendar-day"></i> Desde:
-                            <input type="date" id="periodDateFrom" class="period-date-input">
+                    <div class="period-dates-row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                        <label style="font-size:12px;font-weight:600;margin:0;display:flex;align-items:center;gap:6px;">
+                            <i class="fas fa-code-commit"></i> Commit base de desarrollo:
+                            <select id="gitCommitSelect" class="period-date-input" style="min-width:320px;max-width:520px;font-size:12px;">
+                                <option value="origin/desarrollo">origin/desarrollo (?ltimo remoto)</option>
+                                <option value="desarrollo">desarrollo (?ltimo local)</option>
+                            </select>
                         </label>
-                        <label><i class="fas fa-calendar-check"></i> Hasta:
-                            <input type="date" id="periodDateTo" class="period-date-input">
-                        </label>
-                        <label id="snapshotPickerWrap" style="display:none;"><i class="fas fa-camera"></i> Snapshot:
-                            <select id="snapshotPicker" class="period-date-input" style="max-width:240px;"></select>
-                        </label>
-                        <button type="button" class="btn btn-scan btn-sm" onclick="aplicarFiltroPeriodo()" style="padding:6px 14px;font-size:12px;">
-                            <i class="fas fa-magnifying-glass"></i> Comparar Per&iacute;odo
+                        <button type="button" class="btn btn-scan btn-sm" id="btnEjecutarGitCompare" onclick="ejecutarComparativaGit()" style="padding:6px 14px;font-size:12px;">
+                            <i class="fas fa-magnifying-glass"></i> Comparar con desarrollo
                         </button>
-                        <button type="button" class="btn btn-pdf-compare btn-sm" onclick="generarPdfComparativa()" id="btnPdfComparePeriod" disabled style="padding:6px 14px;font-size:12px;">
-                            <i class="fas fa-file-pdf"></i> PDF Comparativa
+                        <button type="button" class="btn btn-pdf-compare btn-sm" onclick="generarPdfComparativa()" id="btnPdfCompareGit" disabled style="padding:6px 14px;font-size:12px;">
+                            <i class="fas fa-file-pdf"></i> PDF Comparativa Git
+                        </button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="cargarCommitsGit()" title="Recargar commits" style="padding:6px 10px;font-size:12px;">
+                            <i class="fas fa-sync-alt"></i>
                         </button>
                     </div>
+                    <div id="gitCompareStatus" style="font-size:12px;color:var(--muted);margin-top:8px;"></div>
                 </div>
                 <p id="clientBaselineStatus" style="font-size:13px;margin:12px 0 0 0;color:var(--dark);min-height:1.2em;"></p>
                 <div id="baselineFilesPreview" class="ref-preview no-print" style="display:none;"></div>
@@ -224,6 +220,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 <div class="folder-analytics-head">
                     <h2><i class="fas fa-folder-tree"></i>Por carpeta / m&oacute;dulo</h2>
                     <p class="analytics-hint">Agrupado por <strong>proyecto</strong> (carpeta global). Pulse un m&oacute;dulo para filtrar la tabla de archivos.</p>
+                    <div id="folderFilterBarContainer" style="display:none;"></div>
                 </div>
                 <table class="folder-breakdown">
                     <thead>
@@ -486,6 +483,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         let clientBaseline = null;
         let clientBaselineLoadError = null;
         let folderBreakdownOpen = {};
+        let excludedDiffFolders = []; // carpetas cuya diferencia de horas no se contabiliza
         let devCount = 3;
         const DEV_COUNT_KEY = 'dashboard_dev_count';
         const HOURS_PER_DAY_3DEVS = 16;
@@ -505,6 +503,16 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         function normalizePathKey(p) {
             return String(p || '').replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase();
         }
+
+        function pathsMatch(a, b) {
+            if (!a || !b) return false;
+            if (a === b) return true;
+            const na = normalizePathKey(a);
+            const nb = normalizePathKey(b);
+            if (na === nb) return true;
+            if (na.endsWith('\\' + nb) || nb.endsWith('\\' + na) || na.endsWith('/' + nb) || nb.endsWith('/' + na)) return true;
+            return pathBasename(a).toLowerCase() === pathBasename(b).toLowerCase();
+        }
         
         function fileFolderRelative(file) {
             let folder = String(file.folder || 'ROOT').replace(/\\/g, '/');
@@ -520,19 +528,24 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
 
         /** Clave estable (misma en solo-carpeta y multi) para complejidad / exclusiones. */
         function fileComplexityKey(file) {
-            const proj = file.projectPath || file.project || '';
+            const proj = normalizePathKey(file.projectPath || file.project || '');
             return proj + '|' + fileFolderRelative(file) + '|' + file.name;
         }
 
         /** Variantes de clave; nameOnly=false evita choques entre carpetas en el mapa combinado. */
         function fileComplexityKeyVariants(file, nameOnly) {
-            const proj = file.projectPath || file.project || '';
+            const proj = normalizePathKey(file.projectPath || file.project || '');
+            const rawProj = String(file.projectPath || file.project || '').replace(/\\/g, '/').replace(/\/+$/, '');
             const rel = fileFolderRelative(file);
-            const raw = file.folder || 'ROOT';
+            const raw = String(file.folder || 'ROOT').replace(/\\/g, '/');
             const name = file.name;
             const keys = [
                 proj + '|' + rel + '|' + name,
-                proj + '|' + raw + '|' + name
+                proj + '|' + raw + '|' + name,
+                rawProj + '|' + rel + '|' + name,
+                rawProj + '|' + raw + '|' + name,
+                rel + '|' + name,
+                raw + '|' + name
             ];
             if (nameOnly !== false) keys.push(name);
             return keys.filter((k, i, arr) => k && arr.indexOf(k) === i);
@@ -549,8 +562,24 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
 
         function findSavedProjectKeys(projects, path) {
             if (!path || !projects) return [];
-            const want = normalizePathKey(path);
-            return Object.keys(projects).filter(pk => normalizePathKey(pk) === want);
+            const norm = normalizePathKey(path);
+            const isComposite = path.indexOf('||') >= 0;
+            const pathParts = isComposite ? path.split('||').map(p => pathBasename(p).toLowerCase()).sort() : null;
+
+            return Object.keys(projects).filter(pk => {
+                const pkNorm = normalizePathKey(pk);
+                if (pkNorm === norm) return true;
+                if (norm.endsWith('/' + pkNorm) || pkNorm.endsWith('/' + norm) || norm.endsWith('\\' + pkNorm) || pkNorm.endsWith('\\' + norm)) return true;
+                if (isComposite && pk.indexOf('||') >= 0) {
+                    const pkParts = pk.split('||').map(p => pathBasename(p).toLowerCase()).sort();
+                    if (pathParts && pkParts && pathParts.length === pkParts.length && pathParts.every((v, i) => v === pkParts[i])) {
+                        return true;
+                    }
+                }
+                const base = pathBasename(path).toLowerCase();
+                if (!isComposite && base && pathBasename(pk).toLowerCase() === base) return true;
+                return false;
+            });
         }
 
         /**
@@ -559,47 +588,57 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
          * y solo si no hay, la del proyecto combinado (relavera||flujo).
          */
         function applySavedFileSettings(file, projects, primaryProjectKey) {
-            const individualKeys = findSavedProjectKeys(projects, file.projectPath);
-            const keysToTry = individualKeys.slice();
-            if (primaryProjectKey && projects[primaryProjectKey]) {
-                const primNorm = normalizePathKey(primaryProjectKey);
-                if (!individualKeys.some(k => normalizePathKey(k) === primNorm)) {
-                    keysToTry.push(primaryProjectKey);
-                }
-            }
+            if (!file || !projects) return;
 
-            const individualSet = {};
-            individualKeys.forEach(k => { individualSet[normalizePathKey(k)] = true; });
+            let appliedComplexity = false;
+            let appliedExclusion = false;
 
-            const seen = {};
-            let complexitySet = false;
-            let excludedSet = false;
-            keysToTry.forEach(pk => {
-                if (!pk || seen[normalizePathKey(pk)] || !projects[pk]) return;
-                seen[normalizePathKey(pk)] = true;
-                const saved = projects[pk];
-                const isIndividual = !!individualSet[normalizePathKey(pk)];
-                // En el mapa combinado no usar solo el nombre del archivo (colisiona entre carpetas)
-                const allowNameOnly = isIndividual;
-
-                if (!complexitySet) {
-                    const c = lookupInSavedMap(saved.complexities, file, allowNameOnly);
+            const tryApply = (saved, isPrimary) => {
+                if (!saved) return;
+                if (!appliedComplexity && saved.complexities) {
+                    const c = lookupInSavedMap(saved.complexities, file, true);
                     if (c != null) {
                         file.complexity = c;
-                        complexitySet = true;
+                        appliedComplexity = true;
                     }
                 }
-                if (!excludedSet && saved.excludedFiles) {
-                    const keys = fileComplexityKeyVariants(file, allowNameOnly);
+                if (!appliedExclusion && saved.excludedFiles !== undefined) {
+                    const keys = fileComplexityKeyVariants(file, true);
+                    let isEx = false;
                     for (let i = 0; i < keys.length; i++) {
-                        if (saved.excludedFiles[keys[i]]) {
-                            file.excluded = true;
-                            excludedSet = true;
+                        if (saved.excludedFiles && saved.excludedFiles[keys[i]]) {
+                            isEx = true;
                             break;
                         }
                     }
+                    if (isEx) {
+                        file.excluded = true;
+                        appliedExclusion = true;
+                    } else if (isPrimary) {
+                        file.excluded = false;
+                        appliedExclusion = true;
+                    }
                 }
-            });
+            };
+
+            // 1. Prioridad: el proyecto principal activo
+            if (primaryProjectKey) {
+                const savedKeys = findSavedProjectKeys(projects, primaryProjectKey);
+                const pKey = savedKeys.length ? savedKeys[0] : primaryProjectKey;
+                if (projects[pKey]) {
+                    tryApply(projects[pKey], true);
+                }
+            }
+
+            // 2. Fallback a carpetas individuales si no se determino
+            if (!appliedComplexity || !appliedExclusion) {
+                const individualKeys = findSavedProjectKeys(projects, file.projectPath);
+                individualKeys.forEach(pk => {
+                    if (projects[pk]) {
+                        tryApply(projects[pk], false);
+                    }
+                });
+            }
         }
 
         function isFileExcluded(file) {
@@ -745,11 +784,16 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             return scanQueue.map(q => {
                 const key = normalizePathKey(q.path);
                 const prev = currentScanTargets.find(t => normalizePathKey(t.path) === key);
-                return {
+                const item = {
                     path: q.path,
                     mode: normalizeScanMode(q.mode),
-                    label: (prev && prev.label) || pathBasename(q.path)
+                    label: (prev && prev.label) || (q.isFile ? (q.name || pathBasename(q.path)) : pathBasename(q.path))
                 };
+                if (q.isFile) item.isFile = true;
+                if (q.name) item.name = q.name;
+                if (q.folder) item.folder = q.folder;
+                if (q.files && q.files.length) item.files = q.files;
+                return item;
             });
         }
 
@@ -909,31 +953,52 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         
         function computeMetrics(files) {
             let totalLines = 0, totalHours = 0;
-            files.forEach(f => {
-                totalLines += f.lines;
-                totalHours += f.lines / tasaComplejidad(f.complexity);
+            const baselineIdx = baselineHasFileDetail() ? buildBaselineFileIndex() : null;
+            (files || []).forEach(f => {
+                const eff = getFileEffectiveMetrics(f, baselineIdx);
+                totalLines += eff.lines;
+                totalHours += eff.hours;
             });
-            return { totalLines, totalHours, fileCount: files.length };
+            return { totalLines, totalHours, fileCount: (files || []).length };
         }
         
         function aggregateByFolder(files) {
             const map = {};
+            const baselineIdx = baselineHasFileDetail() ? buildBaselineFileIndex() : null;
             files.forEach(f => {
                 if (!fileHasLines(f)) return;
                 const k = f.folder || 'ROOT';
-                if (!map[k]) map[k] = { lines: 0, files: 0, hours: 0 };
-                map[k].lines += f.lines;
-                map[k].files += 1;
-                map[k].hours += f.lines / tasaComplejidad(f.complexity);
+                if (!map[k]) map[k] = { lines: 0, files: 0, totalFiles: 0, excludedCount: 0, diffExcludedCount: 0, hours: 0 };
+                map[k].totalFiles += 1;
+                if (isFileExcluded(f)) {
+                    map[k].excludedCount += 1;
+                } else {
+                    const eff = getFileEffectiveMetrics(f, baselineIdx);
+                    map[k].lines += eff.lines;
+                    map[k].files += 1;
+                    map[k].hours += eff.hours;
+                    if (eff.isDiffExcluded) {
+                        map[k].diffExcludedCount += 1;
+                    }
+                }
             });
-            const totalLines = files.reduce((s, f) => s + f.lines, 0);
+            const totalLines = files.reduce((s, f) => {
+                if (isFileExcluded(f)) return s;
+                const eff = getFileEffectiveMetrics(f, baselineIdx);
+                return s + eff.lines;
+            }, 0);
             return Object.keys(map).map(folder => ({
                 folder,
                 lines: map[folder].lines,
                 files: map[folder].files,
+                totalFiles: map[folder].totalFiles,
+                excludedCount: map[folder].excludedCount,
+                diffExcludedCount: map[folder].diffExcludedCount,
+                isFullyExcluded: (map[folder].totalFiles > 0 && map[folder].excludedCount === map[folder].totalFiles),
+                isDiffExcluded: isFolderDiffExcluded(folder),
                 hours: map[folder].hours,
                 pct: totalLines ? (map[folder].lines / totalLines * 100) : 0
-            })).sort((a, b) => b.lines - a.lines);
+            })).sort((a, b) => b.lines - a.lines || b.totalFiles - a.totalFiles);
         }
 
         function globalFolderOf(folder) {
@@ -953,17 +1018,21 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             (rows || []).forEach(r => {
                 const g = globalFolderOf(r.folder);
                 if (!groups[g]) {
-                    groups[g] = { global: g, lines: 0, files: 0, hours: 0, pct: 0, children: [] };
+                    groups[g] = { global: g, lines: 0, files: 0, totalFiles: 0, excludedCount: 0, hours: 0, pct: 0, children: [] };
                 }
                 groups[g].children.push(r);
                 groups[g].lines += r.lines;
                 groups[g].files += r.files;
+                groups[g].totalFiles = (groups[g].totalFiles || 0) + (r.totalFiles != null ? r.totalFiles : r.files);
+                groups[g].excludedCount = (groups[g].excludedCount || 0) + (r.excludedCount || 0);
                 groups[g].hours += r.hours;
                 groups[g].pct += r.pct;
             });
             return Object.keys(groups)
-                .sort((a, b) => groups[b].lines - groups[a].lines || a.localeCompare(b, 'es'))
+                .sort((a, b) => groups[b].lines - groups[a].lines || groups[b].totalFiles - groups[a].totalFiles || a.localeCompare(b, 'es'))
                 .map(k => {
+                    groups[k].isFullyExcluded = groups[k].totalFiles > 0 && groups[k].excludedCount === groups[k].totalFiles;
+                    groups[k].isDiffExcluded = isFolderDiffExcluded(k) || (groups[k].children.length > 0 && groups[k].children.every(c => c.isDiffExcluded));
                     groups[k].children.sort((a, b) => b.lines - a.lines || a.folder.localeCompare(b.folder, 'es'));
                     return groups[k];
                 });
@@ -1700,6 +1769,63 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             return null;
         }
 
+        function isFolderDiffExcluded(folder) {
+            if (!baselineHasFileDetail() || !excludedDiffFolders || !excludedDiffFolders.length) return false;
+            const f = String(folder == null || folder === '' ? 'ROOT' : folder).replace(/\\/g, '/');
+            return excludedDiffFolders.some(ex => {
+                const exNorm = String(ex).replace(/\\/g, '/');
+                return folderMatchesFilter(f, exNorm);
+            });
+        }
+
+        function getFileEffectiveMetrics(file, baselineIndex) {
+            if (isFileExcluded(file)) {
+                return { lines: 0, hours: 0, complexity: file.complexity || 'media', isDiffExcluded: false, isFullyExcluded: true };
+            }
+            const isDiffEx = isFolderDiffExcluded(file.folder || 'ROOT');
+            if (isDiffEx) {
+                const idx = baselineIndex || (baselineHasFileDetail() ? buildBaselineFileIndex() : null);
+                const ref = idx ? findBaselineFile(file, idx) : null;
+                if (ref) {
+                    const refL = Number(ref.lines) || 0;
+                    const effComp = ref.complexity || file.complexity || 'media';
+                    const refH = (ref.hours != null && !isNaN(Number(ref.hours)) && Number(ref.hours) > 0)
+                        ? Number(ref.hours)
+                        : (refL / tasaComplejidad(effComp));
+                    return {
+                        lines: refL,
+                        hours: refH,
+                        complexity: effComp,
+                        isDiffExcluded: true,
+                        isFullyExcluded: false,
+                        refFile: ref,
+                        deltaLines: 0,
+                        deltaHours: 0
+                    };
+                } else {
+                    return {
+                        lines: 0,
+                        hours: 0,
+                        complexity: file.complexity || 'media',
+                        isDiffExcluded: true,
+                        isFullyExcluded: false,
+                        refFile: null,
+                        deltaLines: 0,
+                        deltaHours: 0
+                    };
+                }
+            }
+            const curL = Number(file.lines) || 0;
+            const curH = curL / tasaComplejidad(file.complexity || 'media');
+            return {
+                lines: curL,
+                hours: curH,
+                complexity: file.complexity || 'media',
+                isDiffExcluded: false,
+                isFullyExcluded: false
+            };
+        }
+
         let refPreviewGlobalFilter = 'all';
 
         function setRefPreviewGlobalFilter(value) {
@@ -2191,49 +2317,248 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         function renderFolderBreakdown() {
             const tbody = document.getElementById('folderBreakdownBody');
             if (!tbody) return;
-            const files = getActiveFiles();
-            if (!files.length) {
+            const allFiles = getVisibleFiles();
+            if (!allFiles.length) {
                 tbody.innerHTML = '';
+                renderFolderFilterActionBar();
                 return;
             }
-            const rows = aggregateByFolder(files);
+            const rows = aggregateByFolder(allFiles);
             const groups = groupRowsByGlobal(rows);
             const esc = (s) => String(s == null ? '' : s).replace(/</g, '&lt;');
             const showDelta = syncHoursDeltaColumns();
             const refHours = showDelta ? aggregateBaselineHours() : { exact: {}, global: {} };
-            const deltaCell = (curH, refH) => showDelta
-                ? '<td class="hours-delta-col" style="text-align:right;">' + formatHoursDeltaHtml(curH - (Number(refH) || 0)) + '</td>'
-                : '';
+            const deltaCell = (curH, refH, isDiffEx) => {
+                if (!showDelta) return '';
+                if (isDiffEx) {
+                    return '<td class="hours-delta-col" style="text-align:right;"><span class="hours-delta-cell delta-zero" title="Diferencia de horas no contabilizada">+0.00 h</span></td>';
+                }
+                return '<td class="hours-delta-col" style="text-align:right;">' + formatHoursDeltaHtml(curH - (Number(refH) || 0)) + '</td>';
+            };
             tbody.innerHTML = groups.map(g => {
                 const gid = String(g.global);
                 const isOpen = !!folderBreakdownOpen[gid];
-                const head = '<tr class="folder-group-head' + (isOpen ? ' is-open' : '') + '" data-group="' + gid.replace(/"/g, '&quot;') + '" data-folder="' + gid.replace(/"/g, '&quot;') + '" onclick="setFilter(\'folder\', this.dataset.folder)" title="Filtrar archivos de este m&oacute;dulo">' +
+                const isFiltered = (currentFolderFilter === gid);
+                const isFullyExcluded = g.isFullyExcluded;
+
+                const isDiffEx = g.isDiffExcluded;
+                const filterBadge = isFiltered
+                    ? '<span class="badge-filter-active" title="Filtrando esta carpeta"><i class="fas fa-filter"></i> Filtrada</span>'
+                    : '';
+                const diffExcludedBadge = isDiffEx
+                    ? '<span class="badge-diff-excluded" title="Diferencia de horas no contabilizada (+0.00h vs ref)"><i class="fas fa-clock-rotate-left"></i> Diff no cont.</span>'
+                    : '';
+                const excludedBadge = isFullyExcluded
+                    ? '<span class="badge-folder-excluded" title="Módulo completo excluido del conteo"><i class="fas fa-eye-slash"></i> No contabilizada</span>'
+                    : '';
+
+                let actionBtn = '';
+                if (isFiltered || isDiffEx || isFullyExcluded) {
+                    if (hasHoursCompare()) {
+                        actionBtn = '<button type="button" class="folder-action-btn' + (isDiffEx ? ' btn-folder-diff-active' : '') + '" onclick="toggleNoContabilizarDiferencia(event, \'' + gid.replace(/'/g, "\\'") + '\')" title="' + (isDiffEx ? 'Volver a contabilizar la diferencia de horas' : 'No contabilizar la diferencia de horas de este m?dulo (mantener horas base y diff = 0.00 h)') + '">' +
+                            '<i class="fas fa-clock-rotate-left"></i> ' +
+                            (isDiffEx ? 'Contabilizar diff' : 'No cont. diff') +
+                            '</button>';
+                    } else {
+                        actionBtn = '<button type="button" class="folder-action-btn' + (isFullyExcluded ? ' btn-folder-excluded' : '') + '" onclick="toggleExcluirCarpeta(event, \'' + gid.replace(/'/g, "\\'") + '\')" title="' + (isFullyExcluded ? 'Volver a contabilizar este m?dulo' : 'No contabilizar ning?n archivo de este m?dulo') + '">' +
+                            '<i class="fas ' + (isFullyExcluded ? 'fa-eye' : 'fa-eye-slash') + '"></i> ' +
+                            (isFullyExcluded ? 'Contabilizar carpeta' : 'No contabilizar toda la carpeta') +
+                            '</button>';
+                    }
+                }
+
+                const head = '<tr class="folder-group-head' + (isOpen ? ' is-open' : '') + (isFiltered ? ' is-filtered' : '') + (isFullyExcluded ? ' folder-row-fully-excluded' : (isDiffEx ? ' folder-row-diff-excluded' : '')) + '" data-group="' + gid.replace(/"/g, '&quot;') + '" data-folder="' + gid.replace(/"/g, '&quot;') + '" onclick="handleFolderBreakdownClick(this.dataset.folder)" title="Clic para filtrar o quitar filtro de este m&oacute;dulo">' +
                     '<td><span class="folder-global-name"><i class="fas fa-layer-group"></i> ' + esc(g.global) + '</span>' +
+                    filterBadge +
+                    excludedBadge +
+                    diffExcludedBadge +
+                    actionBtn +
                     '<button type="button" class="folder-group-toggle" onclick="toggleFolderGroup(event, this.closest(\'tr\').dataset.group)" title="Mostrar u ocultar subcarpetas">' +
                     (isOpen
                         ? '<i class="fas fa-chevron-up"></i> Ocultar'
                         : '<i class="fas fa-chevron-down"></i> Mostrar') +
                     '</button></td>' +
-                    '<td style="text-align:center;">' + g.files + '</td>' +
-                    '<td style="text-align:right;">' + g.lines.toLocaleString() + '</td>' +
-                    '<td style="text-align:right;">' + g.hours.toFixed(2) + ' h</td>' +
-                    deltaCell(g.hours, refHours.global[g.global]) +
-                    '<td style="text-align:right;">' + g.pct.toFixed(1) + '%</td>' +
+                    '<td style="text-align:center;">' + (isFullyExcluded ? ('<span class="text-muted" title="' + g.totalFiles + ' archivos no contabilizados">0 / ' + g.totalFiles + '</span>') : (g.excludedCount > 0 ? (g.files + ' <span style="font-size:11px;color:var(--muted);" title="' + g.excludedCount + ' excluidos">(' + g.totalFiles + ')</span>') : g.files)) + '</td>' +
+                    '<td style="text-align:right;">' + (isFullyExcluded ? '<span class="text-muted">0</span>' : g.lines.toLocaleString()) + '</td>' +
+                    '<td style="text-align:right;">' + (isFullyExcluded ? '<span class="text-muted">0.00 h</span>' : g.hours.toFixed(2) + ' h') + '</td>' +
+                    deltaCell(g.hours, refHours.global[g.global], g.isDiffExcluded) +
+                    '<td style="text-align:right;">' + (isFullyExcluded ? '<span class="text-muted">0.0%</span>' : g.pct.toFixed(1) + '%') + '</td>' +
                     '<td class="folder-bar-cell"><div class="folder-bar"><div style="width:' + Math.min(100, g.pct).toFixed(1) + '%"></div></div></td>' +
                     '</tr>';
-                const kids = g.children.map(r =>
-                    '<tr class="folder-sub-row' + (isOpen ? ' is-open' : '') + '" data-parent="' + gid.replace(/"/g, '&quot;') + '" data-folder="' + String(r.folder).replace(/"/g, '&quot;') + '" onclick="setFilter(\'folder\', this.dataset.folder)" title="Filtrar esta subcarpeta">' +
-                    '<td><span class="folder-sub-name">' + esc(subfolderLabel(r.folder, g.global)) + '</span></td>' +
-                    '<td style="text-align:center;">' + r.files + '</td>' +
-                    '<td style="text-align:right;">' + r.lines.toLocaleString() + '</td>' +
-                    '<td style="text-align:right;">' + r.hours.toFixed(2) + ' h</td>' +
-                    deltaCell(r.hours, refHours.exact[r.folder]) +
-                    '<td style="text-align:right;">' + r.pct.toFixed(1) + '%</td>' +
-                    '<td class="folder-bar-cell"><div class="folder-bar folder-bar-sub"><div style="width:' + Math.min(100, r.pct).toFixed(1) + '%"></div></div></td>' +
-                    '</tr>'
-                ).join('');
+                const kids = g.children.map(r => {
+                    const isSubFiltered = (currentFolderFilter === r.folder);
+                    const isSubFullyExcluded = r.isFullyExcluded;
+
+                    const isSubDiffEx = r.isDiffExcluded;
+                    const subFilterBadge = isSubFiltered
+                        ? '<span class="badge-filter-active" title="Filtrando esta subcarpeta"><i class="fas fa-filter"></i> Filtrada</span>'
+                        : '';
+                    const subDiffExcludedBadge = isSubDiffEx
+                        ? '<span class="badge-diff-excluded" title="Diferencia de horas no contabilizada (+0.00h vs ref)"><i class="fas fa-clock-rotate-left"></i> Diff no cont.</span>'
+                        : '';
+                    const subExcludedBadge = isSubFullyExcluded
+                        ? '<span class="badge-folder-excluded" title="Subcarpeta completa excluida del conteo"><i class="fas fa-eye-slash"></i> No contabilizada</span>'
+                        : '';
+
+                    let subActionBtn = '';
+                    if (isSubFiltered || isSubDiffEx || isSubFullyExcluded) {
+                        if (hasHoursCompare()) {
+                            subActionBtn = '<button type="button" class="folder-action-btn' + (isSubDiffEx ? ' btn-folder-diff-active' : '') + '" onclick="toggleNoContabilizarDiferencia(event, \'' + String(r.folder).replace(/'/g, "\\'") + '\')" title="' + (isSubDiffEx ? 'Volver a contabilizar la diferencia de horas' : 'No contabilizar la diferencia de horas de esta subcarpeta (mantener horas base y diff = 0.00 h)') + '">' +
+                                '<i class="fas fa-clock-rotate-left"></i> ' +
+                                (isSubDiffEx ? 'Contabilizar diff' : 'No cont. diff') +
+                                '</button>';
+                        } else {
+                            subActionBtn = '<button type="button" class="folder-action-btn' + (isSubFullyExcluded ? ' btn-folder-excluded' : '') + '" onclick="toggleExcluirCarpeta(event, \'' + String(r.folder).replace(/'/g, "\\'") + '\')" title="' + (isSubFullyExcluded ? 'Volver a contabilizar esta subcarpeta' : 'No contabilizar ning?n archivo de esta subcarpeta') + '">' +
+                                '<i class="fas ' + (isSubFullyExcluded ? 'fa-eye' : 'fa-eye-slash') + '"></i> ' +
+                                (isSubFullyExcluded ? 'Contabilizar carpeta' : 'No contabilizar toda la carpeta') +
+                                '</button>';
+                        }
+                    }
+
+                    return '<tr class="folder-sub-row' + (isOpen ? ' is-open' : '') + (isSubFiltered ? ' is-filtered' : '') + (isSubFullyExcluded ? ' folder-row-fully-excluded' : (isSubDiffEx ? ' folder-row-diff-excluded' : '')) + '" data-parent="' + gid.replace(/"/g, '&quot;') + '" data-folder="' + String(r.folder).replace(/"/g, '&quot;') + '" onclick="handleFolderBreakdownClick(this.dataset.folder)" title="Clic para filtrar o quitar filtro de esta subcarpeta">' +
+                        '<td><span class="folder-sub-name">' + esc(subfolderLabel(r.folder, g.global)) + '</span>' + subFilterBadge + subExcludedBadge + subDiffExcludedBadge + subActionBtn + '</td>' +
+                        '<td style="text-align:center;">' + (isSubFullyExcluded ? ('<span class="text-muted" title="' + r.totalFiles + ' archivos no contabilizados">0 / ' + r.totalFiles + '</span>') : (r.excludedCount > 0 ? (r.files + ' <span style="font-size:11px;color:var(--muted);" title="' + r.excludedCount + ' excluidos">(' + r.totalFiles + ')</span>') : r.files)) + '</td>' +
+                        '<td style="text-align:right;">' + (isSubFullyExcluded ? '<span class="text-muted">0</span>' : r.lines.toLocaleString()) + '</td>' +
+                        '<td style="text-align:right;">' + (isSubFullyExcluded ? '<span class="text-muted">0.00 h</span>' : r.hours.toFixed(2) + ' h') + '</td>' +
+                        deltaCell(r.hours, refHours.exact[r.folder], r.isDiffExcluded) +
+                        '<td style="text-align:right;">' + (isSubFullyExcluded ? '<span class="text-muted">0.0%</span>' : r.pct.toFixed(1) + '%') + '</td>' +
+                        '<td class="folder-bar-cell"><div class="folder-bar folder-bar-sub"><div style="width:' + Math.min(100, r.pct).toFixed(1) + '%"></div></div></td>' +
+                        '</tr>';
+                }).join('');
                 return head + kids;
             }).join('');
+
+            renderFolderFilterActionBar();
+        }
+
+        function renderFolderFilterActionBar() {
+            const container = document.getElementById('folderFilterBarContainer');
+            if (!container) return;
+            if (!currentFolderFilter || currentFolderFilter === 'all') {
+                container.innerHTML = '';
+                container.style.display = 'none';
+                return;
+            }
+            const matchingFiles = projectFiles.filter(f => folderMatchesFilter(f.folder || 'ROOT', currentFolderFilter));
+            const isDiffEx = isFolderDiffExcluded(currentFolderFilter);
+            const allExcluded = matchingFiles.length > 0 && matchingFiles.every(f => isFileExcluded(f));
+            const excludedCount = matchingFiles.filter(f => isFileExcluded(f)).length;
+            const activeCount = matchingFiles.length - excludedCount;
+            const esc = (s) => String(s == null ? '' : s).replace(/</g, '&lt;').replace(/"/g, '&quot;');
+            const filterKeyEsc = String(currentFolderFilter).split("\\").join("\\\\").split("\x27").join("\\\x27");
+            const hasBaseline = baselineHasFileDetail();
+
+            container.style.display = 'block';
+            container.innerHTML = '<div class="folder-filter-bar">' +
+                '<div class="folder-filter-bar-left">' +
+                    '<span class="folder-filter-bar-title"><i class="fas fa-filter"></i> M&oacute;dulo filtrado: <strong>' + esc(currentFolderFilter) + '</strong></span>' +
+                    '<span class="folder-filter-bar-count">(' + (allExcluded ? '0' : activeCount) + ' de ' + matchingFiles.length + ' archivos contabilizados)</span>' +
+                    (isDiffEx ? '<span class="badge-diff-excluded"><i class="fas fa-clock-rotate-left"></i> Diferencia no contabilizada (+0.00h vs ref)</span>' : '') +
+                    (allExcluded ? '<span class="badge-folder-excluded"><i class="fas fa-eye-slash"></i> Carpeta completa excluida (0h)</span>' : '') +
+                '</div>' +
+                '<div class="folder-filter-bar-actions">' +
+                    (hasBaseline ? (
+                        '<button type="button" class="btn-folder-diff-bar' + (isDiffEx ? ' is-active' : '') + '" onclick="toggleNoContabilizarDiferencia(event, \'' + filterKeyEsc + '\')" title="' + (isDiffEx ? 'Volver a sumar la diferencia de horas de este m?dulo' : 'No contabilizar la diferencia de horas (mantener horas base y diff = 0.00 h)') + '">' +
+                            '<i class="fas fa-clock-rotate-left"></i> ' +
+                            (isDiffEx ? 'Volver a contabilizar diferencia' : 'No contabilizar diferencia de horas') +
+                        '</button>'
+                    ) : '') +
+                    '<button type="button" class="btn-folder-exclude-bar' + (allExcluded ? ' is-excluded' : '') + '" onclick="toggleExcluirCarpeta(event, \'' + filterKeyEsc + '\')" title="' + (allExcluded ? 'Volver a contabilizar todos los archivos de esta carpeta' : 'Excluir completamente todos los archivos (0 l?neas / 0 horas)') + '">' +
+                        '<i class="fas ' + (allExcluded ? 'fa-eye' : 'fa-eye-slash') + '"></i> ' +
+                        (allExcluded ? 'Reactivar carpeta completa' : 'Excluir carpeta completa (0h)') +
+                    '</button>' +
+                    '<button type="button" class="btn-folder-clear-bar" onclick="setFilter(\'folder\', \'all\')" title="Quitar filtro">' +
+                        '<i class="fas fa-times"></i> Quitar filtro' +
+                    '</button>' +
+                '</div>' +
+            '</div>';
+        }
+
+        // No contabilizar la diferencia de horas de una carpeta (mantiene horas de referencia y diff = 0)
+        function toggleNoContabilizarDiferencia(event, folder) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            if (!folder) return;
+
+            if (!baselineHasFileDetail()) {
+                showToast('Para no contabilizar la diferencia de horas, cargue primero un archivo de referencia JSON o PDF.', 'warning');
+                return;
+            }
+
+            const folderKey = String(folder).replace(/\\/g, '/');
+            const idx = excludedDiffFolders.findIndex(f => f.toLowerCase() === folderKey.toLowerCase());
+            let isNowExcluded = false;
+            if (idx >= 0) {
+                excludedDiffFolders.splice(idx, 1);
+                isNowExcluded = false;
+            } else {
+                excludedDiffFolders.push(folderKey);
+                isNowExcluded = true;
+            }
+
+            renderTable();
+            renderFolderBreakdown();
+            updateStats();
+            renderClientBaselineCompare();
+            renderFolderFilterActionBar();
+
+            if (isNowExcluded) {
+                showToast('Diferencia de ?' + folder + '? no contabilizada (se mantienen horas base y diff = 0.00 h)');
+            } else {
+                showToast('Diferencia de ?' + folder + '? vuelta a contabilizar');
+            }
+        }
+
+        // Excluir o re-incluir todos los archivos de una carpeta / modulo
+        function toggleExcluirCarpeta(event, folder) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            if (!folder) return;
+
+            const matchingFiles = projectFiles.filter(f => folderMatchesFilter(f.folder || 'ROOT', folder));
+            if (!matchingFiles.length) {
+                showToast('No se encontraron archivos en ' + folder, 'warning');
+                return;
+            }
+
+            const allExcluded = matchingFiles.every(f => isFileExcluded(f));
+            const newExcludedState = !allExcluded;
+
+            matchingFiles.forEach(f => {
+                f.excluded = newExcludedState;
+            });
+
+            // Si se excluyen, ajustar el filtro de inclusion a "all" para que el usuario pueda ver los archivos en la tabla
+            if (newExcludedState) {
+                if (currentInclusionFilter === 'active') {
+                    currentInclusionFilter = 'all';
+                    const incSel = document.getElementById('inclusionFilter');
+                    if (incSel) incSel.value = 'all';
+                }
+            }
+
+            renderTable();
+            renderFolderBreakdown();
+            updateStats();
+
+            const n = matchingFiles.length;
+            if (newExcludedState) {
+                showToast('Carpeta «' + folder + '» no contabilizada (' + n + ' archivos excluidos del total)');
+            } else {
+                showToast('Carpeta «' + folder + '» vuelta a contabilizar (' + n + ' archivos incluidos)');
+            }
+        }
+
+        function handleFolderBreakdownClick(folder) {
+            if (currentFolderFilter === folder) {
+                setFilter('folder', 'all');
+            } else {
+                setFilter('folder', folder);
+            }
         }
 
         function toggleFolderGroup(event, key) {
@@ -2257,11 +2582,12 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 }
             });
             tbody.querySelectorAll('.folder-sub-row').forEach(tr => {
-                if (tr.getAttribute('data-parent') !== key) return;
-                tr.classList.toggle('is-open', open);
+                if (tr.getAttribute('data-parent') === key) {
+                    tr.classList.toggle('is-open', open);
+                }
             });
         }
-        
+
         function updateAdjustmentSummary() {
             const el = document.getElementById('adjustSummary');
             if (!el) return;
@@ -2299,18 +2625,18 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 badge.removeAttribute('title');
                 return;
             }
-            const hours = excluded.reduce((s, f) => s + (f.lines / tasaComplejidad(f.complexity)), 0);
-            const hoursTxt = hours.toFixed(2);
-            badge.style.display = '';
-            badge.innerHTML = '<i class="fas fa-eye-slash"></i> ' + n + ' excluido' + (n === 1 ? '' : 's');
-            badge.title = 'Horas excluidas del conteo: ' + hoursTxt + ' h\n'
-                + n + ' archivo' + (n === 1 ? '' : 's') + '\n'
-                + 'Filtro \u00abSolo excluidos\u00bb para verlos y reactivarlos';
+            const h = excluded.reduce((s, f) => s + (Number(f.lines) || 0) / tasaComplejidad(f.complexity), 0);
+            badge.style.display = 'inline-block';
+            badge.textContent = n + ' excluido' + (n > 1 ? 's' : '') + ' (~' + h.toFixed(1) + 'h no contadas)';
+            badge.title = n + ' archivo(s) excluidos no entran en totales ni en el PDF. '
+                + 'Filtro «Solo excluidos» para verlos y reactivarlos';
         }
-        
+
         async function persistScanSnapshot(projectPath, metrics, scanMode) {
             const projects = await loadSavedProjects();
-            const prev = projects[projectPath] || {};
+            const savedKeys = findSavedProjectKeys(projects, projectPath);
+            const actualKey = savedKeys.length ? savedKeys[0] : projectPath;
+            const prev = projects[actualKey] || projects[projectPath] || {};
             const history = Array.isArray(prev.history) ? prev.history.slice() : [];
             const snap = {
                 at: new Date().toISOString(),
@@ -2321,20 +2647,39 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             };
             history.push(snap);
             while (history.length > MAX_HISTORY_POINTS) history.shift();
-            projects[projectPath] = {
+
+            const labels = currentScanTargets.length
+                ? currentScanTargets.map(t => t.label || pathBasename(t.path))
+                : [pathBasename(projectPath)];
+
+            projects[actualKey] = {
                 ...prev,
+                name: prev.name || labels.join(' + '),
+                targets: (prev.targets && prev.targets.length) ? prev.targets : currentScanTargets.map(t => ({
+                    path: t.path,
+                    mode: normalizeScanMode(t.mode),
+                    label: t.label || pathBasename(t.path),
+                    ...(t.isFile ? { isFile: true, name: t.name, folder: t.folder } : {}),
+                    ...(t.files && t.files.length ? { files: t.files } : {})
+                })),
+                folderFilter: currentFolderFilter || 'all',
+                projectView: currentProjectView || 'all',
                 history,
                 lastSnapshot: snap
             };
             const ok = await saveProjects(projects);
             return ok ? snap : null;
         }
-        
+
         // Cargar proyectos guardados
         async function loadSavedProjects() {
             try {
                 const response = await fetch('dashboard_api.php?action=load');
-                return await response.json();
+                const data = await response.json();
+                if (!data || Array.isArray(data) || typeof data !== 'object') {
+                    return {};
+                }
+                return data;
             } catch (e) {
                 console.error('Error loading projects:', e);
                 return {};
@@ -2344,10 +2689,11 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         // Guardar proyectos
         async function saveProjects(projects) {
             try {
+                const payload = (projects && !Array.isArray(projects) && typeof projects === 'object') ? projects : {};
                 const response = await fetch('dashboard_api.php?action=save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(projects)
+                    body: JSON.stringify(payload)
                 });
                 const data = await response.json();
                 if (data.error) {
@@ -2365,25 +2711,76 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         async function renderProjectList() {
             const projects = await loadSavedProjects();
             const list = document.getElementById('projectList');
+            if (!list) return;
 
             let html = '';
             Object.keys(projects).forEach(path => {
                 const saved = projects[path] || {};
                 const name = saved.name || pathBasename(path.split('||')[0] || path);
                 const esc = path.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-                html += `<div class="project-chip" onclick="cargarProyectoGuardado('${esc}')" title="${String(path).replace(/"/g, '&quot;')}">${name}</div>`;
+                const nameEsc = String(name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const isActive = (currentProject && pathsMatch(currentProject, path));
+                html += `<div class="project-chip${isActive ? ' active' : ''}" onclick="cargarProyectoGuardado('${esc}')" title="${String(path).replace(/"/g, '&quot;')}">` +
+                    `<span class="project-chip-label">${name}</span>` +
+                    `<button type="button" class="project-chip-remove" onclick="eliminarProyectoGuardado(event, '${esc}', '${nameEsc}')" title="Eliminar guardado"><i class="fas fa-times"></i></button>` +
+                    `</div>`;
             });
 
             list.innerHTML = html;
         }
 
+        // Eliminar guardado de configuracion de agrupacion de carpetas
+        async function eliminarProyectoGuardado(event, pathKey, name) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+
+            const displayName = name || pathBasename(pathKey.split('||')[0] || pathKey);
+            if (!confirm('¿Desea eliminar la configuración guardada "' + displayName + '"?')) {
+                return;
+            }
+
+            const projects = await loadSavedProjects();
+            const norm = normalizePathKey(pathKey);
+            let deleted = false;
+
+            Object.keys(projects).forEach(pk => {
+                if (pk === pathKey || normalizePathKey(pk) === norm) {
+                    delete projects[pk];
+                    deleted = true;
+                } else if (pathKey.indexOf('||') >= 0 && pk.indexOf('||') >= 0) {
+                    const pkParts = pk.split('||').map(p => normalizePathKey(p)).sort();
+                    const targetParts = pathKey.split('||').map(p => normalizePathKey(p)).sort();
+                    if (pkParts.length === targetParts.length && pkParts.every((v, i) => v === targetParts[i])) {
+                        delete projects[pk];
+                        deleted = true;
+                    }
+                }
+            });
+
+            if (deleted) {
+                const ok = await saveProjects(projects);
+                if (ok) {
+                    showToast('Configuración "' + displayName + '" eliminada', 'warning');
+                    await renderProjectList();
+                }
+            } else {
+                showToast('No se encontró la configuración para eliminar', 'warning');
+            }
+        }
+
         function cargarProyectoGuardado(pathKey) {
             loadSavedProjects().then(projects => {
-                const saved = projects[pathKey];
+                const savedKeys = findSavedProjectKeys(projects, pathKey);
+                const actualKey = savedKeys.length ? savedKeys[0] : pathKey;
+                const saved = projects[actualKey] || projects[pathKey];
                 if (saved && Array.isArray(saved.targets) && saved.targets.length) {
                     scanQueue = saved.targets.map(t => ({
                         path: t.path,
-                        mode: normalizeScanMode(t.mode)
+                        mode: normalizeScanMode(t.mode),
+                        ...(t.isFile ? { isFile: true, name: t.name, folder: t.folder } : {}),
+                        ...(t.files && t.files.length ? { files: t.files } : {})
                     }));
                 } else if (pathKey.indexOf('||') >= 0) {
                     scanQueue = pathKey.split('||').filter(Boolean).map(p => ({
@@ -2393,11 +2790,26 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 } else {
                     scanQueue = [{ path: pathKey, mode: document.getElementById('scanMode').value || 'normal' }];
                 }
+                if (saved && saved.folderFilter) {
+                    currentFolderFilter = saved.folderFilter;
+                } else {
+                    currentFolderFilter = 'all';
+                }
+                if (saved && saved.projectView) {
+                    currentProjectView = saved.projectView;
+                } else {
+                    currentProjectView = 'all';
+                }
+                if (saved && Array.isArray(saved.excludedDiffFolders)) {
+                    excludedDiffFolders = saved.excludedDiffFolders.slice();
+                } else {
+                    excludedDiffFolders = [];
+                }
                 renderScanQueue();
                 escanearProyecto();
             });
         }
-        
+
         // Escanear proyecto(s)
         function escanearProyecto() {
             const pathEl = document.getElementById('projectPath');
@@ -2405,10 +2817,17 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             const pendingPath = pathEl ? pathEl.value.trim() : '';
             if (pendingPath && scanQueue.length === 0) {
                 agregarCarpetaACola(pendingPath, modeEl ? modeEl.value : 'normal');
-            } else if (pendingPath && scanQueue.length > 0) {
-                const key = normalizePathKey(pendingPath);
-                if (!scanQueue.some(t => normalizePathKey(t.path) === key)) {
-                    agregarCarpetaACola(pendingPath, modeEl ? modeEl.value : 'normal');
+            }
+
+            if (!scanQueue.length && currentProject) {
+                if (currentScanTargets && currentScanTargets.length) {
+                    scanQueue = currentScanTargets.map(t => ({
+                        path: t.path,
+                        mode: t.mode,
+                        ...(t.isFile ? { isFile: true, name: t.name, folder: t.folder } : {}),
+                        ...(t.files && t.files.length ? { files: t.files } : {})
+                    }));
+                    renderScanQueue();
                 }
             }
 
@@ -2417,7 +2836,12 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 return;
             }
 
-            const targets = scanQueue.map(t => ({ path: t.path, mode: t.mode }));
+            const targets = scanQueue.map(t => {
+                const item = { path: t.path, mode: t.mode };
+                if (t.isFile) item.isFile = true;
+                if (t.files && t.files.length) item.files = t.files;
+                return item;
+            });
             const loadingEl = document.getElementById('loading');
             if (loadingEl) {
                 loadingEl.classList.add('show');
@@ -2451,8 +2875,16 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
 
                 currentScanTargets = resolvedTargets;
                 currentProject = compositeProjectKey(resolvedTargets);
-                currentProjectView = 'all';
-                scanQueue = resolvedTargets.map(t => ({ path: t.path, mode: t.mode }));
+
+                scanQueue = resolvedTargets.map(t => {
+                    const orig = scanQueue.find(q => pathsMatch(q.path, t.path));
+                    const item = { path: t.path, mode: t.mode };
+                    if (orig && orig.isFile) item.isFile = true;
+                    if (orig && orig.name) item.name = orig.name;
+                    if (orig && orig.folder) item.folder = orig.folder;
+                    if (orig && orig.files && orig.files.length) item.files = orig.files;
+                    return item;
+                });
                 renderScanQueue();
                 if (pathEl) pathEl.value = '';
 
@@ -2463,6 +2895,22 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 }));
 
                 const projects = await loadSavedProjects();
+                const savedKeys = findSavedProjectKeys(projects, currentProject);
+                const savedProj = savedKeys.length ? projects[savedKeys[0]] : projects[currentProject];
+
+                // Respect saved folder filter and project view
+                if (savedProj) {
+                    if (savedProj.folderFilter && savedProj.folderFilter !== 'all') {
+                        currentFolderFilter = savedProj.folderFilter;
+                    }
+                    if (savedProj.projectView && savedProj.projectView !== 'all') {
+                        currentProjectView = savedProj.projectView;
+                    }
+                    if (Array.isArray(savedProj.excludedDiffFolders)) {
+                        excludedDiffFolders = savedProj.excludedDiffFolders.slice();
+                    }
+                }
+
                 const baselineIdx = baselineHasFileDetail() ? buildBaselineFileIndex() : null;
                 projectFiles.forEach(file => {
                     applySavedFileSettings(file, projects, currentProject);
@@ -2497,9 +2945,16 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 renderFolderBreakdown();
                 renderTable();
                 updateStats();
+                const gitWrap = document.getElementById('gitCompareWrap');
+                if (gitWrap) {
+                    gitWrap.style.display = (data.gitAvailable !== false) ? 'block' : 'none';
+                    if (data.gitAvailable !== false) {
+                        cargarCommitsGit();
+                    }
+                }
                 const modeNote = resolvedTargets.map(t =>
                     (t.label || pathBasename(t.path)) + ': ' + modeLabel(t.mode)
-                ).join(' Â· ');
+                ).join(' · ');
                 showToast('Escaneado: ' + data.files.length + ' archivos (' + modeNote + ')');
             })
             .catch(error => {
@@ -2508,7 +2963,6 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             });
         }
 
-        // Cargar proyecto guardado (anade a la cola y escanea)
         function cargarProyecto(path) {
             scanQueue = [{ path: path, mode: document.getElementById('scanMode').value || 'normal' }];
             renderScanQueue();
@@ -2516,8 +2970,8 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         }
 
         // Guardar configuracion
-        async function guardarConfiguracion() {
-            if (!currentProject || projectFiles.length === 0) return;
+        async function guardarConfiguracion(silent) {
+            if (!currentProject || projectFiles.length === 0) return false;
 
             const projects = await loadSavedProjects();
 
@@ -2537,24 +2991,45 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 ? targetsToSave.map(t => t.label || pathBasename(t.path))
                 : [pathBasename(currentProject)];
 
-            projects[currentProject] = {
-                ...(projects[currentProject] || {}),
+            const newProjectKey = targetsToSave.length
+                ? compositeProjectKey(targetsToSave)
+                : currentProject;
+
+            const targetKey = newProjectKey || currentProject;
+            const savedKeys = findSavedProjectKeys(projects, targetKey);
+            const actualKey = savedKeys.length ? savedKeys[0] : targetKey;
+            const prevProjectData = projects[actualKey] || projects[currentProject] || {};
+
+            projects[actualKey] = {
+                ...prevProjectData,
                 name: labels.join(' + '),
                 targets: targetsToSave,
                 complexities: complexities,
                 excludedFiles: excludedFiles,
+                excludedDiffFolders: excludedDiffFolders || [],
+                folderFilter: currentFolderFilter || 'all',
+                projectView: currentProjectView || 'all',
                 lastScan: new Date().toISOString()
             };
+
+            // Clean up obsolete key if target key changed
+            if (actualKey !== currentProject && projects[currentProject]) {
+                delete projects[currentProject];
+            }
+            currentProject = actualKey;
 
             // Sincronizar cada carpeta individual para que "solo relavera" y el filtro
             // en relavera+flujo usen las mismas complejidades / exclusiones.
             targetsToSave.forEach(t => {
                 const pathKey = t.path;
                 if (!pathKey) return;
-                const perComplexities = { ...((projects[pathKey] && projects[pathKey].complexities) || {}) };
-                const perExcluded = { ...((projects[pathKey] && projects[pathKey].excludedFiles) || {}) };
+                const existingKey = Object.keys(projects).find(pk => pathsMatch(pk, pathKey)) || pathKey;
+                const prev = projects[existingKey] || {};
+                const perComplexities = { ...(prev.complexities || {}) };
+                const perExcluded = { ...(prev.excludedFiles || {}) };
+
                 projectFiles.forEach(file => {
-                    if (!file.projectPath || normalizePathKey(file.projectPath) !== normalizePathKey(pathKey)) return;
+                    if (!pathsMatch(file.projectPath, pathKey) && !pathsMatch(file.project, t.label || pathBasename(pathKey))) return;
                     const ck = fileComplexityKey(file);
                     perComplexities[ck] = file.complexity;
                     fileComplexityKeyVariants(file).forEach(k => {
@@ -2562,8 +3037,8 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                         else delete perExcluded[k];
                     });
                 });
-                const prev = projects[pathKey] || {};
-                projects[pathKey] = {
+
+                projects[existingKey] = {
                     ...prev,
                     name: t.label || pathBasename(pathKey),
                     targets: [{ path: pathKey, mode: t.mode, label: t.label || pathBasename(pathKey) }],
@@ -2577,14 +3052,17 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             if (success) {
                 renderProjectList();
                 renderScanQueue();
-                if (targetsModesChanged(prevTargets, targetsToSave)) {
-                    showToast('Tipo de conteo guardado. Pulse \u00abEscanear todo\u00bb para recalcular lineas/horas.', 'warning');
-                } else {
-                    showToast('Configuracion guardada');
+                if (!silent) {
+                    if (targetsModesChanged(prevTargets, targetsToSave)) {
+                        showToast('Tipo de conteo guardado. Pulse «Escanear todo» para recalcular líneas/horas.', 'warning');
+                    } else {
+                        showToast('Configuración guardada (carpetas, complejidades y exclusiones)');
+                    }
                 }
             }
+            return success;
         }
-        
+
         // Cambiar complejidad
         function cambiarComplejidad(index, newComplexity) {
             projectFiles[index].complexity = newComplexity;
@@ -2603,11 +3081,13 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 if (element) element.classList.add('active');
             } else if (type === 'folder') {
                 currentFolderFilter = value;
+                const sel = document.getElementById('folderFilter');
+                if (sel && sel.value !== value) sel.value = value;
             } else if (type === 'complexity') {
                 currentComplexityFilter = value;
             } else if (type === 'diff') {
                 if (!baselineHasFileDetail() && value !== 'all') {
-                    showToast('Falta el listado de archivos. Suba el PDF gerencial con \u00abA\u00f1adir listado\u00bb.', 'warning');
+                    showToast('Falta el listado de archivos. Suba el PDF gerencial con «Añadir listado».', 'warning');
                     currentDiffFilter = 'all';
                     const sel = document.getElementById('diffFilter');
                     if (sel) sel.value = 'all';
@@ -2620,8 +3100,10 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 currentInclusionFilter = value || 'active';
             }
             renderTable();
+            renderFolderBreakdown();
+            updateStats();
         }
-        
+
         function syncFolderFilterOptions() {
             const sel = document.getElementById('folderFilter');
             if (!sel) return;
@@ -2653,12 +3135,12 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 o.value = folder;
                 o.textContent = folder === 'ROOT'
                     ? 'ROOT'
-                    : (folder.indexOf('/') < 0 ? folder + ' (todo el m\u00f3dulo)' : folder);
+                    : (folder.indexOf('/') < 0 ? folder + ' (todo el módulo)' : folder);
                 parent.appendChild(o);
             }
             if (globales.length) {
                 const og = document.createElement('optgroup');
-                og.label = 'M\u00f3dulos (carpeta global)';
+                og.label = 'Módulos (carpeta global)';
                 globales.forEach(folder => appendFolderOption(og, folder));
                 sel.appendChild(og);
             }
@@ -2668,12 +3150,21 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 subcarpetas.forEach(folder => appendFolderOption(os, folder));
                 sel.appendChild(os);
             }
-            if (prev !== 'all' && folders[prev]) {
+            if (prev !== 'all' && (folders[prev] || list.some(l => l.toLowerCase() === prev.toLowerCase() || l.toLowerCase().startsWith(prev.toLowerCase() + '/')))) {
                 sel.value = prev;
                 currentFolderFilter = prev;
-            } else {
+            } else if (prev === 'all') {
                 sel.value = 'all';
                 currentFolderFilter = 'all';
+            } else {
+                const matched = list.find(l => l.toLowerCase() === prev.toLowerCase() || l.toLowerCase().startsWith(prev.toLowerCase() + '/'));
+                if (matched) {
+                    sel.value = matched;
+                    currentFolderFilter = matched;
+                } else {
+                    sel.value = 'all';
+                    currentFolderFilter = 'all';
+                }
             }
         }
 
@@ -2811,9 +3302,18 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
 
                 let diffBadge = '';
                 let linesDeltaHtml = '';
+                const isDiffEx = isFolderDiffExcluded(file.folder || 'ROOT');
                 if (baselineIndex) {
                     const diff = getFileDiffInfo(file, baselineIndex);
-                    if (diff) {
+                    if (isDiffEx) {
+                        if (diff && diff.refFile) {
+                            diffBadge = '<span class="diff-badge badge-diff-omitted" title="Diferencia no contabilizada en este reporte (congelado a referencia)">Diff omitida</span>';
+                            linesDeltaHtml = '<span class="diff-lines-delta" style="color:var(--muted);"><i class="fas fa-clock-rotate-left"></i> ref: ' + Number(diff.refLines).toLocaleString() + '</span>';
+                        } else {
+                            diffBadge = '<span class="diff-badge badge-diff-omitted" title="Archivo nuevo en carpeta con diferencia no contabilizada (0h en reporte)">Nuevo (omitido)</span>';
+                            linesDeltaHtml = '<span class="diff-lines-delta down">no contabilizado</span>';
+                        }
+                    } else if (diff) {
                         if (diff.status === 'nuevo') {
                             diffBadge = '<span class="diff-badge diff-badge-nuevo">Nuevo</span>';
                             linesDeltaHtml = '<span class="diff-lines-delta up">+' + file.lines.toLocaleString() + ' vs ref.</span>';
@@ -2838,10 +3338,14 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
 
                 let hoursDeltaTd = '';
                 if (showHoursDelta) {
-                    const refFile = baselineIndex ? findBaselineFile(file, baselineIndex) : null;
-                    const curH = file.lines / tasaComplejidad(file.complexity);
-                    const refH = refFile ? horasDeArchivoNum(refFile) : 0;
-                    hoursDeltaTd = '<td class="hours-delta-col">' + formatHoursDeltaHtml(curH - refH) + '</td>';
+                    if (isDiffEx) {
+                        hoursDeltaTd = '<td class="hours-delta-col"><span class="hours-delta-cell delta-zero" title="Diferencia de horas no contabilizada (+0.00h)">0.00 h</span></td>';
+                    } else {
+                        const refFile = baselineIndex ? findBaselineFile(file, baselineIndex) : null;
+                        const curH = file.lines / tasaComplejidad(file.complexity);
+                        const refH = refFile ? horasDeArchivoNum(refFile) : 0;
+                        hoursDeltaTd = '<td class="hours-delta-col">' + formatHoursDeltaHtml(curH - refH) + '</td>';
+                    }
                 }
 
                 html += `
@@ -2899,19 +3403,24 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 baja: { files: 0, lines: 0, hours: 0 }
             };
 
+            const baselineIdx = baselineHasFileDetail() ? buildBaselineFileIndex() : null;
             const visibleFiles = getActiveFiles();
             visibleFiles.forEach(file => {
-                totalLines += file.lines;
-                totalHours += file.lines / tasaComplejidad(file.complexity);
-                const sugKey = file.suggestedComplexity != null ? file.suggestedComplexity : file.complexity;
-                suggestedHoursTotal += file.lines / tasaComplejidad(sugKey);
+                const eff = getFileEffectiveMetrics(file, baselineIdx);
+                totalLines += eff.lines;
+                totalHours += eff.hours;
+                const sugKey = file.suggestedComplexity != null ? file.suggestedComplexity : eff.complexity;
+                suggestedHoursTotal += eff.lines / tasaComplejidad(sugKey);
 
-                if (file.type === 'php') { php.lines += file.lines; php.files++; }
-                else if (file.type === 'js') { js.lines += file.lines; js.files++; }
-                else if (file.type === 'html') { html.lines += file.lines; html.files++; }
+                if (file.type === 'php') { php.lines += eff.lines; php.files++; }
+                else if (file.type === 'js') { js.lines += eff.lines; js.files++; }
+                else if (file.type === 'html') { html.lines += eff.lines; html.files++; }
 
-                complexity[file.complexity].files++;
-                complexity[file.complexity].lines += file.lines;
+                const compKey = eff.complexity || file.complexity || 'media';
+                if (complexity[compKey]) {
+                    complexity[compKey].files++;
+                    complexity[compKey].lines += eff.lines;
+                }
             });
 
             // Horas por complejidad: lineas / tasa (evita error por redondeo por archivo)
@@ -3015,14 +3524,19 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 baja: { files: 0, lines: 0, hours: 0 }
             };
             
+            const baselineIdxPdf = baselineHasFileDetail() ? buildBaselineFileIndex() : null;
             pdfFiles.forEach(file => {
-                totalLines += file.lines;
-                totalHours += file.lines / tasaComplejidad(file.complexity);
-                if (file.type === 'php') { php.lines += file.lines; php.files++; }
-                else if (file.type === 'js') { js.lines += file.lines; js.files++; }
-                else if (file.type === 'html') { html.lines += file.lines; html.files++; }
-                complexity[file.complexity].files++;
-                complexity[file.complexity].lines += file.lines;
+                const eff = getFileEffectiveMetrics(file, baselineIdxPdf);
+                totalLines += eff.lines;
+                totalHours += eff.hours;
+                if (file.type === 'php') { php.lines += eff.lines; php.files++; }
+                else if (file.type === 'js') { js.lines += eff.lines; js.files++; }
+                else if (file.type === 'html') { html.lines += eff.lines; html.files++; }
+                const compKey = eff.complexity || file.complexity || 'media';
+                if (complexity[compKey]) {
+                    complexity[compKey].files++;
+                    complexity[compKey].lines += eff.lines;
+                }
             });
             complexity.alta.hours = complexity.alta.lines / RATES.alta;
             complexity['media-alta'].hours = complexity['media-alta'].lines / RATES['media-alta'];
@@ -3503,157 +4017,226 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
         })();
     
 
-        // === GESTION DE COMPARATIVA POR PERIODOS Y PDF COMPARATIVA ===
+        // === GESTION DE COMPARATIVA POR GIT (RAMA DESARROLLO) Y PDF COMPARATIVA ===
         let currentCompareMode = 'file';
 
         function setCompareMode(mode) {
             currentCompareMode = mode;
             const tabFile = document.getElementById('tabCompareFile');
-            const tabPeriod = document.getElementById('tabComparePeriod');
+            const tabGit = document.getElementById('tabCompareGit');
             const boxFile = document.getElementById('compareFileToolbar');
-            const boxPeriod = document.getElementById('comparePeriodBox');
+            const boxGit = document.getElementById('compareGitBox');
 
-            if (mode === 'period') {
+            if (mode === 'git') {
                 if (tabFile) tabFile.classList.remove('active');
-                if (tabPeriod) tabPeriod.classList.add('active');
+                if (tabGit) tabGit.classList.add('active');
                 if (boxFile) boxFile.style.display = 'none';
-                if (boxPeriod) boxPeriod.style.display = 'block';
-                initPeriodDates();
-                populateSnapshotPicker();
+                if (boxGit) boxGit.style.display = 'block';
+                cargarCommitsGit();
             } else {
                 if (tabFile) tabFile.classList.add('active');
-                if (tabPeriod) tabPeriod.classList.remove('active');
+                if (tabGit) tabGit.classList.remove('active');
                 if (boxFile) boxFile.style.display = 'flex';
-                if (boxPeriod) boxPeriod.style.display = 'none';
+                if (boxGit) boxGit.style.display = 'none';
             }
         }
 
-        function initPeriodDates() {
-            const toInput = document.getElementById('periodDateTo');
-            const fromInput = document.getElementById('periodDateFrom');
-            const today = new Date();
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(today.getDate() - 7);
+        async function cargarCommitsGit() {
+            const select = document.getElementById('gitCommitSelect');
+            const badge = document.getElementById('gitBranchBadge');
+            const statusEl = document.getElementById('gitCompareStatus');
+            if (!select) return;
 
-            if (toInput && !toInput.value) toInput.value = today.toISOString().split('T')[0];
-            if (fromInput && !fromInput.value) fromInput.value = sevenDaysAgo.toISOString().split('T')[0];
-        }
+            select.innerHTML = '<option value="">Cargando commits de rama desarrollo...</option>';
+            try {
+                const resp = await fetch('dashboard_scan.php?action=git_commits');
+                const data = await resp.json();
+                if (!data.success || !Array.isArray(data.commits)) {
+                    select.innerHTML = '<option value="origin/desarrollo">origin/desarrollo (remoto)</option><option value="desarrollo">desarrollo (local)</option>';
+                    if (statusEl) statusEl.textContent = data.error || 'No se pudieron leer los commits individuales de Git.';
+                    return;
+                }
 
-        function seleccionarPeriodoRapido(dias, btnEl) {
-            document.querySelectorAll('.period-chip').forEach(c => c.classList.remove('active'));
-            if (btnEl) btnEl.classList.add('active');
+                if (badge && data.branch) {
+                    badge.textContent = data.branch;
+                }
 
-            const toInput = document.getElementById('periodDateTo');
-            const fromInput = document.getElementById('periodDateFrom');
-            const today = new Date();
-            if (toInput) toInput.value = today.toISOString().split('T')[0];
+                const mainBranch = data.branch || 'origin/desarrollo';
+                let html = '<option value="' + mainBranch + '">&#x2605; &Uacute;ltimo estado en ' + mainBranch + '</option>';
+                if (mainBranch !== 'desarrollo') {
+                    html += '<option value="desarrollo">desarrollo (rama local)</option>';
+                }
+                if (mainBranch !== 'origin/desarrollo') {
+                    html += '<option value="origin/desarrollo">origin/desarrollo (rama remota)</option>';
+                }
 
-            if (dias === 'all') {
-                if (fromInput) fromInput.value = '2020-01-01';
-            } else {
-                const past = new Date();
-                past.setDate(today.getDate() - Number(dias));
-                if (fromInput) fromInput.value = past.toISOString().split('T')[0];
-            }
-            aplicarFiltroPeriodo();
-        }
+                data.commits.forEach(c => {
+                    const subj = String(c.subject || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                    const auth = String(c.author || '').replace(/</g, '&lt;');
+                    html += '<option value="' + c.hash + '">' + c.hash + ' &middot; ' + c.date + ' &middot; ' + subj + ' (' + auth + ')</option>';
+                });
 
-        async function populateSnapshotPicker() {
-            const picker = document.getElementById('snapshotPicker');
-            const wrap = document.getElementById('snapshotPickerWrap');
-            if (!picker || !currentProject) return;
-
-            const projects = await loadSavedProjects();
-            const proj = projects[currentProject] || {};
-            const snapshots = Array.isArray(proj.snapshots) ? proj.snapshots : [];
-
-            if (snapshots.length >= 1) {
-                if (wrap) wrap.style.display = 'inline-flex';
-                picker.innerHTML = '<option value="">-- Elige snapshot guardado --</option>' +
-                    snapshots.map(s => {
-                        const d = s.dateStr || (s.at ? s.at.split('T')[0] : '');
-                        const l = s.totalLines ? s.totalLines.toLocaleString() + ' lin.' : '';
-                        const h = s.totalHours ? s.totalHours.toFixed(1) + ' h' : '';
-                        return '<option value="' + s.id + '">' + d + ' (' + l + ' · ' + h + ')</option>';
-                    }).join('');
-            } else {
-                if (wrap) wrap.style.display = 'none';
+                select.innerHTML = html;
+                if (statusEl) statusEl.textContent = 'Listo. ' + data.commits.length + ' commits disponibles en rama desarrollo.';
+            } catch (err) {
+                console.error('Error cargando commits Git:', err);
+                select.innerHTML = '<option value="origin/desarrollo">origin/desarrollo</option><option value="desarrollo">desarrollo</option>';
+                if (statusEl) statusEl.textContent = 'Error al consultar Git: ' + err.message;
             }
         }
 
-        async function aplicarFiltroPeriodo() {
+        async function ejecutarComparativaGit() {
             if (!projectFiles || !projectFiles.length) {
-                showToast('Escanea el proyecto primero para comparar periodos', 'warning');
+                showToast('Escanea el proyecto primero para comparar con la rama de desarrollo', 'warning');
                 return;
             }
 
-            const fromVal = document.getElementById('periodDateFrom') ? document.getElementById('periodDateFrom').value : '';
-            const toVal = document.getElementById('periodDateTo') ? document.getElementById('periodDateTo').value : '';
-            const snapId = document.getElementById('snapshotPicker') ? document.getElementById('snapshotPicker').value : '';
+            const select = document.getElementById('gitCommitSelect');
+            const ref = (select && select.value) ? select.value.trim() : 'origin/desarrollo';
+            const btn = document.getElementById('btnEjecutarGitCompare');
+            const statusEl = document.getElementById('gitCompareStatus');
 
-            const projects = await loadSavedProjects();
-            const proj = projects[currentProject] || {};
-            const snapshots = Array.isArray(proj.snapshots) ? proj.snapshots : [];
-            const prevFiles = Array.isArray(proj.previousFiles) ? proj.previousFiles : (Array.isArray(proj.lastFiles) ? proj.lastFiles : []);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Comparando con Git...';
+            }
+            if (statusEl) {
+                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Consultando diferencias con Git frente a ' + ref + '...';
+            }
 
-            let selectedSnap = null;
-
-            if (snapId) {
-                selectedSnap = snapshots.find(s => s.id === snapId);
-            } else if (fromVal && snapshots.length) {
-                const fromTs = new Date(fromVal).getTime();
-                const sorted = snapshots.slice().sort((a, b) => {
-                    const diffA = Math.abs(new Date(a.at || a.dateStr).getTime() - fromTs);
-                    const diffB = Math.abs(new Date(b.at || b.dateStr).getTime() - fromTs);
-                    return diffA - diffB;
+            try {
+                const resp = await fetch('dashboard_scan.php?action=git_compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ commit: ref })
                 });
-                selectedSnap = sorted[0];
+                const data = await resp.json();
+
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Comparar con desarrollo';
+                }
+
+                if (!data.success) {
+                    showToast('Error en comparativa Git: ' + (data.error || 'Desconocido'), 'error');
+                    if (statusEl) statusEl.textContent = 'Error: ' + (data.error || 'No se pudo comparar');
+                    return;
+                }
+
+                const diffMap = data.diffMap || {};
+                const statusMap = data.statusMap || {};
+                const commitInfo = data.commitInfo || {};
+
+                let matchedDiffCount = 0;
+                let totalAdded = 0;
+                let totalDeleted = 0;
+
+                const refFilesList = projectFiles.map(file => {
+                    const normGitPath = String(file.repoPath || '').replace(/\\/g, '/');
+                    const fileName = file.name;
+                    const folder = file.folder || 'ROOT';
+                    const curLines = Number(file.lines) || 0;
+                    const comp = file.complexity || 'media';
+                    const rate = tasaComplejidad(comp);
+
+                    let diffEntry = null;
+                    let gitStatus = '';
+
+                    if (normGitPath && diffMap[normGitPath]) {
+                        diffEntry = diffMap[normGitPath];
+                        gitStatus = statusMap[normGitPath] || '';
+                    } else if (normGitPath) {
+                        const k = Object.keys(diffMap).find(p => p.toLowerCase() === normGitPath.toLowerCase());
+                        if (k) {
+                            diffEntry = diffMap[k];
+                            gitStatus = statusMap[k] || '';
+                        }
+                    }
+
+                    if (!diffEntry) {
+                        const candidates = Object.keys(diffMap).filter(p => {
+                            const b = pathBasename(p);
+                            return b.toLowerCase() === fileName.toLowerCase();
+                        });
+                        if (candidates.length === 1) {
+                            diffEntry = diffMap[candidates[0]];
+                            gitStatus = statusMap[candidates[0]] || '';
+                        }
+                    }
+
+                    let refLines = curLines;
+                    if (diffEntry) {
+                        matchedDiffCount++;
+                        totalAdded += (diffEntry.added || 0);
+                        totalDeleted += (diffEntry.deleted || 0);
+                        if (gitStatus === 'A') {
+                            refLines = 0;
+                        } else {
+                            refLines = Math.max(0, curLines - (diffEntry.delta || 0));
+                        }
+                    }
+
+                    const refHours = Math.round((refLines / rate) * 100) / 100;
+                    return {
+                        name: fileName,
+                        folder: folder,
+                        type: file.type,
+                        lines: refLines,
+                        complexity: comp,
+                        hours: refHours
+                    };
+                });
+
+                const m = computeMetrics(refFilesList);
+                const shortRef = (commitInfo.hash ? commitInfo.hash.slice(0, 8) : ref);
+                const commitTitle = commitInfo.subject ? (' (' + shortRef + ': ' + commitInfo.subject + ')') : (' (' + ref + ')');
+
+                clientBaseline = {
+                    source: 'git',
+                    gitRef: ref,
+                    commitInfo: commitInfo,
+                    periodLabel: 'Git desarrollo ' + shortRef,
+                    fileName: 'Git desarrollo' + commitTitle,
+                    listSourceFileName: 'Git diff vs ' + ref,
+                    loadedAt: new Date().toISOString(),
+                    totalLines: m.totalLines,
+                    totalHours: m.totalHours,
+                    fileCount: m.fileCount,
+                    sourceDetail: 'Comparativa Git frente a desarrollo ' + commitTitle + ' por ' + (commitInfo.author || 'Git') + ' el ' + (commitInfo.date || ''),
+                    files: refFilesList
+                };
+
+                persistClientBaseline();
+                renderClientBaselinePanel();
+                renderClientBaselineCompare();
+                syncHoursComparePdfOption();
+                syncDiffFilterControl();
+                updateStats();
+                renderTable();
+                renderFolderBreakdown();
+
+                const btnPdfGit = document.getElementById('btnPdfCompareGit');
+                if (btnPdfGit) btnPdfGit.disabled = false;
+                const btnPdf = document.getElementById('btnPdfCompare');
+                if (btnPdf) btnPdf.disabled = false;
+
+                const curM = computeMetrics(getActiveFiles());
+                const deltaH = curM.totalHours - m.totalHours;
+                const sign = deltaH >= 0 ? '+' : '';
+                const msg = 'Comparativa Git lista: ' + matchedDiffCount + ' archivos modificados (+' + totalAdded + ' / -' + totalDeleted + ' l&iacute;n.) | Dif. horas: ' + sign + deltaH.toFixed(2) + ' h';
+                if (statusEl) {
+                    statusEl.innerHTML = '<strong><i class="fas fa-check-circle" style="color:var(--success);"></i> ' + msg + '</strong>';
+                }
+                showToast(msg);
+            } catch (err) {
+                console.error('Error al ejecutar comparativa Git:', err);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Comparar con desarrollo';
+                }
+                if (statusEl) statusEl.textContent = 'Error al ejecutar comparativa Git: ' + err.message;
+                showToast('Error al ejecutar comparativa Git: ' + err.message, 'error');
             }
-
-            let refFilesList = [];
-            let refLabel = '';
-
-            if (selectedSnap && Array.isArray(selectedSnap.files) && selectedSnap.files.length) {
-                refFilesList = selectedSnap.files;
-                refLabel = 'Snapshot del ' + (selectedSnap.dateStr || selectedSnap.at.split('T')[0]);
-            } else if (prevFiles && prevFiles.length) {
-                refFilesList = prevFiles;
-                refLabel = 'Escaneo previo guardado (Periodo: ' + (fromVal || 'inicio') + ' a ' + (toVal || 'hoy') + ')';
-            } else {
-                showToast('No hay historial previo para este periodo. Se usara el estado actual como base.', 'warning');
-                refFilesList = serializeFilesForStore(projectFiles);
-                refLabel = 'Periodo (' + (fromVal || 'inicio') + ' a ' + (toVal || 'hoy') + ')';
-            }
-
-            const m = computeMetrics(refFilesList);
-            clientBaseline = {
-                source: 'period',
-                periodLabel: 'Periodo: ' + (fromVal || 'Inicio') + ' a ' + (toVal || 'Hoy'),
-                fileName: refLabel,
-                listSourceFileName: refLabel,
-                loadedAt: new Date().toISOString(),
-                totalLines: m.totalLines,
-                totalHours: m.totalHours,
-                fileCount: m.fileCount,
-                sourceDetail: 'Periodo de analisis: ' + (fromVal || 'Inicio') + ' a ' + (toVal || 'Hoy') + ' (' + refFilesList.length + ' archivos de referencia)',
-                files: refFilesList
-            };
-
-            persistClientBaseline();
-            renderClientBaselinePanel();
-            renderClientBaselineCompare();
-            syncHoursComparePdfOption();
-            syncDiffFilterControl();
-            updateStats();
-            renderTable();
-
-            const btnPComp = document.getElementById('btnPdfCompare');
-            const btnPCompPeriod = document.getElementById('btnPdfComparePeriod');
-            if (btnPComp) btnPComp.disabled = false;
-            if (btnPCompPeriod) btnPCompPeriod.disabled = false;
-
-            const matches = countBaselineMatches();
-            showToast('Comparando periodo (' + (fromVal || 'Inicio') + ' a ' + (toVal || 'Hoy') + ') | Casados: ' + matches.matched + '/' + projectFiles.length);
         }
 
         // === GENERAR PDF DE COMPARATIVA EXCLUSIVO ===
@@ -3667,7 +4250,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 return;
             }
 
-            const btn = document.getElementById('btnPdfCompare') || document.getElementById('btnPdfComparePeriod');
+            const btn = document.getElementById('btnPdfCompare') || document.getElementById('btnPdfComparePeriod') || document.getElementById('btnPdfCompareGit');
             if (btn) {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
@@ -3693,6 +4276,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
             let totalCurrentLinesCalculated = 0;
 
             activeFiles.forEach(file => {
+                const isDiffEx = isFolderDiffExcluded(file.folder || 'ROOT');
                 const ref = findBaselineFile(file, idx);
                 // Si existe en el baseline importado, se mantiene estrictamente la complejidad del JSON importado
                 const effectiveComplexity = (ref && ref.complexity) ? ref.complexity : (file.complexity || 'media');
@@ -3700,6 +4284,53 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
 
                 const curL = Number(file.lines) || 0;
                 const curH = curL / tasaComplejidad(effectiveComplexity);
+
+                if (isDiffEx) {
+                    if (ref) {
+                        seenInCur.add(fileRefKey(ref.folder, ref.name));
+                        const refL = Number(ref.lines) || 0;
+                        const refH = Number(horasDeArchivoNum(ref)) || (refL / tasaComplejidad(effectiveComplexity));
+
+                        totalCurrentLinesCalculated += refL;
+                        totalCurrentHoursCalculated += refH;
+
+                        if (compHoursCur[effectiveComplexity] !== undefined) compHoursCur[effectiveComplexity] += refH;
+                        if (compHoursRef[effectiveComplexity] !== undefined) compHoursRef[effectiveComplexity] += refH;
+
+                        const folderKey = file.folder || 'ROOT';
+                        if (!folderMap[folderKey]) {
+                            folderMap[folderKey] = {
+                                name: folderKey,
+                                refLines: 0, curLines: 0,
+                                refHours: 0, curHours: 0,
+                                refFiles: 0, curFiles: 0,
+                                isDiffExcluded: true
+                            };
+                        }
+                        folderMap[folderKey].curLines += refL;
+                        folderMap[folderKey].curHours += refH;
+                        folderMap[folderKey].refLines += refL;
+                        folderMap[folderKey].refHours += refH;
+                        folderMap[folderKey].curFiles += 1;
+                        folderMap[folderKey].refFiles += 1;
+                        folderMap[folderKey].isDiffExcluded = true;
+
+                        unchanged.push({
+                            name: file.name,
+                            folder: file.folder,
+                            type: file.type,
+                            curLines: refL,
+                            refLines: refL,
+                            deltaLines: 0,
+                            curHours: refH,
+                            refHours: refH,
+                            deltaHours: 0,
+                            complexity: effectiveComplexity,
+                            status: 'SIN CAMBIO'
+                        });
+                    }
+                    return;
+                }
 
                 totalCurrentLinesCalculated += curL;
                 totalCurrentHoursCalculated += curH;
@@ -3836,7 +4467,7 @@ $dashboardPathHintEsc = htmlspecialchars($dashboardPathHint, ENT_QUOTES, 'UTF-8'
                 ? currentScanTargets.map(t => t.label || pathBasename(t.path)).join(' + ')
                 : pathBasename(currentProject || 'Proyecto');
             const dateStr = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            const scopeLabel = b.periodLabel || ('Referencia: ' + (b.fileName || 'Informe de referencia'));
+            const scopeLabel = b.source === 'git' ? (b.fileName || ('Git desarrollo (' + (b.gitRef || 'desarrollo') + ')')) : (b.periodLabel || ('Referencia: ' + (b.fileName || 'Informe de referencia')));
 
             const ink = '#1c1712';
             const teal = '#1b6b63';
