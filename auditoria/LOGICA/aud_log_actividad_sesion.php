@@ -67,6 +67,32 @@ if (!function_exists('aud_ses_asegurar_esquema')) {
 			return;
 		}
 
+		// La tabla sesion puede no existir (importaciones previas del dump
+		// antiguo o instalaciones nuevas). Crearla de forma idempotente con el
+		// esquema completo que el resto del modulo espera; las sentencias
+		// CREATE/ALTER siguientes son no-op cuando ya existe.
+		@mysqli_query($con, "CREATE TABLE IF NOT EXISTS `auditoria`.`sesion` (
+			`Ses_Cod` int(11) NOT NULL,
+			`Usu_Cod` int(11) NOT NULL,
+			`Ses_Int` datetime DEFAULT NULL,
+			`Ses_Out` datetime DEFAULT NULL,
+			`Emp_Cod` int(11) DEFAULT NULL,
+			`Suc_Cod` int(11) DEFAULT NULL,
+			`Ses_Ip` varchar(45) DEFAULT NULL,
+			`Ses_Ubi` varchar(120) DEFAULT NULL,
+			`Ses_Nav` varchar(255) DEFAULT NULL,
+			`Ses_Ult_Act` datetime DEFAULT NULL,
+			`Ses_Min_Uso` int(11) NOT NULL DEFAULT 0,
+			`Ses_Est` char(1) NOT NULL DEFAULT 'A',
+			`Ses_Token` varchar(64) DEFAULT NULL,
+			PRIMARY KEY (`Ses_Cod`),
+			KEY `Usu_Cod` (`Usu_Cod`),
+			KEY `idx_ses_est_act` (`Ses_Est`, `Ses_Ult_Act`),
+			KEY `idx_ses_emp` (`Emp_Cod`),
+			KEY `idx_ses_usu` (`Usu_Cod`),
+			KEY `idx_ses_int` (`Ses_Int`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 		$columnasActuales = array();
 		$r = @mysqli_query($con, sentencias_actividad_sesion(1, array()));
 		if ($r) {
