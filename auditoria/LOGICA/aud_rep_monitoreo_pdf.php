@@ -260,9 +260,53 @@ function aud_generar_reporte_monitoreo_pdf($datos, $destino = 'I', $rutaArchivo 
 		}
 	}
 
+	// Detalle de movimientos filtrados (solo si el llamador aporta filas: Monitoreo de Actividades)
+	$detalle = (isset($datos['filas']) && is_array($datos['filas'])) ? $datos['filas'] : array();
+	$numObservaciones = 6;
+	if (!empty($detalle)) {
+		$numObservaciones = 7;
+		$pdf->Ln(2);
+		$pdf->SectionHeader('6. DETALLE DE MOVIMIENTOS DEL FILTRO APLICADO');
+
+		$pdf->SetFont('Helvetica', 'B', 7);
+		$pdf->SetFillColor(241, 245, 249);
+		$pdf->SetTextColor(51, 65, 85);
+		$pdf->Cell(18, 6, utf8_decode('Fecha'), 1, 0, 'L', true);
+		$pdf->Cell(11, 6, utf8_decode('Hora'), 1, 0, 'C', true);
+		$pdf->Cell(27, 6, utf8_decode('Usuario'), 1, 0, 'L', true);
+		$pdf->Cell(24, 6, utf8_decode('Módulo'), 1, 0, 'L', true);
+		$pdf->Cell(24, 6, utf8_decode('Directorio'), 1, 0, 'L', true);
+		$pdf->Cell(24, 6, utf8_decode('Proceso'), 1, 0, 'L', true);
+		$pdf->Cell(38, 6, utf8_decode('Actividad'), 1, 0, 'L', true);
+		$pdf->Cell(24, 6, utf8_decode('Planta'), 1, 1, 'L', true);
+
+		$pdf->SetFont('Helvetica', '', 7);
+		$limiteDetalle = 500;
+		$mostradas = 0;
+		foreach ($detalle as $f) {
+			if ($mostradas >= $limiteDetalle) {
+				break;
+			}
+			$mostradas++;
+			$pdf->SetTextColor(15, 23, 42);
+			$pdf->Cell(18, 5, utf8_decode(aud_pdf_acotar(isset($f['fecha']) ? $f['fecha'] : '', 16)), 1, 0, 'L');
+			$pdf->Cell(11, 5, utf8_decode(aud_pdf_acotar(isset($f['hora']) ? $f['hora'] : '', 8)), 1, 0, 'C');
+			$pdf->Cell(27, 5, utf8_decode(aud_pdf_acotar(isset($f['usuario']) ? $f['usuario'] : '', 24)), 1, 0, 'L');
+			$pdf->Cell(24, 5, utf8_decode(aud_pdf_acotar(isset($f['modulo']) ? $f['modulo'] : '', 21)), 1, 0, 'L');
+			$pdf->Cell(24, 5, utf8_decode(aud_pdf_acotar(isset($f['directorio']) ? $f['directorio'] : '', 21)), 1, 0, 'L');
+			$pdf->Cell(24, 5, utf8_decode(aud_pdf_acotar(isset($f['proceso']) ? $f['proceso'] : '', 21)), 1, 0, 'L');
+			$pdf->Cell(38, 5, utf8_decode(aud_pdf_acotar(isset($f['actividad']) ? $f['actividad'] : '', 33)), 1, 0, 'L');
+			$pdf->Cell(24, 5, utf8_decode(aud_pdf_acotar(isset($f['planta']) ? $f['planta'] : '', 21)), 1, 1, 'L');
+		}
+		if (count($detalle) > $limiteDetalle) {
+			$pdf->SetTextColor(148, 163, 184);
+			$pdf->Cell(190, 5, utf8_decode('Detalle limitado a los primeros ' . $limiteDetalle . ' de ' . count($detalle) . ' movimientos del filtro.'), 1, 1, 'C');
+		}
+	}
+
 	// Conclusiones
 	$pdf->Ln(2);
-	$pdf->SectionHeader('6. OBSERVACIONES DE AUDITORÍA');
+	$pdf->SectionHeader($numObservaciones . '. OBSERVACIONES DE AUDITORÍA');
 
 	$obs = isset($datos['observaciones']) ? $datos['observaciones'] : array();
 	if (empty($obs)) {
@@ -300,5 +344,17 @@ function aud_generar_reporte_monitoreo_pdf($datos, $destino = 'I', $rutaArchivo 
 	} else {
 		$pdf->Output('Reporte_Monitoreo_Auditoria.pdf', 'I');
 		exit;
+	}
+}
+
+if (!function_exists('aud_pdf_acotar')) {
+	/** Acota un texto a un maximo de caracteres para celdas FPDF. */
+	function aud_pdf_acotar($texto, $max)
+	{
+		$texto = trim((string)$texto);
+		if (strlen($texto) > (int)$max) {
+			$texto = substr($texto, 0, max(0, (int)$max - 3)) . '...';
+		}
+		return $texto;
 	}
 }
