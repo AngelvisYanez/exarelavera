@@ -18,6 +18,38 @@ $(function () {
         });
     }
 
+    // Controlar ingreso estricto de fecha de caducidad (dd/mm/aaaa) limitando el año a 4 dígitos
+    $('#Cho_Cli').attr('maxlength', '10');
+    $('#Cho_Cli').on('input', function () {
+        if ($('#Cho_Tli').val() === 'Np') return;
+        var val = $(this).val().replace(/[^0-9\/]/g, '');
+        var parts = val.split('/');
+        if (parts.length > 0 && parts[0].length > 2) parts[0] = parts[0].substring(0, 2);
+        if (parts.length > 1 && parts[1].length > 2) parts[1] = parts[1].substring(0, 2);
+        if (parts.length > 2 && parts[2].length > 4) parts[2] = parts[2].substring(0, 4);
+        if (parts.length > 3) parts = parts.slice(0, 3);
+        $(this).val(parts.join('/'));
+    });
+
+    $('#Cho_Cli').on('blur', function () {
+        var val = $(this).val().trim();
+        if (!val || $('#Cho_Tli').val() === 'Np' || val === '00/00/0000') return;
+        var parts = val.split('/');
+        if (parts.length === 3) {
+            if (parts[2].length !== 4) {
+                $.alert("El año en la fecha de caducidad debe tener exactamente 4 dígitos (ej: 2026).");
+                return;
+            }
+            var d = parseInt(parts[0], 10);
+            var m = parseInt(parts[1], 10);
+            var y = parseInt(parts[2], 10);
+            if (isNaN(d) || isNaN(m) || isNaN(y) || m < 1 || m > 12 || d < 1 || d > 31 || y < 1900 || y > 2099) {
+                $.alert("La fecha de caducidad de la licencia no es válida.");
+                return;
+            }
+        }
+    });
+
     // Cargar dinámicamente las empresas de transporte para el selector
     $.getJSON('', { listTransportesAjax: true }, function (data) {
         var $select = $('#Mat_Cod');
@@ -40,12 +72,44 @@ $(function () {
         if (e.which === 13) reloadGridVehiculos();
     });
 
-    // Detectar cuando el usuario termina de escribir la cédula para autocompletar
+    // Detectar eventos en cédula de operario para autocompletar y actualizar icono de estado
     $('#Cho_Ced').on('blur', function() {
         var cedula = $(this).val().trim();
-        if (cedula.length >= 10) {
-            buscarPersonaPorCedula(cedula);
+        if (cedula.length > 0) {
+            buscarPersonaPorCedula(cedula, $('#Cho_Cod').val());
+        } else {
+            setChoferStatusIcon('neutral');
         }
+    });
+
+    $('#Cho_Ced').on('keypress', function(e) {
+        if (e.which === 13) { // Enter
+            e.preventDefault();
+            var cedula = $(this).val().trim();
+            if (cedula.length > 0) {
+                buscarPersonaPorCedula(cedula, $('#Cho_Cod').val());
+            }
+        }
+    });
+
+    $('#Cho_Ced').on('input', function() {
+        var val = $(this).val().trim();
+        setChoferStatusIcon('neutral');
+        if (val.length === 0) {
+            $('#Cho_Cod').val('');
+            $('#Prs_Nom').val('');
+            $('#Prs_Ape').val('');
+            $('#Cho_Tel').val('');
+            $('#Cho_Tli').val('');
+            $('#Cho_Cli').val('');
+            $('#Cho_Tsa').val('');
+            evaluarTipoLicencia();
+        }
+    });
+
+    // Detectar cambio en Tipo de Licencia
+    $('#Cho_Tli').on('change', function() {
+        evaluarTipoLicencia();
     });
 
     // Detectar cuando el usuario termina de escribir la placa para autocompletar
@@ -158,31 +222,173 @@ $(function () {
 });
 
 /**
+ * Actualiza el icono y tooltip del estado de validación de la cédula del operario
+ * @param {string} type 'loading' | 'found' | 'new' | 'invalid' | 'neutral'
+ * @param {string} [tooltipText]
+ */
+function setChoferStatusIcon(type, tooltipText) {
+    var $iconSpan = $('#iconChoferStatus');
+    if (!$iconSpan.length) return;
+
+    // Eliminar cualquier tooltip flotante residual de jQuery UI o Bootstrap para evitar que se quede pegado
+    $('.ui-tooltip, .tooltip').remove();
+
+    var iconHtml = '';
+    var defaultTooltip = '';
+
+    switch (type) {
+        case 'loading':
+            iconHtml = '<i class="fa fa-spinner fa-spin" style="color: #337ab7; font-size: 14px;"></i>';
+            defaultTooltip = 'Consultando...';
+            break;
+        case 'found':
+            iconHtml = '<i class="glyphicon glyphicon-ok" style="color: #5cb85c; font-size: 14px;"></i>';
+            defaultTooltip = 'Operador registrado en persona';
+            break;
+        case 'new':
+            iconHtml = '<i class="glyphicon glyphicon-warning-sign" style="color: #f0ad4e; font-size: 14px;"></i>';
+            defaultTooltip = 'Este operador es nuevo';
+            break;
+        case 'invalid':
+            iconHtml = '<i class="glyphicon glyphicon-remove" style="color: #d9534f; font-size: 14px;"></i>';
+            defaultTooltip = 'Credencial no válida';
+            break;
+        case 'neutral':
+        default:
+            iconHtml = '<i class="glyphicon glyphicon-minus" style="color: #999; font-size: 14px;"></i>';
+            defaultTooltip = '';
+            break;
+    }
+
+    var text = tooltipText !== undefined ? tooltipText : defaultTooltip;
+    $iconSpan.html(iconHtml);
+
+    // Usar tooltip flotante CSS (data-tooltip) que desaparece de inmediato en hover-out sin quedarse pegado
+    if (text) {
+        $iconSpan.attr('data-tooltip', text);
+    } else {
+        $iconSpan.removeAttr('data-tooltip');
+    }
+
+    // Evitar que el tooltip nativo del navegador se solape o se duplique
+    $iconSpan.removeAttr('title').removeAttr('data-original-title');
+}
+
+/**
+ * Evalúa el tipo de licencia seleccionado.
+ * Si es 'Np' (NO POSEE), coloca '00/00/0000' en caducidad y bloquea el campo.
+ * Si es cualquier otra licencia, desbloquea el campo para su ingreso.
+ */
+function evaluarTipoLicencia() {
+    var tli = $('#Cho_Tli').val();
+    var $cli = $('#Cho_Cli');
+
+    if (tli === 'Np') {
+        $cli.val('00/00/0000')
+            .prop('readonly', true)
+            .css({
+                'background-color': '#eee',
+                'cursor': 'not-allowed',
+                'pointer-events': 'none'
+            });
+        try {
+            if ($cli.data('datepicker')) {
+                $cli.datepicker('disable');
+            }
+        } catch (e) {}
+    } else {
+        if ($cli.val() === '00/00/0000') {
+            $cli.val('');
+        }
+        $cli.prop('readonly', false)
+            .css({
+                'background-color': '#fff',
+                'cursor': 'text',
+                'pointer-events': 'auto'
+            });
+        try {
+            if ($cli.data('datepicker')) {
+                $cli.datepicker('enable');
+            }
+        } catch (e) {}
+    }
+}
+
+/**
  * Busca si una persona existe por su número de identificación y autocompleta el formulario
  * @param {string} cedula 
+ * @param {string|number} [choCod]
  */
-function buscarPersonaPorCedula(cedula) {
-    $.getJSON('', { buscarPersonaPorCedulaAjax: 1, cedula: cedula }, function (res) {
+function buscarPersonaPorCedula(cedula, choCod) {
+    cedula = (cedula || '').trim();
+    if (!cedula) {
+        setChoferStatusIcon('neutral');
+        return;
+    }
+
+    // 1. Validar formato de la cédula o RUC
+    if (typeof validaNoIdentif === 'function') {
+        var resVal = validaNoIdentif(cedula);
+        if (!resVal.success) {
+            setChoferStatusIcon('invalid', 'Credencial no válida');
+            return;
+        }
+    } else if (cedula.length < 10 || cedula.length > 13) {
+        setChoferStatusIcon('invalid', 'Credencial no válida');
+        return;
+    }
+
+    // 2. Icono de cargando al momento de consultar
+    setChoferStatusIcon('loading', 'Consultando...');
+
+    var params = { buscarPersonaPorCedulaAjax: 1, cedula: cedula };
+    if (choCod) {
+        params.cho_cod = choCod;
+    }
+
+    $.getJSON('', params, function (res) {
+        // Evitar sobreescritura si el usuario ya modificó el input
+        if ($('#Cho_Ced').val().trim() !== cedula) return;
+
         if (res && res.exists) {
-            $('#Prs_Nom').val(res.Prs_Nom);
-            $('#Prs_Ape').val(res.Prs_Ape);
-            $('#Cho_Tel').val(res.Prs_Tel);
+            // 3. Encontrado -> Check verde
+            setChoferStatusIcon('found', 'Operador registrado en persona');
+            $('#Prs_Nom').val(res.Prs_Nom || '');
+            $('#Prs_Ape').val(res.Prs_Ape || '');
+            $('#Cho_Tel').val(res.Prs_Tel || '');
             
             if (res.Prs_San) {
                 var tsa = res.Prs_San.toUpperCase().trim();
                 $('#Cho_Tsa').val(tsa);
             }
             
+            if (res.Cho_Cod) {
+                $('#Cho_Cod').val(res.Cho_Cod);
+            }
+            
             if (res.isChofer) {
-                $('#Cho_Tli').val(res.Cho_Tli);
-                $('#Cho_Cli').val(res.Cho_Cli);
+                $('#Cho_Tli').val(res.Cho_Tli || '');
+                $('#Cho_Cli').val(res.Cho_Cli || '');
+                evaluarTipoLicencia();
             } else {
                 $('#Cho_Tli').val('');
                 $('#Cho_Cli').val('');
+                evaluarTipoLicencia();
             }
+        } else {
+            // 4. Si es nuevo y no está en persona -> Signo de advertencia con tooltip
+            setChoferStatusIcon('new', 'Este operador es nuevo');
+            $('#Prs_Nom').val('');
+            $('#Prs_Ape').val('');
+            $('#Cho_Tel').val('');
+            $('#Cho_Tli').val('');
+            $('#Cho_Cli').val('');
+            $('#Cho_Tsa').val('');
+            evaluarTipoLicencia();
         }
     }).fail(function() {
         console.error("Error al buscar persona por cédula o RUC.");
+        setChoferStatusIcon('invalid', 'Credencial no válida');
     });
 }
 
@@ -241,18 +447,29 @@ function initGrids() {
         rowNum: 50,
         rowList: [10, 25, 50, 100, -1],
         colModel: [
-            { label: 'Código', name: 'Cho_Cod', key: true, hidden: true, width: 50, align: 'center' },
+            { label: 'Cód. Int.', name: 'Cho_Cod', key: true, width: 65, align: 'center' },
             { label: 'Cédula', name: 'Prs_Ced', width: 100, align: 'center' },
             { label: 'Nombre', name: 'nombre', width: 220 },
-            { label: 'Licencia', name: 'Cho_Tli', width: 80, align: 'center' },
-            { label: 'Caducidad', name: 'Cho_Cli', width: 110, align: 'center', formatter: function(v) {
-                if (!v) return '';
+            { label: 'Licencia', name: 'Cho_Tli', width: 95, align: 'center', formatter: function(v) {
+                if (!v) return '-';
+                var valUpper = String(v).trim().toUpperCase();
+                if (valUpper === 'NP' || valUpper === 'NO POSEE') {
+                    return 'No Posee';
+                }
+                return 'Tipo: ' + String(v).trim();
+            }},
+            { label: 'Caducidad', name: 'Cho_Cli', width: 100, align: 'center', formatter: function(v, o, r) {
+                var tli = r && r.Cho_Tli ? String(r.Cho_Tli).trim().toUpperCase() : '';
+                if (tli === 'NP' || tli === 'NO POSEE' || !v || v === '0000-00-00' || v === '1900-01-01' || v === '00/00/0000') {
+                    return '-';
+                }
                 // Formatear fecha de YYYY-MM-DD a dd/mm/aaaa
-                var parts = v.split('-');
+                var cleanDate = String(v).trim().split(' ')[0];
+                var parts = cleanDate.split('-');
                 if (parts.length === 3) {
                     return parts[2] + '/' + parts[1] + '/' + parts[0];
                 }
-                return v;
+                return cleanDate;
             }},
             { label: 'Acciones', name: 'acciones', width: 90, align: 'center', sortable: false, formatter: function(cellvalue, options, rowObject) {
                 var choCod = rowObject.Cho_Cod || options.rowId;
@@ -262,7 +479,10 @@ function initGrids() {
             }}
         ],
         viewrecords: true,
-        jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false }
+        jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false },
+        loadComplete: function() {
+            customizarTextoVerTodos('#pagerChoferes');
+        }
     }, false, '#pagerChoferes', { refresh: true, view: false });
 
     $('#gridVehiculos').createGrid({
@@ -274,15 +494,17 @@ function initGrids() {
         rowList: [10, 25, 50, 100, -1],
         colModel: [
             { label: 'ID', name: 'Row_Id', key: true, hidden: true, width: 50, align: 'center' },
+            { label: 'Cód. Int.', name: 'Cod_Int', width: 65, align: 'center' },
             { label: 'Clasificación', name: 'Clasificacion', width: 95, align: 'center', formatter: function(v) {
                 if (v === 'V') return '<span class="label label-primary" style="font-size: 11px;">Vehículo</span>';
                 if (v === 'O') return '<span class="label label-warning" style="font-size: 11px;">Otro (Equipo)</span>';
                 return v || '';
             }},
-            { label: 'Placa / Serie', name: 'Ide_Pla_Ser', width: 110, align: 'center' },
-            { label: 'Marca', name: 'Veh_Mar', width: 130 },
-            { label: 'Color', name: 'Veh_Col', width: 90, align: 'center' },
-            { label: 'Tipo', name: 'Veh_Tit', width: 120, align: 'center', formatter: function(v) {
+            { label: 'Empresa / Proveedor', name: 'empresa_transporte', width: 180 },
+            { label: 'Placa / Serie', name: 'Ide_Pla_Ser', width: 100, align: 'center' },
+            { label: 'Marca', name: 'Veh_Mar', width: 110 },
+            { label: 'Color', name: 'Veh_Col', width: 80, align: 'center' },
+            { label: 'Tipo', name: 'Veh_Tit', width: 110, align: 'center', formatter: function(v) {
                 if (v === 'V') return 'Volqueta';
                 if (v === 'B') return 'Bus(eta)';
                 if (v === 'C') return 'Camioneta';
@@ -290,8 +512,17 @@ function initGrids() {
                 if (v === 'M') return 'Maquinaria';
                 return v || '';
             }},
-            { label: 'Valor Hora', name: 'Veh_Val', width: 90, align: 'right', formatter: 'number', formatoptions: { decimalSeparator: ".", thousandsSeparator: "", decimalPlaces: 2 } },
-            { label: 'Empresa / Proveedor', name: 'empresa_transporte', width: 190 },
+            { label: 'Descripción Adicional', name: 'Veh_Adi', width: 140, formatter: function(v) {
+                return v ? $('<div>').text(v).html() : '-';
+            }},
+            { label: 'Valor Hora', name: 'Veh_Val', width: 85, align: 'right', formatter: function(v, options, rowObject) {
+                if (rowObject && (rowObject.Clasificacion === 'O' || String(rowObject.Row_Id).indexOf('M_') === 0)) {
+                    return '-';
+                }
+                if (v === null || v === undefined || v === '') return '-';
+                var n = parseFloat(v);
+                return isNaN(n) ? '-' : n.toFixed(2);
+            }},
             { label: 'Acciones', name: 'acciones', width: 90, align: 'center', sortable: false, formatter: function(cellvalue, options, rowObject) {
                 var rowId = rowObject.Row_Id || options.rowId;
                 var clasif = rowObject.Clasificacion || (String(rowId).indexOf('M_') === 0 ? 'O' : 'V');
@@ -301,8 +532,139 @@ function initGrids() {
             }}
         ],
         viewrecords: true,
-        jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false }
+        jsonReader: { root: "rows", page: "page", total: "total", records: "records", repeatitems: false },
+        loadComplete: function() {
+            customizarTextoVerTodos('#pagerVehiculos');
+        }
     }, false, '#pagerVehiculos', { refresh: true, view: false });
+
+    // Personalizar opción -1 inmediatamente al crear los grids
+    customizarTextoVerTodos('#pagerChoferes');
+    customizarTextoVerTodos('#pagerVehiculos');
+
+    // Botones de exportar a Excel en barra de paginación
+    try {
+        $('#gridChoferes').navButtonAdd('#pagerChoferes', {
+            caption: "Exportar Excel",
+            buttonicon: "glyphicon glyphicon-download-alt",
+            onClickButton: exportarExcelChoferes,
+            position: "last",
+            title: "Exportar a Excel"
+        });
+        $('#gridVehiculos').navButtonAdd('#pagerVehiculos', {
+            caption: "Exportar Excel",
+            buttonicon: "glyphicon glyphicon-download-alt",
+            onClickButton: exportarExcelVehiculos,
+            position: "last",
+            title: "Exportar a Excel"
+        });
+    } catch(e) {}
+}
+
+var isExportandoExcel = false;
+var timerCheckDescargaExcel = null;
+
+function getCookieDescarga(name) {
+    var parts = document.cookie.split(';');
+    for (var i = 0; i < parts.length; i++) {
+        var p = parts[i].trim();
+        if (p.indexOf(name + '=') === 0) {
+            return decodeURIComponent(p.substring(name.length + 1));
+        }
+    }
+    return null;
+}
+
+function limpiarCookieDescarga(name) {
+    document.cookie = name + '=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+}
+
+function iniciarDescargaExcel(urlBase) {
+    if (isExportandoExcel) return;
+    isExportandoExcel = true;
+
+    // Deshabilitar botones de exportar y mostrar loader del sistema
+    $('.btn-exportar-excel').prop('disabled', true).addClass('disabled');
+    $('#pagerChoferes, #pagerVehiculos').find('.glyphicon-download-alt').closest('td').addClass('ui-state-disabled');
+    $('#loader').show();
+
+    var token = 'dl_' + new Date().getTime();
+    limpiarCookieDescarga('fileDownloadToken');
+
+    var urlFinal = urlBase + '&fileDownloadToken=' + encodeURIComponent(token);
+
+    // Asignar al iframe oculto para disparar la descarga en segundo plano
+    var $iframe = $('#iframeDownloadExcel');
+    if (!$iframe.length) {
+        $iframe = $('<iframe id="iframeDownloadExcel" style="display:none; width:0; height:0; border:0;"></iframe>').appendTo('body');
+    }
+    $iframe.attr('src', urlFinal);
+
+    // Chequear periódicamente la cookie de finalización enviada por el servidor
+    if (timerCheckDescargaExcel) clearInterval(timerCheckDescargaExcel);
+    timerCheckDescargaExcel = setInterval(function() {
+        var cookieVal = getCookieDescarga('fileDownloadToken');
+        if (cookieVal === token) {
+            finalizarDescargaExcel();
+        }
+    }, 200);
+
+    // Timeout de seguridad (15 segundos) para no dejar bloqueada la UI si hay problemas de red
+    setTimeout(function() {
+        if (isExportandoExcel) {
+            finalizarDescargaExcel();
+        }
+    }, 15000);
+}
+
+function finalizarDescargaExcel() {
+    if (timerCheckDescargaExcel) {
+        clearInterval(timerCheckDescargaExcel);
+        timerCheckDescargaExcel = null;
+    }
+    limpiarCookieDescarga('fileDownloadToken');
+    $('#loader').fadeOut('slow');
+    isExportandoExcel = false;
+    $('.btn-exportar-excel').prop('disabled', false).removeClass('disabled');
+    $('#pagerChoferes, #pagerVehiculos').find('.glyphicon-download-alt').closest('td').removeClass('ui-state-disabled');
+}
+
+/**
+ * Exporta el listado de Operarios a Excel según los filtros activos
+ */
+function exportarExcelChoferes() {
+    if (isExportandoExcel) return;
+    var search = $('#searchChofer').val().trim();
+    var op_opciones = $('#opChofer').val() || 'd';
+    var url = 'man_alt_vehiculos_choferes.php?exportarExcelChoferesAjax=1' +
+              '&search=' + encodeURIComponent(search) +
+              '&op_opciones=' + encodeURIComponent(op_opciones);
+    iniciarDescargaExcel(url);
+}
+
+/**
+ * Exporta el listado de Maquinaria y Vehículos a Excel según los filtros activos
+ */
+function exportarExcelVehiculos() {
+    if (isExportandoExcel) return;
+    var search = $('#searchVehiculo').val().trim();
+    var op_opciones = $('#opVehiculo').val() || 'p';
+    var tipo_clasificacion = $('#tipoClasificacionGrid').val() || '';
+    var url = 'man_alt_vehiculos_choferes.php?exportarExcelVehiculosAjax=1' +
+              '&search=' + encodeURIComponent(search) +
+              '&op_opciones=' + encodeURIComponent(op_opciones) +
+              '&tipo_clasificacion=' + encodeURIComponent(tipo_clasificacion);
+    iniciarDescargaExcel(url);
+}
+
+/**
+ * Personaliza el texto de la opción -1 en el selector de paginación para mostrar "Todos"
+ * @param {string} pagerId Selector del paginador
+ */
+function customizarTextoVerTodos(pagerId) {
+    var $select = $(pagerId).find('.ui-pg-selbox');
+    if (!$select.length) return;
+    $select.find('option[value="-1"]').text('Todos');
 }
 
 /**
@@ -310,14 +672,8 @@ function initGrids() {
  * @param {string} clasif '' | 'V' | 'O'
  */
 function cambiarFiltroClasificacion(clasif) {
-    $('#tipoClasificacionGrid').val(clasif);
-    $('#btnClasifTodos, #btnClasifVeh, #btnClasifMaq').removeClass('active').css({'color':'#000','background-color':'#e6e6e6'});
-    if (clasif === 'V') {
-        $('#btnClasifVeh').addClass('active').css({'color':'#e67e22','background-color':'#fff'});
-    } else if (clasif === 'O') {
-        $('#btnClasifMaq').addClass('active').css({'color':'#e67e22','background-color':'#fff'});
-    } else {
-        $('#btnClasifTodos').addClass('active').css({'color':'#e67e22','background-color':'#fff'});
+    if (clasif !== undefined) {
+        $('#tipoClasificacionGrid').val(clasif);
     }
     reloadGridVehiculos();
 }
@@ -376,6 +732,7 @@ function mostrarListado() {
 function mostrarFormulario(tipo) {
     // Resetear formularios
     $('#formChofer')[0].reset();
+    $('#Cho_Cod').val('');
     $('#formVehiculo')[0].reset();
     $('#Veh_Tit').val('V'); // Volqueta por defecto
     $('#Maq_Tip').val('GENERADOR');
@@ -388,6 +745,8 @@ function mostrarFormulario(tipo) {
     // Mostrar dinámicamente solo el formulario del tipo seleccionado y cambiar título
     if (tipo === 'chofer') {
         $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Registrar Nuevo Operario');
+        setChoferStatusIcon('neutral');
+        evaluarTipoLicencia();
         $('#divFormTabVehiculo').hide();
         $('#divFormTabChofer').show();
     } else {
@@ -430,6 +789,90 @@ function abrirMiniModalTipoDinamico() {
     } else {
         abrirMiniModal('Veh_Tit', 'Tipo Vehículo');
     }
+}
+
+/**
+ * Guarda los datos del Operario / Chofer
+ */
+var isGuardandoChofer = false;
+function guardarChofer() {
+    if (isGuardandoChofer) return;
+
+    var ced = $('#Cho_Ced').val().trim();
+    var tel = $('#Cho_Tel').val().trim();
+    var nom = $('#Prs_Nom').val().trim();
+    var ape = $('#Prs_Ape').val().trim();
+    var tli = $('#Cho_Tli').val();
+    var cli = $('#Cho_Cli').val().trim();
+    var tsa = $('#Cho_Tsa').val();
+
+    if (!ced || !tel || !nom || !ape || !tli || !tsa) {
+        $.alert("Todos los campos marcados con asterisco (*) son obligatorios.");
+        return;
+    }
+
+    if (tli !== 'Np') {
+        if (!cli || cli === '00/00/0000') {
+            $.alert("Debe ingresar una fecha de caducidad válida para la licencia seleccionada.");
+            return;
+        }
+
+        var regexFecha = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+        var match = cli.match(regexFecha);
+        if (!match) {
+            $.alert("El año de la fecha de caducidad debe tener exactamente 4 dígitos en formato dd/mm/aaaa.");
+            return;
+        }
+
+        var dia = parseInt(match[1], 10);
+        var mes = parseInt(match[2], 10);
+        var anio = parseInt(match[3], 10);
+
+        if (anio < 1900 || anio > 2099 || mes < 1 || mes > 12 || dia < 1 || dia > 31) {
+            $.alert("La fecha de caducidad ingresada no es válida.");
+            return;
+        }
+    }
+
+    if (typeof validaNoIdentif === 'function') {
+        var resVal = validaNoIdentif(ced);
+        if (!resVal.success) {
+            setChoferStatusIcon('invalid', 'Credencial no válida');
+            $.alert(resVal.message || "La cédula o RUC ingresado no es válido.");
+            return;
+        }
+    } else if (ced.length < 10 || ced.length > 13) {
+        setChoferStatusIcon('invalid', 'Credencial no válida');
+        $.alert("La cédula o RUC debe tener entre 10 y 13 dígitos.");
+        return;
+    }
+
+    isGuardandoChofer = true;
+    $('#loader').show();
+    $('#btnGuardarChofer').prop('disabled', true);
+
+    var formData = $('#formChofer').serialize();
+    formData += '&saveChoferAjax=1';
+
+    $.post('', formData, function (res) {
+        $('#loader').hide();
+        isGuardandoChofer = false;
+        $('#btnGuardarChofer').prop('disabled', false);
+        if (res && res.success) {
+            $.alert(res.message || "Operador registrado exitosamente.", function() {
+                setChoferStatusIcon('neutral');
+                mostrarListado();
+                reloadGridChoferes();
+            });
+        } else {
+            $.alert(res.message || "Error al registrar el operador.");
+        }
+    }, 'json').fail(function() {
+        $('#loader').hide();
+        isGuardandoChofer = false;
+        $('#btnGuardarChofer').prop('disabled', false);
+        $.alert("Error de comunicación con el servidor.");
+    });
 }
 
 /**
@@ -734,9 +1177,10 @@ function generarPlacaProvisional() {
 function editarChofer(choCod, cedula) {
     mostrarFormulario('chofer');
     $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Editar Operario');
+    $('#Cho_Cod').val(choCod || '');
     if (cedula) {
         $('#Cho_Ced').val(cedula);
-        buscarPersonaPorCedula(cedula);
+        buscarPersonaPorCedula(cedula, choCod);
     }
 }
 
