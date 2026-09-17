@@ -1193,7 +1193,7 @@ if (isset($_POST['inactivarVehiculoAjax'])) {
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div class="form-group">
-                                            <label class="col-sm-4 control-label label-sm">Detalle Adicional:</label>
+                                            <label class="col-sm-4 control-label label-sm">Descripcion Adicional:</label>
                                             <div class="col-sm-6">
                                                 <textarea id="Veh_Adi" name="Veh_Adi" class="form-control" rows="2" placeholder="Ingrese un detalle adicional..."></textarea>
                                             </div>
