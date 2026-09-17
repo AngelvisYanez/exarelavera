@@ -149,7 +149,12 @@ function loadSelectors() {
         $sel.empty().append('<option value="">Seleccione Máquina...</option>');
         $repMaq.empty().append('<option value="TODAS">TODAS LAS MÁQUINAS</option>');
         $.each(data, function (i, val) {
-            var textOpt = val.Veh_Pla + ' - ' + val.Veh_Mar;
+            var textOpt = '';
+            if (val.Veh_Adi && $.trim(val.Veh_Adi) !== '') {
+                textOpt = $.trim(val.Veh_Adi) + ' - ' + val.Veh_Pla + ' - ' + val.Veh_Mar;
+            } else {
+                textOpt = val.Veh_Pla + ' - ' + val.Veh_Mar;
+            }
             $sel.append($('<option>', {
                 value: val.Veh_Cod,
                 text: textOpt
@@ -358,8 +363,8 @@ function reloadGridHorometros() {
  */
 function cargarJornadaDesdeGrid(vehCod, choCod, horFec) {
     mostrarFormulario();
-    $("#Veh_Cod").val(vehCod);
-    $("#Cho_Cod").val(choCod);
+    $("#Veh_Cod").val(vehCod).trigger("chosen:updated");
+    $("#Cho_Cod").val(choCod).trigger("chosen:updated");
     var dateOnly = horFec.split(' ')[0];
     var parts = dateOnly.split('-');
     if (parts.length === 3) {
@@ -387,6 +392,8 @@ function mostrarListado() {
 function mostrarFormulario() {
     $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Registro de Horómetros por Turno');
     $("#formContexto")[0].reset();
+    $("#Veh_Cod").val('').trigger("chosen:updated");
+    $("#Cho_Cod").val('').trigger("chosen:updated");
     $("#Hor_Fec").val(obtenerFechaActual());
     $("#panelJornada").hide();
     $("#divListado").hide();
@@ -468,6 +475,14 @@ function abrirModalRegistro(Hor_Cod) {
     $("#formHorometroModal")[0].reset();
     $("#Hor_Cod_Modal").val(Hor_Cod);
     $("#Hor_Hrs").val('0.00').css("color", "#0f172a");
+
+    // Mostrar el contexto de la máquina, operador y fecha seleccionados
+    var txtMaq = $("#Veh_Cod option:selected").text();
+    var txtOpe = $("#Cho_Cod option:selected").text();
+    var txtFec = $("#Hor_Fec").val();
+    $("#lbl_modal_contexto_maq").text(txtMaq || 'Sin máquina seleccionada');
+    $("#lbl_modal_contexto_ope").text(txtOpe || 'Sin operador');
+    $("#lbl_modal_contexto_fec").text(txtFec || '-');
 
     // Limpiar previas visuales de las fotos
     $("#preview_ini_container").html('<span style="color:#94a3b8; font-size:11px;">(Suba una foto clara)</span>');
@@ -1189,39 +1204,31 @@ $(function() {
         }
     });
 
-    // Evento para cargar la última máquina asignada cuando se selecciona un operador (Registro)
-    $("#Cho_Cod").on('change', function() {
-        var cho_cod = $(this).val();
-        if (cho_cod !== '') {
-            $.ajax({
-                url: 'man_alt_maquinaria_horometro.php?getLastVehiculoByOperadorAjax=1',
-                type: 'GET',
-                data: { Cho_Cod: cho_cod },
-                dataType: 'json',
-                success: function(r) {
-                    if (r.success && r.Veh_Cod > 0) {
-                        $("#Veh_Cod").val(r.Veh_Cod).trigger("chosen:updated");
-                        limpiarSubgrid();
-                    }
-                }
-            });
-        }
-    });
+    // NOTA: No sobreescribir Veh_Cod al cambiar de operador en el registro,
+    // para evitar que se cambie la máquina seleccionada por el usuario.
 });
 
 // -------------------------------------------------------------------------
-// FUNCION AUXILIAR PARA AUTO-SELECCIONAR EL OPERADOR
+// FUNCION AUXILIAR PARA AUTO-SELECCIONAR EL OPERADOR DE LA MAQUINARIA
 // -------------------------------------------------------------------------
 function buscarUltimoOperadorOriginal(veh_cod) {
     if (!veh_cod) return;
     
+    // Si el usuario ya eligió un operador manualmente, no reemplazarlo
+    var opeActual = $('#Cho_Cod').val();
+    if (opeActual && opeActual !== '') {
+        return;
+    }
+
     $.ajax({
         url: 'man_alt_maquinaria_horometro.php?getLastOperadorAjax=1&veh_cod=' + veh_cod,
         type: 'GET',
         dataType: 'json',
         success: function(res) {
             if (res.success && res.Cho_Cod) {
-                $('#Cho_Cod').val(res.Cho_Cod).trigger('chosen:updated');
+                if (!$('#Cho_Cod').val()) {
+                    $('#Cho_Cod').val(res.Cho_Cod).trigger('chosen:updated');
+                }
             }
         }
     });

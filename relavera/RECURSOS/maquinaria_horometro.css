@@ -8,7 +8,7 @@
     border: none !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible !important;
     margin: 15px;
 }
 .panel-heading {
@@ -18,9 +18,12 @@
     font-size: 14px;
     padding: 12px 18px !important;
     border-bottom: none !important;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
 }
 .exa-body {
     padding: 20px !important;
+    overflow: visible !important;
 }
 
 /* ======================================================================
@@ -312,4 +315,57 @@
 .swal2-overlay,
 .ui-widget-overlay {
     z-index: 1059 !important;
+}
+
+/* ======================================================================
+   CHOSEN DROPDOWN FLOTANTE Y VISIBILIDAD (SIN EXPANDIR EL CONTENEDOR)
+   ====================================================================== */
+#divFormulario {
+    overflow: visible !important;
+    position: relative;
+}
+
+#divFormulario .header-contexto-turno {
+    overflow: visible !important;
+    position: relative;
+}
+
+#divFormulario .chosen-container {
+    width: 100% !important;
+    position: relative;
+}
+
+#divFormulario .chosen-container.chosen-with-drop .chosen-drop {
+    z-index: 2500 !important;
+    min-width: 100% !important;
+    width: max-content !important;
+    max-width: 550px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22) !important;
+    border: 1px solid #94a3b8 !important;
+    border-top: none !important;
+    border-radius: 0 0 6px 6px !important;
+    background: #ffffff !important;
+}
+
+#divFormulario .chosen-container .chosen-results {
+    max-height: 280px !important;
+    overflow-y: auto !important;
+    padding: 4px 0 !important;
+}
+
+#divFormulario .chosen-container .chosen-results li {
+    padding: 7px 12px !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+#divFormulario .chosen-container .chosen-results li:last-child {
+    border-bottom: none;
+}
+
+#divFormulario .chosen-container .chosen-results li.highlighted {
+    background-color: #334a5f !important;
+    background-image: none !important;
+    color: #ffffff !important;
 }

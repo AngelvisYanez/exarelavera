@@ -608,7 +608,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <script language="javascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
-    <link rel="stylesheet" type="text/css" href="../RECURSOS/maquinaria_horometro.css" />
+    <link rel="stylesheet" type="text/css" href="../RECURSOS/maquinaria_horometro.css?v=3" />
     <script>
         var user_role = '<?php echo $user_role; ?>';
     </script>
@@ -1038,22 +1038,22 @@ if (isset($_GET['getEvidenciasAjax'])) {
             <div id="divFormulario" style="display:none;">
 
                 <!-- HEADER DE CONTEXTO DEL TURNO -->
-                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; padding-bottom: 120px; margin-bottom: 20px;">
-                    <form id="formContexto" class="form-horizontal" onsubmit="return false;">
-                        <div class="row">
-                            <div class="col-sm-3">
+                <div class="header-contexto-turno" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px 20px 15px 20px; margin-bottom: 20px; position: relative; overflow: visible !important;">
+                    <form id="formContexto" class="form-horizontal" onsubmit="return false;" style="overflow: visible !important;">
+                        <div class="row" style="overflow: visible !important;">
+                            <div class="col-sm-4" style="overflow: visible !important;">
                                 <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Máquina / Vehículo:</label>
                                 <select id="Veh_Cod" name="Veh_Cod" class="form-control chosen-select" onchange="limpiarSubgrid(); buscarUltimoOperadorOriginal(this.value);">
                                     <option value="">Seleccione Máquina...</option>
                                 </select>
                             </div>
-                            <div class="col-sm-3">
+                            <div class="col-sm-3" style="overflow: visible !important;">
                                 <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Operador:</label>
                                 <select id="Cho_Cod" name="Cho_Cod" class="form-control chosen-select" onchange="limpiarSubgrid();">
                                     <option value="">Seleccione Operador...</option>
                                 </select>
                             </div>
-                            <div class="col-sm-3">
+                            <div class="col-sm-3" style="overflow: visible !important;">
                                 <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Fecha del Turno:</label>
                                 <input id="Hor_Fec" name="Hor_Fec" type="text" class="form-control datepicker" placeholder="dd/mm/aaaa" onchange="limpiarSubgrid();" />
                             </div>
@@ -1113,7 +1113,15 @@ if (isset($_GET['getEvidenciasAjax'])) {
                     <h4 class="modal-title" style="font-weight:bold; font-size:14px;" id="modalRegistroHorometroTitulo"><i class="glyphicon glyphicon-edit"></i> Editar Horómetro</h4>
                 </div>
                 <div class="modal-body" style="background:#f8fafc; padding:20px;">
-                    <form id="formHorometroModal" class="form-horizontal" onsubmit="return false;" enctype="multipart/form-data">
+                    <!-- Contexto del registro actual -->
+                    <div style="background:#f1f5f9; border: 1px solid #cbd5e1; border-left: 4px solid #0284c7; border-radius: 4px; padding: 8px 14px; margin-bottom: 15px; font-size: 12px;">
+                        <span style="color:#64748b; font-size:11px; font-weight:600; text-transform:uppercase;">Registro Asignado a:</span><br/>
+                        <strong style="color:#0f172a;"><i class="glyphicon glyphicon-wrench text-primary"></i> <span id="lbl_modal_contexto_maq">-</span></strong> &nbsp;|&nbsp;
+                        <span style="color:#0f172a;"><i class="glyphicon glyphicon-user text-info"></i> <span id="lbl_modal_contexto_ope">-</span></span> &nbsp;|&nbsp;
+                        <span style="color:#0f172a;"><i class="glyphicon glyphicon-calendar text-muted"></i> <span id="lbl_modal_contexto_fec">-</span></span>
+                    </div>
+
+                    <form id="formHorometroModal" class="form-horizontal" onsubmit="return false;" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" id="Hor_Cod_Modal" name="Hor_Cod" value="0" />
 
                         <!-- Bloque Inicial -->
@@ -1124,7 +1132,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                     <div class="form-group" style="margin-bottom:10px;">
                                         <label class="col-sm-5 control-label label-sm">Horómetro Inicial:<span class="text-danger">*</span></label>
                                         <div class="col-sm-7">
-                                            <input id="Hor_Ini" name="Hor_Ini" type="text" class="form-control calculo-horas" placeholder="Lectura inicial" onkeypress="return validar_decimal(event);" />
+                                            <input id="Hor_Ini" name="Hor_Ini" type="text" class="form-control calculo-horas" placeholder="Lectura inicial" onkeypress="return validar_decimal(event);" autocomplete="off" />
                                         </div>
                                     </div>
                                     <div class="form-group" style="margin-bottom:10px;">
@@ -1158,7 +1166,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
                                     <div class="form-group" style="margin-bottom:10px;">
                                         <label class="col-sm-5 control-label label-sm">Horómetro Final:<span class="text-danger">*</span></label>
                                         <div class="col-sm-7">
-                                            <input id="Hor_Fin" name="Hor_Fin" type="text" class="form-control calculo-horas" placeholder="Lectura final" onkeypress="return validar_decimal(event);" />
+                                            <input id="Hor_Fin" name="Hor_Fin" type="text" class="form-control calculo-horas" placeholder="Lectura final" onkeypress="return validar_decimal(event);" autocomplete="off" />
                                         </div>
                                     </div>
                                     <div class="form-group" style="margin-bottom:10px;">
@@ -1302,7 +1310,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=12"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=16"></script>
 
     <!-- Liberacion y cierre de conexiones -->
     <?php

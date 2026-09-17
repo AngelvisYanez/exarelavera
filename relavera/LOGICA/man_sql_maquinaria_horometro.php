@@ -9,10 +9,10 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
     $sql = "";
     switch ($id) {
         case 1:
-            $sql = "SELECT DISTINCT Veh_Cod, Veh_Pla, Veh_Mar 
+            $sql = "SELECT DISTINCT Veh_Cod, Veh_Pla, Veh_Mar, Veh_Adi 
                     FROM vehiculo 
                     WHERE Veh_Est = 'A' AND Emp_Cod = " . (int)$Par_Sql['Emp_Cod'] . " AND (Veh_Tip != 'VM' OR Veh_Tip IS NULL)
-                    ORDER BY Veh_Pla ASC";
+                    ORDER BY IF(Veh_Adi IS NOT NULL AND Veh_Adi != '', Veh_Adi, Veh_Pla) ASC, Veh_Pla ASC";
             break;
 
         case 2:
