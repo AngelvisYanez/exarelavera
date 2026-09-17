@@ -189,19 +189,23 @@ if (isset($_POST['saveHorometroAjax'])) {
             @mkdir($ruta_destino, 0777, true);
         }
 
-        // Subida de imagen Inicial (opcional)
+        // Subida de imagen Inicial (opcional con nombre único por máquina)
         $hor_img_ini_path = '';
         if (isset($_FILES['Hor_Img_Ini']) && $_FILES['Hor_Img_Ini']['error'] == 0) {
             $ext = pathinfo($_FILES['Hor_Img_Ini']['name'], PATHINFO_EXTENSION);
-            $hor_img_ini_path = $fecha_str . '_ini_' . $count_n . '.' . $ext;
+            if (empty($ext)) $ext = 'jpg';
+            $uniq_ini = date('His') . '_' . rand(100, 999);
+            $hor_img_ini_path = $fecha_str . '_v' . $Veh_Cod . '_c' . $Cho_Cod . '_ini_' . $count_n . '_' . $uniq_ini . '.' . $ext;
             move_uploaded_file($_FILES['Hor_Img_Ini']['tmp_name'], $ruta_destino . $hor_img_ini_path);
         }
 
-        // Subida de imagen Final (opcional)
+        // Subida de imagen Final (opcional con nombre único por máquina)
         $hor_img_fin_path = '';
         if (isset($_FILES['Hor_Img_Fin']) && $_FILES['Hor_Img_Fin']['error'] == 0) {
             $ext = pathinfo($_FILES['Hor_Img_Fin']['name'], PATHINFO_EXTENSION);
-            $hor_img_fin_path = $fecha_str . '_fin_' . $count_n . '.' . $ext;
+            if (empty($ext)) $ext = 'jpg';
+            $uniq_fin = date('His') . '_' . rand(100, 999);
+            $hor_img_fin_path = $fecha_str . '_v' . $Veh_Cod . '_c' . $Cho_Cod . '_fin_' . $count_n . '_' . $uniq_fin . '.' . $ext;
             move_uploaded_file($_FILES['Hor_Img_Fin']['tmp_name'], $ruta_destino . $hor_img_fin_path);
         }
 

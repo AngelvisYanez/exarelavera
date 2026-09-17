@@ -84,6 +84,12 @@ function sentencias_doc($id, $Par_Sql)
                     $osql = $osql . " AND Tia_Ini='$Par_Sql[Tia_Ini]' ";
                 if (!empty($Par_Sql['Tia_Cod']))
                     $osql = $osql . " AND tipo_asien.Tia_Cod='$Par_Sql[Tia_Cod]' ";
+                if (!empty($Par_Sql['Com_Gen'])) {
+                    $com_gen = ($Par_Sql['Com_Gen'] == 'A') ? 'A' : (($Par_Sql['Com_Gen'] == 'M') ? 'M' : '');
+                    if ($com_gen != '') {
+                        $osql = $osql . " AND comprobantes.Com_Gen='$com_gen' ";
+                    }
+                }
                 if ($Par_Sql['op_comp'] == 'a') {
                     if (!empty($Par_Sql['Month'])) {
                         list($ann, $mes) = explode('-', $Par_Sql['Month']);
