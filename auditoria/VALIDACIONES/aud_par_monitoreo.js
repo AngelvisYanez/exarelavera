@@ -256,6 +256,59 @@ $(function () {
 	}
 	window.audVerDetalle = verDetalle;
 
+	/* ---- Wrapper para envio de formularios con confirmacion estilizada ----
+	 * Recibe (form, event): muestra el dialogo exa-ui de Confirmar/Cancelar;
+	 * si se confirma hace submit nativo (sin re-disparar onsubmit). */
+	window.audConfirmarDemoForm = function (form, evt) {
+		if (evt && evt.preventDefault) {
+			evt.preventDefault();
+		}
+		var $f = $(form);
+		audConfirmarDemo('Confirmar la accion?', function () {
+			var f = $f.get(0);
+			if (f && f.submit) {
+				try { f.submit(); } catch (e9) {
+					if (typeof alert === 'function') { alert('No se pudo enviar el formulario.'); }
+				}
+			}
+		});
+		return false;
+	};
+
+	/* Dialogo estilizado de confirmacion/cancelacion (patron detalleDialog) */
+	var $audConfirm = null;
+	function audConfirmarDemo(msj, alConfirmar) {
+		if (!$('#audConfirmDemo').length) {
+			$('body').append('<div id="audConfirmDemo" title="Confirmar accion" style="display:none;"><p style="padding:14px 8px 4px;"></p></div>');
+		}
+		var $dlg = $('#audConfirmDemo');
+		$dlg.find('p').html(msj || 'Confirmar la accion?');
+		if (!$dlg.hasClass('ui-dialog-content')) {
+			$dlg.dialog({
+				autoOpen: false,
+				modal: true,
+				resizable: false,
+				width: Math.min(420, $(window).width() - 20),
+				height: 'auto',
+				appendTo: '.exa-ui-panel',
+				dialogClass: 'exa-ui-panel exa-ui-dialog',
+				buttons: [
+					{ text: 'Confirmar', class: 'btn btn-primary', click: function () {
+						$(this).dialog('close');
+						if (typeof alConfirmar === 'function') {
+							alConfirmar();
+						}
+					} },
+					{ text: 'Cancelar', class: 'btn btn-default', click: function () {
+						$(this).dialog('close');
+					} }
+				]
+			});
+		}
+		$dlg.dialog('open');
+	}
+	window.audConfirmarDemo = audConfirmarDemo;
+
 	/* ---- Calendario (yy-mm-dd; locale es fuerza dd/mm/yy) ---- */
 	function initCalendarios() {
 		var $from = $('#from');

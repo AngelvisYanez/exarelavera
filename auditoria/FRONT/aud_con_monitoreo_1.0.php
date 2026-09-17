@@ -342,8 +342,15 @@ if (isset($_REQUEST['exportMonitoreoPdf'])) {
 		}
 	}
 
-	// Filas del informe
+	// Filas del informe y agregados para el PDF (misma consulta filtrada que la grilla)
 	$filas = array();
+	$aggMod = array();
+	$aggHora = array();
+	$aggUsu = array();
+	$aggPla = array();
+	$totIns = 0;
+	$totUpd = 0;
+	$totDel = 0;
 	foreach ($Arr_Resultado as $row) {
 		$arr = explode(' ', isset($row['Log_Fec']) ? $row['Log_Fec'] : '');
 		$pares = aud_pares_interpretados($row, null, null);
@@ -360,12 +367,50 @@ if (isset($_REQUEST['exportMonitoreoPdf'])) {
 			}
 		}
 
+		$nomUsu = aud_nombre_usuario($row);
+		$nomMod = aud_nombre_modulo($row);
+		$nomDir = aud_nombre_directorio($row);
+		$nomPcs = aud_nombre_proceso($row);
+		$eveCod = isset($row['Eve_Cod']) ? (int)$row['Eve_Cod'] : 0;
+		if ($eveCod === 2) { $totIns++; }
+		elseif ($eveCod === 3) { $totUpd++; }
+		elseif ($eveCod === 4) { $totDel++; }
+
+		if ($nomMod !== '') {
+			if (!isset($aggMod[$nomMod])) { $aggMod[$nomMod] = 0; }
+			$aggMod[$nomMod]++;
+		}
+		$hh = isset($arr[1]) ? substr($arr[1], 0, 2) : '';
+		if ($hh !== '') {
+			$hh = str_pad($hh, 2, '0', STR_PAD_LEFT) . ':00';
+			if (!isset($aggHora[$hh])) { $aggHora[$hh] = 0; }
+			$aggHora[$hh]++;
+		}
+		if (!isset($aggUsu[$nomUsu])) {
+			$aggUsu[$nomUsu] = array('nombre' => $nomUsu, 'total' => 0, 'insert' => 0, 'update' => 0, 'delete' => 0);
+		}
+		$aggUsu[$nomUsu]['total']++;
+		if ($eveCod === 2) { $aggUsu[$nomUsu]['insert']++; }
+		elseif ($eveCod === 3) { $aggUsu[$nomUsu]['update']++; }
+		elseif ($eveCod === 4) { $aggUsu[$nomUsu]['delete']++; }
+		if ($planta !== '') {
+			if (!isset($aggPla[$planta])) {
+				$aggPla[$planta] = array('planta' => $planta, 'usuarios' => array(), 'total' => 0, 'insert' => 0, 'update' => 0, 'delete' => 0);
+			}
+			$aggPla[$planta]['usuarios'][$nomUsu] = true;
+			$aggPla[$planta]['total']++;
+			if ($eveCod === 2) { $aggPla[$planta]['insert']++; }
+			elseif ($eveCod === 3) { $aggPla[$planta]['update']++; }
+			elseif ($eveCod === 4) { $aggPla[$planta]['delete']++; }
+		}
+
 		$filas[] = array(
 			'fecha' => isset($arr[0]) ? $arr[0] : '',
 			'hora' => isset($arr[1]) ? $arr[1] : '',
-			'usuario' => aud_nombre_usuario($row),
-			'modulo' => aud_nombre_modulo($row),
-			'proceso' => aud_nombre_proceso($row),
+			'usuario' => $nomUsu,
+			'modulo' => $nomMod,
+			'directorio' => $nomDir,
+			'proceso' => $nomPcs,
 			'actividad' => aud_resumen_actividad($row),
 			'planta' => $planta,
 			'detalle' => aud_resumen_detalle($row, $pares)
@@ -410,12 +455,69 @@ if (isset($_REQUEST['exportMonitoreoPdf'])) {
 		$emisorNombre = trim($rowEmisor['Prs_Ape'] . ' ' . $rowEmisor['Prs_Nom']);
 	}
 
+	// Total exacto del filtro (misma consulta COUNT que usa la grilla)
+	$totalFiltro = count($filas);
+	$rowCount = $obBD_con1->getRowConsulta(13, $filtros, $obBD_conexion);
+	if (isset($rowCount['count'])) {
+		$totalFiltro = (int)$rowCount['count'];
+	}
+
+	// Listas ordenadas para el informe PDF
+	$modulosList = array();
+	arsort($aggMod);
+	foreach ($aggMod as $kMod => $vTot) {
+		$modulosList[] = array('modulo' => $kMod, 'total' => $vTot);
+	}
+	$horariosList = array();
+	for ($h = 0; $h < 24; $h++) {
+		$etq = str_pad($h, 2, '0', STR_PAD_LEFT) . ':00';
+		$horariosList[] = array('hora' => $etq, 'total' => isset($aggHora[$etq]) ? $aggHora[$etq] : 0);
+	}
+	$usuariosList = array();
+	$tmpUsu = array();
+	foreach ($aggUsu as $kUsu => $u) {
+		$tmpUsu[$kUsu] = $u['total'];
+	}
+	arsort($tmpUsu);
+	foreach ($tmpUsu as $kUsu2 => $vTot2) {
+		$usuariosList[] = $aggUsu[$kUsu2];
+	}
+	$plantasList = array();
+	$tmpPla = array();
+	foreach ($aggPla as $kPla => $p) {
+		$tmpPla[$kPla] = $p['total'];
+	}
+	arsort($tmpPla);
+	foreach ($tmpPla as $kPla2 => $vTot3) {
+		$pRow = $aggPla[$kPla2];
+		$pRow['usuarios'] = count($pRow['usuarios']);
+		$plantasList[] = $pRow;
+	}
+
+	// Observaciones del informe
+	$observaciones = array();
+	$observaciones[] = 'Filtros aplicados: ' . implode(' | ', $bitFiltros);
+	foreach ($alcance as $aAlc) {
+		$observaciones[] = 'Alcance configurado - ' . $aAlc['nivel'] . ': ' . $aAlc['nombre'];
+	}
+	$observaciones[] = 'El filtro coincide con ' . number_format($totalFiltro) . ' movimientos; el detalle y las estadisticas se calculan sobre los primeros ' . count($filas) . ' registros devueltos.';
+
 	$datos = array(
-		'empresa_nombre' => $empNombre,
+		'empresa' => $empNombre,
+		'rango' => date('d/m/Y', strtotime($fil_from)) . ' a ' . date('d/m/Y', strtotime($fil_to)),
 		'usuario_emisor' => $emisorNombre,
-		'periodo_texto' => $fil_from . ' a ' . $fil_to,
-		'filtros_texto' => implode(' | ', $bitFiltros),
-		'alcance' => $alcance,
+		'resumen' => array(
+			'total' => $totalFiltro,
+			'insert' => $totIns,
+			'update' => $totUpd,
+			'delete' => $totDel,
+			'usuarios_unicos' => count($aggUsu)
+		),
+		'modulos' => $modulosList,
+		'horarios' => $horariosList,
+		'usuarios_top' => array_slice($usuariosList, 0, 10),
+		'plantas_top' => $plantasList,
+		'observaciones' => $observaciones,
 		'filas' => $filas,
 		'total_registros' => count($filas)
 	);
@@ -780,7 +882,7 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 				</fieldset>
 
 				<div class="aud-toolbar-actions clearfix">
-					<form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="display:inline;" onsubmit="return confirm('Esto inserta actividad de demostracion (no es un movimiento real). Continuar?');">
+					<form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="display:inline;" onsubmit="return audConfirmarDemoForm(this, event);">
 						<input type="hidden" name="simular" value="1" />
 						<button type="submit" class="btn btn-default btn-xs" title="Inserta actividad de demostracion (solo pruebas)">
 							<span class="glyphicon glyphicon-plus"></span> Simular actividad
