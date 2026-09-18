@@ -86,11 +86,17 @@ if (isset($_GET['listHorometrosGridAjax'])) {
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 50;
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $op_opciones = isset($_GET['op_opciones']) ? trim($_GET['op_opciones']) : '';
+    $f_tipo = isset($_GET['f_tipo']) ? trim($_GET['f_tipo']) : '';
+    $f_val = isset($_GET['f_val']) ? trim($_GET['f_val']) : '';
+    $f_val2 = isset($_GET['f_val2']) ? trim($_GET['f_val2']) : '';
 
     $params = array(
         0 => $_SESSION['Ses_Emp_Cod'],
         'search' => $search,
-        'op_opciones' => $op_opciones
+        'op_opciones' => $op_opciones,
+        'f_tipo' => $f_tipo,
+        'f_val' => $f_val,
+        'f_val2' => $f_val2
     );
 
     $row_count = $obBD_con1->getRowConsulta(3, $params, $obBD_conexion);
@@ -181,7 +187,8 @@ if (isset($_POST['saveHorometroAjax'])) {
         } else {
             $count_n = isset($row_c['total']) ? (int)$row_c['total'] + 1 : 1;
         }
-        $fecha_str = date('Ymd'); // "fechaactual"
+        $fecha_str = str_replace('-', '', $Hor_Fec);
+        if (empty($fecha_str)) $fecha_str = date('Ymd');
 
         $emp_cod = isset($_SESSION['Ses_Emp_Cod']) ? $_SESSION['Ses_Emp_Cod'] : '620';
         $ruta_destino = "../../imagenes/" . $emp_cod . "/horometro/";
@@ -1047,7 +1054,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
                         <div class="row" style="overflow: visible !important;">
                             <div class="col-sm-4" style="overflow: visible !important;">
                                 <label class="control-label" style="font-size:12px; margin-bottom:5px; color:#475569;">Máquina / Vehículo:</label>
-                                <select id="Veh_Cod" name="Veh_Cod" class="form-control chosen-select" onchange="limpiarSubgrid(); buscarUltimoOperadorOriginal(this.value);">
+                                <select id="Veh_Cod" name="Veh_Cod" class="form-control chosen-select" onchange="limpiarSubgrid();">
                                     <option value="">Seleccione Máquina...</option>
                                 </select>
                             </div>
@@ -1314,7 +1321,7 @@ if (isset($_GET['getEvidenciasAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=16"></script>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_maquinaria_horometro.js?v=19"></script>
 
     <!-- Liberacion y cierre de conexiones -->
     <?php

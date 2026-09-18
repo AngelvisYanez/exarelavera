@@ -30,9 +30,9 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
             if (!empty($Par_Sql['search']) && !empty($Par_Sql['op_opciones'])) {
                 $searchTerm = addslashes($Par_Sql['search']);
                 if ($Par_Sql['op_opciones'] == 'p') {
-                    $search = " AND v.Veh_Pla LIKE '%$searchTerm%'";
+                    $search = " AND (v.Veh_Pla LIKE '%$searchTerm%' OR v.Veh_Mar LIKE '%$searchTerm%')";
                 } else if ($Par_Sql['op_opciones'] == 'o') {
-                    $search = " AND (p.Prs_Nom LIKE '%$searchTerm%' OR p.Prs_Ape LIKE '%$searchTerm%' OR p.Prs_Ced LIKE '$searchTerm%')";
+                    $search = " AND (p.Prs_Nom LIKE '%$searchTerm%' OR p.Prs_Ape LIKE '%$searchTerm%' OR p.Prs_Ced LIKE '%$searchTerm%')";
                 }
             }
 
@@ -43,7 +43,7 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
                 $f_val2 = addslashes($Par_Sql['f_val2']);
 
                 if ($f_tipo == 'D' && !empty($f_val)) {
-                    $search .= " AND mh.Hor_Fec = '$f_val'";
+                    $search .= " AND DATE(mh.Hor_Fec) = '$f_val'";
                 } else if ($f_tipo == 'S' && !empty($f_val)) {
                     // Formato week HTML5: YYYY-Www (ej. 2026-W23)
                     $parts = explode('-W', $f_val);
@@ -70,16 +70,16 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
 
             if (empty($Par_Sql['limits'])) {
                 $sql = "SELECT COUNT(*) as total FROM (
-                            SELECT mh.Hor_Fec
+                            SELECT DATE(mh.Hor_Fec)
                             FROM maquinaria_horometro mh
                             INNER JOIN vehiculo v ON v.Veh_Cod = mh.Veh_Cod
                             INNER JOIN chofer c ON c.Cho_Cod = mh.Cho_Cod
                             INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
                             WHERE v.Emp_Cod = " . (int)$Par_Sql[0] . " $search
-                            GROUP BY mh.Hor_Fec, mh.Veh_Cod, mh.Cho_Cod
+                            GROUP BY DATE(mh.Hor_Fec), mh.Veh_Cod, mh.Cho_Cod
                         ) AS sub";
             } else {
-                $sql = "SELECT MIN(mh.Hor_Cod) as Hor_Cod, mh.Hor_Fec, 
+                $sql = "SELECT MIN(mh.Hor_Cod) as Hor_Cod, DATE(mh.Hor_Fec) as Hor_Fec, 
                                MIN(mh.Hor_Hini) as Hor_Hini, MAX(mh.Hor_Hfin) as Hor_Hfin, 
                                MIN(mh.Hor_Ini) as Hor_Ini, MAX(mh.Hor_Fin) as Hor_Fin, 
                                SUM(IF(mh.Hor_Fin > 0, mh.Hor_Fin - mh.Hor_Ini, 0)) as Hor_Hrs, 
@@ -92,8 +92,8 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
                         INNER JOIN chofer c ON c.Cho_Cod = mh.Cho_Cod
                         INNER JOIN persona p ON p.Prs_Cod = c.Prs_Cod
                         WHERE v.Emp_Cod = " . (int)$Par_Sql[0] . " $search
-                        GROUP BY mh.Hor_Fec, mh.Veh_Cod, mh.Cho_Cod
-                        ORDER BY mh.Hor_Fec DESC " . $Par_Sql['limits'];
+                        GROUP BY DATE(mh.Hor_Fec), mh.Veh_Cod, mh.Cho_Cod
+                        ORDER BY DATE(mh.Hor_Fec) DESC " . $Par_Sql['limits'];
             }
             break;
 
@@ -144,7 +144,7 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
                     FROM maquinaria_horometro 
                     WHERE Veh_Cod = " . (int)$Par_Sql['Veh_Cod'] . "
                       AND Cho_Cod = " . (int)$Par_Sql['Cho_Cod'] . "
-                      AND Hor_Fec = '" . $Par_Sql['Hor_Fec'] . "'
+                      AND DATE(Hor_Fec) = '" . $Par_Sql['Hor_Fec'] . "'
                       AND Hor_Est != 'I'
                     ORDER BY Hor_Cod ASC";
             break;
@@ -152,9 +152,9 @@ function sentencias_maquinaria_horometro($id, $Par_Sql)
         case 14:
             // Contar registros del día para renombrado de imágenes
             if ($Par_Sql['Hor_Cod'] > 0) {
-                $sql = "SELECT COUNT(*) as total FROM maquinaria_horometro WHERE Veh_Cod = " . (int)$Par_Sql['Veh_Cod'] . " AND Cho_Cod = " . (int)$Par_Sql['Cho_Cod'] . " AND Hor_Fec = '" . $Par_Sql['Hor_Fec'] . "' AND Hor_Cod <= " . (int)$Par_Sql['Hor_Cod'];
+                $sql = "SELECT COUNT(*) as total FROM maquinaria_horometro WHERE Veh_Cod = " . (int)$Par_Sql['Veh_Cod'] . " AND Cho_Cod = " . (int)$Par_Sql['Cho_Cod'] . " AND DATE(Hor_Fec) = '" . $Par_Sql['Hor_Fec'] . "' AND Hor_Cod <= " . (int)$Par_Sql['Hor_Cod'];
             } else {
-                $sql = "SELECT COUNT(*) as total FROM maquinaria_horometro WHERE Veh_Cod = " . (int)$Par_Sql['Veh_Cod'] . " AND Cho_Cod = " . (int)$Par_Sql['Cho_Cod'] . " AND Hor_Fec = '" . $Par_Sql['Hor_Fec'] . "'";
+                $sql = "SELECT COUNT(*) as total FROM maquinaria_horometro WHERE Veh_Cod = " . (int)$Par_Sql['Veh_Cod'] . " AND Cho_Cod = " . (int)$Par_Sql['Cho_Cod'] . " AND DATE(Hor_Fec) = '" . $Par_Sql['Hor_Fec'] . "'";
             }
             break;
 
