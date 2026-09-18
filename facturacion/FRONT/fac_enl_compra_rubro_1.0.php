@@ -599,7 +599,7 @@ if ($mysqli && $Emp_Cod > 0) {
 
 <div id="ppaDialog" title="Rubro de presupuesto (proyecto)" style="display:none;">
     <div style="margin-bottom:8px;font-size:12px;color:#555;">
-        <span class="lbl-compra" id="det_titulo">ù</span>
+        <span class="lbl-compra" id="det_titulo">ÔøΩ</span>
     </div>
     <div class="ppa-filtros">
         <div class="input-group input-group-xs" style="width:100%;margin-bottom:4px;">
@@ -651,11 +651,11 @@ if ($mysqli && $Emp_Cod > 0) {
     function rutaArbol(ruta) {
         var txt = $.trim(ruta || ''), html = '';
         if (txt === '') {
-            return '<span class="exa-sinpadre">ù sin jerarquia ù</span>';
+            return '<span class="exa-sinpadre">ÔøΩ sin jerarquia ÔøΩ</span>';
         }
         var niveles = txt.split('>');
         if (!niveles.length) {
-            return '<span class="exa-sinpadre">ù sin jerarquia ù</span>';
+            return '<span class="exa-sinpadre">ÔøΩ sin jerarquia ÔøΩ</span>';
         }
         $.each(niveles, function (i, p) {
             var esHoja = (i === niveles.length - 1);
@@ -891,7 +891,8 @@ if ($mysqli && $Emp_Cod > 0) {
                 { label: 'Tipo', name: 'Tic_Des', width: 85 },
                 { label: 'N Doc.', name: 'Cop_Num', width: 105 },
                 { label: 'RUC/CI', name: 'Prs_Ced', width: 100 },
-                { label: 'Razon social', name: 'proveedor', width: 200 },
+                { label: 'Razon social', name: 'proveedor', width: 180 },
+                { label: 'Observacion', name: 'Cop_Obs', width: 160 },
                 { label: 'Subtotal', name: 'Cop_Imp', width: 75, align: 'right', formatter: 'number', formatoptions: { decimalPlaces: 2 } },
                 { label: 'Total + IVA', name: 'Cop_Tot', width: 90, align: 'right', formatter: 'number', formatoptions: { decimalPlaces: 2 } },
                 { label: 'Items', name: 'tot_items', width: 45, align: 'center' },
