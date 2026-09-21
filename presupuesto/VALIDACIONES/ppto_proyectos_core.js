@@ -30,6 +30,8 @@ var pdfImportPayload = null;
 var pdfImportConflictos = [];
 var pdfImportPreviewTon = 0;
 var rubrosCache = [];
+/** Listado fijo del tab Rubros y toneladas (valores de BD; no depende del cuadro). */
+var rubrosConfigCache = [];
 var gruposTopeCache = {};
 var escenarioActivo = 'esperada';
 var escenarioMesesReal = 0;
@@ -980,6 +982,35 @@ function rubroRowHtml(x, indent) {
     + '</tr>';
 }
 
+/**
+ * Fila del tab Rubros y toneladas: valores configurados en BD (no escenario/vista del cuadro).
+ */
+function rubroRowHtmlConfig(x) {
+  var facAnual = parseFloat(x && x.Pdp_FacAnualTon) || 0;
+  var facMes = factorMensual(facAnual);
+  var anual = parseFloat(x && x.Pdp_PreAnual) || 0;
+  var mensual = factorMensual(anual);
+  var tonMes = tonCostoActivo();
+  var tonRubro = normalizarTonMesRubro(x && x.Pdp_TonBase);
+  if (tonRubro > 0) {
+    tonMes = tonRubro;
+  }
+  var json = JSON.stringify(x).replace(/'/g, '&#39;');
+  return '<tr>'
+    + '<td><span class="text-muted">' + (x.Ppa_Cla || '') + '</span></td>'
+    + '<td>' + (x.Pdp_Rubro || '') + '</td>'
+    + '<td class="text-right">' + formatNumber(tonMes, 2) + '</td>'
+    + '<td class="text-right">' + formatNumber(facAnual, 4) + '</td>'
+    + '<td class="text-right">' + formatNumber(facMes, 6) + '</td>'
+    + '<td class="text-right"><strong>' + formatCurrency(anual) + '</strong></td>'
+    + '<td class="text-right">' + formatCurrency(mensual) + '</td>'
+    + '<td class="text-center exa-ppto-rubro-actions-cell"><span class="exa-ppto-rubro-actions">'
+    + '<button type="button" class="btn btn-xs btn-info btn-edit-rubro" title="Editar" data-json=\'' + json + '\'><i class="bi bi-pencil-square"></i></button>'
+    + '<button type="button" class="btn btn-xs btn-danger btn-del-rubro" title="Eliminar" data-json=\'' + json + '\'><i class="bi bi-trash"></i></button>'
+    + '</span></td>'
+    + '</tr>';
+}
+
 function subgrupoHeadHtml(sg, tonMes, grupoCod) {
   var f = parseFloat(cuadroFinalFactorCtx) || 1;
   var totalBase = sg.total;
@@ -1181,7 +1212,7 @@ function renderTablaRubrosPage() {
   var start = (rubrosPage - 1) * rubrosPageSize;
   var slice = rubrosPageRows.slice(start, start + rubrosPageSize);
   $.each(slice, function(i, x) {
-    $tb.append(rubroRowHtml(x, false));
+    $tb.append(rubroRowHtmlConfig(x));
   });
   if ($pager.length) {
     if (total > rubrosPageSize) {
@@ -1541,7 +1572,7 @@ function aplicarCuadroPeriodoResponse(r) {
 function refreshVistaPresupuesto() {
   recalcIngresoEsperadaCliente();
   if (!rubrosCache || !rubrosCache.length) return;
-  renderTablaRubros(rubrosCache);
+  /* Solo refresca el cuadro; el grid de Rubros y toneladas permanece con datos de BD. */
   renderCuadroRubros(rubrosCache, gruposTopeCache);
   actualizarBotonesEscenario(rubrosCache);
 }
