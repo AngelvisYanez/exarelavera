@@ -9,7 +9,13 @@ if (!isset($_SESSION)) {
     session_start();
 }
 
-header('Content-Type: application/json; charset=utf-8');
+// Compatibilidad con PHP 5.3
+if (!defined('JSON_PRETTY_PRINT')) {
+    define('JSON_PRETTY_PRINT', 0);
+}
+if (!defined('JSON_UNESCAPED_UNICODE')) {
+    define('JSON_UNESCAPED_UNICODE', 0);
+}
 
 // Directorio de almacenamiento JSON / Caché local para desarrollo y modo offline
 $dataDir = __DIR__ . '/../DATA';
@@ -18,34 +24,49 @@ if (!file_exists($dataDir)) {
 }
 
 $archivoActividades = $dataDir . '/actividades_relavera.json';
+$archivoSectores = $dataDir . '/sectores_relavera.json';
 $archivoVectores = $dataDir . '/vectores_relavera.geojson';
 $archivoGpsLogs = $dataDir . '/gps_telemetria_volquetas.json';
 $archivoEmergencias = $dataDir . '/emergencias_sos.json';
 
 // Cargar conexión de base de datos del ERP si está disponible
 $dbConexion = null;
-$empresaCod = isset($_SESSION['Ses_Emp_Cod']) ? $_SESSION['Ses_Emp_Cod'] : 1;
+$empresaCod = isset($_SESSION['Ses_Emp_Cod']) ? $_SESSION['Ses_Emp_Cod'] : 620;
+
+// Definir clase Mock de DebugBar si no existe para evitar Fatal Error en MysqlConexion
+if (!class_exists('DebugBar')) {
+    class DebugBar {
+        public static function __callStatic($name, $args) {}
+    }
+}
 
 try {
     $rutaConexion = __DIR__ . '/../../DATA/MysqlConexion.php';
     if (file_exists($rutaConexion)) {
         require_once($rutaConexion);
         if (class_exists('MysqlConexion')) {
-            $dispositivoBD = isset($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : null;
+            $dispositivoBD = isset($_SESSION['Ses_Dat_Dis']) && !empty($_SESSION['Ses_Dat_Dis']) ? $_SESSION['Ses_Dat_Dis'] : 'ecoparkmining';
             $dbConexion = new MysqlConexion($dispositivoBD);
+            if (!$dbConexion || empty($dbConexion->conexion)) {
+                $dbConexion = new MysqlConexion('exa');
+            }
+            if (!$dbConexion || empty($dbConexion->conexion)) {
+                $dbConexion = new MysqlConexion();
+            }
         }
     }
 } catch (Exception $e) {
     $dbConexion = null;
 }
 
-// Inicializar actividades por defecto si el archivo no existe
-if (!file_exists($archivoActividades)) {
+// Inicializar actividades por defecto si el archivo no existe o está vacío
+if (!file_exists($archivoActividades) || filesize($archivoActividades) < 5) {
     $actividadesIniciales = array(
         array(
             'id' => 'ACT-' . date('Ymd') . '-001',
             'tipo' => 'descarga_relave',
             'tipo_label' => 'Descarga de Relave Seco',
+            'ubicacion_nombre' => 'Frente Central de Vertido',
             'chofer' => 'Manuel Carrión',
             'placa' => 'OBA-7821',
             'volqueta_num' => 'VOL-04 (OBA-7821)',
@@ -58,6 +79,8 @@ if (!file_exists($archivoActividades)) {
             'longitud_m' => 0,
             'estado' => 'Completada',
             'estado_badge' => 'success',
+            'icono' => 'fa-truck',
+            'color' => '#10b981',
             'observaciones' => 'Descarga de 16m³ de relave en el punto central de vertido.',
             'geometria' => array(
                 'type' => 'Polygon',
@@ -76,6 +99,7 @@ if (!file_exists($archivoActividades)) {
             'id' => 'ACT-' . date('Ymd') . '-002',
             'tipo' => 'compactacion_dique',
             'tipo_label' => 'Conformación y Compactación de Dique',
+            'ubicacion_nombre' => 'Sector Operativo Dique Frontal',
             'chofer' => 'Jorge Aguilar',
             'placa' => 'LBA-9023',
             'volqueta_num' => 'Rodillo / Volqueta #12',
@@ -88,6 +112,8 @@ if (!file_exists($archivoActividades)) {
             'longitud_m' => 115.0,
             'estado' => 'En Progreso',
             'estado_badge' => 'warning',
+            'icono' => 'fa-cogs',
+            'color' => '#ea580c',
             'observaciones' => 'Pase de rodillo vibratorio pata de cabra en coronación del dique frontal.',
             'geometria' => array(
                 'type' => 'LineString',
@@ -102,6 +128,7 @@ if (!file_exists($archivoActividades)) {
             'id' => 'ACT-' . date('Ymd') . '-003',
             'tipo' => 'monitoreo_piezometro',
             'tipo_label' => 'Monitoreo de Piezómetro PZ-01',
+            'ubicacion_nombre' => 'Punto de Monitoreo Geotécnico PZ-01',
             'chofer' => 'Ing. Supervisor Geotécnico',
             'placa' => 'N/A',
             'volqueta_num' => 'Técnico de Campo',
@@ -114,6 +141,8 @@ if (!file_exists($archivoActividades)) {
             'longitud_m' => 0,
             'estado' => 'Supervisado',
             'estado_badge' => 'info',
+            'icono' => 'fa-eye',
+            'color' => '#0f766e',
             'observaciones' => 'Lectura nivel freático y estabilidad de taludes ok.',
             'geometria' => array(
                 'type' => 'Point',
@@ -151,6 +180,50 @@ switch ($action) {
             }));
         }
 
+        // Asegurar que cada actividad tenga ubicacion_nombre, icono y color
+        foreach ($actividades as &$act) {
+            if (empty($act['ubicacion_nombre'])) {
+                if (!empty($act['sector_nombre'])) {
+                    $act['ubicacion_nombre'] = $act['sector_nombre'];
+                } elseif (isset($act['lat']) && isset($act['lng'])) {
+                    $dLat = abs((float)$act['lat'] - (-3.738658));
+                    $dLng = abs((float)$act['lng'] - (-79.630349));
+                    if ($dLat < 0.0008 && $dLng < 0.0008) {
+                        $act['ubicacion_nombre'] = 'Frente Central de Vertido';
+                    } elseif ((float)$act['lat'] < -3.7405) {
+                        $act['ubicacion_nombre'] = 'Garita de Control / Balanza';
+                    } else {
+                        $act['ubicacion_nombre'] = 'Sector Operativo Dique';
+                    }
+                } else {
+                    $act['ubicacion_nombre'] = 'Zona Relavera';
+                }
+            }
+
+            // Defaults inteligentes de icono y color si no los tiene
+            if (empty($act['icono'])) {
+                $tipoAct = isset($act['tipo']) ? $act['tipo'] : '';
+                if ($tipoAct === 'reporte_alerta') $act['icono'] = 'fa-exclamation-triangle';
+                elseif ($tipoAct === 'monitoreo_piezometro') $act['icono'] = 'fa-eye';
+                elseif ($tipoAct === 'descarga_humeda') $act['icono'] = 'fa-tint';
+                elseif ($tipoAct === 'compactacion_dique') $act['icono'] = 'fa-cogs';
+                elseif ($tipoAct === 'mantenimiento_vias') $act['icono'] = 'fa-road';
+                elseif ($tipoAct === 'acarreo_material') $act['icono'] = 'fa-truck';
+                else $act['icono'] = 'fa-truck';
+            }
+
+            if (empty($act['color'])) {
+                $tipoAct = isset($act['tipo']) ? $act['tipo'] : '';
+                if ($tipoAct === 'reporte_alerta') $act['color'] = '#ef4444';
+                elseif ($tipoAct === 'monitoreo_piezometro') $act['color'] = '#0f766e';
+                elseif ($tipoAct === 'descarga_humeda') $act['color'] = '#06b6d4';
+                elseif ($tipoAct === 'compactacion_dique') $act['color'] = '#ea580c';
+                elseif ($tipoAct === 'mantenimiento_vias') $act['color'] = '#64748b';
+                else $act['color'] = '#10b981';
+            }
+        }
+        unset($act);
+
         // Cálculo de cubicaje acumulado (m3)
         $totalCubicajeM3 = 0;
         foreach ($actividades as $act) {
@@ -167,6 +240,250 @@ switch ($action) {
             'total_m3' => round($totalCubicajeM3, 2),
             'total_registros' => count($actividades)
         ));
+        break;
+
+    // Obtener lista de sectores / ubicaciones de referencia desde finca_actividad
+    case 'get_sectores':
+        $sectores = array();
+        if ($dbConexion && !empty($dbConexion->conexion)) {
+            try {
+                $sqlSec = "SELECT Fnc_Cod, Fnc_Des, Fnc_Dir, Fnc_Hec, Fnc_Lat, Fnc_Lng, Fnc_Geo_JSON, Suc_Cod, Fnc_Est 
+                           FROM finca_actividad 
+                           WHERE Fnc_Est = 'A' 
+                           ORDER BY Fnc_Des ASC";
+                $resSec = @mysqli_query($dbConexion->conexion, $sqlSec);
+                if ($resSec) {
+                    while ($row = @mysqli_fetch_assoc($resSec)) {
+                        $geo = null;
+                        $icono = 'fa-map-marker';
+                        $color = '#8b5cf6';
+                        $categoria = 'Sector Operativo';
+                        if (!empty($row['Fnc_Geo_JSON'])) {
+                            $geo = json_decode($row['Fnc_Geo_JSON'], true);
+                            if (is_array($geo)) {
+                                if (isset($geo['properties']['icono'])) $icono = $geo['properties']['icono'];
+                                elseif (isset($geo['icono'])) $icono = $geo['icono'];
+
+                                if (isset($geo['properties']['color'])) $color = $geo['properties']['color'];
+                                elseif (isset($geo['color'])) $color = $geo['color'];
+
+                                if (isset($geo['properties']['categoria'])) $categoria = $geo['properties']['categoria'];
+                            }
+                        }
+                        $sectores[] = array(
+                            'id' => (int)$row['Fnc_Cod'],
+                            'nombre' => $row['Fnc_Des'],
+                            'categoria' => $categoria,
+                            'direccion' => !empty($row['Fnc_Dir']) ? $row['Fnc_Dir'] : '',
+                            'hectareas' => (float)$row['Fnc_Hec'],
+                            'lat' => (float)$row['Fnc_Lat'],
+                            'lng' => (float)$row['Fnc_Lng'],
+                            'geometria' => $geo,
+                            'icono' => $icono,
+                            'color' => $color,
+                            'suc_cod' => $row['Suc_Cod']
+                        );
+                    }
+                }
+            } catch (Exception $e) {}
+        }
+
+        // Si no hay en BD o para complementar iconos/colores de caché JSON
+        if (file_exists($archivoSectores)) {
+            $jsonSec = json_decode(file_get_contents($archivoSectores), true);
+            if (is_array($jsonSec)) {
+                if (empty($sectores)) {
+                    $sectores = $jsonSec;
+                } else {
+                    $cacheMap = array();
+                    foreach ($jsonSec as $js) {
+                        if (isset($js['id'])) $cacheMap[$js['id']] = $js;
+                    }
+                    foreach ($sectores as &$sec) {
+                        if (isset($cacheMap[$sec['id']])) {
+                            if (($sec['icono'] === 'fa-map-marker' || empty($sec['icono'])) && !empty($cacheMap[$sec['id']]['icono'])) {
+                                $sec['icono'] = $cacheMap[$sec['id']]['icono'];
+                            }
+                            if (($sec['color'] === '#8b5cf6' || empty($sec['color'])) && !empty($cacheMap[$sec['id']]['color'])) {
+                                $sec['color'] = $cacheMap[$sec['id']]['color'];
+                            }
+                        }
+                    }
+                    unset($sec);
+                }
+            }
+        }
+
+        echo json_encode(array(
+            'success' => true,
+            'sectores' => $sectores,
+            'total' => count($sectores)
+        ));
+        break;
+
+    // Guardar una nueva ubicación / sector de referencia en finca_actividad
+    case 'guardar_sector':
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+
+        if (!$data || empty($data['nombre']) || !isset($data['lat']) || !isset($data['lng'])) {
+            echo json_encode(array('success' => false, 'message' => 'El nombre de la ubicación y las coordenadas son obligatorios.'));
+            exit;
+        }
+
+        $nombre = trim($data['nombre']);
+        $categoria = isset($data['categoria']) ? trim($data['categoria']) : 'Sector Operativo';
+        $direccion = isset($data['direccion']) ? trim($data['direccion']) : '';
+        $hectareas = isset($data['hectareas']) ? (float)$data['hectareas'] : 0.0;
+        $lat = (float)$data['lat'];
+        $lng = (float)$data['lng'];
+        $icono = isset($data['icono']) && !empty($data['icono']) ? trim($data['icono']) : 'fa-map-marker';
+        $color = isset($data['color']) && !empty($data['color']) ? trim($data['color']) : '#8b5cf6';
+        $geometria = isset($data['geometria']) ? $data['geometria'] : null;
+
+        // Estructurar GeoJSON con propiedades de estilo (icono y color)
+        if (empty($geometria)) {
+            $geoData = array(
+                'type' => 'Point',
+                'coordinates' => array($lng, $lat),
+                'properties' => array(
+                    'icono' => $icono,
+                    'color' => $color,
+                    'categoria' => $categoria
+                )
+            );
+        } else {
+            $geoData = $geometria;
+            if (!isset($geoData['properties']) || !is_array($geoData['properties'])) {
+                $geoData['properties'] = array();
+            }
+            $geoData['properties']['icono'] = $icono;
+            $geoData['properties']['color'] = $color;
+            $geoData['properties']['categoria'] = $categoria;
+        }
+        $geoJsonStr = json_encode($geoData);
+        $sucCod = 759; // Relavera
+        $nuevoId = null;
+
+        if ($dbConexion && !empty($dbConexion->conexion)) {
+            try {
+                $nomEsc = mysqli_real_escape_string($dbConexion->conexion, $nombre);
+                $dirEsc = mysqli_real_escape_string($dbConexion->conexion, $direccion);
+                $geoEsc = mysqli_real_escape_string($dbConexion->conexion, $geoJsonStr);
+                $sqlIns = "INSERT INTO finca_actividad (Fnc_Des, Fnc_Dir, Fnc_Hec, Fnc_Lat, Fnc_Lng, Fnc_Geo_JSON, Suc_Cod, Fnc_Est) 
+                           VALUES ('{$nomEsc}', '{$dirEsc}', {$hectareas}, {$lat}, {$lng}, '{$geoEsc}', {$sucCod}, 'A')";
+                $resIns = @mysqli_query($dbConexion->conexion, $sqlIns);
+                if ($resIns) {
+                    $nuevoId = (int)mysqli_insert_id($dbConexion->conexion);
+                }
+            } catch (Exception $e) {}
+        }
+
+        if (!$nuevoId) {
+            $nuevoId = time();
+        }
+
+        // Actualizar caché JSON local para offline
+        $sectores = array();
+        if (file_exists($archivoSectores)) {
+            $sectores = json_decode(file_get_contents($archivoSectores), true);
+            if (!is_array($sectores)) $sectores = array();
+        }
+        $sectorObj = array(
+            'id' => $nuevoId,
+            'nombre' => $nombre,
+            'categoria' => $categoria,
+            'direccion' => $direccion,
+            'hectareas' => $hectareas,
+            'lat' => $lat,
+            'lng' => $lng,
+            'geometria' => $geometria,
+            'icono' => $icono,
+            'color' => $color,
+            'suc_cod' => $sucCod,
+            'fecha_guardado' => date('Y-m-d H:i:s')
+        );
+        array_unshift($sectores, $sectorObj);
+        file_put_contents($archivoSectores, json_encode($sectores, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+        echo json_encode(array(
+            'success' => true,
+            'id' => $nuevoId,
+            'nombre' => $nombre,
+            'sector' => $sectorObj,
+            'message' => 'Ubicación / Sector registrado exitosamente en la base de datos (finca_actividad).'
+        ));
+        break;
+
+    // Subida y almacenamiento de imágenes de evidencia (mapeo/RECURSOS/locator/)
+    case 'subir_evidencia':
+        $dirDestino = dirname(__FILE__) . '/../RECURSOS/locator/';
+        if (!is_dir($dirDestino)) {
+            @mkdir($dirDestino, 0777, true);
+        }
+
+        $archivoGuardado = null;
+        $nombreOriginal = '';
+        $tamanoBytes = 0;
+
+        // 1. Manejar multipart $_FILES['evidencia']
+        if (isset($_FILES['evidencia']) && $_FILES['evidencia']['error'] === UPLOAD_ERR_OK) {
+            $tmpName = $_FILES['evidencia']['tmp_name'];
+            $nombreOriginal = $_FILES['evidencia']['name'];
+            $tamanoBytes = $_FILES['evidencia']['size'];
+            $ext = strtolower(pathinfo($nombreOriginal, PATHINFO_EXTENSION));
+            if (!in_array($ext, array('jpg', 'jpeg', 'png', 'webp'))) {
+                $ext = 'jpg';
+            }
+            $nuevoNombre = 'EVI_' . date('Ymd_His') . '_' . substr(md5(uniqid(mt_rand(), true)), 0, 6) . '.' . $ext;
+            $rutaDestino = $dirDestino . $nuevoNombre;
+            if (move_uploaded_file($tmpName, $rutaDestino)) {
+                $archivoGuardado = $nuevoNombre;
+            }
+        } 
+        // 2. Manejar base64 desde payload JSON
+        else {
+            $input = file_get_contents('php://input');
+            $jsonData = json_decode($input, true);
+            if ($jsonData && !empty($jsonData['imagen_base64'])) {
+                $base64 = $jsonData['imagen_base64'];
+                $nombreOriginal = !empty($jsonData['nombre']) ? $jsonData['nombre'] : 'evidencia.jpg';
+                $ext = 'jpg';
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64, $typeMatch)) {
+                    $base64 = substr($base64, strpos($base64, ',') + 1);
+                    $extRaw = strtolower($typeMatch[1]);
+                    if (in_array($extRaw, array('jpg', 'jpeg', 'png', 'webp'))) {
+                        $ext = ($extRaw === 'jpeg') ? 'jpg' : $extRaw;
+                    }
+                }
+                $decoded = base64_decode($base64);
+                if ($decoded !== false) {
+                    $nuevoNombre = 'EVI_' . date('Ymd_His') . '_' . substr(md5(uniqid(mt_rand(), true)), 0, 6) . '.' . $ext;
+                    $rutaDestino = $dirDestino . $nuevoNombre;
+                    if (file_put_contents($rutaDestino, $decoded)) {
+                        $archivoGuardado = $nuevoNombre;
+                        $tamanoBytes = strlen($decoded);
+                    }
+                }
+            }
+        }
+
+        if ($archivoGuardado) {
+            echo json_encode(array(
+                'success' => true,
+                'archivo' => $archivoGuardado,
+                'url' => '../RECURSOS/locator/' . $archivoGuardado,
+                'nombre_original' => $nombreOriginal,
+                'tamano' => $tamanoBytes,
+                'fecha' => date('Y-m-d H:i:s'),
+                'message' => 'Evidencia guardada exitosamente en locator.'
+            ));
+        } else {
+            echo json_encode(array(
+                'success' => false,
+                'message' => 'No se pudo guardar la imagen de evidencia.'
+            ));
+        }
         break;
 
     // 2. Guardar o actualizar una actividad
@@ -205,6 +522,81 @@ switch ($action) {
         }
 
         file_put_contents($archivoActividades, json_encode($actividades, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+        // Persistir en MySQL ecoparkmining.relavera_actividades si la BD está disponible
+        if ($dbConexion && !empty($dbConexion->conexion)) {
+            try {
+                $fncCodVal = (!empty($data['fnc_cod']) && is_numeric($data['fnc_cod'])) ? (int)$data['fnc_cod'] : 'NULL';
+                $vehCodVal = (!empty($data['veh_cod']) && is_numeric($data['veh_cod'])) ? (int)$data['veh_cod'] : 'NULL';
+                $choCodVal = (!empty($data['cho_cod']) && is_numeric($data['cho_cod'])) ? (int)$data['cho_cod'] : 'NULL';
+
+                // Si no vinieron los códigos numéricos directos, resolver por placa y chofer
+                if ($vehCodVal === 'NULL' && !empty($data['placa']) && $data['placa'] !== 'N/A') {
+                    $plaEsc = mysqli_real_escape_string($dbConexion->conexion, $data['placa']);
+                    $resV = @mysqli_query($dbConexion->conexion, "SELECT Veh_Cod FROM vehiculo WHERE Veh_Pla = '{$plaEsc}' LIMIT 1");
+                    if ($resV && ($rowV = @mysqli_fetch_assoc($resV))) {
+                        $vehCodVal = (int)$rowV['Veh_Cod'];
+                    }
+                }
+
+                if ($choCodVal === 'NULL' && !empty($data['chofer'])) {
+                    $choEsc = mysqli_real_escape_string($dbConexion->conexion, $data['chofer']);
+                    $resC = @mysqli_query($dbConexion->conexion, "SELECT c.Cho_Cod FROM chofer c INNER JOIN persona p ON c.Prs_Ced = p.Prs_Ced WHERE CONCAT(p.Prs_Ape, ' ', p.Prs_Nom) LIKE '%{$choEsc}%' LIMIT 1");
+                    if ($resC && ($rowC = @mysqli_fetch_assoc($resC))) {
+                        $choCodVal = (int)$rowC['Cho_Cod'];
+                    }
+                }
+
+                $actIde = mysqli_real_escape_string($dbConexion->conexion, $idActividad);
+                $actTip = mysqli_real_escape_string($dbConexion->conexion, isset($data['tipo']) ? $data['tipo'] : 'descarga_relave');
+                $actTipLab = mysqli_real_escape_string($dbConexion->conexion, isset($data['tipo_label']) ? $data['tipo_label'] : 'Descarga de Relave');
+
+                // Resolver nombre de la ubicación / sector
+                $ubiNom = !empty($data['ubicacion_nombre']) ? trim($data['ubicacion_nombre']) : '';
+                if (empty($ubiNom) && $fncCodVal !== 'NULL') {
+                    $resF = @mysqli_query($dbConexion->conexion, "SELECT Fnc_Des FROM finca_actividad WHERE Fnc_Cod = {$fncCodVal} LIMIT 1");
+                    if ($resF && ($rowF = @mysqli_fetch_assoc($resF))) {
+                        $ubiNom = $rowF['Fnc_Des'];
+                    }
+                }
+                if (empty($ubiNom)) {
+                    $ubiNom = 'Frente Central de Vertido';
+                }
+                $data['ubicacion_nombre'] = $ubiNom;
+                $ubiEsc = mysqli_real_escape_string($dbConexion->conexion, $ubiNom);
+
+                $actLat = (float)$data['lat'];
+                $actLng = (float)$data['lng'];
+                $actVol = isset($data['volumen_m3']) ? (float)$data['volumen_m3'] : 0.0;
+                $actAre = isset($data['area_m2']) ? (float)$data['area_m2'] : 0.0;
+                $actLon = isset($data['longitud_m']) ? (float)$data['longitud_m'] : 0.0;
+                $actFec = !empty($data['fecha']) ? mysqli_real_escape_string($dbConexion->conexion, $data['fecha']) : date('Y-m-d H:i:s');
+                $actEstOpe = mysqli_real_escape_string($dbConexion->conexion, isset($data['estado']) ? $data['estado'] : 'Completada');
+                $actEstBad = mysqli_real_escape_string($dbConexion->conexion, isset($data['estado_badge']) ? $data['estado_badge'] : 'success');
+                $actObs = mysqli_real_escape_string($dbConexion->conexion, isset($data['observaciones']) ? $data['observaciones'] : '');
+                $actGeo = !empty($data['geometria']) ? mysqli_real_escape_string($dbConexion->conexion, json_encode($data['geometria'])) : 'NULL';
+                $actGeoSql = ($actGeo === 'NULL') ? 'NULL' : "'{$actGeo}'";
+
+                $sqlAct = "INSERT INTO relavera_actividades (
+                    Act_Ide, Emp_Cod, Suc_Cod, Fnc_Cod, Veh_Cod, Cho_Cod,
+                    Act_Tip, Act_Tip_Lab, Act_Ubi_Nom, Act_Lat, Act_Lng, Act_Ele,
+                    Act_Vol_M3, Act_Are_M2, Act_Lon_M, Act_Fec, Act_Est,
+                    Act_Est_Ope, Act_Est_Bad, Act_Obs, Act_Geo_JSON, Act_Sync_Off
+                ) VALUES (
+                    '{$actIde}', 620, 759, {$fncCodVal}, {$vehCodVal}, {$choCodVal},
+                    '{$actTip}', '{$actTipLab}', '{$ubiEsc}', {$actLat}, {$actLng}, 680.00,
+                    {$actVol}, {$actAre}, {$actLon}, '{$actFec}', 'A',
+                    '{$actEstOpe}', '{$actEstBad}', '{$actObs}', {$actGeoSql}, 0
+                ) ON DUPLICATE KEY UPDATE 
+                    Act_Tip = '{$actTip}', Act_Tip_Lab = '{$actTipLab}',
+                    Act_Ubi_Nom = '{$ubiEsc}',
+                    Act_Lat = {$actLat}, Act_Lng = {$actLng},
+                    Act_Vol_M3 = {$actVol}, Act_Are_M2 = {$actAre}, Act_Lon_M = {$actLon},
+                    Act_Est_Ope = '{$actEstOpe}', Act_Est_Bad = '{$actEstBad}', Act_Obs = '{$actObs}'";
+
+                @mysqli_query($dbConexion->conexion, $sqlAct);
+            } catch (Exception $e) {}
+        }
 
         echo json_encode(array('success' => true, 'id' => $idActividad, 'message' => 'Actividad guardada correctamente.'));
         break;
@@ -295,46 +687,101 @@ switch ($action) {
 
     // 5. Consultar flota real de choferes y volquetas desde MySQL ERP
     case 'get_flota':
+        $vehiculos = array();
+        $choferes = array();
         $flota = array();
 
-        if ($dbConexion && is_object($dbConexion)) {
+        if ($dbConexion && is_object($dbConexion) && !empty($dbConexion->conexion)) {
             try {
-                $sql = "SELECT v.Veh_Cod, v.Veh_Pla, v.Veh_Cap, t.Mat_Des,
-                               CONCAT(p.Prs_Nom, ' ', p.Prs_Ape) AS Chofer_Nombre
-                        FROM vehiculo v
-                        LEFT JOIN manifiesto_transporte t ON v.Mat_Cod = t.Mat_Cod
-                        LEFT JOIN chofer c ON c.Emp_Cod = v.Emp_Cod
-                        LEFT JOIN persona p ON c.Prs_Ced = p.Prs_Ced
-                        WHERE v.Emp_Cod = '{$empresaCod}' AND v.Veh_Est = 'ACTIVO'
-                        ORDER BY v.Veh_Pla ASC
-                        LIMIT 15";
-                $result = ($dbConexion && !empty($dbConexion->conexion)) ? @mysqli_query($dbConexion->conexion, $sql) : false;
-
-                if ($result) {
-                    while ($row = @mysqli_fetch_assoc($result)) {
-                        $flota[] = array(
+                // Consulta de Vehículos / Maquinaria Activa
+                $sqlVeh = "SELECT v.Veh_Cod, v.Veh_Pla, v.Veh_Mar, v.Veh_Cap, t.Mat_Des
+                           FROM vehiculo v
+                           LEFT JOIN manifiesto_transporte t ON v.Mat_Cod = t.Mat_Cod
+                           WHERE v.Veh_Est = 'A'
+                           GROUP BY v.Veh_Pla
+                           ORDER BY v.Veh_Pla ASC";
+                $resVeh = @mysqli_query($dbConexion->conexion, $sqlVeh);
+                if ($resVeh) {
+                    while ($row = @mysqli_fetch_assoc($resVeh)) {
+                        $capM3 = 16.0;
+                        if (!empty($row['Veh_Cap'])) {
+                            $valCap = (float)$row['Veh_Cap'];
+                            if ($valCap > 100) {
+                                $capM3 = round($valCap / 1600, 1);
+                                if ($capM3 <= 0 || $capM3 > 50) $capM3 = 16.0;
+                            } elseif ($valCap > 0) {
+                                $capM3 = $valCap;
+                            }
+                        }
+                        $vehItem = array(
                             'codigo' => 'VOL-' . $row['Veh_Cod'],
                             'placa' => $row['Veh_Pla'],
-                            'capacidad_m3' => $row['Veh_Cap'] ? $row['Veh_Cap'] : 16.0,
-                            'transporte' => $row['Mat_Des'] ? $row['Mat_Des'] : 'Transporte Comunitario',
-                            'chofer' => $row['Chofer_Nombre'] ? $row['Chofer_Nombre'] : 'Chofer Operativo'
+                            'marca' => !empty($row['Veh_Mar']) ? $row['Veh_Mar'] : 'Volqueta / Maquinaria',
+                            'capacidad_m3' => $capM3,
+                            'transporte' => !empty($row['Mat_Des']) ? $row['Mat_Des'] : 'Transporte Operativo'
+                        );
+                        $vehiculos[] = $vehItem;
+                        $flota[] = array(
+                            'codigo' => $vehItem['codigo'],
+                            'placa' => $vehItem['placa'],
+                            'capacidad_m3' => $vehItem['capacidad_m3'],
+                            'transporte' => $vehItem['transporte'],
+                            'chofer' => 'Por Asignar'
+                        );
+                    }
+                }
+
+                // Consulta de Choferes / Operadores Activos
+                $sqlCho = "SELECT c.Cho_Cod, p.Prs_Nom, p.Prs_Ape, p.Prs_Ced, c.Cho_Tel
+                           FROM chofer c
+                           INNER JOIN persona p ON c.Prs_Cod = p.Prs_Cod
+                           WHERE c.Cho_Est = 'A'
+                           GROUP BY p.Prs_Ced
+                           ORDER BY p.Prs_Ape ASC, p.Prs_Nom ASC";
+                $resCho = @mysqli_query($dbConexion->conexion, $sqlCho);
+                if ($resCho) {
+                    while ($row = @mysqli_fetch_assoc($resCho)) {
+                        $nom = trim($row['Prs_Ape'] . ' ' . $row['Prs_Nom']);
+                        $choferes[] = array(
+                            'codigo' => 'CHO-' . $row['Cho_Cod'],
+                            'nombre' => $nom,
+                            'cedula' => !empty($row['Prs_Ced']) ? $row['Prs_Ced'] : '',
+                            'telefono' => !empty($row['Cho_Tel']) ? $row['Cho_Tel'] : ''
                         );
                     }
                 }
             } catch (Exception $e) {}
         }
 
-        // Fallback enriquecido
-        if (empty($flota)) {
-            $flota = array(
-                array('codigo' => 'VOL-04', 'placa' => 'OBA-7821', 'capacidad_m3' => 16.0, 'transporte' => 'Trans. El Tablón', 'chofer' => 'Manuel Carrión'),
-                array('codigo' => 'VOL-09', 'placa' => 'PBC-3419', 'capacidad_m3' => 14.0, 'transporte' => 'Trans. Relavera Sur', 'chofer' => 'Luis Espinoza'),
-                array('codigo' => 'VOL-12', 'placa' => 'LBA-9023', 'capacidad_m3' => 18.0, 'transporte' => 'Trans. Minero Central', 'chofer' => 'Jorge Aguilar'),
-                array('codigo' => 'VOL-15', 'placa' => 'PBA-6124', 'capacidad_m3' => 16.0, 'transporte' => 'Trans. El Oro', 'chofer' => 'Carlos Morales')
+        // Fallbacks si no se obtuvo datos de BD
+        if (empty($vehiculos)) {
+            $vehiculos = array(
+                array('codigo' => 'VOL-04', 'placa' => 'OBA-7821', 'marca' => 'HINO 700', 'capacidad_m3' => 16.0, 'transporte' => 'Trans. El Tablón'),
+                array('codigo' => 'VOL-09', 'placa' => 'PBC-3419', 'marca' => 'MERCEDES ACTROS', 'capacidad_m3' => 14.0, 'transporte' => 'Trans. Relavera Sur'),
+                array('codigo' => 'VOL-12', 'placa' => 'LBA-9023', 'marca' => 'MACK GRANITE', 'capacidad_m3' => 18.0, 'transporte' => 'Trans. Minero Central'),
+                array('codigo' => 'VOL-15', 'placa' => 'PBA-6124', 'marca' => 'VOLVO FMX', 'capacidad_m3' => 16.0, 'transporte' => 'Trans. El Oro')
+            );
+            $flota = $vehiculos;
+        }
+
+        if (empty($choferes)) {
+            $choferes = array(
+                array('codigo' => 'CHO-01', 'nombre' => 'Carrión Manuel', 'cedula' => '0703819201'),
+                array('codigo' => 'CHO-02', 'nombre' => 'Espinoza Luis', 'cedula' => '0702918234'),
+                array('codigo' => 'CHO-03', 'nombre' => 'Aguilar Jorge', 'cedula' => '0704928172'),
+                array('codigo' => 'CHO-04', 'nombre' => 'Morales Carlos', 'cedula' => '0705829104')
             );
         }
 
-        echo json_encode(array('success' => true, 'flota' => $flota));
+        echo json_encode(array(
+            'success' => true,
+            'vehiculos' => $vehiculos,
+            'choferes' => $choferes,
+            'flota' => $flota,
+            'total_vehiculos' => count($vehiculos),
+            'total_choferes' => count($choferes),
+            'origen_bd' => ($dbConexion && !empty($dbConexion->conexion) && count($vehiculos) > 4)
+        ));
         break;
 
     // 6. Consultar Manifiestos de hoy desde MySQL ERP
