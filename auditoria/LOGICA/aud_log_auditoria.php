@@ -340,7 +340,7 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 				$this->registrarLogSesion($obBD_conexion, $Ses_Usu_Cod, 'I', 'Ses_Cod', (string)$Ses_Cod, 'Ses_Cod='.$Ses_Cod);
 			}
 			return $Ses_Cod;
-		} catch (Throwable $e) {
+		} catch (Exception $e) {
 			if (class_exists('DebugBar')) {
 				DebugBar::addException($e);
 			}
@@ -372,7 +372,7 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 			$this->registrarLogSesion($obBD_conexion, $Ses_Usu_Cod, 'U', 'Ses_Out', (string)$Ses_Out, 'Ses_Cod='.$Ses_Cod);
 			$this->liberar();
 			$obBD_conexion->cerrar();
-		} catch (Throwable $e) {
+		} catch (Exception $e) {
 			if (class_exists('DebugBar')) {
 				DebugBar::addException($e);
 			}
@@ -420,7 +420,7 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 			}
 			$this->liberar();
 			$obBD_conexion->cerrar();
-		} catch (Throwable $e) {
+		} catch (Exception $e) {
 			if (class_exists('DebugBar')) {
 				DebugBar::addException($e);
 			}
@@ -455,7 +455,7 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 			$val = str_replace('*', ' ', (string)$Log_Val);
 			$int = str_replace('*', ' ', (string)$Log_Int);
 			$this->grabarv_registros($this->sentencias(3, $this->parametros(((int)$Ses_Usu_Cod).'*'.$pcs.'*'.$tab.'*'.$hoy.'*'.$eve.'*'.$cam.'*'.$val.'*'.$int.'*'.$emp.'*'.$suc)), $obBD_conexion->conexion);
-		} catch (Throwable $e) {
+		} catch (Exception $e) {
 			if (class_exists('DebugBar')) {
 				DebugBar::addException($e);
 			}
