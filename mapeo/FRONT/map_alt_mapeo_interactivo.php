@@ -7,57 +7,15 @@
  * @package mapeo.FRONT
  * @version 2.2 (Ultra Zoom 22 & Calidad Satélite HD)
  */
+
 if (!isset($_SESSION)) {
     session_start();
 }
 
-$empresaNombre = isset($_SESSION['Ses_Emp_Nom']) ? (string)$_SESSION['Ses_Emp_Nom'] : '';
-$esCapacitacionVideos = false;
+$empresaNombre = isset($_SESSION['Ses_Emp_Nom']) && !empty($_SESSION['Ses_Emp_Nom']) ? (string)$_SESSION['Ses_Emp_Nom'] : 'ECOPARKMINING SA';
+$empresaCod = isset($_SESSION['Ses_Emp_Cod']) && !empty($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 503;
+$sucursalCod = isset($_SESSION['Ses_Suc_Cod']) && !empty($_SESSION['Ses_Suc_Cod']) ? (int)$_SESSION['Ses_Suc_Cod'] : 759;
 
-// Verificación de empresa "Capacitación Videos"
-if (stripos($empresaNombre, 'capacitacion') !== false || 
-    stripos($empresaNombre, 'video') !== false || 
-    stripos($empresaNombre, 'capacitación') !== false) {
-    $esCapacitacionVideos = true;
-}
-
-// Permitir acceso en entorno local / desarrollo o si no hay sesión activa directa
-$esDevLocal = (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false || empty($empresaNombre)));
-$accesoPermitido = $esCapacitacionVideos || $esDevLocal;
-
-if (!$accesoPermitido) {
-    ?>
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <title>Módulo en Desarrollo - Acceso Restringido</title>
-        <link rel="shortcut icon" type="image/x-icon" href="../../imagenes/ingresar/favicon.png" />
-        <link rel="icon" type="image/png" href="../../imagenes/ingresar/favicon.png" />
-        <link rel="stylesheet" href="../../framework/jquery/bootstrap/bootstrap-3.3.5/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="../../framework/plugins/fonts/font-awesome/font-awesome-4.4.0/css/font-awesome.min.css" />
-        <style>
-            body { background: #f1f5f9; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: 'Segoe UI', sans-serif; }
-            .restricted-box { background: white; padding: 40px; border-radius: 12px; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        </style>
-    </head>
-    <body>
-        <div class="restricted-box">
-            <i class="fa fa-lock text-warning" style="font-size: 54px; margin-bottom: 20px;"></i>
-            <h3 style="color: #1e293b; font-weight: 700; margin-top: 0;">Módulo en Desarrollo</h3>
-            <p style="color: #64748b; font-size: 14px;">
-                El módulo de <b>Mapeo Interactivo y Registro GPS de Relavera</b> se encuentra actualmente en fase de desarrollo y está habilitado exclusivamente para la empresa <b>Capacitación Videos</b>.
-            </p>
-            <p style="font-size: 12px; color: #94a3b8;">Empresa actual: <?= htmlspecialchars($empresaNombre ? $empresaNombre : 'Sin sesión'); ?></p>
-            <a href="../../skins/php/index_button.php" class="btn btn-primary" style="margin-top: 15px;">
-                <i class="fa fa-arrow-left"></i> Volver al Inicio
-            </a>
-        </div>
-    </body>
-    </html>
-    <?php
-    exit;
-}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -97,7 +55,7 @@ if (!$accesoPermitido) {
         <div class="topbar-brand">
             <i class="fa fa-globe" style="font-size: 20px; color: #a7f3d0;"></i>
             <span>Mapeo Interactivo Relavera</span>
-            <span class="badge-dev">Desarrollo &bull; Capacitación Videos</span>
+            <span class="badge-dev"><?= htmlspecialchars($empresaNombre); ?></span>
             <span class="offline-status-pill" id="offline-pill" title="Estado de conectividad y sincronización">
                 <i class="fa fa-circle text-success" id="offline-dot"></i> <span id="offline-text">En Línea</span>
             </span>
@@ -139,6 +97,20 @@ if (!$accesoPermitido) {
             <span class="sec-stats-badge" id="sector-focus-count">0 eventos</span>
             <button type="button" class="btn-exit-focus" onclick="salirDeModoEnfoqueSector()" title="Restaurar vista macro de todos los sectores">
                 <i class="fa fa-times"></i> Ver Todos los Sectores
+            </button>
+        </div>
+
+        <!-- Banner Flotante Prominente de Modo Offline -->
+        <div class="offline-floating-banner" id="offline-floating-banner" style="display:none;">
+            <div class="offline-banner-content">
+                <i class="fa fa-plug" style="font-size:16px;"></i>
+                <span class="offline-banner-title">MODO OFFLINE (SIN CONEXIÓN)</span>
+                <span class="offline-banner-sep">&bull;</span>
+                <span>Memoria local</span>
+                <span class="offline-banner-count" id="offline-banner-count">0 pendientes</span>
+            </div>
+            <button type="button" class="btn-offline-sync-now" onclick="OfflineManager.mostrarDialogoSincronizacion(true)" title="Ver cola y sincronizar">
+                <i class="fa fa-refresh"></i> Ver Cola / Sincronizar
             </button>
         </div>
 
@@ -933,6 +905,25 @@ if (!$accesoPermitido) {
                     <span style="font-size:11px; color:#64748b;">Resumen tabular de pesajes, cubicajes y coordenadas</span>
                 </div>
             </button>
+
+            <hr style="border:0; border-top:1px dashed #cbd5e1; margin:4px 0;">
+
+            <button onclick="OfflineManager.descargarMapaOfflineJSON()" style="padding:12px; background:#f0fdf4; border:1px solid #86efac; border-radius:8px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:12px;">
+                <i class="fa fa-download text-success" style="font-size:22px;"></i>
+                <div>
+                    <strong style="font-size:13px; color:#166534; display:block;">Descargar Mapa y Datos a Local (.json)</strong>
+                    <span style="font-size:11px; color:#15803d;">Respaldo offline completo con sectores, eventos y geometrías</span>
+                </div>
+            </button>
+
+            <button onclick="document.getElementById('input-cargar-mapa-offline').click()" style="padding:12px; background:#eff6ff; border:1px solid #93c5fd; border-radius:8px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:12px;">
+                <i class="fa fa-upload text-primary" style="font-size:22px;"></i>
+                <div>
+                    <strong style="font-size:13px; color:#1e40af; display:block;">Cargar / Restaurar Mapa Local (.json)</strong>
+                    <span style="font-size:11px; color:#2563eb;">Importar respaldo local para visualización sin internet</span>
+                </div>
+            </button>
+            <input type="file" id="input-cargar-mapa-offline" accept=".json" onchange="OfflineManager.cargarMapaOfflineDesdeInput(this)" style="display:none;" />
         </div>
         <div class="modal-mapeo-footer">
             <button onclick="cerrarModalExportacion()" style="padding:8px 14px; background:#e2e8f0; color:#475569; border:none; border-radius:6px; font-weight:600; cursor:pointer;">
@@ -940,6 +931,65 @@ if (!$accesoPermitido) {
             </button>
         </div>
     </div>
+</div>
+
+<!-- MODAL DE DIÁLOGO DE SINCRONIZACIÓN OFFLINE -->
+<div class="modal-mapeo" id="modal-sincronizacion-offline">
+    <div class="modal-mapeo-dialog" style="max-width: 650px;">
+        <div class="modal-mapeo-header" style="background: linear-gradient(135deg, #065f46, #047857); color: #fff;">
+            <div style="font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <i class="fa fa-wifi text-warning" style="font-size: 18px;"></i>
+                <span>¡Conexión a Internet Restablecida!</span>
+            </div>
+            <button type="button" onclick="OfflineManager.cerrarDialogoSincronizacion()" style="background:none; border:none; color:rgba(255,255,255,0.7); font-size:20px; cursor:pointer;">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-mapeo-body" style="padding: 16px;">
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; margin-bottom: 14px; font-size: 13px; color: #166534; display: flex; align-items: flex-start; gap: 10px;">
+                <i class="fa fa-info-circle" style="font-size: 18px; margin-top: 2px;"></i>
+                <div id="offline-sync-resumen-text">
+                    Se detectaron registros creados en este dispositivo durante el Modo Offline.
+                </div>
+            </div>
+
+            <div style="max-height: 240px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 14px;">
+                <table class="table" style="width: 100%; font-size: 12px; border-collapse: collapse; margin: 0;">
+                    <thead style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #475569; position: sticky; top: 0;">
+                        <tr>
+                            <th style="padding: 8px 10px; text-align: left;">Tipo</th>
+                            <th style="padding: 8px 10px; text-align: left;">Nombre / Descripción</th>
+                            <th style="padding: 8px 10px; text-align: left;">Fecha</th>
+                            <th style="padding: 8px 10px; text-align: left;">Coordenadas</th>
+                            <th style="padding: 8px 10px; text-align: center; width: 40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="offline-sync-table-body">
+                        <!-- Filas dinámicas -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="font-size: 11px; color: #64748b; line-height: 1.4;">
+                <i class="fa fa-shield text-success"></i> Los registros se insertarán de forma segura en la base de datos MySQL (tablas <code>relavera_actividades</code> y <code>finca_actividad</code>). Las fotos tomadas sin conexión se subirán automáticamente.
+            </div>
+        </div>
+        <div class="modal-mapeo-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+            <button type="button" class="btn btn-sm" onclick="OfflineManager.descargarMapaOfflineJSON()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; font-weight: 600; cursor: pointer;">
+                <i class="fa fa-download"></i> Guardar Respaldo JSON
+            </button>
+            <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-sm" onclick="OfflineManager.cerrarDialogoSincronizacion()" style="background: #e2e8f0; color: #475569; border: none; border-radius: 6px; padding: 6px 12px; font-weight: 600; cursor: pointer;">
+                    Más Tarde
+                </button>
+                <button type="button" class="btn btn-sm" id="btn-ejecutar-sync-offline" onclick="OfflineManager.ejecutarSincronizacion()" style="background: #10b981; color: #fff; border: none; border-radius: 6px; padding: 6px 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa fa-cloud-upload"></i> Sincronizar Ahora con MySQL
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL LIGHTBOX: VISOR DE EVIDENCIAS A PANTALLA COMPLETA -->
 <div class="locator-lightbox-modal" id="locator-lightbox" onclick="cerrarLightbox()">
     <div class="locator-lightbox-content" onclick="event.stopPropagation()">
@@ -951,8 +1001,11 @@ if (!$accesoPermitido) {
     </div>
 </div>
 
-<!-- Lógica JavaScript del Módulo -->
-<script src="../VALIDACIONES/map_val_mapeo.js?v=4.5"></script>
+<!-- Componente Gestor Offline & Respaldo Local JSON -->
+<script src="../COMPONENTES/map_comp_offline.js?v=1.0"></script>
+<!-- Lógica JavaScript Principal del Módulo -->
+<script src="../VALIDACIONES/map_val_mapeo.js?v=7"></script>
 
 </body>
 </html>
+

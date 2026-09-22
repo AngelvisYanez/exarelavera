@@ -866,8 +866,14 @@ function actualizarIndicadorOffline(online) {
 }
 
 function guardarEnBufferOffline(tipo, item) {
+    if (typeof OfflineManager !== 'undefined') {
+        OfflineManager.guardarRegistro(tipo, item);
+    }
     if (tipo === 'actividad') {
         MapeoState.offlineQueue.actividades.push(item);
+    } else if (tipo === 'sector') {
+        if (!MapeoState.offlineQueue.sectores) MapeoState.offlineQueue.sectores = [];
+        MapeoState.offlineQueue.sectores.push(item);
     } else if (tipo === 'gps') {
         MapeoState.offlineQueue.gps.push(item);
     }
@@ -1823,6 +1829,18 @@ function guardarSectorFormulario() {
         geometria: MapeoState.geometriaTemporal
     };
 
+    if (!navigator.onLine || (typeof OfflineManager !== 'undefined' && !OfflineManager.isOnline())) {
+        guardarEnBufferOffline('sector', payload);
+        MapeoState.sectores.unshift(payload);
+        limpiarLayerTemporal();
+        cerrarModalActividad(true);
+        renderSectoresMapa();
+        renderSectoresLista();
+        poblarSelectoresSectores();
+        mostrarToast(`Sector "${nombre}" guardado localmente (Modo Offline).`);
+        return;
+    }
+
     fetch('../LOGICA/map_log_mapeo.php?action=guardar_sector', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2066,6 +2084,7 @@ function renderSectoresLista() {
     MapeoState.sectores.forEach(sec => {
         const secIconRaw = sec.icono || 'fa-map-marker';
         const secIcon = secIconRaw.indexOf('fa-') === 0 ? secIconRaw : `fa-${secIconRaw}`;
+        const secColor = sec.color || '#8b5cf6';
         const evts = obtenerActividadesDeSector(sec);
         html += `
             <div class="actividad-card" style="border-left: 4px solid ${secColor}; cursor:pointer;" onclick="enfocarSector(${sec.id})">
