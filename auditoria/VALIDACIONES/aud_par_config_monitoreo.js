@@ -1,8 +1,8 @@
 /**
- * Logica de seleccion jerarquica y guardado para aud_adm_config_monitoreo.
- * Permite marcar/desmarcar modulos, directorios y procesos para auditoria.
- * Incluye filtro visual interactivo por Rol, por Usuario, Modo Estricto y Estado de Auditoria.
- * Restringe la modificacion y guardado exclusivamente al Administrador de Sistemas.
+ * Configuracion de monitoreo - modulo / directorio / proceso.
+ * Seleccion jerarquica y guardado, con filtro interactivo por Rol, por Usuario,
+ * Modo Estricto y Estado de Auditoria. Solo el Administrador de Sistemas edita.
+ * @package auditoria.VALIDACIONES
  */
 (function ($) {
 	'use strict';
@@ -11,13 +11,20 @@
 	var $status = $('#audCfgStatus');
 	var esAdmin = (typeof window.audEsAdminSistemas !== 'undefined') ? !!window.audEsAdminSistemas : true;
 
-	// Variables para estado de filtros
-	var filtroPcsMap = null; // Map { pcsId: true } o null si no hay filtro activo
+	// Estado de filtros
+	var filtroPcsMap = null; // { pcsId: true } o null si no hay filtro activo
 	var filtroTipo = '';     // 'Rol' o 'Usuario'
 	var filtroNombre = '';   // Nombre del rol o usuario seleccionado
 
+	// Estado de vista: 'lista' (arbol colapsable) o 'grid' (tabla plana por modulo)
+	var vista = 'lista';
+	var ultimoData = null;
+
+	// Hay cambios sin guardar en la seleccion
+	var dirty = false;
+
 	function setStatus(msg, ok) {
-		$status.text(msg).css('color', ok ? '#2e7d32' : '#c62828');
+		$status.text(msg).css('color', ok === false ? '#c62828' : '#2e7d32');
 	}
 
 	function esc(s) {
@@ -29,12 +36,98 @@
 			.replace(/"/g, '&quot;');
 	}
 
+	/** Texto util para busqueda: quita toggles, contadores y distintivos */
+	function nodeText($el) {
+		var $c = $el.clone();
+		$c.find('.aud-cfg-toggle, .aud-cfg-count, .aud-badge-assigned').remove();
+		return $.trim($c.text() || '').toLowerCase();
+	}
+
+	/** Clave estable de un checkbox para conservar el estado entre vistas */
+	function checkKey($c) {
+		var modOrg = $c.closest('.aud-cfg-mod').attr('data-org') || '0';
+		if ($c.hasClass('aud-cfg-mod-chk')) return modOrg + '|m|0';
+		if ($c.hasClass('aud-cfg-dir-chk')) {
+			return modOrg + '|d|' + ($c.closest('.aud-cfg-dir').attr('data-org') || modOrg);
+		}
+		return modOrg + '|p|' + ($c.val() || '0');
+	}
+
+	function snapshotChecks() {
+		var st = {};
+		$list.find('.aud-cfg-pcs-chk, .aud-cfg-dir-chk, .aud-cfg-mod-chk').each(function () {
+			var $c = $(this);
+			st[checkKey($c)] = { c: $c.is(':checked'), i: !!$c.prop('indeterminate') };
+		});
+		return st;
+	}
+
+	function applyChecks(st) {
+		if (!st) return;
+		$list.find('.aud-cfg-pcs-chk, .aud-cfg-dir-chk, .aud-cfg-mod-chk').each(function () {
+			var $c = $(this);
+			if (st[checkKey($c)]) {
+				$c.prop('checked', st[checkKey($c)].c).prop('indeterminate', st[checkKey($c)].i);
+			}
+		});
+		$list.find('.aud-cfg-mod').each(function () {
+			syncModCheckbox($(this));
+		});
+	}
+
+	/** Conteo de procesos de un modulo (total y marcados) para el resumen */
+	function modStats(mod, selected, modFull, dirFull) {
+		var total = 0;
+		var checked = 0;
+		var fullMod = !!modFull[mod.Org_Cod];
+		$.each(mod.directorios || [], function (j, dir) {
+			var fullDir = fullMod || !!dirFull[dir.Org_Cod];
+			var procesos = dir.procesos || [];
+			$.each(procesos, function (k, p) {
+				total++;
+				if (fullDir || !!selected[dir.Org_Cod + '_' + p.Pcs_Cod]) {
+					checked++;
+				}
+			});
+		});
+		return { total: total, checked: checked };
+	}
+
+	function countHtml(stats) {
+		if (!stats.total) return '';
+		var cls = (stats.checked === stats.total) ? ' aud-cfg-count-on'
+			: (stats.checked > 0 ? ' aud-cfg-count-part' : '');
+		return '<span class="aud-cfg-count' + cls + '" title="' + stats.checked + ' de ' + stats.total + ' procesos auditados">' + stats.checked + '/' + stats.total + '</span>';
+	}
+
+	/** Marca que hay cambios sin guardar y avisa/refuerza el boton Guardar */
+	function marcarDirty() {
+		if (!esAdmin) return;
+		dirty = true;
+		$('#audCfgDirty').toggle(true);
+		$('#btnCfgGuardar').addClass('btn-warning').removeClass('btn-success');
+	}
+
+	/** Vista/servidor y UI quedan en paz: se limpia el aviso de cambios */
+	function limpiarDirty() {
+		dirty = false;
+		$('#audCfgDirty').toggle(false);
+		if (esAdmin) {
+			$('#btnCfgGuardar').addClass('btn-success').removeClass('btn-warning');
+		}
+	}
+
 	function collectItems() {
 		var items = [];
 		$list.children('.aud-cfg-mod').each(function () {
 			var $mod = $(this);
 			var org = parseInt($mod.attr('data-org'), 10) || 0;
 			if (org <= 0) return;
+			var $modChk = $mod.find('.aud-cfg-mod-chk').first();
+			if ($modChk.length && $modChk.is(':checked') && !$modChk.prop('indeterminate')) {
+				items.push({ org: org, pcs: 0 });
+				return;
+			}
 			var $allPcs = $mod.find('.aud-cfg-pcs-chk');
 			var total = $allPcs.length;
 			var checked = $allPcs.filter(':checked').length;
@@ -72,6 +165,13 @@
 		return items;
 	}
 
+	function refreshSwitchUi($chk) {
+		var $sw = $chk.closest('.aud-cfg-switch');
+		if ($sw.length) {
+			$sw.toggleClass('aud-cfg-sw-part', !!$chk.prop('indeterminate'));
+		}
+	}
+
 	function syncDirCheckbox($dir) {
 		var $pcs = $dir.find('.aud-cfg-pcs-chk');
 		var total = $pcs.length;
@@ -79,6 +179,7 @@
 		var $chk = $dir.find('.aud-cfg-dir-chk');
 		$chk.prop('checked', total > 0 && checked === total);
 		$chk.prop('indeterminate', checked > 0 && checked < total);
+		refreshSwitchUi($chk);
 	}
 
 	function syncModCheckbox($mod) {
@@ -91,16 +192,130 @@
 		var $modChk = $mod.find('.aud-cfg-mod-chk');
 		$modChk.prop('checked', total > 0 && checked === total);
 		$modChk.prop('indeterminate', checked > 0 && checked < total);
+		refreshSwitchUi($modChk);
 	}
 
 	function setCollapsed($box, collapsed) {
+		if (vista === 'grid') collapsed = false;
 		$box.toggleClass('aud-cfg-collapsed', !!collapsed);
 		$box.find('> .aud-cfg-mod-head .aud-cfg-toggle .glyphicon, > .aud-cfg-dir-head .aud-cfg-toggle .glyphicon')
 			.toggleClass('glyphicon-chevron-right', !!collapsed)
 			.toggleClass('glyphicon-chevron-down', !collapsed);
 	}
 
+	function switchInputHtml(chkClass, valueAttr, checked, disAttr) {
+		return '<span class="aud-cfg-sw-ctrl"><input type="checkbox" class="' + chkClass + '"' + valueAttr + (checked ? ' checked="checked"' : '') + disAttr + ' />'
+			+ '<span class="aud-cfg-sw-track"><span class="aud-cfg-sw-thumb"></span></span></span>';
+	}
+
+	function gridPcsRowHtml(p, chk, disAttr, dirName) {
+		var name = esc(p.Pcs_Lin || ('Proceso ' + p.Pcs_Cod));
+		var estado = chk ? 'Auditar' : 'Inactivo';
+		return '<div class="aud-cfg-pcs aud-cfg-grid-row" data-pcs="' + p.Pcs_Cod + '">'
+			+ '<span class="aud-cfg-g-dircell">' + (dirName ? esc(dirName) : '&mdash;') + '</span>'
+			+ '<span class="aud-cfg-g-pcscell"><label class="aud-cfg-pcs-label aud-cfg-switch">' + switchInputHtml('aud-cfg-pcs-chk', ' value="' + p.Pcs_Cod + '"', chk, disAttr) + ' '
+			+ name + '</label></span>'
+			+ '<span class="aud-cfg-g-statecell aud-cfg-g-state-' + (chk ? 'on' : 'off') + '">' + estado + '</span>'
+			+ '</div>';
+	}
+
+	function renderGrid(mods, selected, modFull, dirFull, disAttr) {
+		var html = '';
+		$.each(mods, function (i, m) {
+			var org = m.Org_Cod;
+			var fullMod = !!modFull[org];
+			var dirs = m.directorios || [];
+			html += '<div class="aud-cfg-mod aud-cfg-grid-mod" data-org="' + org + '">';
+			html += '<div class="aud-cfg-mod-head aud-cfg-grid-modhead"><label class="aud-cfg-switch">'
+				+ switchInputHtml('aud-cfg-mod-chk', '', fullMod, disAttr) + '</label> ';
+			html += '<strong>' + esc(m.Org_Des) + '</strong>';
+			html += countHtml(modStats(m, selected, modFull, dirFull)) + '</div>';
+			html += '<div class="aud-cfg-mod-body">';
+			html += '<div class="aud-cfg-grid-head"><span class="aud-cfg-g-dircell">Directorio</span><span class="aud-cfg-g-pcscell">Proceso</span><span class="aud-cfg-g-statecell">Auditar</span></div>';
+
+			$.each(dirs, function (j, dir) {
+				var dirOrg = dir.Org_Cod;
+				var fullDir = fullMod || !!dirFull[dirOrg];
+				var procesos = dir.procesos || [];
+				if (dir.es_modulo) {
+					$.each(procesos, function (k, p) {
+						var selKey = dirOrg + '_' + p.Pcs_Cod;
+						var chk = fullDir || !!selected[selKey];
+						html += gridPcsRowHtml(p, chk, disAttr, null);
+					});
+					return;
+				}
+				html += '<div class="aud-cfg-dir aud-cfg-grid-dir" data-org="' + dirOrg + '">';
+				html += '<div class="aud-cfg-dir-head aud-cfg-grid-dirhead"><label class="aud-cfg-switch">'
+					+ switchInputHtml('aud-cfg-dir-chk', '', fullDir, disAttr) + '</label> ';
+				html += esc(dir.Org_Des) + ' <span class="aud-cfg-count">(' + procesos.length + ')</span></div>';
+				html += '<div class="aud-cfg-dir-body">';
+				$.each(procesos, function (k, p) {
+					var selKey = dirOrg + '_' + p.Pcs_Cod;
+					var chk = fullDir || !!selected[selKey];
+					html += gridPcsRowHtml(p, chk, disAttr, dir.Org_Des);
+				});
+				html += '</div></div>';
+			});
+
+			html += '</div></div>';
+		});
+		return html;
+	}
+
+	function renderLista(mods, selected, modFull, dirFull, disAttr) {
+		var html = '';
+		$.each(mods, function (i, m) {
+			var org = m.Org_Cod;
+			var fullMod = !!modFull[org];
+			var dirs = m.directorios || [];
+			html += '<div class="aud-cfg-mod aud-cfg-collapsed" data-org="' + org + '">';
+			html += '<div class="aud-cfg-mod-head"><a href="#" class="aud-cfg-toggle"><span class="glyphicon glyphicon-chevron-right"></span></a> ';
+			html += '<label class="aud-cfg-switch aud-cfg-nivel-modulo"><span class="aud-cfg-sw-ctrl"><input type="checkbox" class="aud-cfg-mod-chk"' + (fullMod ? ' checked="checked"' : '') + disAttr + ' />'
+				+ '<span class="aud-cfg-sw-track"><span class="aud-cfg-sw-thumb"></span></span></span> ';
+			html += '<strong>' + esc(m.Org_Des) + '</strong>';
+			html += countHtml(modStats(m, selected, modFull, dirFull)) + '</label></div>';
+			html += '<div class="aud-cfg-mod-body">';
+
+			$.each(dirs, function (j, dir) {
+				var dirOrg = dir.Org_Cod;
+				var fullDir = fullMod || !!dirFull[dirOrg];
+				var procesos = dir.procesos || [];
+				if (dir.es_modulo) {
+					$.each(procesos, function (k, p) {
+						var selKey = dirOrg + '_' + p.Pcs_Cod;
+						var chk = fullDir || !!selected[selKey];
+						html += '<div class="aud-cfg-pcs" data-pcs="' + p.Pcs_Cod + '">';
+						html += '<label class="aud-cfg-pcs-label aud-cfg-switch"><span class="aud-cfg-sw-ctrl"><input type="checkbox" class="aud-cfg-pcs-chk" value="' + p.Pcs_Cod + '"' + (chk ? ' checked="checked"' : '') + disAttr + ' />'
+							+ '<span class="aud-cfg-sw-track"><span class="aud-cfg-sw-thumb"></span></span></span> ';
+						html += esc(p.Pcs_Lin || ('Proceso ' + p.Pcs_Cod)) + '</label></div>';
+					});
+					return;
+				}
+				html += '<div class="aud-cfg-dir aud-cfg-collapsed" data-org="' + dirOrg + '">';
+				html += '<div class="aud-cfg-dir-head"><a href="#" class="aud-cfg-toggle"><span class="glyphicon glyphicon-chevron-right"></span></a> ';
+				html += '<label class="aud-cfg-switch aud-cfg-nivel-directorio"><span class="aud-cfg-sw-ctrl"><input type="checkbox" class="aud-cfg-dir-chk"' + (fullDir ? ' checked="checked"' : '') + disAttr + ' />'
+					+ '<span class="aud-cfg-sw-track"><span class="aud-cfg-sw-thumb"></span></span></span> ';
+				html += esc(dir.Org_Des) + ' <span class="aud-cfg-count">(' + procesos.length + ')</span></label></div>';
+				html += '<div class="aud-cfg-dir-body">';
+				$.each(procesos, function (k, p) {
+					var selKey = dirOrg + '_' + p.Pcs_Cod;
+					var chk = fullDir || !!selected[selKey];
+					html += '<div class="aud-cfg-pcs" data-pcs="' + p.Pcs_Cod + '">';
+					html += '<label class="aud-cfg-pcs-label aud-cfg-switch"><span class="aud-cfg-sw-ctrl"><input type="checkbox" class="aud-cfg-pcs-chk" value="' + p.Pcs_Cod + '"' + (chk ? ' checked="checked"' : '') + disAttr + ' />'
+						+ '<span class="aud-cfg-sw-track"><span class="aud-cfg-sw-thumb"></span></span></span> ';
+					html += esc(p.Pcs_Lin || ('Proceso ' + p.Pcs_Cod)) + '</label></div>';
+				});
+				html += '</div></div>';
+			});
+
+			html += '</div></div>';
+		});
+		return html;
+	}
+
 	function render(data) {
+		ultimoData = data;
 		var mods = (data && data.modules) ? data.modules : [];
 		var selected = (data && data.selected) ? data.selected : {};
 		var modFull = (data && data.modFull) ? data.modFull : {};
@@ -115,60 +330,11 @@
 		}
 
 		var disAttr = esAdmin ? '' : ' disabled="disabled" title="Modo solo lectura"';
-		var html = '';
+		var html = (vista === 'grid')
+			? renderGrid(mods, selected, modFull, dirFull, disAttr)
+			: renderLista(mods, selected, modFull, dirFull, disAttr);
 
-		$.each(mods, function (i, mod) {
-			var modOrg = mod.Org_Cod;
-			var isModFull = !!modFull[modOrg];
-			html += '<div class="aud-cfg-mod aud-cfg-collapsed" data-org="' + modOrg + '">';
-			html += '<div class="aud-cfg-mod-head">';
-			html += '<a href="#" class="aud-cfg-toggle"><span class="glyphicon glyphicon-chevron-right"></span></a> ';
-			html += '<label><input type="checkbox" class="aud-cfg-mod-chk"' + (isModFull ? ' checked="checked"' : '') + disAttr + ' /> ';
-			html += '<strong>' + esc(mod.Org_Des) + '</strong></label>';
-			html += '</div>';
-			html += '<div class="aud-cfg-mod-body">';
-
-			var dirs = mod.directorios || [];
-			$.each(dirs, function (j, dir) {
-				var dirOrg = dir.Org_Cod;
-				var isDirFull = isModFull || !!dirFull[dirOrg];
-				var pcsList = dir.procesos || [];
-
-				if (dir.es_modulo) {
-					$.each(pcsList, function (k, pcs) {
-						var selKey = dirOrg + '_' + pcs.Pcs_Cod;
-						var chk = isDirFull || !!selected[selKey];
-						html += '<div class="aud-cfg-pcs" data-pcs="' + pcs.Pcs_Cod + '">';
-						html += '<label class="aud-cfg-pcs-label"><input type="checkbox" class="aud-cfg-pcs-chk" value="' + pcs.Pcs_Cod + '"' + (chk ? ' checked="checked"' : '') + disAttr + ' /> ';
-						html += esc(pcs.Pcs_Lin) + '</label>';
-						html += '</div>';
-					});
-					return;
-				}
-
-				html += '<div class="aud-cfg-dir aud-cfg-collapsed" data-org="' + dirOrg + '">';
-				html += '<div class="aud-cfg-dir-head">';
-				html += '<a href="#" class="aud-cfg-toggle"><span class="glyphicon glyphicon-chevron-right"></span></a> ';
-				html += '<label><input type="checkbox" class="aud-cfg-dir-chk"' + (isDirFull ? ' checked="checked"' : '') + disAttr + ' /> ';
-				html += esc(dir.Org_Des) + ' <span class="aud-cfg-count">(' + pcsList.length + ')</span></label>';
-				html += '</div>';
-				html += '<div class="aud-cfg-dir-body">';
-
-				$.each(pcsList, function (k, pcs) {
-					var selKey = dirOrg + '_' + pcs.Pcs_Cod;
-					var chk = isDirFull || !!selected[selKey];
-					html += '<div class="aud-cfg-pcs" data-pcs="' + pcs.Pcs_Cod + '">';
-					html += '<label class="aud-cfg-pcs-label"><input type="checkbox" class="aud-cfg-pcs-chk" value="' + pcs.Pcs_Cod + '"' + (chk ? ' checked="checked"' : '') + disAttr + ' /> ';
-					html += esc(pcs.Pcs_Lin) + '</label>';
-					html += '</div>';
-				});
-
-				html += '</div></div>';
-			});
-
-			html += '</div></div>';
-		});
-
+		$list.toggleClass('aud-cfg-view-grid', vista === 'grid');
 		$list.html(html);
 
 		$list.find('.aud-cfg-mod').each(function () {
@@ -181,11 +347,17 @@
 			$.each(dirFull, function () { nRules++; });
 			$.each(selected, function () { nRules++; });
 		}
+		var totalPcs = 0;
+		var checkedPcs = 0;
+		$.each(mods, function (i, m) {
+			var st = modStats(m, selected, modFull, dirFull);
+			totalPcs += st.total;
+			checkedPcs += st.checked;
+		});
 		setStatus(data && data.hasConfig
-			? ('Configuracion activa: ' + nRules + ' regla(s). El monitor registra la actividad de los seleccionados en todo el sistema.')
-			: 'Sin configuracion: se registran los eventos de las tablas por defecto (AUDIT_TABLES).', true);
+			? ('Configuracion activa: ' + nRules + ' regla(s), ' + checkedPcs + '/' + totalPcs + ' procesos auditados. El monitor registra la actividad de los seleccionados en todo el sistema.')
+			: 'Sin configuracion: no se registrara actividad (' + checkedPcs + '/' + totalPcs + ' procesos auditados). Marque los modulos para cubrir el sistema.', true);
 
-		// Si habia un filtro previo, reaplicar
 		if (filtroPcsMap !== null) {
 			aplicarFiltros();
 		}
@@ -195,6 +367,7 @@
 		$list.html('<p class="aud-cfg-empty">Cargando...</p>');
 		$.getJSON(window.location.pathname, { listConfigAjax: 1 }, function (data) {
 			render(data);
+			limpiarDirty();
 		}).fail(function () {
 			$list.html('<p class="aud-cfg-empty">No se pudo cargar la configuracion.</p>');
 			setStatus('Error al cargar.', false);
@@ -215,30 +388,37 @@
 		});
 	}
 
-	/** Cargar combo de usuarios */
+	/** Cargar combo de usuarios (agrupados por persona, sin repetidos) */
 	function cargarUsuarios() {
 		var $sel = $('#audCfgFiltroUsu');
 		$.getJSON(window.location.pathname, { listUsuariosAjax: 1 }, function (resp) {
 			if (resp && resp.success && resp.rows) {
 				var opts = '<option value="">-- Todos los usuarios --</option>';
 				$.each(resp.rows, function (i, u) {
-					var extra = u.Roles ? (' (' + u.Roles + ')') : '';
-					opts += '<option value="' + u.Usu_Cod + '">' + esc(u.Usu_Nom + extra) + '</option>';
+					var val = ($.trim(u.Usu_Cods || '') !== '') ? u.Usu_Cods : (u.Usu_Cod || '');
+					var nombre = u.Usu_Nom || 'Usuario #' + (u.Usu_Cod || '');
+					if (u.N_Ctas > 1) {
+						nombre += ' (' + u.N_Ctas + ' cuentas)';
+					}
+					if (u.Roles) {
+						nombre += ' (' + u.Roles + ')';
+					}
+					opts += '<option value="' + val + '">' + esc(nombre) + '</option>';
 				});
 				$sel.html(opts);
 			}
 		});
 	}
 
-	/** Aplica simultaneamente: busqueda de texto, filtro por rol/usuario, estado de auditoria y modo estricto */
+	/** Aplica: busqueda de texto, filtro rol/usuario, estado de auditoria y modo estricto */
 	function aplicarFiltros() {
 		var q = $.trim($('#audCfgFilter').val() || '').toLowerCase();
 		var hasPcsFilter = (filtroPcsMap !== null);
 		var estadoAudit = $('#audCfgFiltroAudit').val() || 'todos';
 		var modoEstricto = $('#audCfgModoEstricto').is(':checked');
 
-		// Limpiar badges previos
 		$list.find('.aud-badge-assigned').remove();
+		$list.find('.aud-cfg-empty-filter').remove();
 
 		var conteoTotalAsignados = 0;
 		var conteoAuditados = 0;
@@ -246,14 +426,14 @@
 
 		$list.find('.aud-cfg-mod').each(function () {
 			var $mod = $(this);
-			var modTxt = $.trim($mod.find('.aud-cfg-mod-head').text() || '').toLowerCase();
+			var modTxt = nodeText($mod.find('.aud-cfg-mod-head'));
 			var modHitText = !q || (modTxt.indexOf(q) !== -1);
 			var modHasVisiblePcs = false;
 			var modHasRolePcs = false;
 
 			$mod.find('.aud-cfg-dir').each(function () {
 				var $dir = $(this);
-				var dirTxt = $.trim($dir.find('.aud-cfg-dir-head').text() || '').toLowerCase();
+				var dirTxt = nodeText($dir.find('.aud-cfg-dir-head'));
 				var dirHitText = modHitText || (dirTxt.indexOf(q) !== -1);
 				var dirHasVisiblePcs = false;
 				var dirHasRolePcs = false;
@@ -263,12 +443,12 @@
 					var $chk = $pcs.find('.aud-cfg-pcs-chk');
 					var pcsId = parseInt($pcs.attr('data-pcs'), 10) || parseInt($chk.val(), 10) || 0;
 					var isChecked = $chk.is(':checked');
-					var t = $.trim($pcs.text() || '').toLowerCase();
+					var t = nodeText($pcs);
 
 					var hitText = dirHitText || (t.indexOf(q) !== -1);
-					var hitRoleUser = !hasPcsFilter || (filtroPcsMap[pcsId] === true);
 
 					if (hasPcsFilter && filtroPcsMap[pcsId] === true) {
+						$pcs.attr('data-in-filtro', '1');
 						conteoTotalAsignados++;
 						dirHasRolePcs = true;
 						modHasRolePcs = true;
@@ -277,6 +457,8 @@
 						} else {
 							conteoPendientes++;
 						}
+					} else {
+						$pcs.removeAttr('data-in-filtro');
 					}
 
 					var hitEstado = true;
@@ -286,7 +468,9 @@
 						hitEstado = !isChecked;
 					}
 
-					var visible = hitText && hitRoleUser && hitEstado;
+					// Todos los modulos/procesos/directorios se listan para cualquier rol;
+					// los asignados al rol/usuario quedan resaltados con su distintivo.
+					var visible = hitText && hitEstado;
 					$pcs.toggle(visible);
 					if (visible) {
 						dirHasVisiblePcs = true;
@@ -296,7 +480,6 @@
 					}
 				});
 
-				// En modo estricto con filtro de rol activo, si el directorio no tiene procesos del rol, no se muestra
 				var dirVisible = dirHasVisiblePcs;
 				if (hasPcsFilter && modoEstricto && !dirHasRolePcs) {
 					dirVisible = false;
@@ -310,18 +493,17 @@
 				}
 			});
 
-			// Procesos directamente hijos del modulo
 			$mod.children('.aud-cfg-mod-body').children('.aud-cfg-pcs').each(function () {
 				var $pcs = $(this);
 				var $chk = $pcs.find('.aud-cfg-pcs-chk');
 				var pcsId = parseInt($pcs.attr('data-pcs'), 10) || parseInt($chk.val(), 10) || 0;
 				var isChecked = $chk.is(':checked');
-				var t = $.trim($pcs.text() || '').toLowerCase();
+				var t = nodeText($pcs);
 
 				var hitText = modHitText || (t.indexOf(q) !== -1);
-				var hitRoleUser = !hasPcsFilter || (filtroPcsMap[pcsId] === true);
 
 				if (hasPcsFilter && filtroPcsMap[pcsId] === true) {
+					$pcs.attr('data-in-filtro', '1');
 					conteoTotalAsignados++;
 					modHasRolePcs = true;
 					if (isChecked) {
@@ -329,6 +511,8 @@
 					} else {
 						conteoPendientes++;
 					}
+				} else {
+					$pcs.removeAttr('data-in-filtro');
 				}
 
 				var hitEstado = true;
@@ -338,7 +522,9 @@
 					hitEstado = !isChecked;
 				}
 
-				var visible = hitText && hitRoleUser && hitEstado;
+				// Todos los modulos/procesos/directorios se listan para cualquier rol;
+				// los asignados al rol/usuario quedan resaltados con su distintivo.
+				var visible = hitText && hitEstado;
 				$pcs.toggle(visible);
 				if (visible) {
 					modHasVisiblePcs = true;
@@ -348,7 +534,6 @@
 				}
 			});
 
-			// En modo estricto con filtro de rol activo, si el modulo no tiene procesos del rol, no se muestra
 			var modVisible = modHasVisiblePcs;
 			if (hasPcsFilter && modoEstricto && !modHasRolePcs) {
 				modVisible = false;
@@ -359,9 +544,13 @@
 			}
 		});
 
-		// Actualizar contadores y aviso informativo si hay filtro
 		if (hasPcsFilter) {
 			actualizarMensajeFiltro(conteoTotalAsignados, conteoAuditados, conteoPendientes);
+		}
+
+		var visMods = $list.find('.aud-cfg-mod:visible').length;
+		if (visMods === 0 && (q || hasPcsFilter || estadoAudit !== 'todos')) {
+			$list.prepend('<p class="aud-cfg-empty aud-cfg-empty-filter">Ningun modulo coincide con la busqueda o los filtros activos.</p>');
 		}
 	}
 
@@ -421,15 +610,25 @@
 		if (filtroPcsMap !== null) aplicarFiltros();
 	});
 
+	$list.on('change', '.aud-cfg-pcs-chk, .aud-cfg-dir-chk, .aud-cfg-mod-chk', marcarDirty);
+
 	$('#btnCfgTodos').on('click', function () {
 		if (!esAdmin) return;
 		$list.find('.aud-cfg-pcs-chk, .aud-cfg-mod-chk, .aud-cfg-dir-chk').prop('checked', true).prop('indeterminate', false);
+		$list.find('.aud-cfg-mod').each(function () {
+			syncModCheckbox($(this));
+		});
+		marcarDirty();
 		if (filtroPcsMap !== null) aplicarFiltros();
 	});
 
 	$('#btnCfgNinguno').on('click', function () {
 		if (!esAdmin) return;
 		$list.find('.aud-cfg-pcs-chk, .aud-cfg-mod-chk, .aud-cfg-dir-chk').prop('checked', false).prop('indeterminate', false);
+		$list.find('.aud-cfg-mod').each(function () {
+			syncModCheckbox($(this));
+		});
+		marcarDirty();
 		if (filtroPcsMap !== null) aplicarFiltros();
 	});
 
@@ -443,6 +642,28 @@
 		$list.find('.aud-cfg-mod, .aud-cfg-dir').each(function () {
 			setCollapsed($(this), true);
 		});
+	});
+
+	/** Cambio de vista: lista (arbol) o grid (tabla) */
+	function setVista(v) {
+		if (v !== 'lista' && v !== 'grid') return;
+		if (v === vista) return;
+		var st = snapshotChecks();
+		vista = v;
+		$('#btnCfgVistaLista').toggleClass('active', vista === 'lista');
+		$('#btnCfgVistaGrid').toggleClass('active', vista === 'grid');
+		if (ultimoData) {
+			render(ultimoData);
+			applyChecks(st);
+		}
+	}
+
+	$('#btnCfgVistaLista').on('click', function () {
+		setVista('lista');
+	});
+
+	$('#btnCfgVistaGrid').on('click', function () {
+		setVista('grid');
 	});
 
 	$('#btnCfgRecargar').on('click', function () {
@@ -461,7 +682,7 @@
 		aplicarFiltros();
 	});
 
-	/** Evento Filtro por Rol */
+	/** Filtro por Rol */
 	$('#audCfgFiltroRol').on('change', function () {
 		var rolVal = $(this).val();
 		if (!rolVal) {
@@ -470,7 +691,7 @@
 			}
 			return;
 		}
-		$('#audCfgFiltroUsu').val(''); // Limpiar selector usuario
+		$('#audCfgFiltroUsu').val('');
 		var rolTxt = $(this).find('option:selected').text();
 		filtroTipo = 'Rol';
 		filtroNombre = rolTxt;
@@ -492,7 +713,7 @@
 		});
 	});
 
-	/** Evento Filtro por Usuario */
+	/** Filtro por Usuario */
 	$('#audCfgFiltroUsu').on('change', function () {
 		var usuVal = $(this).val();
 		if (!usuVal) {
@@ -501,7 +722,7 @@
 			}
 			return;
 		}
-		$('#audCfgFiltroRol').val(''); // Limpiar selector rol
+		$('#audCfgFiltroRol').val('');
 		var usuTxt = $(this).find('option:selected').text();
 		filtroTipo = 'Usuario';
 		filtroNombre = usuTxt;
@@ -524,12 +745,11 @@
 	});
 
 	function actualizarMensajeFiltro(total, auditados, pendientes) {
-		var msg = '<span class="glyphicon glyphicon-filter"></span> Mostrando procesos asignados a '
+		var msg = '<span class="glyphicon glyphicon-filter"></span> Filtro por '
 			+ '<strong>' + esc(filtroTipo) + ': ' + esc(filtroNombre) + '</strong> &mdash; '
-			+ '<strong>' + total + '</strong> proceso(s) autorizados ('
+			+ 'se listan todos los modulos, directorios y procesos; los <strong>' + total + '</strong> autorizados de este rol/usuario quedan resaltados ('
 			+ '<span style="color:#0f7b3d;"><strong>' + auditados + '</strong> marcados en monitoreo</span>, '
-			+ '<span style="color:#b91c1c;"><strong>' + pendientes + '</strong> sin auditar</span>). '
-			+ 'Los modulos y procesos ajenos se encuentran filtrados.';
+			+ '<span style="color:#b91c1c;"><strong>' + pendientes + '</strong> sin auditar</span>).';
 		$('#audCfgFilterMsg').html(msg).show();
 		if (esAdmin) {
 			$('#btnCfgMarcarFiltro').show();
@@ -561,7 +781,7 @@
 		if (!filtroPcsMap) return;
 
 		var marcados = 0;
-		$list.find('.aud-cfg-pcs:visible').each(function () {
+		$list.find('.aud-cfg-pcs:visible[data-in-filtro="1"]').each(function () {
 			var $chk = $(this).find('.aud-cfg-pcs-chk');
 			if ($chk.length && !$chk.is(':checked')) {
 				$chk.prop('checked', true);
@@ -574,6 +794,7 @@
 		});
 
 		aplicarFiltros();
+		marcarDirty();
 		var aviso = 'Se marcaron ' + marcados + ' procesos para ' + filtroTipo + ': ' + filtroNombre + '. Presione "Guardar" para confirmar los cambios.';
 		setStatus(aviso, true);
 		if (typeof $.alert === 'function') {
@@ -587,7 +808,7 @@
 		if (!filtroPcsMap) return;
 
 		var desmarcados = 0;
-		$list.find('.aud-cfg-pcs:visible').each(function () {
+		$list.find('.aud-cfg-pcs:visible[data-in-filtro="1"]').each(function () {
 			var $chk = $(this).find('.aud-cfg-pcs-chk');
 			if ($chk.length && $chk.is(':checked')) {
 				$chk.prop('checked', false);
@@ -600,6 +821,7 @@
 		});
 
 		aplicarFiltros();
+		marcarDirty();
 		var aviso = 'Se desmarcaron ' + desmarcados + ' procesos de ' + filtroTipo + ': ' + filtroNombre + '. Presione "Guardar" para confirmar los cambios.';
 		setStatus(aviso, true);
 		if (typeof $.alert === 'function') {
@@ -631,18 +853,37 @@
 			success: function (resp) {
 				if (resp && resp.success) {
 					setStatus(resp.message || 'Configuracion guardada.', true);
+					if (typeof $.alert === 'function') {
+						$.alert(resp.message || 'Configuracion guardada.');
+					}
+					limpiarDirty();
 					cargar();
 				} else {
-					setStatus((resp && resp.message) ? resp.message : 'Error al guardar.', false);
+					setStatus((resp && resp.message) || 'No se pudo guardar.', false);
 				}
 			},
-			error: function () {
-				setStatus('Error de conexion al guardar.', false);
+			error: function (xhr) {
+				var msg = 'Error al guardar.';
+				if (xhr && xhr.responseText) {
+					try {
+						var parsed = $.parseJSON(xhr.responseText);
+						if (parsed && parsed.message) {
+							msg = parsed.message;
+						}
+					} catch (ignore) {}
+				}
+				setStatus(msg, false);
 			},
 			complete: function () {
 				$btn.prop('disabled', false);
 			}
 		});
+	});
+
+	$(window).on('beforeunload', function () {
+		if (dirty) {
+			return 'Hay cambios sin guardar en la configuracion de monitoreo.';
+		}
 	});
 
 	// Inicializacion

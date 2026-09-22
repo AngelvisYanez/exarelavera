@@ -22,12 +22,38 @@ $(function () {
 			dir: $('#dir').val() || 0,
 			pcs: $('#pcs').val() || 0,
 			eve: $('#eve').val() || 0,
-			q: $.trim($('#fil_q').val() || '')
+			pla: ($('#filPlanta').length && $('#audFilPlantaWrap').is(':visible')) ? ($('#filPlanta').val() || 0) : 0
 		};
 		if (hasSucursales) {
 			data.suc = $('#suc').val() || 0;
 		}
 		return data;
+	}
+
+	/** Muestra el filtro de Planta solo si el proceso seleccionado tiene que ver con plantas */
+	function actualizarPlantaSelect() {
+		var $wrap = $('#audFilPlantaWrap');
+		var $sel = $('#filPlanta');
+		if (!$wrap.length || !$sel.length) {
+			return;
+		}
+		var pcs = parseInt($('#pcs').val(), 10) || 0;
+		if (pcs <= 0) {
+			$wrap.hide();
+			$sel.val('0');
+			return;
+		}
+		$.getJSON(window.location.pathname, { plantaProcesoAjax: 1, pcs: pcs }, function (resp) {
+			if (resp && resp.success && resp.tiene) {
+				$wrap.show();
+			} else {
+				$wrap.hide();
+				$sel.val('0');
+			}
+		}).fail(function () {
+			$wrap.hide();
+			$sel.val('0');
+		});
 	}
 
 	function fmtYmd(d) {
@@ -47,19 +73,15 @@ $(function () {
 		var eveTxt = $('#eve option:selected').text() || 'Todos';
 		var periodo = (from && to) ? (from + ' a ' + to) : 'sin periodo';
 		var html = 'Filtros activos: <strong>' + periodo + '</strong>' +
-			' · Usuario: <strong>' + $.trim(usuTxt) + '</strong>';
+			' &middot; Usuario: <strong>' + $.trim(usuTxt) + '</strong>';
 		if (hasSucursales) {
 			var sucTxt = $('#suc option:selected').text() || 'Todas';
-			html += ' · Sucursal: <strong>' + $.trim(sucTxt) + '</strong>';
+			html += ' &middot; Sucursal: <strong>' + $.trim(sucTxt) + '</strong>';
 		}
-		html += ' · Modulo: <strong>' + $.trim(orgTxt) + '</strong>' +
-			' · Directorio: <strong>' + $.trim(dirTxt) + '</strong>' +
-			' · Proceso: <strong>' + $.trim(pcsTxt) + '</strong>' +
-			' · Evento: <strong>' + $.trim(eveTxt) + '</strong>';
-		var qTxt = $.trim($('#fil_q').val() || '');
-		if (qTxt) {
-			html += ' · Buscar: <strong>' + $('<div>').text(qTxt).html() + '</strong>';
-		}
+		html += ' &middot; Modulo: <strong>' + $.trim(orgTxt) + '</strong>' +
+			' &middot; Directorio: <strong>' + $.trim(dirTxt) + '</strong>' +
+			' &middot; Proceso: <strong>' + $.trim(pcsTxt) + '</strong>' +
+			' &middot; Evento: <strong>' + $.trim(eveTxt) + '</strong>';
 		$('#audSearchHint').html(html);
 	}
 
@@ -124,7 +146,10 @@ $(function () {
 			$usu.empty().append('<option value="0">Todos</option>');
 			if (data && data.rows) {
 				$.each(data.rows, function (i, r) {
-					$usu.append($('<option/>').val(r.Usu_Cod).text(r.Usu_Nom));
+					var val = ($.trim(r.Usu_Cods || '') !== '')
+						? r.Usu_Cods
+						: (r.Usu_Cod || '0');
+					$usu.append($('<option/>').val(val).text(r.Usu_Nom));
 				});
 			}
 			if (cur && $usu.find('option[value="' + cur + '"]').length) {
@@ -132,10 +157,16 @@ $(function () {
 			} else {
 				$usu.val('0');
 			}
+			if ($.fn.chosen) {
+				$usu.trigger('chosen:updated');
+			}
 			if (typeof done === 'function') {
 				done();
 			}
 		}).fail(function () {
+			if ($.fn.chosen) {
+				$usu.trigger('chosen:updated');
+			}
 			if (typeof done === 'function') {
 				done();
 			}
@@ -159,9 +190,6 @@ $(function () {
 			postData: filtrosPost(),
 			page: 1
 		}).trigger('reloadGrid');
-		if ($('#aud-kpi-panel').is(':visible')) {
-			cargarKpi();
-		}
 	}
 
 	function limpiarFiltros() {
@@ -175,11 +203,15 @@ $(function () {
 			$('#to').datepicker('option', 'minDate', vFrom);
 			$('#from').datepicker('option', 'maxDate', vTo);
 		} catch (eClr) {}
-		$('#fil_q').val('');
 		$('#org').val('0');
 		$('#dir').val('0');
 		$('#eve').val('0');
 		$('#usu').val('0');
+		$('#audFilPlantaWrap').hide();
+		$('#filPlanta').val('0');
+		if ($.fn.chosen) {
+			$('#usu').trigger('chosen:updated');
+		}
 		if (hasSucursales) {
 			$('#suc').val('0');
 		}
@@ -224,134 +256,58 @@ $(function () {
 	}
 	window.audVerDetalle = verDetalle;
 
-	
-	/* ---- Dashboard y Graficos KPI ---- */
-	var kpiStorageKey = 'aud_monitoreo_kpi_open_v1';
-
-	function renderSparkline(fechas) {
-		var $host = $('#chart-fechas-host');
-		if (!fechas || !fechas.length) {
-			$host.html('<p class="text-muted" style="margin:0; font-size:11px; padding:30px 0; text-align:center;">Sin actividad en el periodo</p>');
-			return;
+	/* ---- Wrapper para envio de formularios con confirmacion estilizada ----
+	 * Recibe (form, event): muestra el dialogo exa-ui de Confirmar/Cancelar;
+	 * si se confirma hace submit nativo (sin re-disparar onsubmit). */
+	window.audConfirmarDemoForm = function (form, evt) {
+		if (evt && evt.preventDefault) {
+			evt.preventDefault();
 		}
-		var maxVal = 1;
-		$.each(fechas, function(i, f) {
-			var v = parseInt(f.total, 10) || 0;
-			if (v > maxVal) maxVal = v;
-		});
-
-		var svgWidth = 420;
-		var svgHeight = 90;
-		var padLeft = 10;
-		var padRight = 10;
-		var padTop = 15;
-		var padBottom = 20;
-		var effW = svgWidth - padLeft - padRight;
-		var effH = svgHeight - padTop - padBottom;
-		var step = fechas.length > 1 ? effW / (fechas.length - 1) : effW / 2;
-
-		var points = [];
-		var dots = '';
-		$.each(fechas, function(i, f) {
-			var v = parseInt(f.total, 10) || 0;
-			var x = fechas.length > 1 ? (padLeft + i * step) : (svgWidth / 2);
-			var y = padTop + effH - ((v / maxVal) * effH);
-			points.push(x.toFixed(1) + ',' + y.toFixed(1));
-			dots += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.5" fill="#3b82f6" stroke="#fff" stroke-width="1.5"><title>' + f.fecha + ': ' + v + ' eventos</title></circle>';
-		});
-
-		var polyline = '<polyline fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="' + points.join(' ') + '" />';
-		
-		// Fill area
-		var areaPoints = points.slice();
-		var lastX = fechas.length > 1 ? (padLeft + (fechas.length - 1) * step) : (svgWidth / 2);
-		var firstX = fechas.length > 1 ? padLeft : (svgWidth / 2);
-		areaPoints.push(lastX.toFixed(1) + ',' + (padTop + effH));
-		areaPoints.push(firstX.toFixed(1) + ',' + (padTop + effH));
-		var polygon = '<polygon fill="rgba(59, 130, 246, 0.12)" points="' + areaPoints.join(' ') + '" />';
-
-		// Labels for first and last
-		var firstDate = fechas[0].fecha ? fechas[0].fecha.substring(5) : '';
-		var lastDate = fechas[fechas.length - 1].fecha ? fechas[fechas.length - 1].fecha.substring(5) : '';
-		var lbls = '<text x="' + padLeft + '" y="' + (svgHeight - 4) + '" font-size="9" fill="#94a3b8">' + firstDate + '</text>';
-		if (fechas.length > 1) {
-			lbls += '<text x="' + (svgWidth - padRight) + '" y="' + (svgHeight - 4) + '" text-anchor="end" font-size="9" fill="#94a3b8">' + lastDate + '</text>';
-		}
-
-		var svg = '<svg viewBox="0 0 ' + svgWidth + ' ' + svgHeight + '" class="aud-sparkline-svg" preserveAspectRatio="none">' +
-			polygon + polyline + dots + lbls + '</svg>';
-		$host.html(svg);
-	}
-
-	function renderBarList($host, list, keyName, valColor) {
-		if (!list || !list.length) {
-			$host.html('<p class="text-muted" style="margin:0; font-size:11px; padding:20px 0; text-align:center;">Sin datos disponibles</p>');
-			return;
-		}
-		var maxVal = 1;
-		$.each(list, function(i, item) {
-			var v = parseInt(item.total, 10) || 0;
-			if (v > maxVal) maxVal = v;
-		});
-
-		var html = '';
-		$.each(list.slice(0, 5), function(i, item) {
-			var name = item[keyName] || 'Sin nombre';
-			var v = parseInt(item.total, 10) || 0;
-			var pct = Math.max(4, Math.round((v / maxVal) * 100));
-			html += '<div class="aud-bar-item">' +
-				'<div class="aud-bar-lbl clearfix">' +
-					'<span style="float:left; max-width:70%; overflow:hidden; text-overflow:ellipsis;" title="' + $('<div>').text(name).html() + '">' + $('<div>').text(name).html() + '</span>' +
-					'<span style="float:right; font-weight:700; color:#475569;">' + v + '</span>' +
-				'</div>' +
-				'<div class="aud-bar-track"><div class="aud-bar-fill" style="width:' + pct + '%; background:' + (valColor || '#3b82f6') + ';"></div></div>' +
-			'</div>';
-		});
-		$host.html(html);
-	}
-
-	function cargarKpi() {
-		var postData = filtrosPost();
-		postData.listMonitoreoKpiAjax = 1;
-		delete postData.listMonitoreoGridAjax;
-
-		$.ajax({
-			url: window.location.pathname,
-			type: 'POST',
-			dataType: 'json',
-			data: postData,
-			success: function (res) {
-				if (!res) return;
-				var tot = parseInt(res.total, 10) || 0;
-				$('#kpi-total').text(tot);
-				
-				var ins = 0, upd = 0, del = 0;
-				if (res.eventos && res.eventos.length) {
-					$.each(res.eventos, function (i, ev) {
-						var ini = (ev.Eve_Ini || '').toUpperCase();
-						var cnt = parseInt(ev.total, 10) || 0;
-						if (ini === 'I') ins += cnt;
-						else if (ini === 'U') upd += cnt;
-						else if (ini === 'D') del += cnt;
-					});
+		var $f = $(form);
+		audConfirmarDemo('Confirmar la accion?', function () {
+			var f = $f.get(0);
+			if (f && f.submit) {
+				try { f.submit(); } catch (e9) {
+					if (typeof alert === 'function') { alert('No se pudo enviar el formulario.'); }
 				}
-				$('#kpi-ins').text(ins);
-				$('#kpi-upd').text(upd);
-				$('#kpi-del').text(del);
-
-				var insPct = tot > 0 ? Math.round((ins / tot) * 100) : 0;
-				var updPct = tot > 0 ? Math.round((upd / tot) * 100) : 0;
-				var delPct = tot > 0 ? Math.round((del / tot) * 100) : 0;
-				$('#kpi-ins-pct').text(insPct + '% del total');
-				$('#kpi-upd-pct').text(updPct + '% del total');
-				$('#kpi-del-pct').text(delPct + '% del total');
-
-				renderSparkline(res.fechas || []);
-				renderBarList($('#chart-modulos-host'), res.modulos || [], 'modulo', '#6366f1');
-				renderBarList($('#chart-usuarios-host'), res.usuarios || [], 'usuario', '#0ea5e9');
 			}
 		});
+		return false;
+	};
+
+	/* Dialogo estilizado de confirmacion/cancelacion (patron detalleDialog) */
+	var $audConfirm = null;
+	function audConfirmarDemo(msj, alConfirmar) {
+		if (!$('#audConfirmDemo').length) {
+			$('body').append('<div id="audConfirmDemo" title="Confirmar accion" style="display:none;"><p style="padding:14px 8px 4px;"></p></div>');
+		}
+		var $dlg = $('#audConfirmDemo');
+		$dlg.find('p').html(msj || 'Confirmar la accion?');
+		if (!$dlg.hasClass('ui-dialog-content')) {
+			$dlg.dialog({
+				autoOpen: false,
+				modal: true,
+				resizable: false,
+				width: Math.min(420, $(window).width() - 20),
+				height: 'auto',
+				appendTo: '.exa-ui-panel',
+				dialogClass: 'exa-ui-panel exa-ui-dialog',
+				buttons: [
+					{ text: 'Confirmar', class: 'btn btn-primary', click: function () {
+						$(this).dialog('close');
+						if (typeof alConfirmar === 'function') {
+							alConfirmar();
+						}
+					} },
+					{ text: 'Cancelar', class: 'btn btn-default', click: function () {
+						$(this).dialog('close');
+					} }
+				]
+			});
+		}
+		$dlg.dialog('open');
 	}
+	window.audConfirmarDemo = audConfirmarDemo;
 
 	/* ---- Calendario (yy-mm-dd; locale es fuerza dd/mm/yy) ---- */
 	function initCalendarios() {
@@ -415,6 +371,24 @@ $(function () {
 		});
 	}
 	initCalendarios();
+
+	/* ---- Chosen buscador para usuario ---- */
+	function initChosen() {
+		var $usu = $('#usu');
+		if (!$usu.length || !$.fn.chosen) {
+			return;
+		}
+		try {
+			$usu.chosen('destroy');
+		} catch (e) {}
+
+		$usu.chosen({
+			width: '100%',
+			search_contains: true,
+			no_results_text: 'No se encontraron usuarios'
+		});
+	}
+	initChosen();
 
 	/* ---- Filtro de columnas (localStorage) ---- */
 	function applyCols() {
@@ -504,17 +478,17 @@ $(function () {
 
 	var colNames = ['Id', 'Fecha', 'Hora', 'Empresa', 'Sucursal', 'Usuario', 'Modulo', 'Directorio', 'Proceso', 'Actividad', 'Detalle', ''];
 	var colModel = [
-		{ name: 'Log_Cod', index: 'Log_Cod', width: 55, align: 'center', sorttype: 'int' },
-		{ name: 'Fecha', index: 'Fecha', width: 90, align: 'center' },
-		{ name: 'Hora', index: 'Hora', width: 70, align: 'center' },
-		{ name: 'Empresa', index: 'Empresa', width: 120, align: 'left' },
-		{ name: 'Sucursal', index: 'Sucursal', width: 110, align: 'left', hidden: !hasSucursales },
-		{ name: 'Usuario', index: 'Usuario', width: 120, align: 'left' },
-		{ name: 'Modulo', index: 'Modulo', width: 100, align: 'left' },
-		{ name: 'Directorio', index: 'Directorio', width: 110, align: 'left' },
-		{ name: 'Proceso', index: 'Proceso', width: 110, align: 'left' },
-		{ name: 'Actividad', index: 'Actividad', width: 150, align: 'left' },
-		{ name: 'Detalle', index: 'Detalle', width: 200, align: 'left' },
+		{ name: 'Log_Cod', index: 'Log_Cod', width: 55, align: 'center', sortable: false },
+		{ name: 'Fecha', index: 'Fecha', width: 90, align: 'center', sortable: false },
+		{ name: 'Hora', index: 'Hora', width: 70, align: 'center', sortable: false },
+		{ name: 'Empresa', index: 'Empresa', width: 120, align: 'left', sortable: false },
+		{ name: 'Sucursal', index: 'Sucursal', width: 110, align: 'left', hidden: !hasSucursales, sortable: false },
+		{ name: 'Usuario', index: 'Usuario', width: 120, align: 'left', sortable: false },
+		{ name: 'Modulo', index: 'Modulo', width: 100, align: 'left', sortable: false },
+		{ name: 'Directorio', index: 'Directorio', width: 110, align: 'left', sortable: false },
+		{ name: 'Proceso', index: 'Proceso', width: 110, align: 'left', sortable: false },
+		{ name: 'Actividad', index: 'Actividad', width: 150, align: 'left', sortable: false },
+		{ name: 'Detalle', index: 'Detalle', width: 200, align: 'left', sortable: false },
 		{
 			name: 'acciones',
 			index: 'acciones',
@@ -529,6 +503,21 @@ $(function () {
 		}
 	];
 
+	function ajustarPaginacion() {
+		var curRows = parseInt($grid.jqGrid('getGridParam', 'rowNum'), 10) || 0;
+		if (curRows <= 0) {
+			var selVal = $('#gridMonitoreoPager .ui-pg-selbox').val();
+			curRows = parseInt(selVal, 10) || 0;
+		}
+		var $pgCenter = $('#gridMonitoreoPager_center');
+		if (curRows >= 10000000) {
+			// Modo "Todos": se quita la paginacion
+			$pgCenter.css('visibility', 'hidden');
+		} else {
+			$pgCenter.css('visibility', 'visible');
+		}
+	}
+
 	$grid.jqGrid({
 		url: window.location.pathname,
 		mtype: 'POST',
@@ -536,6 +525,8 @@ $(function () {
 		postData: filtrosPost(),
 		colNames: colNames,
 		colModel: colModel,
+		cmTemplate: { sortable: false },
+		viewsortcols: [false, 'vertical', false],
 		jsonReader: {
 			root: 'rows',
 			page: 'page',
@@ -545,10 +536,10 @@ $(function () {
 			id: 'Log_Cod'
 		},
 		pager: '#gridMonitoreoPager',
-		rowNum: 25,
-		rowList: [10, 25, 50, 100],
-		sortname: 'Log_Cod',
-		sortorder: 'desc',
+		rowNum: 250,
+		rowList: [250, 500, 1000, 5000, '10000000:Todos'],
+		sortname: '',
+		sortorder: '',
 		viewrecords: true,
 		rownumbers: false,
 		autowidth: true,
@@ -558,6 +549,7 @@ $(function () {
 		caption: 'Resultados de la busqueda',
 		loadComplete: function () {
 			applyCols();
+			ajustarPaginacion();
 			if (typeof exaUiFitJqGrid === 'function') {
 				exaUiFitJqGrid('#gridMonitoreo', '#lista .exa-ui-grid-host');
 			}
@@ -573,31 +565,15 @@ $(function () {
 		edit: false, add: false, del: false, search: false, refresh: true, view: false
 	});
 
+	$(document).on('change', '#gridMonitoreoPager .ui-pg-selbox', function () {
+		ajustarPaginacion();
+	});
+
 	applyCols();
 
 	$('.aud-col-toggle').on('click', function () {
 		saveCols();
 		applyCols();
-	});
-
-	$('#btnToggleKpi').on('click', function () {
-		var $p = $('#aud-kpi-panel');
-		if ($p.is(':visible')) {
-			$p.slideUp(180, function () {
-				if (typeof exaUiFitJqGrid === 'function') {
-					exaUiFitJqGrid('#gridMonitoreo', '#lista .exa-ui-grid-host');
-				}
-			});
-			try { localStorage.setItem(kpiStorageKey, '0'); } catch(eKpi) {}
-		} else {
-			$p.slideDown(180, function () {
-				cargarKpi();
-				if (typeof exaUiFitJqGrid === 'function') {
-					exaUiFitJqGrid('#gridMonitoreo', '#lista .exa-ui-grid-host');
-				}
-			});
-			try { localStorage.setItem(kpiStorageKey, '1'); } catch(eKpi) {}
-		}
 	});
 
 	$('#btnBuscar').on('click', function () {
@@ -618,18 +594,27 @@ $(function () {
 	$('#org').on('change', function () {
 		var org = $(this).val() || 0;
 		cargarDirectorios(org, function () {
-			cargarProcesos(org, $('#dir').val() || 0, actualizarHint);
+			cargarProcesos(org, $('#dir').val() || 0, function () {
+				actualizarHint();
+				actualizarPlantaSelect();
+			});
 		});
 	});
 
 	$('#dir').on('change', function () {
 		var org = $('#org').val() || 0;
 		var dir = $(this).val() || 0;
-		cargarProcesos(org, dir, actualizarHint);
+		cargarProcesos(org, dir, function () {
+			actualizarHint();
+			actualizarPlantaSelect();
+		});
 	});
 
-	$('#pcs, #eve, #usu, #from, #to, #fil_q').on('change input', function () {
+	$('#pcs, #eve, #usu, #from, #to').on('change', function () {
 		actualizarHint();
+		if (this.id === 'pcs') {
+			actualizarPlantaSelect();
+		}
 	});
 
 	$('#suc').on('change', function () {
@@ -647,8 +632,7 @@ $(function () {
 		};
 	}
 
-	$('#btnExportCsv, #btnExportExcel').on('click', function (e) {
-		if (e && e.preventDefault) e.preventDefault();
+	$('#btnExportExcel').on('click', function () {
 		var $frm = $('#frmFiltros');
 		if (!$frm.length) {
 			return;
@@ -668,8 +652,7 @@ $(function () {
 		window.location = window.location.pathname + '?' + $frm.serialize() + '&exportMonitoreoCsv=1';
 	});
 
-	$('#btnExportPdf').on('click', function (e) {
-		if (e && e.preventDefault) e.preventDefault();
+	$('#btnExportPdf').on('click', function () {
 		var $frm = $('#frmFiltros');
 		if (!$frm.length) {
 			return;
@@ -682,21 +665,16 @@ $(function () {
 			if (typeof $.alert === 'function') {
 				$.alert('No hay datos para exportar. Realice una busqueda primero.');
 			} else {
-				alert('No hay datos para exportar.');
+				alert('No hay datos para exportar. Realice una busqueda primero.');
 			}
 			return;
 		}
-		var url = window.location.pathname + '?' + $frm.serialize() + '&exportMonitoreoPdf=1';
-		window.open(url, '_blank');
+		/* Informe PDF generado en servidor (FPDF): descarga directa */
+		window.location = window.location.pathname + '?' + $frm.serialize() + '&exportMonitoreoPdf=1';
 	});
 
 	actualizarHint();
-	try {
-		if (localStorage.getItem(kpiStorageKey) === '1') {
-			$('#aud-kpi-panel').show();
-			cargarKpi();
-		}
-	} catch(eKpiInit) {}
+	actualizarPlantaSelect();
 	setTimeout(function () {
 		if (typeof exaUiAfterViewChange === 'function') {
 			exaUiAfterViewChange('.exa-ui-panel');

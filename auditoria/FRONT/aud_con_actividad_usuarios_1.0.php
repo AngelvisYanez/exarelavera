@@ -21,12 +21,12 @@ $audSucCod = isset($_SESSION['Ses_Suc_Cod']) ? (int)$_SESSION['Ses_Suc_Cod'] : 0
 $audUsuCod = isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
 $Ses_Dat_Dis = isset($_SESSION['Ses_Dat_Dis']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']) : '';
 
-$obBD_con1 = new Class_Log_Datos_Cfg_Monitoreo();
-$obBD_conexion = new Class_Log_Conexion_Cfg_Monitoreo($Ses_Dat_Dis !== '' ? $Ses_Dat_Dis : null);
+$obBD_con1 = new Class_Log_Datos_CfgMon();
+$obBD_conexion = new Class_Log_Conexion_CfgMon($Ses_Dat_Dis !== '' ? $Ses_Dat_Dis : null);
 aud_ses_asegurar_esquema($obBD_conexion->conexion);
 
 // Validar si es Administrador de Sistemas
-$esAdminSistemas = aud_cfg_es_admin_sistemas($audUsuCod, $obBD_con1, $obBD_conexion);
+$esAdminSistemas = aud_cfg_es_admin_sistemas($obBD_con1, $obBD_conexion, $audUsuCod);
 
 // Roles para el combo filtro
 $roles = $obBD_con1->getArrayConsulta(9, array($audEmpCod), $obBD_conexion);
@@ -81,6 +81,52 @@ if (!is_array($roles)) $roles = array();
 			flex: 1 1 auto;
 			overflow-y: auto;
 			min-height: 120px;
+		}
+
+		/* Paginador estilo jqGrid (igual al monitor de actividades) */
+		.aud-grid-pager {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 8px;
+			flex-wrap: wrap;
+			background: #f7f9fc;
+			border-top: 1px solid #e2e8f0;
+			padding: 6px 10px;
+			font-size: 11px;
+			color: #334155;
+		}
+		.aud-pag-left,
+		.aud-pag-right {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+		}
+		.aud-pag-left .btn,
+		.aud-pag-right .btn {
+			padding: 3px 7px;
+			font-size: 11px;
+			line-height: 1.4;
+		}
+		.aud-pag-txt {
+			white-space: nowrap;
+			color: #475569;
+		}
+		.aud-pag-input,
+		.aud-pag-sel {
+			width: 46px;
+			height: 26px;
+			padding: 2px 4px;
+			text-align: center;
+			font-size: 11px;
+			display: inline-block;
+			border-radius: 3px;
+			border: 1px solid #cbd5e1;
+			color: #0f172a;
+		}
+		.aud-pag-sel {
+			width: auto;
+			text-align: left;
 		}
 		.aud-side-col {
 			display: flex;
@@ -300,6 +346,11 @@ if (!is_array($roles)) $roles = array();
 			color: #ffffff;
 			border-color: #991b1b;
 		}
+		.btn-kick-icon {
+			padding: 3px 7px;
+			font-size: 12px;
+			line-height: 1;
+		}
 
 		/* Barra lateral top usuarios */
 		.top-user-item {
@@ -426,6 +477,11 @@ if (!is_array($roles)) $roles = array();
 						</div>
 					</div>
 
+					<div id="audAlertasTiempoReal" class="alert alert-warning" style="display: none; margin: 0; border-radius: 0; border-left: 4px solid #d97706; font-size: 12px; padding: 8px 14px;">
+						<i class="fa fa-exclamation-triangle"></i> <strong>Detectado acceso m&uacute;ltiple:</strong>
+						<span id="audAlertasTiempoRealTxt"></span>
+					</div>
+
 					<div class="aud-panel-head">
 						<h4 class="aud-panel-title">
 							<i class="fa fa-list text-muted"></i> Sesiones Registradas
@@ -442,7 +498,9 @@ if (!is_array($roles)) $roles = array();
 							<select id="filtroRol" class="form-control input-sm" style="width: 150px; font-size: 11px;">
 								<option value="">Todos los Roles</option>
 								<?php foreach ($roles as $r) { ?>
-									<option value="<?php echo (int)$r['Perfiles_Id']; ?>"><?php echo htmlspecialchars($r['Perfiles_Desc']); ?></option>
+									<?php $_rolCod = isset($r['Per_Cod']) ? $r['Per_Cod'] : (isset($r['Perfiles_Id']) ? $r['Perfiles_Id'] : 0); ?>
+									<?php $_rolDes = isset($r['Per_Des']) ? $r['Per_Des'] : (isset($r['Perfiles_Desc']) ? $r['Perfiles_Desc'] : 'Rol #' . $_rolCod); ?>
+									<option value="<?php echo (int)$_rolCod; ?>"><?php echo htmlspecialchars((string)$_rolDes); ?></option>
 								<?php } ?>
 							</select>
 							<?php } ?>
@@ -458,9 +516,10 @@ if (!is_array($roles)) $roles = array();
 									<th>Rol / Perfil</th>
 									<th>Direcci&oacute;n IP / Ubicaci&oacute;n</th>
 									<th>Navegador / SO</th>
-									<th>&Uacute;ltimo Latido</th>
+									<th>&Uacute;ltima Actividad</th>
 									<th>Tiempo de Uso</th>
 									<th>Estado</th>
+									<th>Sesiones Activas</th>
 									<?php if ($esAdminSistemas) { ?>
 									<th style="text-align: right;">Acci&oacute;n</th>
 									<?php } ?>
@@ -468,12 +527,43 @@ if (!is_array($roles)) $roles = array();
 							</thead>
 							<tbody id="tbodyActividad">
 								<tr>
-									<td colspan="<?php echo $esAdminSistemas ? 8 : 7; ?>" class="text-center text-muted" style="padding: 30px;">
+									<td colspan="<?php echo $esAdminSistemas ? 9 : 8; ?>" class="text-center text-muted" style="padding: 30px;">
 										<i class="fa fa-spinner fa-spin fa-2x"></i><br>Cargando sesiones y actividad...
 									</td>
 								</tr>
 							</tbody>
 						</table>
+					</div>
+					<!-- Paginador estilo jqGrid (igual al monitor de actividades) -->
+					<div class="aud-grid-pager" id="audPaginador">
+						<div class="aud-pag-left">
+							<button type="button" class="btn btn-default" id="pagPrimera" title="Primera p&aacute;gina">
+								<i class="fa fa-step-backward"></i>
+							</button>
+							<button type="button" class="btn btn-default" id="pagAnterior" title="P&aacute;gina anterior">
+								<i class="fa fa-chevron-left"></i>
+							</button>
+							<span class="aud-pag-txt">P&aacute;gina</span>
+							<input type="text" class="aud-pag-input" id="pagIr" value="1" title="N&uacute;mero de p&aacute;gina (Enter)" />
+							<span class="aud-pag-txt">de <span id="pagTotal">1</span></span>
+							<button type="button" class="btn btn-default" id="pagSiguiente" title="P&aacute;gina siguiente">
+								<i class="fa fa-chevron-right"></i>
+							</button>
+							<button type="button" class="btn btn-default" id="pagUltima" title="&Uacute;ltima p&aacute;gina">
+								<i class="fa fa-step-forward"></i>
+							</button>
+						</div>
+						<div class="aud-pag-right">
+							<span class="aud-pag-txt" id="pagInfo">Ver 0 a 0 de 0</span>
+							<select class="aud-pag-sel" id="audFilasPagina" title="Registros por p&aacute;gina">
+								<option value="25" selected>25 / p&aacute;gina</option>
+								<option value="50">50 / p&aacute;gina</option>
+								<option value="100">100 / p&aacute;gina</option>
+								<option value="250">250 / p&aacute;gina</option>
+								<option value="500">500 / p&aacute;gina</option>
+								<option value="0">Todos</option>
+							</select>
+						</div>
 					</div>
 				</div>
 
@@ -544,6 +634,9 @@ if (!is_array($roles)) $roles = array();
 	var timerAutoRefresh = null;
 	var listaActividadCache = [];
 	var esAdmin = <?php echo $esAdminSistemas ? 'true' : 'false'; ?>;
+	var sesionActualSesCod = <?php echo isset($_SESSION['Ses_Ses_Cod']) ? (int)$_SESSION['Ses_Ses_Cod'] : 0; ?>;
+	var paginaActividad = 1;
+	var tamPaginaActividad = 25;
 
 	function fmtYmd(d) {
 		var y = d.getFullYear();
@@ -730,10 +823,39 @@ if (!is_array($roles)) $roles = array();
 				$('#kpiPromedioUso').text((d.kpis.promedio_minutos || 0) + ' min');
 
 				listaActividadCache = d.sesiones || [];
+				paginaActividad = 1;
 				renderizarTabla(listaActividadCache);
 				renderizarTopUsuarios(d.top_usuarios || []);
+				renderizarValidaciones(d.validaciones || {});
 			}
 		});
+	}
+
+	function fmtRelativo(min) {
+		if (min === 0) return 'Hace un instante';
+		if (min <= 0) return 'Hace un instante';
+		if (min >= 1440) {
+			var dias = Math.floor(min / 1440);
+			return 'Hace ' + dias + (dias === 1 ? ' d&iacute;a' : ' d&iacute;as');
+		}
+		if (min >= 60) {
+			return 'Hace ' + Math.floor(min / 60) + ' h';
+		}
+		return 'Hace ' + min + ' min';
+	}
+
+	function renderizarValidaciones(v) {
+		var $b = $('#audAlertasTiempoReal');
+		var multi = (v && v.usuarios_con_multiples_sesiones) ? v.usuarios_con_multiples_sesiones : [];
+		if (multi.length === 0) {
+			$b.hide().find('#audAlertasTiempoRealTxt').text('');
+			return;
+		}
+		var nombres = multi.map(function (m) {
+			return m.nombre + ' (<strong>' + m.total + ' sesiones</strong>)';
+		}).join(', ');
+		$('#audAlertasTiempoRealTxt').html(nombres + '. Verifique credenciales compartidas o duplicadas en tiempo real.');
+		$b.show();
 	}
 
 	function renderizarTabla(sesiones) {
@@ -750,17 +872,28 @@ if (!is_array($roles)) $roles = array();
 		$('#conteoRegistros').text(filtradas.length);
 
 		if (filtradas.length === 0) {
-			$('#tbodyActividad').html('<tr><td colspan="' + (esAdmin ? 8 : 7) + '" class="text-center text-muted" style="padding: 24px;">No se encontraron sesiones que coincidan con los filtros.</td></tr>');
+			paginaActividad = 1;
+			$('#tbodyActividad').html('<tr><td colspan="' + (esAdmin ? 9 : 8) + '" class="text-center text-muted" style="padding: 24px;">No se encontraron sesiones que coincidan con los filtros.</td></tr>');
+			renderizarPaginador(0);
 			return;
 		}
 
+		var pageSize = tamPaginaActividad > 0 ? tamPaginaActividad : filtradas.length;
+		var totalPages = Math.ceil(filtradas.length / pageSize);
+		if (paginaActividad > totalPages) paginaActividad = totalPages;
+		if (paginaActividad < 1) paginaActividad = 1;
+		var inicio = (paginaActividad - 1) * pageSize;
+		var visibles = filtradas.slice(inicio, inicio + pageSize);
+
 		var html = '';
-		filtradas.forEach(function (it) {
+		visibles.forEach(function (it) {
 			var inicial = (it.Prs_Nom && it.Prs_Nom.length) ? it.Prs_Nom.charAt(0).toUpperCase() : 'U';
 			var semaforo = it.Semaforo;
 			var badgeClase = semaforo;
+			var esMia = !!it.es_mi_sesion;
+			var sesAct = parseInt(it.sesiones_activas || 0, 10);
 
-			var relativo = it.MinutosInactivo === 0 ? 'Hace un instante' : ('Hace ' + it.MinutosInactivo + ' min');
+			var relativo = fmtRelativo(it.MinutosInactivo);
 			var horaActividad = it.Ses_Ult_Act ? it.Ses_Ult_Act.substring(11, 16) : '--:--';
 
 			var ipUbi = it.Ses_Ip || 'Desconocida';
@@ -774,9 +907,9 @@ if (!is_array($roles)) $roles = array();
 			html += '  <td>';
 			html += '    <div style="display: flex; align-items: center; gap: 10px;">';
 			html += '      <div class="user-avatar-badge">' + inicial + '<span class="status-dot ' + semaforo + '"></span></div>';
-			html += '      <div>';
+			html += '      <div style="min-width: 0;">';
 			html += '        <strong style="color: #0f172a;">' + it.NombreCompleto + '</strong>';
-			html += '        <div style="font-size: 11px; color: #64748b;">' + (it.Usu_Nom || '') + (it.Usu_Ced ? ' &bull; ' + it.Usu_Ced : '') + '</div>';
+			html += '        <div style="font-size: 11px; color: #64748b;">' + (it.Usu_Nom || '') + '</div>';
 			html += '      </div>';
 			html += '    </div>';
 			html += '  </td>';
@@ -786,15 +919,26 @@ if (!is_array($roles)) $roles = array();
 			html += '  <td><strong style="color: #334155;">' + relativo + '</strong><br><small class="text-muted">' + horaActividad + '</small></td>';
 			html += '  <td><span class="badge" style="background: #e0e7ff; color: #3730a3; font-weight: 700;">' + (it.TiempoFormateado || '0m') + '</span></td>';
 			html += '  <td><span class="badge-custom ' + badgeClase + '"><i class="fa fa-circle" style="font-size: 8px;"></i> ' + it.BadgeTexto + '</span></td>';
+			html += '  <td style="text-align: center; white-space: nowrap;">';
+			if (sesAct > 1) {
+				html += '    <span class="badge-custom ausente" title="Este usuario mantiene ' + sesAct + ' sesiones activas simult&aacute;neas en tiempo real (posible credencial compartida)."><i class="fa fa-exclamation-triangle"></i> ' + sesAct + ' activas</span>';
+			} else if (esMia) {
+				html += '    <span class="badge-custom en_linea" title="Esta es la sesi&oacute;n que usted est&aacute; usando ahora."><i class="fa fa-user"></i> Tu sesi&oacute;n</span>';
+			} else if (sesAct === 1) {
+				html += '    <span class="badge-custom inactivo" title="Sesiones activas en este momento."><i class="fa fa-check-circle"></i> 1</span>';
+			} else {
+				html += '    <span class="text-muted" style="font-size: 11px;">&mdash;</span>';
+			}
+			html += '  </td>';
 
 			if (esAdmin) {
-				html += '  <td style="text-align: right;">';
-				if (semaforo === 'en_linea' || semaforo === 'ausente') {
-					html += '    <button type="button" class="btn-kick" onclick="confirmarExpulsion(' + it.Ses_Cod + ', \'' + (it.NombreCompleto || '').replace(/'/g, "\\'") + '\')">';
-					html += '      <i class="fa fa-ban"></i> Desconectar';
-					html += '    </button>';
+				html += '  <td style="text-align: right; white-space: nowrap;">';
+				if (esMia) {
+					html += '    <span class="text-muted muted-icon" title="No puede desconectar su propia sesi&oacute;n desde el monitor."><i class="fa fa-lock"></i></span>';
+				} else if (semaforo === 'en_linea' || semaforo === 'ausente') {
+					html += '    <button type="button" class="btn-kick btn-kick-icon" title="Desconectar a ' + (it.NombreCompleto || '').replace(/"/g, '&quot;') + '" onclick="confirmarExpulsion(' + it.Ses_Cod + ', \'' + (it.NombreCompleto || '').replace(/'/g, "\\'") + '\')"><i class="fa fa-ban"></i></button>';
 				} else {
-					html += '    <span class="text-muted" style="font-size: 11px;">Inactivo</span>';
+					html += '    <span class="text-muted">&mdash;</span>';
 				}
 				html += '  </td>';
 			}
@@ -803,6 +947,37 @@ if (!is_array($roles)) $roles = array();
 		});
 
 		$('#tbodyActividad').html(html);
+		renderizarPaginador(filtradas.length);
+	}
+
+	function renderizarPaginador(total) {
+		var pageSize = tamPaginaActividad > 0 ? tamPaginaActividad : (total || 1);
+		var totalPages = total > 0 ? Math.ceil(total / pageSize) : 1;
+		if (paginaActividad > totalPages) paginaActividad = totalPages;
+		if (paginaActividad < 1) paginaActividad = 1;
+		var desde = total === 0 ? 0 : ((paginaActividad - 1) * pageSize) + 1;
+		var hasta = Math.min(total, paginaActividad * pageSize);
+
+		$('#pagTotal').text(totalPages);
+		$('#pagInfo').text('Ver ' + desde + ' a ' + hasta + ' de ' + total);
+		$('#pagIr').val(paginaActividad).prop('disabled', totalPages <= 1);
+		$('#pagPrimera').prop('disabled', paginaActividad <= 1 || totalPages <= 1);
+		$('#pagAnterior').prop('disabled', paginaActividad <= 1 || totalPages <= 1);
+		$('#pagSiguiente').prop('disabled', paginaActividad >= totalPages || totalPages <= 1);
+		$('#pagUltima').prop('disabled', paginaActividad >= totalPages || totalPages <= 1);
+	}
+
+	function irPaginaActividad(pag) {
+		var total = listaActividadCache.length || 0;
+		var pageSize = tamPaginaActividad > 0 ? tamPaginaActividad : (total || 1);
+		var totalPages = total > 0 ? Math.ceil(total / pageSize) : 1;
+		pag = parseInt(pag, 10) || 1;
+		if (pag < 1) pag = 1;
+		if (pag > totalPages) pag = totalPages;
+		if (pag !== paginaActividad) {
+			paginaActividad = pag;
+			renderizarTabla(listaActividadCache);
+		}
 	}
 
 	function renderizarTopUsuarios(top) {
@@ -828,7 +1003,11 @@ if (!is_array($roles)) $roles = array();
 		$('#boxTopUsuarios').html(html);
 	}
 
-	window.confirmarExpulsion = function (sesCod, usuNom) {
+	window.confirmarExpulsion = function (sesCod, usuNom, esMia) {
+		if (esMia || parseInt(sesCod, 10) === sesionActualSesCod) {
+			alert('No puede desconectar su propia sesi\u00f3n desde el monitor.');
+			return;
+		}
 		$('#kickSesCod').val(sesCod);
 		$('#kickUsuNom').text(usuNom);
 		$('#modalConfirmarExpulsion').modal('show');
@@ -837,6 +1016,11 @@ if (!is_array($roles)) $roles = array();
 	$('#btnEjecutarExpulsion').on('click', function () {
 		var sesCod = $('#kickSesCod').val();
 		if (!sesCod || sesCod === '0') return;
+		if (parseInt(sesCod, 10) === sesionActualSesCod) {
+			$('#modalConfirmarExpulsion').modal('hide');
+			alert('No puede desconectar su propia sesi\u00f3n desde el monitor.');
+			return;
+		}
 
 		var $btn = $(this);
 		$btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Desconectando...');
@@ -869,6 +1053,28 @@ if (!is_array($roles)) $roles = array();
 	// Filtros interactivos
 	$('#filtroEstado, #filtroRol').on('change', cargarDatosActividad);
 	$('#filtroTexto').on('keyup', function () {
+		renderizarTabla(listaActividadCache);
+	});
+
+	// Paginador (estilo monitor de actividades)
+	$('#pagPrimera').on('click', function () { irPaginaActividad(1); });
+	$('#pagAnterior').on('click', function () { irPaginaActividad(paginaActividad - 1); });
+	$('#pagSiguiente').on('click', function () { irPaginaActividad(paginaActividad + 1); });
+	$('#pagUltima').on('click', function () {
+		var total = listaActividadCache.length || 0;
+		var pageSize = tamPaginaActividad > 0 ? tamPaginaActividad : (total || 1);
+		irPaginaActividad(total > 0 ? Math.ceil(total / pageSize) : 1);
+	});
+	$('#pagIr').on('keydown', function (e) {
+		if (e.keyCode === 13) {
+			irPaginaActividad($(this).val());
+			$(this).blur();
+		}
+	}).on('change', function () { irPaginaActividad($(this).val()); });
+	$('#audFilasPagina').on('change', function () {
+		var v = $(this).val();
+		tamPaginaActividad = (v === '0') ? 0 : (parseInt(v, 10) || 25);
+		paginaActividad = 1;
 		renderizarTabla(listaActividadCache);
 	});
 

@@ -31,14 +31,33 @@ $(function () {
     $("#Hor_Fec").val(hoy);
     $("#Hma_Fec").val(hoy);
 
+    // Sincronizar subgrid de jornada automáticamente al cambiar máquina, operador o fecha
+    $("#Veh_Cod, #Cho_Cod, #Hor_Fec").on("change", function () {
+        var maq = $("#Veh_Cod").val();
+        var ope = $("#Cho_Cod").val();
+        var fec = ($("#Hor_Fec").val() || '').trim();
+        if (maq && ope && fec) {
+            cargarJornada();
+        } else {
+            limpiarSubgrid();
+        }
+    });
+
     // Enlazar cálculo de horas acumuladas en tiempo real
     $(".calculo-horas").on("keyup change", function () {
         calcularHorasEnTiempoReal();
     });
 
-    // Detectar Enter en buscador
-    $("#searchHorometro").on("keypress", function (e) {
-        if (e.which === 13) reloadGridHorometros();
+    // Detectar Enter o vaciado en buscador
+    $("#searchHorometro").on("keyup", function (e) {
+        if (e.which === 13 || $(this).val().trim() === '') {
+            reloadGridHorometros();
+        }
+    });
+
+    // Enlazar cambios inmediatos en los selectores y filtros de fecha
+    $("#filtroFechaDia, #filtroFechaSemana, #filtroFechaMes, #filtroQuincena").on("change", function () {
+        reloadGridHorometros();
     });
 
     // Vista previa de las imágenes en el modal
@@ -149,7 +168,12 @@ function loadSelectors() {
         $sel.empty().append('<option value="">Seleccione Máquina...</option>');
         $repMaq.empty().append('<option value="TODAS">TODAS LAS MÁQUINAS</option>');
         $.each(data, function (i, val) {
-            var textOpt = val.Veh_Pla + ' - ' + val.Veh_Mar;
+            var textOpt = '';
+            if (val.Veh_Adi && $.trim(val.Veh_Adi) !== '') {
+                textOpt = $.trim(val.Veh_Adi) + ' - ' + val.Veh_Pla + ' - ' + val.Veh_Mar;
+            } else {
+                textOpt = val.Veh_Pla + ' - ' + val.Veh_Mar;
+            }
             $sel.append($('<option>', {
                 value: val.Veh_Cod,
                 text: textOpt
@@ -214,33 +238,95 @@ function ajustarPlaceholderBusqueda(op) {
         $("#searchEstadoCombo").hide();
         $("#searchHorometro").show().val('');
         if (op === 'p') {
-            $("#searchHorometro").attr('placeholder', 'Buscar placa...');
+            $("#searchHorometro").attr('placeholder', 'Buscar placa o modelo...');
         } else {
             $("#searchHorometro").attr('placeholder', 'Buscar operador...');
         }
     }
+    reloadGridHorometros();
 }
 
 /**
- * Muestra/Oculta los inputs de fecha según el tipo de filtro
+ * Obtiene la semana ISO en formato YYYY-Www
+ */
+function getIsoWeekString(date) {
+    var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    var dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    var wStr = (weekNo < 10 ? '0' : '') + weekNo;
+    return d.getUTCFullYear() + '-W' + wStr;
+}
+
+/**
+ * Muestra/Oculta los inputs de fecha según el tipo de filtro y recarga el grid
  */
 function ajustarFiltroFecha(tipo) {
     $("#filtroFechaDia, #filtroFechaSemana, #filtroFechaMes, #filtroQuincena").hide();
+    var hoy = new Date();
+    var yyyy = hoy.getFullYear();
+    var mm = (hoy.getMonth() + 1 < 10 ? '0' : '') + (hoy.getMonth() + 1);
+    var dd = (hoy.getDate() < 10 ? '0' : '') + hoy.getDate();
+
     if (tipo === 'D') {
         $("#filtroFechaDia").show();
-        var hoy = new Date();
-        var yyyy = hoy.getFullYear();
-        var mm = String(hoy.getMonth() + 1).padStart(2, '0');
-        var dd = String(hoy.getDate()).padStart(2, '0');
-        if (!$("#filtroFechaDia").val()) $("#filtroFechaDia").val(yyyy + '-' + mm + '-' + dd);
+        if (!$("#filtroFechaDia").val()) {
+            $("#filtroFechaDia").val(yyyy + '-' + mm + '-' + dd);
+        }
     } else if (tipo === 'S') {
         $("#filtroFechaSemana").show();
+        if (!$("#filtroFechaSemana").val()) {
+            $("#filtroFechaSemana").val(getIsoWeekString(hoy));
+        }
     } else if (tipo === 'Q') {
         $("#filtroFechaMes").show();
         $("#filtroQuincena").show();
+        if (!$("#filtroFechaMes").val()) {
+            $("#filtroFechaMes").val(yyyy + '-' + mm);
+        }
     } else if (tipo === 'M') {
         $("#filtroFechaMes").show();
+        if (!$("#filtroFechaMes").val()) {
+            $("#filtroFechaMes").val(yyyy + '-' + mm);
+        }
     }
+    reloadGridHorometros();
+}
+
+/**
+ * Exporta los datos visibles del grid a formato CSV/Excel
+ */
+function exportarExcel() {
+    var data = $("#gridHorometros").jqGrid('getRowData');
+    if (!data || data.length === 0) {
+        alert('No hay registros en el listado para exportar.');
+        return;
+    }
+    var csv = "\uFEFFFecha,Placa,Máquina,Operador,Horas Trabajadas,Ubicación\n";
+    for (var i = 0; i < data.length; i++) {
+        var r = data[i];
+        var horasLimpia = (r.Hor_Hrs || '').replace(/<[^>]*>/g, '').trim();
+        var fila = [
+            '"' + (r.Hor_Fec || '').replace(/"/g, '""') + '"',
+            '"' + (r.Veh_Pla || '').replace(/"/g, '""') + '"',
+            '"' + (r.Veh_Mar || '').replace(/"/g, '""') + '"',
+            '"' + (r.operador || '').replace(/"/g, '""') + '"',
+            '"' + horasLimpia.replace(/"/g, '""') + '"',
+            '"' + (r.Hor_Set || '').replace(/"/g, '""') + '"'
+        ];
+        csv += fila.join(',') + "\n";
+    }
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement("a");
+    var url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    var hoy = new Date();
+    var fHoy = hoy.getFullYear() + '-' + (hoy.getMonth() + 1 < 10 ? '0' : '') + (hoy.getMonth() + 1) + '-' + (hoy.getDate() < 10 ? '0' : '') + hoy.getDate();
+    link.setAttribute("download", "reporte_horometros_" + fHoy + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 /**
@@ -358,8 +444,8 @@ function reloadGridHorometros() {
  */
 function cargarJornadaDesdeGrid(vehCod, choCod, horFec) {
     mostrarFormulario();
-    $("#Veh_Cod").val(vehCod);
-    $("#Cho_Cod").val(choCod);
+    $("#Veh_Cod").val(vehCod).trigger("chosen:updated");
+    $("#Cho_Cod").val(choCod).trigger("chosen:updated");
     var dateOnly = horFec.split(' ')[0];
     var parts = dateOnly.split('-');
     if (parts.length === 3) {
@@ -387,6 +473,8 @@ function mostrarListado() {
 function mostrarFormulario() {
     $('.panel-main .panel-heading').html('<span class="glyphicon glyphicon-edit"></span> » Registro de Horómetros por Turno');
     $("#formContexto")[0].reset();
+    $("#Veh_Cod").val('').trigger("chosen:updated");
+    $("#Cho_Cod").val('').trigger("chosen:updated");
     $("#Hor_Fec").val(obtenerFechaActual());
     $("#panelJornada").hide();
     $("#divListado").hide();
@@ -397,6 +485,7 @@ function mostrarFormulario() {
  * Limpia el subgrid si cambian las condiciones de búsqueda
  */
 function limpiarSubgrid() {
+    window.currentJornadaRecords = {};
     $("#panelJornada").hide();
     $("#tblJornada tbody").empty();
 }
@@ -410,10 +499,11 @@ function cargarJornada() {
     var fec = $("#Hor_Fec").val().trim();
 
     if (!maq || !ope || !fec) {
-        $.alert("Debe seleccionar Máquina, Operador y Fecha para cargar los registros de la jornada.");
+        limpiarSubgrid();
         return;
     }
 
+    window.currentJornadaRecords = {};
     $("#tblJornada tbody").html('<tr><td colspan="8" class="text-center text-muted">Cargando registros...</td></tr>');
     $("#panelJornada").show();
 
@@ -445,7 +535,8 @@ function cargarJornada() {
                     '<td class="text-center">' + btnEdit + '</td>' +
                     '</tr>';
                 
-                // Guardar datos en el elemento para usarlos al editar
+                // Guardar datos en el mapa de registros para usarlos al editar
+                window.currentJornadaRecords[r.Hor_Cod] = r;
                 window['reg_hor_' + r.Hor_Cod] = r;
             });
         } else {
@@ -468,6 +559,20 @@ function abrirModalRegistro(Hor_Cod) {
     $("#formHorometroModal")[0].reset();
     $("#Hor_Cod_Modal").val(Hor_Cod);
     $("#Hor_Hrs").val('0.00').css("color", "#0f172a");
+
+    var r = Hor_Cod > 0 ? ((window.currentJornadaRecords && window.currentJornadaRecords[Hor_Cod]) || window['reg_hor_' + Hor_Cod]) : null;
+
+    // Mostrar el contexto de la máquina, operador y fecha seleccionados
+    var txtMaq = $("#Veh_Cod option:selected").text();
+    var txtOpe = $("#Cho_Cod option:selected").text();
+    var txtFec = $("#Hor_Fec").val();
+    if (r && r.Hor_Fec) {
+        var fPart = r.Hor_Fec.split(' ')[0].split('-');
+        if (fPart.length === 3) txtFec = fPart[2] + '/' + fPart[1] + '/' + fPart[0];
+    }
+    $("#lbl_modal_contexto_maq").text(txtMaq || 'Sin máquina seleccionada');
+    $("#lbl_modal_contexto_ope").text(txtOpe || 'Sin operador');
+    $("#lbl_modal_contexto_fec").text(txtFec || '-');
 
     // Limpiar previas visuales de las fotos
     $("#preview_ini_container").html('<span style="color:#94a3b8; font-size:11px;">(Suba una foto clara)</span>');
@@ -493,7 +598,6 @@ function abrirModalRegistro(Hor_Cod) {
         }, 1000);
     } else {
         // ES EDICIÓN / CIERRE: Desbloquear Fin y cargar datos
-        var r = window['reg_hor_' + Hor_Cod];
         if (r && r.Hor_Est !== 'P') {
             $("#modalRegistroHorometroTitulo").html('<i class="glyphicon glyphicon-search"></i> Ver Registro Completo');
         } else {
@@ -523,7 +627,7 @@ function abrirModalRegistro(Hor_Cod) {
                 $("#Hor_Hfin").val(hrFin);
             }
             
-            // Cargar evidencias vía AJAX
+            // Cargar evidencias vía AJAX con timestamp para evitar cache visual entre registros
             $("#preview_ini_container").html('<span style="color:#94a3b8; font-size:11px;">(Cargando evidencia...)</span>');
             $("#preview_fin_container").html('<span style="color:#94a3b8; font-size:11px;">(Cargando evidencia...)</span>');
             
@@ -531,13 +635,14 @@ function abrirModalRegistro(Hor_Cod) {
                 if (resImg && resImg.success) {
                     var emp_cod = resImg.Emp_Cod || '0';
                     var basePath = '../../imagenes/' + emp_cod + '/horometro/';
+                    var buster = '?t=' + new Date().getTime();
                     if (resImg.Hor_Img_Ini) {
-                        $("#preview_ini_container").html('<img src="' + basePath + resImg.Hor_Img_Ini + '" style="max-height:100px; max-width:100%; border-radius:4px;" />');
+                        $("#preview_ini_container").html('<img src="' + basePath + resImg.Hor_Img_Ini + buster + '" style="max-height:100px; max-width:100%; border-radius:4px;" />');
                     } else {
                         $("#preview_ini_container").html('<span style="color:#94a3b8; font-size:11px;">(Sin evidencia inicial)</span>');
                     }
                     if (resImg.Hor_Img_Fin) {
-                        $("#preview_fin_container").html('<img src="' + basePath + resImg.Hor_Img_Fin + '" style="max-height:100px; max-width:100%; border-radius:4px;" />');
+                        $("#preview_fin_container").html('<img src="' + basePath + resImg.Hor_Img_Fin + buster + '" style="max-height:100px; max-width:100%; border-radius:4px;" />');
                     } else {
                         if (r.Hor_Est === 'P') {
                             $("#preview_fin_container").html('<span style="color:#94a3b8; font-size:11px;">(Suba evidencia final)</span>');
@@ -843,14 +948,15 @@ function abrirVisorEvidencia(Hor_Cod) {
         $("#visor_loader").hide();
         if (res && res.success) {
             var emp_cod = res.Emp_Cod || '0';
+            var buster = '?t=' + new Date().getTime();
             if (res.Hor_Img_Ini) {
-                $("#visor_img_ini").html('<img src="../../imagenes/' + emp_cod + '/horometro/' + res.Hor_Img_Ini + '" style="max-height:100%; max-width:100%;" />');
+                $("#visor_img_ini").html('<img src="../../imagenes/' + emp_cod + '/horometro/' + res.Hor_Img_Ini + buster + '" style="max-height:100%; max-width:100%;" />');
             } else {
                 $("#visor_img_ini").html('<span style="color:#94a3b8;">Sin evidencia inicial</span>');
             }
             
             if (res.Hor_Img_Fin) {
-                $("#visor_img_fin").html('<img src="../../imagenes/' + emp_cod + '/horometro/' + res.Hor_Img_Fin + '" style="max-height:100%; max-width:100%;" />');
+                $("#visor_img_fin").html('<img src="../../imagenes/' + emp_cod + '/horometro/' + res.Hor_Img_Fin + buster + '" style="max-height:100%; max-width:100%;" />');
             } else {
                 $("#visor_img_fin").html('<span style="color:#94a3b8;">Sin evidencia final</span>');
             }
@@ -1189,40 +1295,14 @@ $(function() {
         }
     });
 
-    // Evento para cargar la última máquina asignada cuando se selecciona un operador (Registro)
-    $("#Cho_Cod").on('change', function() {
-        var cho_cod = $(this).val();
-        if (cho_cod !== '') {
-            $.ajax({
-                url: 'man_alt_maquinaria_horometro.php?getLastVehiculoByOperadorAjax=1',
-                type: 'GET',
-                data: { Cho_Cod: cho_cod },
-                dataType: 'json',
-                success: function(r) {
-                    if (r.success && r.Veh_Cod > 0) {
-                        $("#Veh_Cod").val(r.Veh_Cod).trigger("chosen:updated");
-                        limpiarSubgrid();
-                    }
-                }
-            });
-        }
-    });
+    // NOTA: No sobreescribir Veh_Cod al cambiar de operador en el registro,
+    // para evitar que se cambie la máquina seleccionada por el usuario.
 });
 
 // -------------------------------------------------------------------------
-// FUNCION AUXILIAR PARA AUTO-SELECCIONAR EL OPERADOR
+// ASIGNACION MANUAL DEL OPERADOR (SE DESHABILITO LA AUTO-SELECCION)
 // -------------------------------------------------------------------------
 function buscarUltimoOperadorOriginal(veh_cod) {
-    if (!veh_cod) return;
-    
-    $.ajax({
-        url: 'man_alt_maquinaria_horometro.php?getLastOperadorAjax=1&veh_cod=' + veh_cod,
-        type: 'GET',
-        dataType: 'json',
-        success: function(res) {
-            if (res.success && res.Cho_Cod) {
-                $('#Cho_Cod').val(res.Cho_Cod).trigger('chosen:updated');
-            }
-        }
-    });
+    // Deshabilitado por requerimiento: asignación 100% manual del operador
+    return;
 }

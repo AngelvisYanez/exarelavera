@@ -72,7 +72,7 @@ class AudPDFComparativa extends FPDF
 		$this->SetY(-15);
 		$this->SetFont('Helvetica', 'I', 8);
 		$this->SetTextColor(148, 163, 184);
-		$this->Cell(100, 10, utf8_decode('Reporte confidencial generado por el Sistema de Auditoría ERP'), 0, 0, 'L');
+		$this->Cell(100, 10, utf8_decode('Reporte confidencial generado por el Sistema de Auditoría EXA ERP RELAVERA'), 0, 0, 'L');
 		$this->Cell(90, 10, utf8_decode('Página ' . $this->PageNo() . ' de {nb}'), 0, 0, 'R');
 	}
 
@@ -114,35 +114,65 @@ function aud_generar_reporte_comparativo_pdf($datos, $destino = 'I', $rutaArchiv
 	$pdf->SetFont('Helvetica', 'B', 9);
 	$pdf->SetFillColor(241, 245, 249);
 	$pdf->SetTextColor(51, 65, 85);
-	$pdf->Cell(70, 7, utf8_decode('Métrica / Indicador'), 1, 0, 'L', true);
-	$pdf->Cell(40, 7, utf8_decode('Período A (Base)'), 1, 0, 'C', true);
-	$pdf->Cell(40, 7, utf8_decode('Período B (Comparado)'), 1, 0, 'C', true);
-	$pdf->Cell(40, 7, utf8_decode('Variación (%)'), 1, 1, 'C', true);
+	$pdf->Cell(58, 7, utf8_decode('Métrica / Indicador'), 1, 0, 'L', true);
+	$pdf->Cell(26, 7, utf8_decode('Período A'), 1, 0, 'C', true);
+	$pdf->Cell(26, 7, utf8_decode('Período B'), 1, 0, 'C', true);
+	$pdf->Cell(25, 7, utf8_decode('Ritmo A/día'), 1, 0, 'C', true);
+	$pdf->Cell(25, 7, utf8_decode('Ritmo B/día'), 1, 0, 'C', true);
+	$pdf->Cell(30, 7, utf8_decode('Variación'), 1, 1, 'C', true);
 
 	$pdf->SetFont('Helvetica', '', 9);
 	$kpis = isset($datos['kpis_comparativa']) ? $datos['kpis_comparativa'] : array();
 
+	$fmtNum = function($v, $decs = 0) {
+		return number_format((float)$v, $decs, ',', '.');
+	};
+	$fmtVal = function($v) {
+		$v = (float)$v;
+		return number_format($v, ($v == floor($v)) ? 0 : 1, ',', '.');
+	};
+
 	foreach ($kpis as $k) {
 		$pdf->SetTextColor(15, 23, 42);
-		$pdf->Cell(70, 6, utf8_decode($k['titulo']), 1, 0, 'L');
-		$pdf->Cell(40, 6, utf8_decode((string)$k['valor_a']), 1, 0, 'C');
-		$pdf->Cell(40, 6, utf8_decode((string)$k['valor_b']), 1, 0, 'C');
+		$pdf->Cell(58, 6, utf8_decode($k['titulo']), 1, 0, 'L');
+		$pdf->SetTextColor(51, 65, 85);
+		$pdf->Cell(26, 6, utf8_decode($fmtVal($k['valor_a'])), 1, 0, 'C');
+		$pdf->Cell(26, 6, utf8_decode($fmtVal($k['valor_b'])), 1, 0, 'C');
+		$pdf->Cell(25, 6, utf8_decode($fmtNum(isset($k['promedio_diario_a']) ? $k['promedio_diario_a'] : 0, 1)), 1, 0, 'C');
+		$pdf->Cell(25, 6, utf8_decode($fmtNum(isset($k['promedio_diario_b']) ? $k['promedio_diario_b'] : 0, 1)), 1, 0, 'C');
 
-		$pct = isset($k['pct_cambio']) ? (float)$k['pct_cambio'] : 0.0;
-		if ($pct > 0) {
-			$pdf->SetTextColor(22, 101, 52); // Verde
-			$txtPct = '+' . number_format($pct, 1) . ' %';
-		} elseif ($pct < 0) {
-			$pdf->SetTextColor(185, 28, 28); // Rojo
-			$txtPct = number_format($pct, 1) . ' %';
-		} else {
+		$pct = (isset($k['pct_cambio']) && $k['pct_cambio'] !== null) ? (float)$k['pct_cambio'] : null;
+		$favor = isset($k['favorable_subida']) ? (bool)$k['favorable_subida'] : true;
+		if ($pct === null) {
+			$pdf->SetTextColor(148, 163, 184);
+			$txtPct = 'N/D';
+		} elseif ($pct == 0) {
 			$pdf->SetTextColor(100, 116, 139);
-			$txtPct = '0.0 %';
+			$txtPct = '=';
+		} else {
+			$bueno = $favor ? ($pct > 0) : ($pct < 0);
+			if ($bueno) {
+				$pdf->SetTextColor(22, 101, 52); // Verde
+			} else {
+				$pdf->SetTextColor(185, 28, 28); // Rojo
+			}
+			$txtPct = (($pct > 0) ? '+' : '') . number_format($pct, 1, ',', '.') . ' %';
 		}
 		$pdf->SetFont('Helvetica', 'B', 9);
-		$pdf->Cell(40, 6, utf8_decode($txtPct), 1, 1, 'C');
+		$pdf->Cell(30, 6, utf8_decode($txtPct), 1, 1, 'C');
 		$pdf->SetFont('Helvetica', '', 9);
 	}
+
+	// Nota de normalizacion y leyenda
+	$pdf->Ln(2);
+	$pdf->SetFont('Helvetica', 'I', 7.5);
+	$pdf->SetTextColor(100, 116, 139);
+	$notaPct = 'Verde: variación favorable · Rojo: variación desfavorable · N/D: sin actividad base para calcular la variación.';
+	if (isset($datos['periodo_a_dias']) && isset($datos['periodo_b_dias'])) {
+		$notaPct = 'Variación normalizada por ritmo diario promedio (Período A: ' . $datos['periodo_a_dias'] . ' día(s); Período B: ' . $datos['periodo_b_dias'] . ' día(s)). ' . $notaPct;
+	}
+	$pdf->Cell(190, 4, utf8_decode($notaPct), 0, 1, 'L');
+	$pdf->Ln(1);
 
 	// 2. Desglose de Operaciones por Módulo
 	$pdf->Ln(2);
@@ -151,10 +181,12 @@ function aud_generar_reporte_comparativo_pdf($datos, $destino = 'I', $rutaArchiv
 	$pdf->SetFont('Helvetica', 'B', 9);
 	$pdf->SetFillColor(241, 245, 249);
 	$pdf->SetTextColor(51, 65, 85);
-	$pdf->Cell(70, 7, utf8_decode('Módulo del Sistema'), 1, 0, 'L', true);
-	$pdf->Cell(40, 7, utf8_decode('Movimientos Período A'), 1, 0, 'C', true);
-	$pdf->Cell(40, 7, utf8_decode('Movimientos Período B'), 1, 0, 'C', true);
-	$pdf->Cell(40, 7, utf8_decode('Variación'), 1, 1, 'C', true);
+	$pdf->Cell(58, 7, utf8_decode('Módulo del Sistema'), 1, 0, 'L', true);
+	$pdf->Cell(26, 7, utf8_decode('Movs. Período A'), 1, 0, 'C', true);
+	$pdf->Cell(26, 7, utf8_decode('Movs. Período B'), 1, 0, 'C', true);
+	$pdf->Cell(25, 7, utf8_decode('Ritmo A/día'), 1, 0, 'C', true);
+	$pdf->Cell(25, 7, utf8_decode('Ritmo B/día'), 1, 0, 'C', true);
+	$pdf->Cell(30, 7, utf8_decode('Variación'), 1, 1, 'C', true);
 
 	$pdf->SetFont('Helvetica', '', 9);
 	$modulos = isset($datos['modulos_comparativa']) ? $datos['modulos_comparativa'] : array();
@@ -165,23 +197,31 @@ function aud_generar_reporte_comparativo_pdf($datos, $destino = 'I', $rutaArchiv
 	} else {
 		foreach ($modulos as $m) {
 			$pdf->SetTextColor(15, 23, 42);
-			$pdf->Cell(70, 6, utf8_decode($m['modulo']), 1, 0, 'L');
-			$pdf->Cell(40, 6, number_format($m['total_a']), 1, 0, 'C');
-			$pdf->Cell(40, 6, number_format($m['total_b']), 1, 0, 'C');
+			$pdf->Cell(58, 6, utf8_decode($m['modulo']), 1, 0, 'L');
+			$pdf->SetTextColor(51, 65, 85);
+			$pdf->Cell(26, 6, utf8_decode($fmtNum($m['total_a'])), 1, 0, 'C');
+			$pdf->Cell(26, 6, utf8_decode($fmtNum($m['total_b'])), 1, 0, 'C');
+			$pdf->Cell(25, 6, utf8_decode($fmtNum(isset($m['promedio_diario_a']) ? $m['promedio_diario_a'] : 0, 1)), 1, 0, 'C');
+			$pdf->Cell(25, 6, utf8_decode($fmtNum(isset($m['promedio_diario_b']) ? $m['promedio_diario_b'] : 0, 1)), 1, 0, 'C');
 
-			$pctM = isset($m['pct_cambio']) ? (float)$m['pct_cambio'] : 0.0;
-			if ($pctM > 0) {
-				$pdf->SetTextColor(22, 101, 52);
-				$txtPctM = '+' . number_format($pctM, 1) . ' %';
-			} elseif ($pctM < 0) {
-				$pdf->SetTextColor(185, 28, 28);
-				$txtPctM = number_format($pctM, 1) . ' %';
-			} else {
+			$pctM = (isset($m['pct_cambio']) && $m['pct_cambio'] !== null) ? (float)$m['pct_cambio'] : null;
+			if ($pctM === null) {
+				$pdf->SetTextColor(148, 163, 184);
+				$txtPctM = 'N/D';
+			} elseif ($pctM == 0) {
 				$pdf->SetTextColor(100, 116, 139);
 				$txtPctM = '=';
+			} else {
+				if ($pctM > 0) {
+					$pdf->SetTextColor(22, 101, 52);
+					$txtPctM = '+' . number_format($pctM, 1, ',', '.') . ' %';
+				} else {
+					$pdf->SetTextColor(185, 28, 28);
+					$txtPctM = number_format($pctM, 1, ',', '.') . ' %';
+				}
 			}
 			$pdf->SetFont('Helvetica', 'B', 9);
-			$pdf->Cell(40, 6, utf8_decode($txtPctM), 1, 1, 'C');
+			$pdf->Cell(30, 6, utf8_decode($txtPctM), 1, 1, 'C');
 			$pdf->SetFont('Helvetica', '', 9);
 		}
 	}
@@ -212,9 +252,10 @@ function aud_generar_reporte_comparativo_pdf($datos, $destino = 'I', $rutaArchiv
 
 			$pdf->SetTextColor(15, 23, 42);
 			$pdf->Cell(65, 6, utf8_decode($nom), 1, 0, 'L');
-			$pdf->Cell(35, 6, number_format($u['Total_Operaciones']), 1, 0, 'C');
-			$pdf->Cell(30, 6, number_format($u['Total_Inserciones']), 1, 0, 'C');
-			$pdf->Cell(30, 6, number_format($u['Total_Modificaciones']), 1, 0, 'C');
+			$pdf->SetTextColor(51, 65, 85);
+			$pdf->Cell(35, 6, utf8_decode($fmtNum($u['Total_Operaciones'])), 1, 0, 'C');
+			$pdf->Cell(30, 6, utf8_decode($fmtNum($u['Total_Inserciones'])), 1, 0, 'C');
+			$pdf->Cell(30, 6, utf8_decode($fmtNum($u['Total_Modificaciones'])), 1, 0, 'C');
 
 			if ((int)$u['Total_Eliminaciones'] > 0) {
 				$pdf->SetTextColor(185, 28, 28);
@@ -222,7 +263,7 @@ function aud_generar_reporte_comparativo_pdf($datos, $destino = 'I', $rutaArchiv
 			} else {
 				$pdf->SetTextColor(100, 116, 139);
 			}
-			$pdf->Cell(30, 6, number_format($u['Total_Eliminaciones']), 1, 1, 'C');
+			$pdf->Cell(30, 6, utf8_decode($fmtNum($u['Total_Eliminaciones'])), 1, 1, 'C');
 			$pdf->SetFont('Helvetica', '', 9);
 		}
 	}

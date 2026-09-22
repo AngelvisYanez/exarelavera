@@ -112,9 +112,12 @@ class MysqlConexion
     {
         /* Conectamos al servidor */
         @$this->conexion = mysqli_connect($this->Servidor, $this->Usuario, $this->Clave, $this->BaseDatos ?: null, $this->Puerto);
+        if ($this->conexion) {
+            @mysqli_set_charset($this->conexion, "latin1");
+        }
         if (!$this->conexion) {
             $this->Error = "Ha fallado la conexión. " . mysqli_connect_error();
-            DebugBar::addTransactionEvent('Open Connection', array('is_success'=>false, 'error_message'=>$this->Error) + $this->getDB());
+            if (class_exists('DebugBar')) DebugBar::addTransactionEvent('Open Connection', array('is_success'=>false, 'error_message'=>$this->Error) + $this->getDB());
         }
         return $this->conexion; /* Si hemos tenido éxito conectando devuelve el identificador de la conexión, sino devuelve 0 */
     }
@@ -125,16 +128,16 @@ class MysqlConexion
         $dbs = empty($db) ? $this->BaseDatos : $db;
         if (!$this->conexion || !@mysqli_select_db($this->conexion, $dbs)) {
             $this->Error = "Imposible abrir " . $dbs;
-            DebugBar::addTransactionEvent('Open Connection', array('is_success'=>false, 'error_message'=>$this->Error) + $this->getDB());
+            if (class_exists('DebugBar')) DebugBar::addTransactionEvent('Open Connection', array('is_success'=>false, 'error_message'=>$this->Error) + $this->getDB());
             return false;
         }
-        DebugBar::addTransactionEvent('Open Connection', $this->getDB());
+        if (class_exists('DebugBar')) DebugBar::addTransactionEvent('Open Connection', $this->getDB());
         return $this->conexion;
     }
     /* Cierra la conexion */
     function cerrar()
     {
-        DebugBar::addTransactionEvent('Close Connection', $this->getDB());
+        if (class_exists('DebugBar')) DebugBar::addTransactionEvent('Close Connection', $this->getDB());
         return (!$this->conexion) ? NULL : @mysqli_close($this->conexion);
     }
     function getDB()

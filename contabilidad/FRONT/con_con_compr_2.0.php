@@ -357,6 +357,16 @@ if (isset($cuenAjaxv1)) {
                                                 </select>
                                             </div>
                                         </div>
+                                        <div class="form-group">
+                                            <label class="col-xs-3 control-label label-xs ">Generación:</label>
+                                            <div class="col-xs-4">
+                                                <select class="form-control input-xs" name="Com_Gen" id="Com_Gen">
+                                                    <option value="">TODOS</option>
+                                                    <option value="A">AUTOMATICO</option>
+                                                    <option value="M">MANUAL</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="col-xs-6">
                                         <!-- static input-->

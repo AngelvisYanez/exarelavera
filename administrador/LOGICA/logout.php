@@ -1,20 +1,45 @@
 <?php 
 /* 
 Alias:	-
-Descripci髇: Cerrar la sesi髇 del sistema
-Fecha de actualizaci髇:	2010-10-29
-Desarrollador:	Lewis Chimarro 
+Descripci贸n: Cerrar la sesi贸n del sistema y registrar cierre en auditor铆a
+Fecha de actualizaci贸n:	2026-09-22
 */
 
-session_start();
-/*if(isset($_SESSION['Ses_Prs_Cod']))
-{*/
-	session_unset();
-	session_destroy();
-	header('Location: ../../index.php');
-//}//Fin del if(isset($_SESSION['Ses_Prs_Cod']))
-?>
- 
- 
- 
+if (!isset($_SESSION)) {
+	@session_start();
+}
 
+$sesCod = !empty($_SESSION['Ses_Ses_Cod']) ? (int)$_SESSION['Ses_Ses_Cod'] : 0;
+$usuCod = !empty($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
+
+if ($sesCod > 0 && $usuCod > 0) {
+	try {
+		require_once dirname(__FILE__) . '/../../auditoria/LOGICA/aud_log_auditoria.php';
+		if (class_exists('Class_Log_Datos_Aud')) {
+			$objAud = new Class_Log_Datos_Aud();
+			$objAud->GuardarCierreSesion($sesCod, date('Y-m-d H:i:s'), $usuCod);
+		}
+	} catch (Exception $e) {
+		// No bloquear el logout en caso de error de BD o auditor铆a
+	}
+}
+
+// Limpiar todas las variables de sesi贸n
+$_SESSION = array();
+
+// Si se usan cookies para la sesi贸n, destruirla tambi茅n en la cookie
+if (ini_get("session.use_cookies")) {
+	$params = session_get_cookie_params();
+	setcookie(session_name(), '', time() - 42000,
+		$params["path"], $params["domain"],
+		$params["secure"], $params["httponly"]
+	);
+}
+
+session_unset();
+@session_destroy();
+
+$motivo = isset($_GET['motivo']) ? '?motivo=' . urlencode($_GET['motivo']) : '';
+header('Location: ../../index.php' . $motivo);
+exit();
+?>

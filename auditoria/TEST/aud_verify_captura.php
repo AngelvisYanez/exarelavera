@@ -198,7 +198,7 @@ while ($row = mysqli_fetch_assoc($rCfg)) {
 mysqli_free_result($rCfg);
 
 if (count($empresas) === 0) {
-	aud_verify_msg('WARN', 'Ninguna empresa tiene reglas activas en cfg_monitoreo. Solo se registran tablas AUDIT_TABLES.');
+	aud_verify_msg('WARN', 'Ninguna empresa tiene reglas activas en cfg_monitoreo. No se registrara actividad hasta marcar modulos.');
 } else {
 	foreach ($empresas as $emp => $cnt) {
 		aud_verify_msg('INFO', "Empresa {$emp}: {$cnt} regla(s) activa(s)");

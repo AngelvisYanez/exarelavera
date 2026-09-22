@@ -1,0 +1,1019 @@
+/*
+ * =========================================================================
+ * ESTILOS DE REDISEÑO VISUAL: AUDITORÍA Y MONITOREO (EXA 3.0 / MODEL 3)
+ * Archivo: auditoria/RECURSOS/aud_monitoreo_ui_1.0.css
+ * Inspirado en: inventario/RECURSOS/inv_bodega_ui_2.0.css y inv_ajuste_ui_3.0.css
+ * =========================================================================
+ */
+
+:root {
+	--aud-primary: #2563EB;
+	--aud-primary-hover: #1D4ED8;
+	--aud-success: #16A34A;
+	--aud-success-hover: #15803D;
+	--aud-danger: #DC2626;
+	--aud-danger-hover: #B91C1C;
+	--aud-warning: #D97706;
+	--aud-info: #0284C7;
+	--aud-dark-blue: #163A5F;
+	--aud-bg-page: #DFE9F6;
+	--aud-bg-card: #FFFFFF;
+	--aud-border: #DDE3EA;
+	--aud-border-subtle: #E2E8F0;
+	--aud-text-main: #1E293B;
+	--aud-text-muted: #64748B;
+	--aud-radius: 6px;
+	--aud-radius-sm: 4px;
+	--aud-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* =========================================================================
+   0. FONDO Y ENVOLTURA GENERAL
+   ========================================================================= */
+body, html {
+	background-color: var(--aud-bg-page) !important;
+	color: var(--aud-text-main);
+}
+
+.panel.panel-main.exa-ui-panel,
+.panel.panel-main.exa-ui-panel > .exa-body {
+	background: transparent !important;
+	background-color: transparent !important;
+}
+
+/* =========================================================================
+   1. BANNERS DE ESTADO DE CAPTURA
+   ========================================================================= */
+.aud-captura-banner {
+	margin: 0 0 10px 0;
+	padding: 8px 12px;
+	border-radius: var(--aud-radius-sm);
+	font-size: 12px;
+	line-height: 1.45;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.aud-captura-ok {
+	background: #eef7f1;
+	border: 1px solid #c5e3d0;
+	color: #1f6b3a;
+}
+
+.aud-captura-off {
+	background: #fdf2f0;
+	border: 1px solid #f0c9c2;
+	color: #a12b22;
+}
+
+/* =========================================================================
+   2. FILTROS Y BÚSQUEDA (aud_con_monitoreo)
+   ========================================================================= */
+.aud-search-fieldset {
+	margin-bottom: 8px;
+	background: #FFFFFF !important;
+	border: 1px solid var(--aud-border) !important;
+	border-radius: var(--aud-radius) !important;
+	box-shadow: var(--aud-shadow-card) !important;
+	padding: 10px 14px 12px !important;
+}
+
+.aud-search-row {
+	display: table;
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 8px 0;
+	margin: 0 -8px;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+.aud-search-cell {
+	display: table-cell;
+	vertical-align: bottom;
+	padding: 0;
+	position: relative;
+}
+
+.aud-search-cell-date { width: 138px; }
+.aud-search-cell-usu { width: 15%; min-width: 140px; }
+.aud-search-cell-suc { width: 12%; }
+.aud-search-cell-mod { width: 11%; }
+.aud-search-cell-dir { width: 11%; }
+.aud-search-cell-pcs { width: 11%; }
+.aud-search-cell-pla { width: 11%; min-width: 130px; }
+.aud-search-cell-eve { width: 10%; }
+.aud-search-cell-actions {
+	width: 148px;
+	white-space: nowrap;
+	text-align: left;
+}
+
+.aud-search-cell > label {
+	display: block;
+	margin: 0 0 3px 0;
+	padding: 0;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: #5b6f88;
+	line-height: 1.2;
+}
+
+.aud-search-cell .form-control,
+.aud-search-cell select.form-control {
+	width: 100%;
+	height: 24px;
+	padding: 2px 6px;
+	font-size: 12px;
+	line-height: 1.35;
+	border-radius: var(--aud-radius-sm);
+	border: 1px solid var(--aud-border);
+}
+
+.aud-search-cell .form-control:focus,
+.aud-search-cell select.form-control:focus {
+	border-color: var(--aud-primary);
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.aud-search-cell-date .form-control {
+	padding: 2px 4px;
+	font-size: 11.5px;
+	text-align: center;
+	letter-spacing: 0;
+}
+
+.aud-search-cell .input-group {
+	display: table;
+	width: 100%;
+	border-collapse: separate;
+}
+
+.aud-search-cell .input-group > .form-control {
+	display: table-cell;
+	width: 100%;
+}
+
+.aud-search-cell .input-group-addon {
+	cursor: pointer;
+	width: 28px;
+	padding: 2px 6px;
+	line-height: 18px;
+	text-align: center;
+	vertical-align: middle;
+	background: #F1F5F9;
+	border: 1px solid var(--aud-border);
+	border-left: none;
+	border-top-right-radius: var(--aud-radius-sm);
+	border-bottom-right-radius: var(--aud-radius-sm);
+	color: #64748B;
+}
+
+.aud-search-cell .input-group-addon:hover {
+	background: #E2E8F0;
+	color: var(--aud-text-main);
+}
+
+/* Chosen en filtros de auditoria */
+.aud-search-cell .chosen-container {
+	width: 100% !important;
+	font-size: 12px;
+	vertical-align: middle;
+}
+
+.aud-search-cell .chosen-container-single .chosen-single {
+	height: 24px !important;
+	line-height: 22px !important;
+	padding: 0 22px 0 6px !important;
+	border: 1px solid var(--aud-border) !important;
+	border-radius: var(--aud-radius-sm) !important;
+	background: #FFFFFF !important;
+	box-shadow: none !important;
+	color: var(--aud-text-main) !important;
+	font-size: 12px !important;
+}
+
+.aud-search-cell .chosen-container-single .chosen-single span {
+	margin-right: 12px;
+	line-height: 22px;
+	font-size: 12px;
+}
+
+.aud-search-cell .chosen-container-single .chosen-single div {
+	width: 18px;
+	height: 22px;
+	top: 0;
+	right: 0;
+}
+
+.aud-search-cell .chosen-container-single .chosen-single div b {
+	background-position: 0 2px !important;
+}
+
+.aud-search-cell .chosen-container-active.chosen-with-drop .chosen-single div b {
+	background-position: -18px 2px !important;
+}
+
+.aud-search-cell .chosen-container-active .chosen-single {
+	border-color: var(--aud-primary) !important;
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+}
+
+.aud-search-cell .chosen-container:not(.chosen-with-drop) .chosen-drop {
+	display: none !important;
+	pointer-events: none !important;
+}
+
+.aud-search-cell .chosen-container .chosen-drop {
+	border: 1px solid var(--aud-primary) !important;
+	border-top: none !important;
+	border-radius: 0 0 var(--aud-radius-sm) var(--aud-radius-sm) !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+	background: #FFFFFF !important;
+	z-index: 10005 !important;
+}
+
+.aud-search-cell .chosen-container .chosen-search {
+	padding: 4px 6px;
+}
+
+.aud-search-cell .chosen-container .chosen-search input[type="text"] {
+	height: 24px;
+	padding: 2px 6px;
+	font-size: 11.5px;
+	border: 1px solid var(--aud-border) !important;
+	border-radius: var(--aud-radius-sm) !important;
+	outline: none !important;
+	background: #FFFFFF !important;
+}
+
+.aud-search-cell .chosen-container .chosen-search input[type="text"]:focus {
+	border-color: var(--aud-primary) !important;
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+}
+
+.aud-search-cell .chosen-container .chosen-results {
+	margin: 0;
+	padding: 2px 0;
+	max-height: 200px;
+	font-size: 11.5px;
+	color: #334155;
+}
+
+.aud-search-cell .chosen-container .chosen-results li {
+	padding: 4px 8px;
+	line-height: 16px;
+}
+
+.aud-search-cell .chosen-container .chosen-results li.highlighted {
+	background: var(--aud-primary) !important;
+	color: #FFFFFF !important;
+}
+
+.aud-search-cell .chosen-container .chosen-results li.no-results {
+	background: #F8FAFC;
+	color: var(--aud-text-muted);
+	font-style: italic;
+}
+
+.aud-search-actions {
+	padding-top: 0;
+}
+
+.aud-search-actions .btn {
+	margin: 0 4px 0 0;
+	vertical-align: middle;
+	border-radius: var(--aud-radius-sm);
+}
+
+.aud-search-hint {
+	margin: 8px 0 0 0;
+	padding: 0;
+	font-size: 11px;
+	color: var(--aud-text-muted);
+	line-height: 1.35;
+}
+
+.aud-search-hint strong {
+	color: #334155;
+	font-weight: 600;
+}
+
+/* =========================================================================
+   3. BARRA DE ACCIONES Y SELECTOR DE COLUMNAS (GRID)
+   ========================================================================= */
+.aud-toolbar-actions {
+	margin: 0 0 8px 0;
+	overflow: visible;
+	position: relative;
+	z-index: 20;
+}
+
+.aud-toolbar-right {
+	float: right;
+	white-space: nowrap;
+}
+
+.aud-toolbar-right > .btn {
+	margin-left: 4px;
+	vertical-align: middle;
+	border-radius: var(--aud-radius-sm);
+}
+
+.aud-col-wrap {
+	position: relative;
+	display: inline-block;
+	margin-left: 4px;
+	z-index: 10000;
+	vertical-align: middle;
+}
+
+.aud-col-panel {
+	display: none;
+	position: absolute;
+	right: 0;
+	top: 100%;
+	z-index: 10001;
+	background: #fff;
+	border: 1px solid #778899;
+	border-radius: var(--aud-radius-sm);
+	padding: 8px 12px;
+	min-width: 200px;
+	text-align: left;
+	box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
+.aud-col-panel label {
+	display: block;
+	margin: 4px 0;
+	cursor: pointer;
+	white-space: nowrap;
+	font-weight: normal;
+	font-size: 12px;
+	color: #334155;
+}
+
+#ui-datepicker-div {
+	z-index: 99999 !important;
+}
+
+@media (max-width: 1100px) {
+	.aud-search-row,
+	.aud-search-cell {
+		display: block;
+		width: 100% !important;
+	}
+	.aud-search-cell {
+		margin-bottom: 8px;
+	}
+	.aud-search-cell-actions {
+		width: 100% !important;
+	}
+}
+
+/* =========================================================================
+   4. MODAL DETALLE DE ACTIVIDAD
+   ========================================================================= */
+.aud-detalle {
+	padding: 2px 2px 6px;
+}
+
+.aud-det-head {
+	display: table;
+	width: 100%;
+	margin: 0 0 12px 0;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #d9e2ec;
+}
+
+.aud-det-head > * {
+	display: table-cell;
+	vertical-align: middle;
+}
+
+.aud-det-when {
+	text-align: right;
+	color: #5b6f88;
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.aud-det-when-main {
+	font-weight: 600;
+	color: #2f3b4c;
+}
+
+.aud-det-hora {
+	font-weight: 500;
+	color: #5b6f88;
+	margin-left: 4px;
+}
+
+.aud-det-id {
+	display: inline-block;
+	margin-left: 10px;
+	padding: 2px 8px;
+	border-radius: 12px;
+	background: #eef3f8;
+	color: #5b6f88;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.aud-det-badge {
+	display: inline-block;
+	padding: 4px 10px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	background: #e8eef5;
+	color: #445566;
+	border: 1px solid #c5d2e0;
+}
+
+.aud-det-badge-i {
+	background: #e7f6ed;
+	color: #1f7a45;
+	border-color: #b7e0c6;
+}
+
+.aud-det-badge-u {
+	background: #eaf2fb;
+	color: #1f5f9a;
+	border-color: #b7d0ea;
+}
+
+.aud-det-badge-d {
+	background: #fdecea;
+	color: #a12b22;
+	border-color: #f0c2bd;
+}
+
+.aud-det-badge-f {
+	background: #fff6e5;
+	color: #8a5a00;
+	border-color: #f0d7a0;
+}
+
+.aud-det-summary {
+	margin: 0 0 14px 0;
+}
+
+.aud-det-title {
+	margin: 0 0 6px 0;
+	font-size: 14px;
+	line-height: 1.35;
+	color: #243447;
+}
+
+.aud-det-lead {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.45;
+	color: #5b6f88;
+}
+
+.aud-det-context {
+	margin-bottom: 10px !important;
+}
+
+.aud-det-meta {
+	display: table;
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 10px 8px;
+	margin: -4px -10px 0;
+}
+
+.aud-det-meta-item {
+	display: inline-block;
+	vertical-align: top;
+	width: 48%;
+	box-sizing: border-box;
+	padding: 8px 10px;
+	background: #f7f9fc;
+	border: 1px solid #e3eaf2;
+	border-radius: var(--aud-radius-sm);
+	margin: 0 1% 8px 0;
+}
+
+.aud-det-meta-wide {
+	width: 98%;
+}
+
+.aud-det-label {
+	display: block;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: #7a8b9e;
+	margin-bottom: 3px;
+}
+
+.aud-det-value {
+	display: block;
+	font-size: 13px;
+	font-weight: 600;
+	color: #243447;
+	word-break: break-word;
+}
+
+.aud-det-datos {
+	margin-bottom: 0 !important;
+}
+
+.aud-det-empty {
+	margin: 4px 0 0 0;
+	padding: 10px 12px;
+	background: #f7f9fc;
+	border: 1px dashed #cfd9e6;
+	border-radius: var(--aud-radius-sm);
+	color: #6a7c90;
+	font-size: 12px;
+}
+
+.aud-det-table {
+	margin-bottom: 0 !important;
+	font-size: 12px;
+}
+
+.aud-det-table > thead > tr > th {
+	background: #eef3f8;
+	color: #445566;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	border-bottom-width: 1px !important;
+}
+
+.aud-det-col-dato {
+	width: 38%;
+	font-weight: 600;
+	color: #334455;
+}
+
+.ui-dialog.exa-ui-dialog .ui-dialog-content {
+	padding: 12px 14px 8px;
+}
+
+.ui-dialog.exa-ui-dialog .ui-dialog-buttonpane {
+	margin-top: 0;
+	padding: 8px 12px;
+	border-top: 1px solid #d9e2ec;
+	background: #f7f9fc;
+}
+
+.ui-dialog.exa-ui-dialog .ui-dialog-buttonpane .btn,
+.ui-dialog.exa-ui-dialog .ui-dialog-buttonset button {
+	min-width: 88px;
+	border-radius: var(--aud-radius-sm);
+}
+
+/* =========================================================================
+   5. CONFIGURACIÓN DE MONITOREO (aud_adm_config_monitoreo)
+   ========================================================================= */
+.aud-cfg-toolbar {
+	margin: 0 0 10px 0;
+}
+
+.aud-cfg-toolbar .btn {
+	margin-right: 6px;
+	border-radius: var(--aud-radius-sm);
+}
+
+.aud-cfg-hint {
+	margin: 0 0 12px 0;
+	padding: 10px 14px;
+	background: #FFFFFF;
+	border: 1px solid var(--aud-border);
+	border-left: 4px solid var(--aud-primary);
+	border-radius: var(--aud-radius-sm);
+	font-size: 12px;
+	color: var(--aud-text-muted);
+	line-height: 1.5;
+	box-shadow: var(--aud-shadow-card);
+}
+
+.aud-cfg-hint strong {
+	color: var(--aud-text-main);
+}
+
+.aud-cfg-list {
+	max-height: 520px;
+	overflow: auto;
+	border: 1px solid var(--aud-border);
+	border-radius: var(--aud-radius);
+	background: #fff;
+	box-shadow: var(--aud-shadow-card);
+}
+
+.aud-cfg-search {
+	margin: 0 0 8px 0;
+	max-width: 360px;
+}
+
+.aud-cfg-search input.form-control {
+	border-radius: var(--aud-radius-sm);
+	border: 1px solid var(--aud-border);
+}
+
+.aud-cfg-search input.form-control:focus {
+	border-color: var(--aud-primary);
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.aud-cfg-mod {
+	border-bottom: 1px solid #e8eef5;
+	padding: 6px 10px 4px;
+}
+
+.aud-cfg-mod:last-child {
+	border-bottom: none;
+}
+
+.aud-cfg-mod-head,
+.aud-cfg-dir-head {
+	font-size: 13px;
+	color: #243447;
+	margin-bottom: 2px;
+	white-space: nowrap;
+}
+
+.aud-cfg-mod-head {
+	font-weight: 700;
+}
+
+.aud-cfg-dir-head {
+	font-weight: 600;
+	color: #345;
+	padding-left: 4px;
+}
+
+.aud-cfg-mod-head label,
+.aud-cfg-dir-head label,
+.aud-cfg-pcs label {
+	cursor: pointer;
+	margin: 0;
+	font-weight: inherit;
+}
+
+.aud-cfg-mod-head input,
+.aud-cfg-dir-head input,
+.aud-cfg-pcs input {
+	margin-right: 6px;
+	vertical-align: middle;
+}
+
+.aud-cfg-toggle {
+	display: inline-block;
+	width: 16px;
+	color: #6a7c90;
+	cursor: pointer;
+	text-align: center;
+	margin-right: 2px;
+	text-decoration: none !important;
+}
+
+.aud-cfg-toggle:hover {
+	color: var(--aud-primary);
+}
+
+.aud-cfg-mod.aud-cfg-collapsed > .aud-cfg-mod-body,
+.aud-cfg-dir.aud-cfg-collapsed > .aud-cfg-dir-body {
+	display: none;
+}
+
+.aud-cfg-mod-body {
+	margin: 0 0 4px 8px;
+}
+
+.aud-cfg-dir {
+	margin: 2px 0 4px 10px;
+}
+
+.aud-cfg-pcs {
+	margin: 0 0 3px 28px;
+	font-size: 12px;
+	color: #334455;
+}
+
+.aud-cfg-dir .aud-cfg-pcs {
+	margin-left: 22px;
+}
+
+.aud-cfg-count {
+	font-weight: normal;
+	color: #7a8b9e;
+	font-size: 11px;
+	margin-left: 4px;
+}
+
+.aud-cfg-count-on {
+	color: var(--aud-success);
+	font-weight: 700;
+}
+
+.aud-cfg-count-part {
+	color: var(--aud-warning);
+	font-weight: 700;
+}
+
+/* Aviso de cambios sin guardar */
+.aud-cfg-dirty {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 12px;
+	background: #fff7ed;
+	border: 1px solid #fcd9a2;
+	color: #b45309;
+	font-size: 11px;
+	font-weight: 700;
+	vertical-align: middle;
+	margin: 0 8px 0 0;
+}
+
+#btnCfgGuardar.btn-warning,
+#btnCfgGuardar.btn-warning:hover,
+#btnCfgGuardar.btn-warning:focus,
+#btnCfgGuardar.btn-warning:active {
+	background: var(--aud-warning);
+	border-color: #b45309;
+	color: #FFFFFF;
+}
+
+#btnCfgGuardar.btn-warning:disabled {
+	background: var(--aud-warning);
+	border-color: #b45309;
+	color: #FFFFFF;
+	opacity: 0.65;
+}
+
+/* Mensaje cuando la busqueda o los filtros no arrojan resultados */
+#audCfgList .aud-cfg-empty-filter {
+	background: #f8fafc;
+	border: 1px dashed #cfd9e6;
+	margin: 10px;
+}
+
+.aud-cfg-empty {
+	padding: 24px;
+	color: #7a8b9e;
+	text-align: center;
+	font-style: italic;
+}
+
+.aud-cfg-status {
+	margin-top: 10px;
+	font-size: 12px;
+	color: #5b6f88;
+}
+
+/* Switches de activacion (modulo/directorio/proceso) */
+.aud-cfg-switch {
+	display: inline-block;
+	vertical-align: middle;
+	cursor: pointer;
+	margin: 0;
+}
+
+.aud-cfg-sw-ctrl {
+	position: relative;
+	display: inline-block;
+	width: 34px;
+	height: 20px;
+	margin-right: 6px;
+	vertical-align: -4px;
+}
+
+.aud-cfg-sw-ctrl input {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	opacity: 0;
+	z-index: 3;
+	cursor: pointer;
+}
+
+.aud-cfg-sw-ctrl input:disabled {
+	cursor: default;
+}
+
+.aud-cfg-sw-track {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	margin-top: -9px;
+	width: 34px;
+	height: 18px;
+	border-radius: 9px;
+	background: #cbd5e1;
+	transition: background 0.15s ease;
+}
+
+.aud-cfg-sw-thumb {
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #FFFFFF;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+	transition: left 0.15s ease;
+}
+
+.aud-cfg-switch input:checked + .aud-cfg-sw-track {
+	background: var(--aud-success);
+}
+
+.aud-cfg-switch input:checked + .aud-cfg-sw-track .aud-cfg-sw-thumb {
+	left: 19px;
+}
+
+.aud-cfg-switch.aud-cfg-sw-part input + .aud-cfg-sw-track {
+	background: var(--aud-warning);
+}
+
+.aud-cfg-switch.aud-cfg-sw-part input + .aud-cfg-sw-track .aud-cfg-sw-thumb {
+	left: 11px;
+}
+
+.aud-cfg-switch input:disabled + .aud-cfg-sw-track {
+	opacity: 0.55;
+}
+
+/* Vista GRID (tabla plana por modulo) */
+.aud-cfg-vista-sep {
+	display: inline-block;
+	width: 1px;
+	height: 16px;
+	background: #d0d7e0;
+	vertical-align: middle;
+	margin: 0 6px;
+}
+
+#btnCfgVistaLista.active,
+#btnCfgVistaGrid.active {
+	background: var(--aud-primary);
+	border-color: var(--aud-primary);
+	color: #FFFFFF;
+}
+
+.aud-cfg-view-grid {
+	display: block;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod {
+	border-bottom: 1px solid #e8eef5;
+	padding: 0;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod:last-child {
+	border-bottom: none;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod-head {
+	padding: 8px 10px !important;
+	font-size: 13px;
+	font-weight: 700;
+	color: #243447;
+	white-space: nowrap;
+	margin-bottom: 0 !important;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod-head .aud-cfg-switch,
+.aud-cfg-view-grid .aud-cfg-dir-head .aud-cfg-switch {
+	display: inline-block;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod-body {
+	display: table;
+	width: 100%;
+	margin: 0;
+	border-collapse: collapse;
+}
+
+.aud-cfg-view-grid .aud-cfg-grid-head,
+.aud-cfg-view-grid .aud-cfg-grid-row {
+	display: table-row;
+}
+
+.aud-cfg-view-grid .aud-cfg-grid-head > span,
+.aud-cfg-view-grid .aud-cfg-grid-row > span {
+	display: table-cell;
+	padding: 5px 8px;
+	border-top: 1px solid #eef1f5;
+	vertical-align: middle;
+}
+
+.aud-cfg-view-grid .aud-cfg-grid-head {
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #7a8b9e;
+	background: #f4f7fb;
+}
+
+.aud-cfg-view-grid .aud-cfg-g-dircell {
+	width: 26%;
+	color: #345;
+	font-weight: 600;
+	font-size: 12px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.aud-cfg-view-grid .aud-cfg-g-pcscell {
+	width: auto;
+	font-size: 12px;
+	color: #334455;
+}
+
+.aud-cfg-view-grid .aud-cfg-g-statecell {
+	width: 110px;
+	text-align: right;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.aud-cfg-view-grid .aud-cfg-g-statecell.on {
+	color: #0f7b3d;
+}
+
+.aud-cfg-view-grid .aud-cfg-g-statecell.off {
+	color: #9aa6b5;
+}
+
+.aud-cfg-view-grid .aud-cfg-grid-dir {
+	margin: 0;
+}
+
+.aud-cfg-view-grid .aud-cfg-grid-dir .aud-cfg-dir-head {
+	border-top: 1px solid #f0f3f7;
+	padding: 6px 10px !important;
+	font-size: 12px;
+	font-weight: 600;
+	color: #345;
+	white-space: nowrap;
+	margin-bottom: 0 !important;
+}
+
+.aud-cfg-view-grid .aud-cfg-dir-body {
+	margin: 0;
+}
+
+.aud-cfg-view-grid .aud-cfg-pcs {
+	margin: 0;
+}
+
+.aud-cfg-view-grid .aud-cfg-pcs-label {
+	display: inline;
+}
+
+.aud-cfg-view-grid .aud-cfg-collapsed > .aud-cfg-mod-body,
+.aud-cfg-view-grid .aud-cfg-collapsed > .aud-cfg-dir-body {
+	display: table-row-group !important;
+}
+
+.aud-cfg-view-grid .aud-cfg-mod.aud-cfg-collapsed,
+.aud-cfg-view-grid .aud-cfg-dir.aud-cfg-collapsed {
+	display: block;
+}
+
+/* =========================================================================
+   6. JQGRID CABECERAS Y PAGINADOR
+   ========================================================================= */
+.ui-jqgrid .ui-jqgrid-htable th {
+	cursor: default !important;
+	user-select: none;
+}
+
+.ui-jqgrid .ui-jqgrid-htable th div {
+	cursor: default !important;
+}
+
+.ui-jqgrid .ui-jqgrid-htable th .s-ico {
+	display: none !important;
+}
+
+#gridMonitoreoPager .ui-pg-selbox {
+	height: 24px;
+	padding: 1px 4px;
+	font-size: 11px;
+	border-radius: var(--aud-radius-sm);
+	border: 1px solid var(--aud-border);
+}
+

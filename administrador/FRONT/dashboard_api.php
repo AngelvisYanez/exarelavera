@@ -45,6 +45,10 @@ try {
         }
         
         if (is_array($input)) {
+            // Si viene un arreglo indexado vacio, forzar a objeto JSON para que no sea []
+            if (empty($input)) {
+                $input = (object)array();
+            }
             $dir = dirname($configFile);
             if (!is_dir($dir)) {
                 @mkdir($dir, 0777, true);

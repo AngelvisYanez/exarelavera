@@ -95,7 +95,19 @@ if (isset($loginAjax)) {
         $_SESSION['Ses_Dat_Dis'] = $row_data['Dat_Dis']; //Base de datos distribuida local
         $_SESSION['Ses_Dat_Aut'] = $row_data['Dat_Aut']; //Base de datos auditoria
         $_SESSION['Ses_Dat_Stg'] = $row_data['Dat_Stg']; //Base de datos storage
+        if (class_exists('Class_Log_Datos_Aud')) {
+            $objAudCerrar = new Class_Log_Datos_Aud;
+            if (!empty($_SESSION['Ses_Ses_Cod']) && !empty($_SESSION['Ses_Usu_Cod'])) {
+                $objAudCerrar->GuardarCierreSesion((int)$_SESSION['Ses_Ses_Cod'], date('Y-m-d H:i:s'), (int)$_SESSION['Ses_Usu_Cod']);
+            }
+            $objAudCerrar->liberar();
+        }
         $responce['success'] = true;
+        if (class_exists('Class_Log_Datos_Aud')) {
+            $objAudAbrir = new Class_Log_Datos_Aud;
+            $_SESSION['Ses_Ses_Cod'] = $objAudAbrir->guardarInicioSesion(date('Y-m-d H:i:s'), $_SESSION['Ses_Usu_Cod'], $obBD_conexion);
+            $objAudAbrir->liberar();
+        }
     } else {
         $responce['success'] = false;
     }
@@ -112,6 +124,13 @@ if (isset($setSucu)) {
         echo json_encode(array('success' => false, 'ver' => null));
         exit();
     }
+    if (class_exists('Class_Log_Datos_Aud')) {
+        $objAudCerrar = new Class_Log_Datos_Aud;
+        if (!empty($_SESSION['Ses_Ses_Cod']) && !empty($_SESSION['Ses_Usu_Cod'])) {
+            $objAudCerrar->GuardarCierreSesion((int)$_SESSION['Ses_Ses_Cod'], date('Y-m-d H:i:s'), (int)$_SESSION['Ses_Usu_Cod']);
+        }
+        $objAudCerrar->liberar();
+    }
     $_SESSION['Ses_Suc_Cod'] = $Suc_Cod;
     $_SESSION['Ses_Suc_Nom'] = $Suc_Nom;
     $_SESSION['Ses_Usu_Cod'] = $row_rs_control['Usu_Cod'];
@@ -122,6 +141,11 @@ if (isset($setSucu)) {
     $_SESSION['Ses_Usu_Men'] = $row_rs_control['Usu_Men'];
     $_SESSION['Ses_Per_Cod'] = isset($row_rs_control['Per_Cod']) ? $row_rs_control['Per_Cod'] : '';
     //var_dump($row_rs_control);
+    if (class_exists('Class_Log_Datos_Aud')) {
+        $objAudAbrir = new Class_Log_Datos_Aud;
+        $_SESSION['Ses_Ses_Cod'] = $objAudAbrir->guardarInicioSesion(date('Y-m-d H:i:s'), $_SESSION['Ses_Usu_Cod'], $obBD_conexion);
+        $objAudAbrir->liberar();
+    }
     echo json_encode(array('success' => true, 'ver' => $row_rs_control));
     exit();
 }
@@ -1575,6 +1599,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
     <script src="../../skins/js/ace/ace.settings.js"></script>
     <script src="../../skins/js/ace/ace.settings-skin.js"></script>
     <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
+    <script src="../../auditoria/VALIDACIONES/aud_idle_tracker.js"></script>
     <!-- <script src="../../framework/php/ventanasSocket/socketExaVentanas.js"></script> -->
     <?php //var_dump($rs_sucursales); 
     ?>

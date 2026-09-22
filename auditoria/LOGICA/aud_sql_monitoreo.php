@@ -11,37 +11,20 @@
  * 
  * @package auditoria.LOGICA
  */
-/** Base maestra de catalogo (usuarios, persona, empresas, sucursal, procesos, organizado). */
-if (!function_exists('aud_master_db')) {
-	function aud_master_db()
+if (!function_exists('aud_sql_db_dis')) {
+	function aud_sql_db_dis()
 	{
-		if (session_id() !== '' && !empty($_SESSION['Ses_Dat_Dis'])) {
-			$db = preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']);
-			if ($db !== '' && $db !== 'exa_master') {
-				return $db;
-			}
+		$db = isset($_SESSION['Ses_Dat_Dis']) ? trim((string)$_SESSION['Ses_Dat_Dis']) : '';
+		if ($db === '' && isset($GLOBALS['Ses_Dat_Dis'])) {
+			$db = trim((string)$GLOBALS['Ses_Dat_Dis']);
 		}
-		if (!empty($GLOBALS['Ses_Dat_Dis'])) {
-			$db = preg_replace('/[^a-zA-Z0-9_]/', '', $GLOBALS['Ses_Dat_Dis']);
-			if ($db !== '' && $db !== 'exa_master') {
-				return $db;
-			}
-		}
-		if (class_exists('Env')) {
-			$db = \Env::get('DB_DATABASE_CORP', '');
-			if (is_string($db) && $db !== '' && $db !== 'exa_master') {
-				return preg_replace('/[^a-zA-Z0-9_]/', '', $db);
-			}
-			$db2 = \Env::get('DB_DATABASE', '');
-			if (is_string($db2) && $db2 !== '' && $db2 !== 'exa_master') {
-				return preg_replace('/[^a-zA-Z0-9_]/', '', $db2);
-			}
-		}
-		return 'exa';
+		$db = preg_replace('/[^a-zA-Z0-9_]/', '', $db);
+		return ($db !== '') ? "`{$db}`" : "`servicios`";
 	}
 }
+
 function sentencias($id,$Par_Sql){
-	$mdb = aud_master_db();
+	$dbDis = aud_sql_db_dis();
 	switch($id){
 		/**
 		 * Busqueda de un usuario por sucursal y coincidencias en su apellido
@@ -49,8 +32,8 @@ function sentencias($id,$Par_Sql){
 		case 1:
 			$sql = "SELECT `persona`.`Prs_Cod`,`persona`.`Prs_Nom`,`persona`.`Prs_Ape`,`persona`.`Prs_Ced`,`usuarios`.`Usu_Cod`,`usuarios`.`Usu_Est`
 			FROM
-			`{$mdb}`.`usuarios`
-			INNER JOIN `{$mdb}`.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`
+			{$dbDis}.`usuarios`
+			INNER JOIN {$dbDis}.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`
 			WHERE
 			`usuarios`.`Suc_Cod` = $Par_Sql[0] AND
 			`persona`.`Prs_Ape` LIKE '%$Par_Sql[1]%'";
@@ -63,8 +46,8 @@ function sentencias($id,$Par_Sql){
 		case 2:
 			$sql = "SELECT `persona`.`Prs_Cod`,`persona`.`Prs_Nom`,`persona`.`Prs_Ape`,`persona`.`Prs_Ced`,`usuarios`.`Usu_Cod`,`usuarios`.`Usu_Est`
 			FROM
-			`{$mdb}`.`usuarios`
-			INNER JOIN `{$mdb}`.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`
+			{$dbDis}.`usuarios`
+			INNER JOIN {$dbDis}.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`
 			WHERE
 			`usuarios`.`Suc_Cod` = $Par_Sql[0] AND
 			`persona`.`Prs_Ced` = '$Par_Sql[1]'";
@@ -76,8 +59,8 @@ function sentencias($id,$Par_Sql){
 		case 3:
 			$sql = "SELECT `persona`.`Prs_Cod`,`persona`.`Prs_Nom`,`persona`.`Prs_Ape`,`persona`.`Prs_Ced`,`usuarios`.`Usu_Cod`,`usuarios`.`Usu_Est`
 			FROM
-			`{$mdb}`.`usuarios`
-			INNER JOIN `{$mdb}`.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`
+			{$dbDis}.`usuarios`
+			INNER JOIN {$dbDis}.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`
 			WHERE
 			`usuarios`.`Usu_Cod` = $Par_Sql[0]";
                         //echo $sql;
@@ -89,9 +72,9 @@ function sentencias($id,$Par_Sql){
 		case 4:
 			$sql = "SELECT `sesion`.`Ses_Cod`,`sesion`.`Ses_Int`,`sesion`.`Ses_Out`
 			FROM
-			`{$mdb}`.`usuarios`
+			{$dbDis}.`usuarios`
 			INNER JOIN `auditoria`.`sesion` ON `usuarios`.`Usu_Cod` = `sesion`.`Usu_Cod`
-			INNER JOIN `{$mdb}`.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`
+			INNER JOIN {$dbDis}.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`
 			WHERE
 			`sesion`.`Usu_Cod` = $Par_Sql[0] AND
 			(DATE_FORMAT(`Ses_Int`,'%Y-%m-%d') BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]')
@@ -106,8 +89,8 @@ function sentencias($id,$Par_Sql){
 		case 5:
 			$sql="SELECT `persona`.`Prs_Cod`,`persona`.`Prs_Nom`,`persona`.`Prs_Ape`,`persona`.`Prs_Ced`,`usuarios`.`Usu_Cod`,`usuarios`.`Usu_Est`,`sesion`.`Ses_Int`,`sesion`.`Ses_Out`
 			FROM
-			`{$mdb}`.`usuarios`
-			INNER JOIN `{$mdb}`.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`
+			{$dbDis}.`usuarios`
+			INNER JOIN {$dbDis}.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`
 			INNER JOIN `auditoria`.`sesion` ON `sesion`.`Usu_Cod` = `usuarios`.`Usu_Cod`
 			WHERE
 			`usuarios`.`Usu_Cod` = $Par_Sql[0] AND
@@ -116,7 +99,7 @@ function sentencias($id,$Par_Sql){
 		break;
 		
 		/**
-		 * Obtener las actividades durante esa sessi�n del usuario 
+		 * Obtener las actividades durante esa sessin del usuario 
 		 */
 		case 6:
 			$empFiltro = (isset($Par_Sql[3]) && $Par_Sql[3] !== '' && (int)$Par_Sql[3] > 0)
@@ -127,8 +110,8 @@ function sentencias($id,$Par_Sql){
 			`auditoria`.`logs`
 			INNER JOIN `auditoria`.`eventos` ON `logs`.`Eve_Cod` = `eventos`.`Eve_Cod`
 			INNER JOIN `auditoria`.`tablas` ON `tablas`.`Tab_Cod` = `logs`.`Tab_Cod`
-			LEFT JOIN `{$mdb}`.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
-			LEFT JOIN `{$mdb}`.`empresas` ON `logs`.`Emp_Cod` = `empresas`.`Emp_Cod`
+			LEFT JOIN {$dbDis}.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
+			LEFT JOIN {$dbDis}.`empresas` ON `logs`.`Emp_Cod` = `empresas`.`Emp_Cod`
 			WHERE `logs`.`Usu_Cod` = $Par_Sql[0] AND (`logs`.`Log_Fec` BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]') $empFiltro
 			ORDER BY `Log_Fec` DESC";
 			return $sql;
@@ -190,15 +173,15 @@ function sentencias($id,$Par_Sql){
 			`auditoria`.`logs`
 			INNER JOIN `auditoria`.`eventos` ON `logs`.`Eve_Cod` = `eventos`.`Eve_Cod`
 			INNER JOIN `auditoria`.`tablas` ON `tablas`.`Tab_Cod` = `logs`.`Tab_Cod`
-			LEFT JOIN `{$mdb}`.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
-			LEFT JOIN `{$mdb}`.`empresas` ON `logs`.`Emp_Cod` = `empresas`.`Emp_Cod`
+			LEFT JOIN {$dbDis}.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
+			LEFT JOIN {$dbDis}.`empresas` ON `logs`.`Emp_Cod` = `empresas`.`Emp_Cod`
 			WHERE `logs`.`Usu_Cod` = $Par_Sql[0] AND (`logs`.`Log_Fec` BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]') AND `tablas`.`Tab_Cod` = '$tabCod' $empFiltro
 			ORDER BY `Log_Fec` DESC";
 			return $sql;
 		break;
 		
 		/**
-		 * Obtener el conteo de registro segun la sesi�n
+		 * Obtener el conteo de registro segun la sesin
 		 */
 		case 11:
 			$empFiltro = (isset($Par_Sql[3]) && $Par_Sql[3] !== '' && (int)$Par_Sql[3] > 0)
@@ -209,7 +192,7 @@ function sentencias($id,$Par_Sql){
 			`auditoria`.`logs`
 			INNER JOIN `auditoria`.`eventos` ON `logs`.`Eve_Cod` = `eventos`.`Eve_Cod`
 			INNER JOIN `auditoria`.`tablas` ON `tablas`.`Tab_Cod` = `logs`.`Tab_Cod`
-			LEFT JOIN `{$mdb}`.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
+			LEFT JOIN {$dbDis}.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
 			WHERE `logs`.`Usu_Cod` = $Par_Sql[0] AND (`logs`.`Log_Fec` BETWEEN '$Par_Sql[1]' AND '$Par_Sql[2]') $empFiltro";
 			return $sql;
 		break;
@@ -333,8 +316,8 @@ function sentencias($id,$Par_Sql){
 
 		case 21:
 			$sql = "SELECT p.`Pcs_Cod`, p.`Pcs_Lin`, p.`Pcs_Det`, o.`Org_Des`
-			FROM `{$mdb}`.`procesos` p
-			LEFT JOIN `{$mdb}`.`organizado` o ON p.`Org_Cod` = o.`Org_Cod`
+			FROM {$dbDis}.`procesos` p
+			LEFT JOIN {$dbDis}.`organizado` o ON p.`Org_Cod` = o.`Org_Cod`
 			WHERE p.`Pcs_Nom`='aud_con_monitoreo_1.0.php'
 			LIMIT 1";
 			return $sql;
@@ -381,7 +364,7 @@ function sentencias($id,$Par_Sql){
 				SELECT ".aud_sql_expr_modulo_cod()." AS `Org_Cod`,
 					".aud_sql_expr_modulo_des()." AS `Org_Des`
 				FROM `auditoria`.`logs`
-				INNER JOIN `{$mdb}`.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
+				INNER JOIN {$dbDis}.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
 				".aud_sql_org_tree_joins('`procesos`')."
 				WHERE 1=1 {$empF}
 			) t
@@ -408,11 +391,11 @@ function sentencias($id,$Par_Sql){
 			}
 			$sql = "SELECT DISTINCT p.`Pcs_Cod`, p.`Pcs_Lin`, p.`Pcs_Nom`, o.`Org_Des`
 			FROM `auditoria`.`logs`
-			INNER JOIN `{$mdb}`.`procesos` p ON `logs`.`Pcs_Cod` = p.`Pcs_Cod`
-			LEFT JOIN `{$mdb}`.`organizado` o ON p.`Org_Cod` = o.`Org_Cod`
-			LEFT JOIN `{$mdb}`.`organizado` op ON op.`Org_Cod` = o.`Org_Niv`
-			LEFT JOIN `{$mdb}`.`organizado` oa ON oa.`Org_Cod` = op.`Org_Niv`
-			LEFT JOIN `{$mdb}`.`organizado` ob ON ob.`Org_Cod` = oa.`Org_Niv`
+			INNER JOIN {$dbDis}.`procesos` p ON `logs`.`Pcs_Cod` = p.`Pcs_Cod`
+			LEFT JOIN {$dbDis}.`organizado` o ON p.`Org_Cod` = o.`Org_Cod`
+			LEFT JOIN {$dbDis}.`organizado` op ON op.`Org_Cod` = o.`Org_Niv`
+			LEFT JOIN {$dbDis}.`organizado` oa ON oa.`Org_Cod` = op.`Org_Niv`
+			LEFT JOIN {$dbDis}.`organizado` ob ON ob.`Org_Cod` = oa.`Org_Niv`
 			WHERE p.`Pcs_Cod` > 0 {$empF} {$dirF} {$modF}
 			ORDER BY IFNULL(p.`Pcs_Lin`, p.`Pcs_Nom`) ASC";
 			return $sql;
@@ -420,6 +403,8 @@ function sentencias($id,$Par_Sql){
 
 		/**
 		 * Usuarios de la empresa activa (combo filtro).
+		 * Agrupa cuentas por persona (nombre) para no mostrar repetidos;
+		 * las cuentas de la misma persona van en Usu_Cods y N_Ctas.
 		 * 0 emp, 1 suc (opcional: si >0 lista solo usuarios de esa sucursal)
 		 */
 		case 27:
@@ -427,13 +412,18 @@ function sentencias($id,$Par_Sql){
 			$suc = isset($Par_Sql[1]) ? (int)$Par_Sql[1] : 0;
 			$empF = $emp > 0 ? " AND s.`Emp_Cod`={$emp}" : ' AND 1=0';
 			$sucF = $suc > 0 ? " AND u.`Suc_Cod`={$suc}" : '';
-			$sql = "SELECT DISTINCT u.`Usu_Cod`,
-				TRIM(CONCAT(IFNULL(`persona`.`Prs_Ape`,''),' ',IFNULL(`persona`.`Prs_Nom`,''))) AS `Usu_Nom`
-			FROM `{$mdb}`.`usuarios` u
-			INNER JOIN `{$mdb}`.`sucursal` s ON u.`Suc_Cod` = s.`Suc_Cod`
-			LEFT JOIN `{$mdb}`.`persona` ON u.`Prs_Cod` = `persona`.`Prs_Cod`
+			$apeNom = "TRIM(CONCAT(IFNULL(`persona`.`Prs_Ape`,''),' ',IFNULL(`persona`.`Prs_Nom`,'')))";
+			$grupoUsu = "IF({$apeNom}='', -u.`Usu_Cod`, {$apeNom})";
+			$sql = "SELECT MIN(u.`Usu_Cod`) AS `Usu_Cod`,
+				GROUP_CONCAT(DISTINCT u.`Usu_Cod` ORDER BY u.`Usu_Cod` SEPARATOR ',') AS `Usu_Cods`,
+				COUNT(DISTINCT u.`Usu_Cod`) AS `N_Ctas`,
+				IFNULL(NULLIF({$apeNom},''), CONCAT('Usuario #', MIN(u.`Usu_Cod`))) AS `Usu_Nom`
+			FROM {$dbDis}.`usuarios` u
+			INNER JOIN {$dbDis}.`sucursal` s ON u.`Suc_Cod` = s.`Suc_Cod`
+			LEFT JOIN {$dbDis}.`persona` ON u.`Prs_Cod` = `persona`.`Prs_Cod`
 			WHERE u.`Usu_Cod` > 0 {$empF} {$sucF}
-			ORDER BY `Usu_Nom` ASC, u.`Usu_Cod` ASC";
+			GROUP BY {$grupoUsu}
+			ORDER BY `Usu_Nom` ASC, `Usu_Cod` ASC";
 			return $sql;
 		break;
 
@@ -445,7 +435,7 @@ function sentencias($id,$Par_Sql){
 			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
 			$empF = $emp > 0 ? " WHERE s.`Emp_Cod`={$emp}" : '';
 			$sql = "SELECT s.`Suc_Cod`, s.`Suc_Des`, s.`Emp_Cod`
-			FROM `{$mdb}`.`sucursal` s
+			FROM {$dbDis}.`sucursal` s
 			{$empF}
 			ORDER BY s.`Suc_Des` ASC";
 			return $sql;
@@ -457,7 +447,7 @@ function sentencias($id,$Par_Sql){
 		 */
 		case 29:
 			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
-			$sql = "SELECT COUNT(*) AS `count` FROM `{$mdb}`.`sucursal` WHERE `Emp_Cod`=".(int)$emp;
+			$sql = "SELECT COUNT(*) AS `count` FROM {$dbDis}.`sucursal` WHERE `Emp_Cod`=".(int)$emp;
 			return $sql;
 		break;
 
@@ -475,7 +465,7 @@ function sentencias($id,$Par_Sql){
 			}
 			$sql = "SELECT DISTINCT `organizado`.`Org_Cod`, `organizado`.`Org_Des`
 			FROM `auditoria`.`logs`
-			INNER JOIN `{$mdb}`.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
+			INNER JOIN {$dbDis}.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
 			".aud_sql_org_tree_joins('`procesos`')."
 			WHERE `organizado`.`Org_Des` IS NOT NULL AND TRIM(`organizado`.`Org_Des`)<>'' {$empF} {$modF}
 			ORDER BY `organizado`.`Org_Des` ASC";
@@ -504,62 +494,48 @@ function sentencias($id,$Par_Sql){
 			return $sql;
 		break;
 
-		/** KPI 1: Conteo por Tipo de Evento (Insert, Update, Delete) */
+		/**
+		 * Plantas de manifiesto (Pla_Cod -> Pla_Nom) para la columna Planta del informe
+		 */
 		case 33:
-			$where = aud_logs_filtro($Par_Sql);
-			$sql = "SELECT `eventos`.`Eve_Ini`, `eventos`.`Eve_Des`, COUNT(`logs`.`Log_Cod`) AS `total`
-			FROM `auditoria`.`logs`
-			INNER JOIN `auditoria`.`eventos` ON `logs`.`Eve_Cod` = `eventos`.`Eve_Cod`
-			INNER JOIN `auditoria`.`tablas` ON `tablas`.`Tab_Cod` = `logs`.`Tab_Cod`
-			".aud_logs_joins()."
-			$where
-			GROUP BY `eventos`.`Eve_Cod`
-			ORDER BY `total` DESC";
+			$sql = "SELECT `Pla_Cod`, `Pla_Nom` FROM {$dbDis}.`manifiesto_plantas` ORDER BY `Pla_Nom` ASC";
 			return $sql;
 		break;
 
-		/** KPI 2: Conteo por Fecha (Tendencia temporal) */
+		/**
+		 * Alcance de la auditoria: reglas cfg_monitoreo activas con nombres resueltos.
+		 * 0 emp
+		 */
 		case 34:
-			$where = aud_logs_filtro($Par_Sql);
-			$sql = "SELECT DATE(`logs`.`Log_Fec`) AS `fecha`, COUNT(`logs`.`Log_Cod`) AS `total`
-			FROM `auditoria`.`logs`
-			INNER JOIN `auditoria`.`eventos` ON `logs`.`Eve_Cod` = `eventos`.`Eve_Cod`
-			INNER JOIN `auditoria`.`tablas` ON `tablas`.`Tab_Cod` = `logs`.`Tab_Cod`
-			".aud_logs_joins()."
-			$where
-			GROUP BY DATE(`logs`.`Log_Fec`)
-			ORDER BY `fecha` ASC
-			LIMIT 60";
+			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$sql = "SELECT c.`Org_Cod`, c.`Pcs_Cod`, o.`Org_Des`, o.`Org_Niv`, p.`Pcs_Lin`, p.`Pcs_Nom`
+			FROM `auditoria`.`cfg_monitoreo` c
+			LEFT JOIN {$dbDis}.`organizado` o ON o.`Org_Cod` = c.`Org_Cod`
+			LEFT JOIN {$dbDis}.`procesos` p ON p.`Pcs_Cod` = c.`Pcs_Cod`
+			WHERE c.`Emp_Cod`={$emp} AND c.`Cfg_Est`='A'
+			ORDER BY o.`Org_Des` ASC, p.`Pcs_Lin` ASC";
 			return $sql;
 		break;
 
-		/** KPI 3: Top Modulos mas activos */
+		/**
+		 * Un proceso tiene que ver con plantas si alguna de sus tablas registradas
+		 * tiene columna Pla_Cod o algun log suyo incluyo el campo Pla_Cod.
+		 * 0 pcs
+		 */
 		case 35:
-			$where = aud_logs_filtro($Par_Sql);
-			$sql = "SELECT IFNULL(".aud_sql_expr_modulo_des().", 'Sin modulo') AS `modulo`, COUNT(`logs`.`Log_Cod`) AS `total`
-			FROM `auditoria`.`logs`
-			INNER JOIN `auditoria`.`eventos` ON `logs`.`Eve_Cod` = `eventos`.`Eve_Cod`
-			INNER JOIN `auditoria`.`tablas` ON `tablas`.`Tab_Cod` = `logs`.`Tab_Cod`
-			".aud_logs_joins()."
-			$where
-			GROUP BY `modulo`
-			ORDER BY `total` DESC
-			LIMIT 7";
-			return $sql;
-		break;
-
-		/** KPI 4: Top Usuarios con mas movimientos */
-		case 36:
-			$where = aud_logs_filtro($Par_Sql);
-			$sql = "SELECT IFNULL(NULLIF(TRIM(CONCAT(IFNULL(`persona`.`Prs_Ape`,''),' ',IFNULL(`persona`.`Prs_Nom`,''))),''), CONCAT('Usuario ', `logs`.`Usu_Cod`)) AS `usuario`, COUNT(`logs`.`Log_Cod`) AS `total`
-			FROM `auditoria`.`logs`
-			INNER JOIN `auditoria`.`eventos` ON `logs`.`Eve_Cod` = `eventos`.`Eve_Cod`
-			INNER JOIN `auditoria`.`tablas` ON `tablas`.`Tab_Cod` = `logs`.`Tab_Cod`
-			".aud_logs_joins()."
-			$where
-			GROUP BY `logs`.`Usu_Cod`
-			ORDER BY `total` DESC
-			LIMIT 7";
+			$pcs = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$dbSchema = trim($dbDis, '`');
+			$sql = "SELECT COUNT(*) AS `count`
+			FROM `auditoria`.`logs` l
+			INNER JOIN `auditoria`.`tablas` t ON t.`Tab_Cod` = l.`Tab_Cod`
+			WHERE l.`Pcs_Cod` = {$pcs}
+			AND (
+				l.`Log_Cam` LIKE '%Pla_Cod%'
+				OR EXISTS (
+					SELECT 1 FROM `information_schema`.`columns` c
+					WHERE c.`table_schema` = '{$dbSchema}' AND c.`table_name` = t.`Tab_Nom` COLLATE utf8mb3_general_ci AND c.`column_name` = 'Pla_Cod'
+				)
+			)";
 			return $sql;
 		break;
 	}
@@ -585,22 +561,22 @@ function aud_logs_select(){
 
 /** Joins del arbol organizado (directorio + 3 ancestros). */
 function aud_sql_org_tree_joins($fromProcesos){
-	$mdb = aud_master_db();
-	return "LEFT JOIN `{$mdb}`.`organizado` ON {$fromProcesos}.`Org_Cod` = `organizado`.`Org_Cod`
-			LEFT JOIN `{$mdb}`.`organizado` `org_padre` ON `org_padre`.`Org_Cod` = `organizado`.`Org_Niv`
-			LEFT JOIN `{$mdb}`.`organizado` `org_abuelo` ON `org_abuelo`.`Org_Cod` = `org_padre`.`Org_Niv`
-			LEFT JOIN `{$mdb}`.`organizado` `org_bisabuelo` ON `org_bisabuelo`.`Org_Cod` = `org_abuelo`.`Org_Niv`";
+	$dbDis = aud_sql_db_dis();
+	return "LEFT JOIN {$dbDis}.`organizado` ON {$fromProcesos}.`Org_Cod` = `organizado`.`Org_Cod`
+			LEFT JOIN {$dbDis}.`organizado` `org_padre` ON `org_padre`.`Org_Cod` = `organizado`.`Org_Niv`
+			LEFT JOIN {$dbDis}.`organizado` `org_abuelo` ON `org_abuelo`.`Org_Cod` = `org_padre`.`Org_Niv`
+			LEFT JOIN {$dbDis}.`organizado` `org_bisabuelo` ON `org_bisabuelo`.`Org_Cod` = `org_abuelo`.`Org_Niv`";
 }
 
 /** Joins comunes listado/conteo (directorio + padres para modulo) */
 function aud_logs_joins(){
-	$mdb = aud_master_db();
-	return "LEFT JOIN `{$mdb}`.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
+	$dbDis = aud_sql_db_dis();
+	return "LEFT JOIN {$dbDis}.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
 			".aud_sql_org_tree_joins('`procesos`')."
-			LEFT JOIN `{$mdb}`.`empresas` ON `logs`.`Emp_Cod` = `empresas`.`Emp_Cod`
-			LEFT JOIN `{$mdb}`.`sucursal` ON `logs`.`Suc_Cod` = `sucursal`.`Suc_Cod`
-			LEFT JOIN `{$mdb}`.`usuarios` ON `logs`.`Usu_Cod` = `usuarios`.`Usu_Cod`
-			LEFT JOIN `{$mdb}`.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`";
+			LEFT JOIN {$dbDis}.`empresas` ON `logs`.`Emp_Cod` = `empresas`.`Emp_Cod`
+			LEFT JOIN {$dbDis}.`sucursal` ON `logs`.`Suc_Cod` = `sucursal`.`Suc_Cod`
+			LEFT JOIN {$dbDis}.`usuarios` ON `logs`.`Usu_Cod` = `usuarios`.`Usu_Cod`
+			LEFT JOIN {$dbDis}.`persona` ON `usuarios`.`Prs_Cod` = `persona`.`Prs_Cod`";
 }
 
 function aud_sql_org_alias($a){
@@ -644,7 +620,7 @@ function aud_sql_expr_modulo_cod($alias = null){
  * No usa Pcs_Lin ni LIKE '%texto%' (evita cruzar modulos).
  */
 function aud_sql_buscar_proceso_sim($nom, $modLike = ''){
-	$mdb = aud_master_db();
+	$dbDis = aud_sql_db_dis();
 	$nom = addslashes(trim((string)$nom));
 	$modLike = addslashes(trim((string)$modLike));
 	$modF = '';
@@ -657,7 +633,7 @@ function aud_sql_buscar_proceso_sim($nom, $modLike = ''){
 		`organizado`.`Org_Niv` AS `Dir_Niv`,
 		".aud_sql_expr_modulo_des()." AS `Mod_Des`,
 		".aud_sql_expr_modulo_cod()." AS `Mod_Cod`
-	FROM `{$mdb}`.`procesos` p
+	FROM {$dbDis}.`procesos` p
 	".aud_sql_org_tree_joins('p')."
 	WHERE IFNULL(p.`Pcs_Est`,'A')='A' AND (
 		p.`Pcs_Nom` = '{$nom}'
@@ -709,8 +685,19 @@ function aud_logs_filtro($Par_Sql){
 	if (isset($Par_Sql[6]) && $Par_Sql[6] !== '' && (int)$Par_Sql[6] > 0) {
 		$w .= ' AND `logs`.`Tab_Cod`='.(int)$Par_Sql[6];
 	}
-	if (isset($Par_Sql[7]) && $Par_Sql[7] !== '' && (int)$Par_Sql[7] > 0) {
-		$w .= ' AND `logs`.`Usu_Cod`='.(int)$Par_Sql[7];
+	if (isset($Par_Sql[7]) && trim((string)$Par_Sql[7]) !== '') {
+		$usus = array();
+		foreach (explode(',', trim((string)$Par_Sql[7])) as $us) {
+			$us = (int)$us;
+			if ($us > 0) {
+				$usus[] = $us;
+			}
+		}
+		if (count($usus) === 1) {
+			$w .= ' AND `logs`.`Usu_Cod`='.$usus[0];
+		} elseif (count($usus) > 1) {
+			$w .= ' AND `logs`.`Usu_Cod` IN ('.implode(',', $usus).')';
+		}
 	}
 	// Par_Sql[10]: Suc_Cod (sucursal)
 	if (isset($Par_Sql[10]) && $Par_Sql[10] !== '' && (int)$Par_Sql[10] > 0) {
@@ -720,19 +707,12 @@ function aud_logs_filtro($Par_Sql){
 	if (isset($Par_Sql[11]) && $Par_Sql[11] !== '' && (int)$Par_Sql[11] > 0) {
 		$w .= ' AND `procesos`.`Org_Cod`='.(int)$Par_Sql[11];
 	}
-	// Par_Sql[12]: Busqueda de texto libre en Log_Val, Log_Cam, Log_Int, Tab_Ali, Tab_Nom, Pcs_Lin, Persona
-	if (isset($Par_Sql[12]) && trim((string)$Par_Sql[12]) !== '') {
-		$q = addslashes(trim((string)$Par_Sql[12]));
-		$w .= " AND (
-			`logs`.`Log_Val` LIKE '%{$q}%'
-			OR `logs`.`Log_Int` LIKE '%{$q}%'
-			OR `logs`.`Log_Cam` LIKE '%{$q}%'
-			OR `tablas`.`Tab_Ali` LIKE '%{$q}%'
-			OR `tablas`.`Tab_Nom` LIKE '%{$q}%'
-			OR `procesos`.`Pcs_Lin` LIKE '%{$q}%'
-			OR `persona`.`Prs_Ape` LIKE '%{$q}%'
-			OR `persona`.`Prs_Nom` LIKE '%{$q}%'
-		)";
+	// Par_Sql[12]: Planta (valor de Pla_Cod en la posicion del par Log_Cam/Log_Val)
+	if (isset($Par_Sql[12]) && $Par_Sql[12] !== '' && (int)$Par_Sql[12] > 0) {
+		$pla = (int)$Par_Sql[12];
+		$posPla = "LENGTH(SUBSTRING_INDEX(`logs`.`Log_Cam`, 'Pla_Cod', 1)) - LENGTH(REPLACE(SUBSTRING_INDEX(`logs`.`Log_Cam`, 'Pla_Cod', 1), ',', '')) + 1";
+		$valPla = "REPLACE(TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(`logs`.`Log_Val`, ',', {$posPla}), ',', -1)), '~', '')";
+		$w .= " AND `logs`.`Log_Cam` LIKE '%Pla_Cod%' AND CAST({$valPla} AS UNSIGNED) = {$pla}";
 	}
 	return $w;
 }

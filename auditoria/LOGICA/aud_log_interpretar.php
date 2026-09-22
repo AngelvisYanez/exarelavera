@@ -125,7 +125,32 @@ function aud_modulos_tabla()
 		'manifiesto_turnos_cab' => 'Relavera / Turnos',
 		'manifiesto_turnos_det' => 'Relavera / Turnos',
 		'manifiesto_visitante' => 'Relavera / Visitantes',
-		'manifiesto_evento' => 'Relavera / Visitantes'
+		'manifiesto_evento' => 'Relavera / Visitantes',
+		'anticipos_clientes' => 'Relavera / Anticipos',
+		'det_ant_cccc' => 'Relavera / Anticipos',
+		'manifiesto_anticipo' => 'Relavera / Anticipos',
+		'pag_anticipo_cli' => 'Relavera / Anticipos',
+		'manifiesto_contratos' => 'Relavera / Contratos',
+		'manifiesto_contratos_docu' => 'Relavera / Contratos',
+		'param_manifiesto' => 'Relavera / Contratos',
+		'maquinaria_alimentacion' => 'Relavera / Maquinaria',
+		'maquinaria_dispensador' => 'Relavera / Maquinaria',
+		'maquinaria_dispensador_det' => 'Relavera / Maquinaria',
+		'maquinaria_dispensador_cierre' => 'Relavera / Maquinaria',
+		'maquinaria_equipo' => 'Relavera / Maquinaria',
+		'maquinaria_horometro' => 'Relavera / Maquinaria',
+		'manifiesto_liquidacion_maq' => 'Relavera / Maquinaria',
+		'manifiesto_tecnico' => 'Relavera / Tecnicos',
+		'manifiesto_mensajes' => 'Relavera / Tecnicos',
+		'chofer' => 'Relavera / Operario y Vehiculos',
+		'vehiculo' => 'Relavera / Operario y Vehiculos',
+		'personal' => 'Relavera / Operario y Vehiculos',
+		'inventario_dispositivos' => 'Relavera / Inventario',
+		'usuario_inventario' => 'Relavera / Inventario',
+		'ccpp_cobrar' => 'Relavera / Cobranzas',
+		'det_ccpp_c' => 'Relavera / Cobranzas',
+		'pago_venta' => 'Relavera / Cobranzas',
+		'ventas_compr' => 'Relavera / Cobranzas'
 	);
 }
 
@@ -191,6 +216,62 @@ function aud_sim_casos()
 			'mod_re' => '/facturaci/i',
 			'mod_not_re' => '/auditoria|contabilid|relavera/i',
 			'tabs' => array('caja_aper')
+		),
+		array(
+			'id' => 'anticipos',
+			'pcs_noms' => array('man_ant_1.0', 'man_est_cuenta_1.0'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|anticipo/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('anticipos_clientes', 'det_ant_cccc', 'manifiesto_anticipo', 'pag_anticipo_cli')
+		),
+		array(
+			'id' => 'contratos',
+			'pcs_noms' => array('man_alt_contratos', 'man_con_planta', 'man_alt_param'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|contrato|planta/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('manifiesto_contratos', 'manifiesto_contratos_docu', 'param_manifiesto')
+		),
+		array(
+			'id' => 'maquinaria',
+			'pcs_noms' => array('man_alt_maquinaria_dispensador', 'man_alt_maquinaria_horometro', 'man_alt_maquinaria_preliquidacion', 'man_alt_alimentacion'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|maquinaria|dispensador|horometro|alimentacion/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('maquinaria_alimentacion', 'maquinaria_dispensador', 'maquinaria_dispensador_det', 'maquinaria_dispensador_cierre', 'maquinaria_equipo', 'maquinaria_horometro', 'manifiesto_liquidacion_maq')
+		),
+		array(
+			'id' => 'tecnicos',
+			'pcs_noms' => array('man_tec_1.0', 'man_tec_camp_1.0'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|tecnico/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('manifiesto_tecnico', 'manifiesto_mensajes')
+		),
+		array(
+			'id' => 'operario_vehiculos',
+			'pcs_noms' => array('man_alt_vehiculos_choferes', 'man_alt_datos_choferes_vehiculos'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|vehiculo|chofer|operario/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('chofer', 'vehiculo', 'personal')
+		),
+		array(
+			'id' => 'inventario',
+			'pcs_noms' => array('inventario_dispositivos', 'man_adm_usuarios', 'man_adm_notificacion'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|inventario|dispositivo/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('inventario_dispositivos', 'usuario_inventario')
+		),
+		array(
+			'id' => 'cobranzas',
+			'pcs_noms' => array('man_est_cuenta_1.0', 'man_fac_man', 'man_alt_fac'),
+			'mod_like' => 'elavera',
+			'mod_re' => '/relavera|cobranza|cuenta|pago/i',
+			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
+			'tabs' => array('ccpp_cobrar', 'det_ccpp_c', 'pago_venta', 'ventas_compr')
 		)
 	);
 }
@@ -266,7 +347,32 @@ function aud_nombre_registro($tabNom, $tabAli, $tabDes)
 		'manifiesto_turnos_cab' => 'turno',
 		'manifiesto_turnos_det' => 'detalle de turno',
 		'manifiesto_visitante' => 'visitante',
-		'manifiesto_evento' => 'evento'
+		'manifiesto_evento' => 'evento',
+		'anticipos_clientes' => 'anticipo de cliente',
+		'det_ant_cccc' => 'detalle de anticipo',
+		'manifiesto_anticipo' => 'anticipo',
+		'pag_anticipo_cli' => 'pago de anticipo',
+		'manifiesto_contratos' => 'contrato con planta',
+		'manifiesto_contratos_docu' => 'documento de contrato',
+		'param_manifiesto' => 'parametro de manifiesto',
+		'maquinaria_alimentacion' => 'alimentacion de maquinaria',
+		'maquinaria_dispensador' => 'dispensador de gasolina',
+		'maquinaria_dispensador_det' => 'detalle de dispensador',
+		'maquinaria_dispensador_cierre' => 'cierre de dispensador',
+		'maquinaria_equipo' => 'equipo de maquinaria',
+		'maquinaria_horometro' => 'horometro de maquinaria',
+		'manifiesto_liquidacion_maq' => 'liquidacion de maquinaria',
+		'manifiesto_tecnico' => 'asignacion de tecnico',
+		'manifiesto_mensajes' => 'mensaje',
+		'chofer' => 'chofer',
+		'vehiculo' => 'vehiculo',
+		'personal' => 'personal',
+		'inventario_dispositivos' => 'dispositivo de inventario',
+		'usuario_inventario' => 'usuario de inventario',
+		'ccpp_cobrar' => 'cuenta por cobrar',
+		'det_ccpp_c' => 'detalle de cuenta por cobrar',
+		'pago_venta' => 'pago de venta',
+		'ventas_compr' => 'comprobante de venta'
 	);
 	$k = strtolower(trim((string)$tabNom));
 	if (isset($map[$k])) {
@@ -621,78 +727,47 @@ function aud_valor_codigo_desde_row($atr, $val, $row)
 
 function aud_valor_codigo_lookup($atr, $val, $row, $obBD_conexion)
 {
-	static $fkCache = array();
 	$atr = trim((string)$atr);
 	$val = trim((string)$val);
 	if ($val === '' || !preg_match('/^\d+$/', $val)) {
 		return '';
 	}
-	$id = (int)$val;
-	$cacheKey = $atr . ':' . $id;
-	if (isset($fkCache[$cacheKey])) {
-		return $fkCache[$cacheKey];
-	}
 	$con = aud_det_conexion_mysqli($obBD_conexion);
 	if (!$con) {
 		return '';
 	}
-	$mdb = function_exists('aud_master_db') ? aud_master_db() : 'exa_master';
+	$datDis = !empty($row['Dat_Dis']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $row['Dat_Dis']) : '';
+	if ($datDis === '' && !empty($_SESSION['Ses_Dat_Dis'])) {
+		$datDis = preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']);
+	}
+	if ($datDis === '') {
+		$datDis = 'exa';
+	}
+	$id = (int)$val;
 	$sql = '';
-
 	if ($atr === 'Emp_Cod') {
-		$sql = "SELECT `Emp_Nom` AS `Nom` FROM `{$mdb}`.`empresas` WHERE `Emp_Cod`={$id} LIMIT 1";
+		$sql = "SELECT `Emp_Nom` AS `Nom` FROM `exa`.`empresas` WHERE `Emp_Cod`={$id} LIMIT 1";
 	} elseif ($atr === 'Suc_Cod') {
-		$sql = "SELECT `Suc_Des` AS `Nom` FROM `{$mdb}`.`sucursal` WHERE `Suc_Cod`={$id} LIMIT 1";
+		$sql = "SELECT `Suc_Des` AS `Nom` FROM `exa`.`sucursal` WHERE `Suc_Cod`={$id} LIMIT 1";
 	} elseif ($atr === 'Usu_Cod') {
 		$sql = "SELECT TRIM(CONCAT(IFNULL(p.`Prs_Ape`,''),' ',IFNULL(p.`Prs_Nom`,''))) AS `Nom`
-			FROM `{$mdb}`.`usuarios` u
-			LEFT JOIN `{$mdb}`.`persona` p ON u.`Prs_Cod` = p.`Prs_Cod`
+			FROM `{$datDis}`.`usuarios` u
+			LEFT JOIN `{$datDis}`.`persona` p ON u.`Prs_Cod` = p.`Prs_Cod`
 			WHERE u.`Usu_Cod`={$id} LIMIT 1";
 	} elseif ($atr === 'Pcs_Cod') {
 		$sql = "SELECT IFNULL(NULLIF(TRIM(`Pcs_Lin`),''), IFNULL(NULLIF(TRIM(`Pcs_Det`),''), `Pcs_Nom`)) AS `Nom`
-			FROM `{$mdb}`.`procesos` WHERE `Pcs_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Cli_Cod') {
-		$sql = "SELECT TRIM(IFNULL(NULLIF(TRIM(`Cli_Nom`),''), IFNULL(NULLIF(TRIM(`Cli_Raz`),''), CONCAT('RUC/CI: ', `Cli_Cir`)))) AS `Nom` FROM `clientes` WHERE `Cli_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Prv_Cod') {
-		$sql = "SELECT TRIM(IFNULL(NULLIF(TRIM(`Prv_Nom`),''), IFNULL(NULLIF(TRIM(`Prv_Raz`),''), CONCAT('RUC/CI: ', `Prv_Cir`)))) AS `Nom` FROM `proveedore` WHERE `Prv_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Pro_Cod') {
-		$sql = "SELECT TRIM(IFNULL(NULLIF(TRIM(`Pro_Des`),''), `Pro_Nom`)) AS `Nom` FROM `producto` WHERE `Pro_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Cta_Cod') {
-		$sql = "SELECT TRIM(CONCAT(IFNULL(`Cta_Num`,''), ' - ', IFNULL(`Cta_Des`,''))) AS `Nom` FROM `cuentas` WHERE `Cta_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Ban_Cod') {
-		$sql = "SELECT TRIM(`Ban_Nom`) AS `Nom` FROM `bancos` WHERE `Ban_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Tic_Cod') {
-		$sql = "SELECT TRIM(IFNULL(NULLIF(TRIM(`Tic_Des`),''), `Tic_Nom`)) AS `Nom` FROM `tipo_comprobante` WHERE `Tic_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Tia_Cod') {
-		$sql = "SELECT TRIM(IFNULL(NULLIF(TRIM(`Tia_Des`),''), `Tia_Nom`)) AS `Nom` FROM `tipo_asiento` WHERE `Tia_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Pun_Cod' || $atr === 'Aut_Cod') {
-		$sql = "SELECT TRIM(IFNULL(NULLIF(TRIM(`Pun_Num`),''), IFNULL(NULLIF(TRIM(`Pun_Des`),''), `Pun_Cod`))) AS `Nom` FROM `punto_emision` WHERE `Pun_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Vnd_Cod') {
-		$sql = "SELECT TRIM(IFNULL(NULLIF(TRIM(`Vnd_Nom`),''), CONCAT('Vendedor ', `Vnd_Cod`))) AS `Nom` FROM `vendedores` WHERE `Vnd_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Veh_Cod') {
-		$sql = "SELECT TRIM(IFNULL(NULLIF(TRIM(`Veh_Pla`),''), `Veh_Des`)) AS `Nom` FROM `vehiculo` WHERE `Veh_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Cho_Cod') {
-		$sql = "SELECT TRIM(IFNULL(NULLIF(TRIM(`Cho_Nom`),''), CONCAT('Chofer ', `Cho_Cod`))) AS `Nom` FROM `chofer` WHERE `Cho_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Pla_Cod') {
-		$sql = "SELECT TRIM(IFNULL(NULLIF(TRIM(`Pla_Nom`),''), `Pla_Des`)) AS `Nom` FROM `planta` WHERE `Pla_Cod`={$id} LIMIT 1";
-	} elseif ($atr === 'Man_Eve') {
-		$sql = "SELECT TRIM(IFNULL(NULLIF(TRIM(`Man_ENom`),''), `Man_EDes`)) AS `Nom` FROM `manifiesto_evento` WHERE `Man_Eve`={$id} OR `Eve_Cod`={$id} LIMIT 1";
+			FROM `exa`.`procesos` WHERE `Pcs_Cod`={$id} LIMIT 1";
 	}
-
 	if ($sql === '') {
-		$fkCache[$cacheKey] = '';
 		return '';
 	}
 	$rs = @mysqli_query($con, $sql);
 	if (!$rs) {
-		$fkCache[$cacheKey] = '';
 		return '';
 	}
 	$reg = mysqli_fetch_assoc($rs);
 	mysqli_free_result($rs);
-	$res = !empty($reg['Nom']) ? trim($reg['Nom']) : '';
-	$fkCache[$cacheKey] = $res;
-	return $res;
+	return !empty($reg['Nom']) ? trim($reg['Nom']) : '';
 }
 
 function aud_valor_natural($atr, $val, $row, $obBD_conexion = null)
@@ -896,27 +971,15 @@ function aud_html_detalle($row, $pares)
 	$ident = aud_h(aud_identificador($row));
 	$eveIni = strtoupper(trim(isset($row['Eve_Ini']) ? $row['Eve_Ini'] : ''));
 	$eveDes = aud_h(isset($row['Eve_Des']) ? $row['Eve_Des'] : aud_verbo_evento($eveIni, ''));
-
-	// Terminos y colores estandar: Ingresar, Actualizar, Eliminar
+	$badgeClass = 'aud-det-badge';
 	if ($eveIni === 'I') {
-		$eveDes = 'Ingresar';
-		$badgeStyle = 'background-color:#d1fae5; color:#065f46; border:1px solid #a7f3d0;';
-		$badgeClass = 'aud-det-badge badge-eve-ins';
+		$badgeClass .= ' aud-det-badge-i';
 	} elseif ($eveIni === 'U') {
-		$eveDes = 'Actualizar';
-		$badgeStyle = 'background-color:#fef3c7; color:#92400e; border:1px solid #fde68a;';
-		$badgeClass = 'aud-det-badge badge-eve-upd';
+		$badgeClass .= ' aud-det-badge-u';
 	} elseif ($eveIni === 'D') {
-		$eveDes = 'Eliminar';
-		$badgeStyle = 'background-color:#fee2e2; color:#991b1b; border:1px solid #fecaca;';
-		$badgeClass = 'aud-det-badge badge-eve-del';
+		$badgeClass .= ' aud-det-badge-d';
 	} elseif ($eveIni === 'F') {
-		$eveDes = 'Fallido';
-		$badgeStyle = 'background-color:#fff6e5; color:#8a5a00; border:1px solid #f0d7a0;';
-		$badgeClass = 'aud-det-badge badge-eve-fal';
-	} else {
-		$badgeStyle = 'background-color:#f1f5f9; color:#475569; border:1px solid #e2e8f0;';
-		$badgeClass = 'aud-det-badge badge-eve-def';
+		$badgeClass .= ' aud-det-badge-f';
 	}
 
 	$fecha = '';
@@ -928,121 +991,76 @@ function aud_html_detalle($row, $pares)
 	}
 	$logCod = isset($row['Log_Cod']) ? (int)$row['Log_Cod'] : 0;
 
-	$html = '<div class="aud-detalle" style="padding:2px 4px 8px;">';
+	$html = '<div class="aud-detalle">';
 
 	/* 1) Cabecera: evento + fecha + id */
-	$html .= '<div class="aud-det-head" style="display:flex; align-items:center; justify-content:space-between; margin:0 0 12px 0; padding-bottom:8px; border-bottom:1px solid #e2e8f0;">';
-	$html .= '<div><span class="'.$badgeClass.'" style="'.$badgeStyle.' display:inline-block; padding:4px 10px; border-radius:4px; font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;">'.($eveDes !== '' ? $eveDes : 'Actividad').'</span></div>';
-	$html .= '<div class="aud-det-when" style="font-size:12px; color:#64748b;">';
+	$html .= '<div class="aud-det-head">';
+	$html .= '<span class="'.$badgeClass.'">'.($eveDes !== '' ? $eveDes : 'Actividad').'</span>';
+	$html .= '<div class="aud-det-when">';
 	if ($fecha !== '') {
-		$html .= '<span class="aud-det-when-main" style="font-weight:600; color:#1e293b;"><i class="fa fa-calendar text-muted" style="margin-right:3px;"></i> '.$fecha.($hora !== '' ? ' <span class="aud-det-hora" style="font-weight:normal; color:#64748b; margin-left:6px;"><i class="fa fa-clock-o text-muted" style="margin-right:3px;"></i> '.$hora.'</span>' : '').'</span>';
+		$html .= '<span class="aud-det-when-main">'.$fecha.($hora !== '' ? ' <span class="aud-det-hora">'.$hora.'</span>' : '').'</span>';
 	}
 	if ($logCod > 0) {
-		$html .= '<span class="aud-det-id" style="display:inline-block; margin-left:10px; padding:2px 8px; border-radius:3px; background:#e2e8f0; color:#334155; font-size:11px; font-weight:700;">#'.$logCod.'</span>';
+		$html .= '<span class="aud-det-id">#'.$logCod.'</span>';
 	}
 	$html .= '</div></div>';
 
 	/* 2) Resumen de la accion */
-	$html .= '<div class="aud-det-summary" style="margin:0 0 14px 0; padding:10px 14px; background:#f8fafc; border-left:4px solid #3b82f6; border-radius:4px;">';
-	$html .= '<p class="aud-det-title" style="margin:0 0 4px 0; font-size:13px; font-weight:700; color:#1e293b;"><strong>'.$usuario.'</strong> realiz&oacute; la acci&oacute;n: '.$actividad.'.</p>';
-	$html .= '<p class="aud-det-lead" style="margin:0; font-size:12px; line-height:1.45; color:#475569;">'.aud_h(aud_frase_movimiento($row, $pares)).'</p>';
+	$html .= '<div class="aud-det-summary">';
+	$html .= '<p class="aud-det-title"><strong>'.$usuario.'</strong> realizo la accion: '.$actividad.'.</p>';
+	$html .= '<p class="aud-det-lead">'.aud_h(aud_frase_movimiento($row, $pares)).'</p>';
 	$html .= '</div>';
 
-	/* 3) Contexto de la Actividad (Estructura Tabular Limpia, Espaciosa y No Aglomerada) */
-	$html .= '<fieldset class="exa-fieldset aud-det-context" style="margin-bottom:14px; border:1px solid #d0dbe5; border-radius:4px; padding:10px 14px; background:#fff;">';
-	$html .= '<legend class="Titulos2" style="font-size:12px; font-weight:700; color:#1e3a5f; margin-bottom:8px; border-bottom:none; padding:0 6px; width:auto;"><i class="fa fa-info-circle text-primary" style="margin-right:4px;"></i> Contexto de la Actividad</legend>';
-	$html .= '<div class="table-responsive" style="margin-bottom:0;">';
-	$html .= '<table class="table table-bordered table-condensed aud-table-context" style="margin-bottom:0; background:#fff; font-size:12px;">';
-	$html .= '<tbody>';
-
-	// Fila 1: Empresa y Sucursal
-	$html .= '<tr>';
-	$html .= '<th style="width:16%; background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-building-o text-muted" style="margin-right:4px;"></i> Empresa</th>';
-	$html .= '<td style="width:34%; color:#0f172a; font-weight:600; vertical-align:middle;">'.$empresa.'</td>';
-	$html .= '<th style="width:16%; background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-map-marker text-muted" style="margin-right:4px;"></i> Sucursal</th>';
-	$html .= '<td style="width:34%; color:#334155; vertical-align:middle;">'.($sucursal !== '' ? $sucursal : '<span class="text-muted" style="font-style:italic;">Matriz / Principal</span>').'</td>';
-	$html .= '</tr>';
-
-	// Fila 2: Módulo y Proceso
-	$html .= '<tr>';
-	$html .= '<th style="background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-cubes text-muted" style="margin-right:4px;"></i> M&oacute;dulo</th>';
-	$modTxt = '<span class="text-primary" style="font-weight:600;">'.$modulo.'</span>';
-	if ($directorio !== '' && $directorio !== $modulo) {
-		$modTxt .= ' <span class="text-muted" style="font-size:11px; margin-left:4px;"><i class="fa fa-angle-right"></i> '.$directorio.'</span>';
+	/* 3) Contexto en rejilla */
+	$html .= '<fieldset class="exa-fieldset aud-det-context"><legend class="Titulos2">Contexto</legend>';
+	$html .= '<div class="aud-det-meta">';
+	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Empresa</span><span class="aud-det-value">'.$empresa.'</span></div>';
+	if ($sucursal !== '') {
+		$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Sucursal</span><span class="aud-det-value">'.$sucursal.'</span></div>';
 	}
-	$html .= '<td style="color:#0f172a; vertical-align:middle;">'.$modTxt.'</td>';
-	$html .= '<th style="background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-cogs text-muted" style="margin-right:4px;"></i> Proceso</th>';
-	$html .= '<td style="color:#334155; vertical-align:middle;">'.($proceso !== '' ? $proceso : '<span class="text-muted" style="font-style:italic;">Proceso general</span>').'</td>';
-	$html .= '</tr>';
-
-	// Fila 3: Registro y Referencia
-	$html .= '<tr>';
-	$html .= '<th style="background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-table text-muted" style="margin-right:4px;"></i> Registro</th>';
-	$html .= '<td style="color:#334155; vertical-align:middle;">'.($registro !== '' ? $registro : '<span class="text-muted" style="font-style:italic;">Transacci&oacute;n general</span>').'</td>';
-	$html .= '<th style="background:#f1f5f9; color:#334e68; font-weight:600; vertical-align:middle;"><i class="fa fa-tag text-muted" style="margin-right:4px;"></i> Referencia</th>';
-	$refHtml = ($ident !== '') 
-		? '<span class="label label-info" style="font-size:11px; font-weight:600; font-family:monospace, sans-serif; padding:3px 8px; border-radius:3px; display:inline-block;">'.$ident.'</span>'
-		: '<span class="text-muted" style="font-style:italic;">Sin referencia registrada</span>';
-	$html .= '<td style="color:#334155; vertical-align:middle;">'.$refHtml.'</td>';
-	$html .= '</tr>';
-
-	$html .= '</tbody>';
-	$html .= '</table>';
-	$html .= '</div>';
-	$html .= '</fieldset>';
+	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Modulo</span><span class="aud-det-value">'.$modulo.'</span></div>';
+	if ($directorio !== '' && $directorio !== $modulo) {
+		$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Directorio</span><span class="aud-det-value">'.$directorio.'</span></div>';
+	} elseif ($directorio !== '') {
+		$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Directorio</span><span class="aud-det-value">'.$directorio.'</span></div>';
+	}
+	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Proceso</span><span class="aud-det-value">'.$proceso.'</span></div>';
+	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Tipo de registro</span><span class="aud-det-value">'.$registro.'</span></div>';
+	if ($ident !== '') {
+		$html .= '<div class="aud-det-meta-item aud-det-meta-wide"><span class="aud-det-label">Referencia</span><span class="aud-det-value">'.$ident.'</span></div>';
+	}
+	$html .= '</div></fieldset>';
 
 	/* 4) Datos del movimiento */
-	$viejos = aud_valores_anteriores($row);
-	$tieneOld = count($viejos) > 0;
-	$html .= '<fieldset class="exa-fieldset aud-det-datos" style="margin-bottom:12px; border:1px solid #d0dbe5; border-radius:4px; padding:10px 14px; background:#fff;">';
-	$html .= '<legend class="Titulos2" style="font-size:12px; font-weight:700; color:#1e3a5f; margin-bottom:8px; border-bottom:none; padding:0 6px; width:auto;"><i class="fa fa-exchange text-primary" style="margin-right:4px;"></i> Datos del Movimiento';
-	if (count($pares) > 0) {
-		$html .= ' <span class="badge" style="background:#e2e8f0; color:#334155; font-size:11px; font-weight:600; vertical-align:middle; margin-left:4px;">'.count($pares).' campo'.(count($pares) !== 1 ? 's' : '').'</span>';
-	}
-	$html .= '</legend>';
+	$html .= '<fieldset class="exa-fieldset aud-det-datos"><legend class="Titulos2">Datos del movimiento</legend>';
 	if (count($pares) === 0) {
-		$html .= '<p class="aud-det-empty" style="margin:4px 0 0 0; padding:10px 12px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:4px; color:#64748b; font-size:12px;">No se registraron campos adicionales en este movimiento.</p>';
+		$html .= '<p class="aud-det-empty">No se registraron campos adicionales en este movimiento.</p>';
 	} else {
-		$html .= '<div class="table-responsive" style="margin-bottom:0;"><table class="table table-bordered table-condensed table-striped aud-det-table" style="margin-bottom:0; font-size:12px;">';
-		$html .= '<thead><tr style="background:#f1f5f9;">';
-		$html .= '<th class="aud-det-col-dato" style="width:32%; font-weight:600; color:#334e68; font-size:11px; text-transform:uppercase;">Dato</th>';
-		if ($tieneOld) {
-			$html .= '<th class="aud-det-col-old" style="width:34%; font-weight:600; color:#334e68; font-size:11px; text-transform:uppercase;">Valor Anterior</th>';
+		$html .= '<div class="table-responsive"><table class="table table-bordered table-condensed table-striped aud-det-table">';
+		$html .= '<thead><tr><th class="aud-det-col-dato">Dato</th>';
+		$viejos = aud_valores_anteriores($row);
+		if (count($viejos) > 0) {
+			$html .= '<th>Valor anterior</th>';
 		}
-		$html .= '<th class="aud-det-col-new" style="width:'.($tieneOld ? '34%' : '68%').'; font-weight:600; color:#334e68; font-size:11px; text-transform:uppercase;">Valor Registrado</th></tr></thead><tbody>';
+		$html .= '<th>Valor registrado</th></tr></thead><tbody>';
 		foreach ($pares as $p) {
 			$eti = isset($p['eti']) ? $p['eti'] : aud_humanizar_campo($p['atr']);
 			if ($eti === $p['atr']) {
 				$eti = aud_humanizar_campo($p['atr']);
 			}
-			$oldVal = '';
-			$hasOld = false;
-			if ($tieneOld && isset($p['atr']) && isset($viejos[$p['atr']])) {
-				$oldVal = aud_valor_natural($p['atr'], $viejos[$p['atr']], $row, null);
-				$hasOld = ($oldVal !== '' && $oldVal !== $p['val']);
+			$html .= '<tr><td class="aud-det-col-dato">'.aud_h($eti).'</td>';
+			if (count($viejos) > 0) {
+				$oldVal = '';
+				if (isset($p['atr']) && isset($viejos[$p['atr']])) {
+					$oldVal = aud_valor_natural($p['atr'], $viejos[$p['atr']], $row, null);
+				}
+				$html .= '<td>'.aud_h($oldVal).'</td>';
 			}
-			$html .= '<tr><td class="aud-det-col-dato" style="font-weight:600; color:#1e293b; vertical-align:middle;">'.aud_h($eti).'</td>';
-			if ($tieneOld) {
-				$oldStyle = $hasOld ? 'color:#b91c1c; text-decoration:line-through; background:#fef2f2; font-weight:500;' : 'color:#64748b;';
-				$html .= '<td class="aud-det-val-old'.($hasOld ? ' aud-det-val-changed' : '').'" style="vertical-align:middle; '.$oldStyle.'">'.aud_h($oldVal).'</td>';
-			}
-			$newStyle = $hasOld ? 'color:#15803d; background:#f0fdf4; font-weight:600;' : 'color:#0f172a;';
-			$html .= '<td class="aud-det-val-new'.($hasOld ? ' aud-det-val-changed' : '').'" style="vertical-align:middle; '.$newStyle.'">'.aud_h($p['val']).'</td></tr>';
+			$html .= '<td>'.aud_h($p['val']).'</td></tr>';
 		}
 		$html .= '</tbody></table></div>';
 	}
-	$html .= '</fieldset>';
-
-	/* 5) Debug: Log_Int completo (colapsable) */
-	$logInt = isset($row['Log_Int']) ? trim((string)$row['Log_Int']) : '';
-	if ($logInt !== '') {
-		$html .= '<div class="aud-det-debug" style="margin-top:10px;">';
-		$html .= '<details class="aud-det-debug-box" style="border:1px solid #e2e8f0; border-radius:4px; background:#f8fafc;"><summary class="aud-det-debug-toggle" style="cursor:pointer; padding:6px 12px; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;"><i class="fa fa-terminal text-muted" style="margin-right:4px;"></i> Informaci&oacute;n interna (Log_Int)</summary>';
-		$html .= '<pre class="aud-det-debug-pre" style="margin:0; padding:10px 12px; font-size:11px; line-height:1.4; color:#1e293b; background:#fff; border-top:1px solid #e2e8f0; border-radius:0 0 4px 4px; white-space:pre-wrap; word-break:break-all; max-height:180px; overflow-y:auto;">'.aud_h(wordwrap($logInt, 90, "\n", true)).'</pre>';
-		$html .= '</details></div>';
-	}
-
-	$html .= '</div>';
+	$html .= '</fieldset></div>';
 	return $html;
 }
 
@@ -1053,9 +1071,9 @@ function aud_html_detalle($row, $pares)
 function aud_estado_captura($empCod, $cfgCount = -1)
 {
 	if (!class_exists('AuditQueue')) {
-		$qPath = dirname(__FILE__) . '/aud_log_queue.php';
-		if (file_exists($qPath)) {
-			require_once($qPath);
+		$queueFile = dirname(__FILE__) . '/aud_log_queue.php';
+		if (file_exists($queueFile)) {
+			require_once($queueFile);
 		}
 	}
 	$enabled = class_exists('AuditQueue') && AuditQueue::enabled();
@@ -1072,7 +1090,8 @@ function aud_estado_captura($empCod, $cfgCount = -1)
 	} elseif ($cfg > 0) {
 		$msg = 'Captura activa: se registra la actividad de los '.$cfg.' modulo(s)/directorio(s)/proceso(s) marcados en configuracion.';
 	} else {
-		$msg = 'Captura activa con tablas por defecto (AUDIT_TABLES). Marque modulos en Configuracion de monitoreo para cubrir todo el sistema.';
+		$ok = false;
+		$msg = 'Captura activa pero sin reglas: no se registrara actividad. Marque modulos en Configuracion de monitoreo para cubrir el sistema.';
 	}
 	return array('ok' => $ok, 'enabled' => $enabled, 'cfg' => $cfg, 'message' => $msg);
 }

@@ -13,10 +13,12 @@ function loadRubros(modoCompleto){
     var esCompleta = (r.modo !== 'simple') && modoCompleto;
 
     if (!r.rows || !r.rows.length) {
-      rubrosCache = [];
-      gruposTopeCache = {};
-      renderTablaRubros([]);
-      if (esCompleta) {
+      if (!esCompleta) {
+        rubrosConfigCache = [];
+        renderTablaRubros([]);
+      } else {
+        rubrosCache = [];
+        gruposTopeCache = {};
         escenariosIngreso = { esperada: 0, proyectada: 0, real: 0 };
         escenariosTonAnual = { esperada: 0, proyectada: 0, real: 0 };
         escenariosTonPeriodo = { esperada: 0, proyectada: 0, real: 0 };
@@ -27,12 +29,16 @@ function loadRubros(modoCompleto){
       return;
     }
 
-    rubrosCache = r.rows;
-    renderTablaRubros(rubrosCache);
-
     if (!esCompleta) {
+      /* Tab Rubros y toneladas: datos fijos de BD (modo simple). */
+      rubrosConfigCache = r.rows;
+      rubrosCache = r.rows;
+      renderTablaRubros(rubrosConfigCache);
       return;
     }
+
+    /* Cuadro presupuestario: no re-renderiza el grid de Rubros y toneladas. */
+    rubrosCache = r.rows;
 
     escenarioMesesReal = parseInt(r.escenarios_meses_con_real, 10) || 0;
     if (r.escenarios_ton_mes) {
@@ -444,7 +450,6 @@ function setEscenario(esc) {
   // Recalculo inmediato con sims en cache; luego refresh completo del servidor.
   sincronizarAjusteConEscenario(esc);
   renderCuadroRubros(rubrosCache, gruposTopeCache);
-  renderTablaRubros(rubrosCache);
   actualizarBotonesEscenario(rubrosCache);
   loadRubros(true);
 }

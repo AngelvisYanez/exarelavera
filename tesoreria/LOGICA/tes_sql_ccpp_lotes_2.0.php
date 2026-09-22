@@ -272,9 +272,8 @@ function sentencias_ccpp($id, $Par_Sql)
 			// echo $sql;
 			return $sql;
 		case 15:
-			$pag_img = isset($Par_Sql['Pag_img']) ? $Par_Sql['Pag_img'] : '';
-			$sql = "INSERT INTO det_ccpp_p (Cpp_Cod, Pag_Cod, Com_Cod, Pag_Fec, Pag_Val, Pag_Est, Pag_Obs, Asi_Cod, Pag_img)
-						VALUES($Par_Sql[Cpp_Cod], $Par_Sql[Pag_Cod], $Par_Sql[Com_Cod], '$Par_Sql[Pag_Fec]', '$Par_Sql[Pag_Val]', 'A', '$Par_Sql[Pag_Obs]', '$Par_Sql[Asi_Cod]', '$pag_img');";
+			$sql = "INSERT INTO det_ccpp_p (Cpp_Cod, Pag_Cod, Com_Cod, Pag_Fec, Pag_Val, Pag_Est, Pag_Obs, Asi_Cod)
+						VALUES($Par_Sql[Cpp_Cod], $Par_Sql[Pag_Cod], $Par_Sql[Com_Cod], '$Par_Sql[Pag_Fec]', '$Par_Sql[Pag_Val]', 'A', '$Par_Sql[Pag_Obs]', '$Par_Sql[Asi_Cod]');";
 			// echo $sql;
 			return $sql;
 		case 16:
@@ -501,16 +500,7 @@ function sentencias_ccpp($id, $Par_Sql)
 							asientos.Asi_Deh,
 							asientos.Asi_Val,
 							asientos.Asi_Con,
-							asientos.Asi_Glo,
-							(SELECT MAX(dcp.Pag_img)
-							 FROM det_ccpp_p dcp
-							 WHERE dcp.Asi_Cod = asientos.Asi_Cod
-							   AND dcp.Com_Cod = $Par_Sql[Com_Cod]) AS Pag_img,
-							(SELECT MAX(tp.Pag_Abr)
-							 FROM det_ccpp_p dcp
-							 INNER JOIN tipos_pago tp ON tp.Pag_Cod = dcp.Pag_Cod
-							 WHERE dcp.Asi_Cod = asientos.Asi_Cod
-							   AND dcp.Com_Cod = $Par_Sql[Com_Cod]) AS Pag_Abr
+							asientos.Asi_Glo
 						from asientos, det_plan
 						where
 							asientos.Com_Cod = $Par_Sql[Com_Cod] and
@@ -666,7 +656,8 @@ function sentencias_ccpp($id, $Par_Sql)
 									IF(SUM(IF(comp2.Com_Est='A',ROUND(Pag_Val,2),0)) IS NULL,0,SUM(IF(comp2.Com_Est='A',ROUND(Pag_Val,2),0))) AS Abono";
 
 			$campos = empty($Par_Sql['limits']) ? " COUNT(compras.Cop_Cod) AS total" : " " . $campos_sql;
-			$ordenar = empty($Par_Sql['limits']) ? "" : "GROUP BY compras.Cop_Cod ORDER by ccpp_pagar.Cpp_Ven";
+			$sidx_order = (!empty($Par_Sql['sidx']) && !empty($Par_Sql['sord'])) ? "ORDER BY {$Par_Sql['sidx']} {$Par_Sql['sord']}" : "ORDER BY compras.Cop_Fec ASC, compras.Cop_Cod ASC";
+			$ordenar = empty($Par_Sql['limits']) ? "" : "GROUP BY compras.Cop_Cod " . $sidx_order;
 
 			$prv_par = "";
 			if ($Par_Sql['Prv_Cod'] == "") {
@@ -728,7 +719,7 @@ function sentencias_ccpp($id, $Par_Sql)
 					AND Emp_Cod=$_SESSION[Ses_Emp_Cod]
 					$filtroWhereCxp
 					GROUP BY compras.Cop_Cod
-					ORDER by ccpp_pagar.Cpp_Ven
+					$sidx_order
 				)";
 
 			// if(empty($Par_Sql['limits'])){
@@ -769,7 +760,7 @@ function sentencias_ccpp($id, $Par_Sql)
 								AND	(comprobantes.Com_Est='A' OR comprobantes.Com_Est='E' )
 								$fec_sql
 								AND proveedore.Emp_Cod=$_SESSION[Ses_Emp_Cod]
-								GROUP BY compras.Cop_Cod ORDER by ccpp_pagar.Cpp_Ven $Par_Sql[limits];";
+								GROUP BY compras.Cop_Cod $sidx_order $Par_Sql[limits];";;
 			//ChromePhp::log($sql);
 			return $sql;
 
@@ -1004,7 +995,7 @@ function sentencias_ccpp($id, $Par_Sql)
 								$fec_sql
 								AND Emp_Cod=$_SESSION[Ses_Emp_Cod]
 							GROUP BY compras.Cop_Cod
-							ORDER by ccpp_pagar.Cpp_Ven";
+							ORDER BY compras.Cop_Fec ASC, compras.Cop_Cod ASC";
 			//echo $sql;
 			return $sql;
 		case 48:

@@ -10,7 +10,7 @@ class TreeMenu{
     protected $_pages=array();
     protected $_class;
     
-    function TreeMenu(){}
+    public function __construct(){}
     public function setClass($class = null){
         if (null !== $class && !is_string($class)) throw new Exception('Invalid argument: $class must be a string or null');
         $this->_class = $class;
@@ -199,7 +199,7 @@ class TreeMenuItem extends TreeMenu {
     protected $_rev = array();
     protected $_customHtmlAttribs = array();
         
-    function TreeMenuItem(array $options=null){ if($options!==null) $this->setOptions($options); }
+    public function __construct(array $options=null){ if($options!==null) $this->setOptions($options); }
     public function setHref($href){
         if (null !== $href && !is_string($href)) throw new Exception('Invalid argument: $label must be a string or null');
         $this->_href = $href; return $this;

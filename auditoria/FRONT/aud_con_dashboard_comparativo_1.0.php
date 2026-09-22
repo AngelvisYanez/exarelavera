@@ -72,6 +72,68 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			margin-bottom: 3px;
 			transition: all 0.15s;
 		}
+
+		/* Barra de herramientas compartida: filtros juntos + Acciones a la derecha */
+		.aud-toolbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 10px;
+			padding: 10px 14px;
+		}
+		.aud-toolbar-left {
+			flex: 1 1 auto;
+			min-width: 0;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+		.aud-toolbar-presets {
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 8px;
+		}
+		.aud-toolbar-label {
+			font-weight: 700;
+			font-size: 12px;
+			color: #334155;
+		}
+		.aud-toolbar-dates {
+			display: flex;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 10px;
+		}
+		.aud-toolbar-dates .period-box-a,
+		.aud-toolbar-dates .period-box-b {
+			width: 300px;
+			max-width: 100%;
+			margin-bottom: 0;
+		}
+		.aud-toolbar-right {
+			flex: 0 0 auto;
+		}
+		.aud-acciones-menu {
+			min-width: 210px;
+			font-size: 12px;
+		}
+		.aud-acciones-menu li a {
+			padding: 7px 14px;
+		}
+		.aud-acciones-menu li a i {
+			width: 20px;
+			text-align: center;
+			margin-right: 4px;
+		}
+		@media (max-width: 767px) {
+			.aud-toolbar-right { width: 100%; }
+			.aud-toolbar-right .dropdown { float: right; }
+			.aud-toolbar-dates .period-box-a,
+			.aud-toolbar-dates .period-box-b { width: 100%; }
+		}
+
 		.period-box-a {
 			background: #f8fafc;
 			border: 1px solid #e2e8f0;
@@ -259,111 +321,97 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 <body>
 
 <div class="panel panel-default panel-main exa-ui-panel exa-ui-fill-page" style="margin-top: 0;">
-	<div class="panel-heading exa-header">
-		<div class="row" style="display: flex; align-items: center; justify-content: space-between;">
-			<div class="col-xs-12 col-sm-6">
-				<h3 class="panel-title" style="font-size: 14px; font-weight: 700; color: #ffffff !important;">
-					<i class="fa fa-line-chart" style="color: #ffffff; margin-right: 4px;"></i> Tablero Anal&iacute;tico Comparativo (Per&iacute;odo A vs Per&iacute;odo B)
-				</h3>
-			</div>
-			<div class="col-xs-12 col-sm-6 text-right">
-				<div class="btn-group btn-group-sm">
-					<button type="button" class="btn btn-primary btn-sm" id="btnRecargarDash" title="Actualizar metricas">
-						<i class="fa fa-refresh"></i> Actualizar Datos
-					</button>
-					<button type="button" class="btn btn-default btn-sm" id="btnDescargarPdf" title="Generar reporte formal PDF">
-						<i class="fa fa-file-pdf-o text-danger"></i> Exportar PDF
-					</button>
-					<button type="button" class="btn btn-default btn-sm" id="btnModalCorreo" title="Enviar reporte por email">
-						<i class="fa fa-envelope-o text-info"></i> Enviar Correo
-					</button>
-					<button type="button" class="btn btn-default btn-sm" id="btnModalWhatsApp" title="Compartir informe por WhatsApp">
-						<i class="fa fa-whatsapp text-success"></i> WhatsApp
-					</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
 	<div class="panel-body exa-body" style="padding: 10px 14px;">
 
-		<!-- Selector de Periodos Comparativos -->
-		<div class="period-control-card">
-			<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
-				<div style="display: flex; align-items: center; gap: 8px;">
-					<span style="font-weight: 700; font-size: 12px; color: #334155;">
-						<i class="fa fa-calendar-check-o text-primary"></i> Rango Temporal de Comparaci&oacute;n:
-					</span>
-					<span id="dashPresetCustomBadge" class="label label-info" style="display:none; font-size:10px; padding: 2px 6px;">Personalizado</span>
-				</div>
-				<div class="btn-group btn-group-xs" id="dashPeriodoPresets">
-					<button type="button" class="btn btn-default preset-btn" data-preset="hoy">Hoy</button>
-					<button type="button" class="btn btn-default preset-btn" data-preset="ayer">Ayer</button>
-					<button type="button" class="btn btn-default preset-btn" data-preset="1semana">1 Semana</button>
-					<button type="button" class="btn btn-primary preset-btn active" data-preset="1mes">1 Mes</button>
-					<button type="button" class="btn btn-default preset-btn" data-preset="3meses">3 Meses</button>
-				</div>
-			</div>
+		<!-- Barra de herramientas: filtros juntos + Acciones a la derecha -->
+		<div class="period-control-card" style="padding: 0;">
+			<div class="aud-toolbar">
 
-			<div class="row" style="display: flex; align-items: center; flex-wrap: wrap;">
-				<!-- Periodo A (Base) -->
-				<div class="col-xs-12 col-sm-5 col-md-5">
-					<div class="period-box-a">
-						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-							<strong style="font-size: 11px; color: #475569; text-transform: uppercase;">
-								<i class="fa fa-history text-muted"></i> Per&iacute;odo A (Base Hist&oacute;rica)
-							</strong>
-							<span class="label label-default" style="background:#64748b; font-size:9px;">Base</span>
+				<div class="aud-toolbar-left">
+					<div class="aud-toolbar-presets">
+						<span class="aud-toolbar-label">
+							<i class="fa fa-calendar-check-o text-primary"></i> Rango Temporal de Comparaci&oacute;n:
+						</span>
+						<span id="dashPresetCustomBadge" class="label label-info" style="display:none; font-size:10px; padding: 2px 6px;">Personalizado</span>
+						<div class="btn-group btn-group-xs" id="dashPeriodoPresets">
+							<button type="button" class="btn btn-default preset-btn" data-preset="hoy">Hoy</button>
+							<button type="button" class="btn btn-default preset-btn" data-preset="ayer">Ayer</button>
+							<button type="button" class="btn btn-default preset-btn" data-preset="1semana">1 Semana</button>
+							<button type="button" class="btn btn-primary preset-btn active" data-preset="1mes">1 Mes</button>
+							<button type="button" class="btn btn-default preset-btn" data-preset="3meses">3 Meses</button>
 						</div>
-						<div class="row" style="margin-left:-4px; margin-right:-4px;">
-							<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
-								<div class="input-group input-group-sm">
-									<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Desde</span>
-									<input type="text" id="pa_ini" class="form-control text-center" value="<?php echo substr($defaultPaIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-									<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pa_ini').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+					</div>
+
+					<div class="aud-toolbar-dates">
+						<!-- Periodo A (Base) -->
+						<div class="period-box-a">
+							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+								<strong style="font-size: 11px; color: #475569; text-transform: uppercase;">
+									<i class="fa fa-history text-muted"></i> Per&iacute;odo A (Base Hist&oacute;rica)
+								</strong>
+								<span class="label label-default" style="background:#64748b; font-size:9px;">Base</span>
+							</div>
+							<div class="row" style="margin-left:-4px; margin-right:-4px;">
+								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
+									<div class="input-group input-group-sm">
+										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Desde</span>
+										<input type="text" id="pa_ini" class="form-control text-center" value="<?php echo substr($defaultPaIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pa_ini').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+									</div>
+								</div>
+								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
+									<div class="input-group input-group-sm">
+										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Hasta</span>
+										<input type="text" id="pa_fin" class="form-control text-center" value="<?php echo substr($defaultPaFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pa_fin').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+									</div>
 								</div>
 							</div>
-							<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
-								<div class="input-group input-group-sm">
-									<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Hasta</span>
-									<input type="text" id="pa_fin" class="form-control text-center" value="<?php echo substr($defaultPaFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-									<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pa_fin').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+						</div>
+
+						<!-- Separador VS -->
+						<span class="dash-vs-pill"><i class="fa fa-exchange"></i> VS</span>
+
+						<!-- Periodo B (Comparado) -->
+						<div class="period-box-b">
+							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+								<strong style="font-size: 11px; color: #1e40af; text-transform: uppercase;">
+									<i class="fa fa-line-chart text-primary"></i> Per&iacute;odo B (Evaluado / Actual)
+								</strong>
+								<span class="label label-primary" style="background:#2563eb; font-size:9px;">Comparado</span>
+							</div>
+							<div class="row" style="margin-left:-4px; margin-right:-4px;">
+								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
+									<div class="input-group input-group-sm">
+										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Desde</span>
+										<input type="text" id="pb_ini" class="form-control text-center" value="<?php echo substr($defaultPbIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pb_ini').focus().datepicker('show');"><i class="fa fa-calendar text-primary"></i></span>
+									</div>
+								</div>
+								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
+									<div class="input-group input-group-sm">
+										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Hasta</span>
+										<input type="text" id="pb_fin" class="form-control text-center" value="<?php echo substr($defaultPbFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pb_fin').focus().datepicker('show');"><i class="fa fa-calendar text-primary"></i></span>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 
-				<!-- Separador VS -->
-				<div class="col-xs-12 col-sm-2 col-md-2 text-center" style="margin: 6px 0;">
-					<span class="dash-vs-pill"><i class="fa fa-exchange"></i> VS</span>
-				</div>
-
-				<!-- Periodo B (Comparado) -->
-				<div class="col-xs-12 col-sm-5 col-md-5">
-					<div class="period-box-b">
-						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-							<strong style="font-size: 11px; color: #1e40af; text-transform: uppercase;">
-								<i class="fa fa-line-chart text-primary"></i> Per&iacute;odo B (Evaluado / Actual)
-							</strong>
-							<span class="label label-primary" style="background:#2563eb; font-size:9px;">Comparado</span>
-						</div>
-						<div class="row" style="margin-left:-4px; margin-right:-4px;">
-							<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
-								<div class="input-group input-group-sm">
-									<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Desde</span>
-									<input type="text" id="pb_ini" class="form-control text-center" value="<?php echo substr($defaultPbIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-									<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pb_ini').focus().datepicker('show');"><i class="fa fa-calendar text-primary"></i></span>
-								</div>
-							</div>
-							<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
-								<div class="input-group input-group-sm">
-									<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Hasta</span>
-									<input type="text" id="pb_fin" class="form-control text-center" value="<?php echo substr($defaultPbFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-									<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pb_fin').focus().datepicker('show');"><i class="fa fa-calendar text-primary"></i></span>
-								</div>
-							</div>
-						</div>
+				<div class="aud-toolbar-right">
+					<div class="dropdown">
+						<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Acciones">
+							<i class="fa fa-sliders"></i> Acciones <span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu dropdown-menu-right aud-acciones-menu">
+							<li><a href="javascript:void(0);" id="btnRecargarDash" title="Actualizar metricas"><i class="fa fa-refresh"></i> Actualizar Datos</a></li>
+							<li class="divider"></li>
+							<li><a href="javascript:void(0);" id="btnDescargarPdf" title="Generar reporte formal PDF"><i class="fa fa-file-pdf-o text-danger"></i> Exportar PDF</a></li>
+							<li><a href="javascript:void(0);" id="btnModalCorreo" title="Enviar reporte por email"><i class="fa fa-envelope-o text-info"></i> Enviar Correo</a></li>
+							<li><a href="javascript:void(0);" id="btnModalWhatsApp" title="Compartir informe por WhatsApp"><i class="fa fa-whatsapp text-success"></i> WhatsApp</a></li>
+						</ul>
 					</div>
 				</div>
 			</div>
@@ -789,22 +837,29 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 		});
 	}
 
+	function numFmt(x, maxDecs) {
+		maxDecs = (maxDecs === undefined) ? 0 : maxDecs;
+		var n = parseFloat(x) || 0;
+		return n.toLocaleString(undefined, { maximumFractionDigits: maxDecs });
+	}
+
 	function renderizarKPIs(kpis) {
 		var html = '';
 		kpis.forEach(function (k) {
-			var pct = parseFloat(k.pct_cambio || 0);
+			var pct = (typeof k.pct_cambio === 'number' && !isNaN(k.pct_cambio)) ? k.pct_cambio : null;
+			var favor = k.favorable_subida !== false;
 			var badgeClass = 'badge-neutral';
 			var icono = 'fa-minus';
-			var txtPct = '0%';
+			var txtPct = 'N/D';
 
-			if (pct > 0) {
-				badgeClass = 'badge-up';
-				icono = 'fa-arrow-up';
-				txtPct = '+' + pct + '%';
-			} else if (pct < 0) {
-				badgeClass = 'badge-down';
-				icono = 'fa-arrow-down';
-				txtPct = pct + '%';
+			if (pct === 0) {
+				txtPct = '0%';
+			} else if (pct !== null) {
+				var sube = pct > 0;
+				var bueno = favor ? sube : !sube;
+				badgeClass = bueno ? 'badge-up' : 'badge-down';
+				icono = sube ? 'fa-arrow-up' : 'fa-arrow-down';
+				txtPct = (sube ? '+' : '') + pct.toFixed(1) + '%';
 			}
 
 			var borderCol = '#2563eb';
@@ -815,13 +870,17 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			else if (k.color === 'purple') borderCol = '#8b5cf6';
 			else if (k.color === 'orange') borderCol = '#ea580c';
 
+			var tituloTip = k.titulo;
+			if (k.dias_a && k.dias_b) tituloTip += ' (A: ' + k.dias_a + ' d&iacute;as · B: ' + k.dias_b + ' d&iacute;as)';
+
 			html += '<div class="kpi-card" style="border-left-color: ' + borderCol + ';">';
-			html += '  <div class="kpi-title" title="' + k.titulo + '"><i class="fa ' + k.icono + '"></i> ' + k.titulo + '</div>';
+			html += '  <div class="kpi-title" title="' + tituloTip + '"><i class="fa ' + k.icono + '"></i> ' + k.titulo + '</div>';
 			html += '  <div class="kpi-values-row">';
-			html += '    <div class="kpi-main-val">' + Number(k.valor_b).toLocaleString() + '</div>';
+			html += '    <div class="kpi-main-val">' + numFmt(k.valor_b) + '</div>';
 			html += '    <span class="kpi-badge ' + badgeClass + '"><i class="fa ' + icono + '"></i> ' + txtPct + '</span>';
 			html += '  </div>';
-			html += '  <div class="kpi-sub-val">Per&iacute;odo base (A): <strong>' + Number(k.valor_a).toLocaleString() + '</strong></div>';
+			html += '  <div class="kpi-sub-val">Base (A): <strong>' + numFmt(k.valor_a) + '</strong> &middot; ritmo ' + numFmt(k.promedio_diario_a, 1) + '/d&iacute;a</div>';
+			html += '  <div class="kpi-sub-val">Comparado (B): <strong>' + numFmt(k.valor_b) + '</strong> &middot; ritmo ' + numFmt(k.promedio_diario_b, 1) + '/d&iacute;a</div>';
 			html += '</div>';
 		});
 		$('#kpiContainer').html(html);
@@ -1122,16 +1181,25 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			var preview = "*INFORME COMPARATIVO DE AUDITORÍA ERP*\n" +
 				"Empresa: " + cacheDatosComparativa.empresa_nombre + "\n" +
 				"Base (A): " + cacheDatosComparativa.periodo_a_label + "\n" +
-				"Comparado (B): " + cacheDatosComparativa.periodo_b_label + "\n\n";
+				"Comparado (B): " + cacheDatosComparativa.periodo_b_label + "\n" +
+				"Días analizados: A (" + (cacheDatosComparativa.periodo_a_dias || '?') + ") → B (" + (cacheDatosComparativa.periodo_b_dias || '?') + ")\n\n";
 			if (cacheDatosComparativa.kpis_comparativa) {
 				cacheDatosComparativa.kpis_comparativa.forEach(function (k) {
-					var s = k.pct_cambio > 0 ? '+' : '';
-					preview += "• " + k.titulo + ": " + Number(k.valor_b).toLocaleString() + " (" + s + k.pct_cambio + "%)\n";
+					var pctV = (typeof k.pct_cambio === 'number' && !isNaN(k.pct_cambio)) ? k.pct_cambio : null;
+					var sPct = (pctV === null) ? 'N/D (sin base)' : ((pctV > 0 ? '+' : '') + pctV.toFixed(1) + '%');
+					preview += "• " + k.titulo + ": " + Number(k.valor_b).toLocaleString() + " (" + sPct + ")\n";
 				});
 			}
 			$('#waPreviewMensaje').text(preview);
 		}
 		$('#modalEnvioWhatsApp').modal('show');
+	});
+
+	// Cerrar el dropdown de Acciones al seleccionar una opcion
+	$(document).on('click', '.aud-acciones-menu a', function () {
+		var $dd = $(this).closest('.dropdown');
+		$dd.removeClass('open');
+		$dd.find('.dropdown-toggle').attr('aria-expanded', 'false');
 	});
 
 	$('#btnEnviarWaApi').on('click', function () {

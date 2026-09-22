@@ -38,9 +38,8 @@ function aud_run_monitoreo_tests()
 		'aud_unit_front_export_banner',
 		'aud_unit_db_sim_proceso_pertenece_al_modulo',
 		'aud_unit_db_modulo_siempre_es_raiz',
-		'aud_unit_sql_filtro_texto_libre',
-		'aud_unit_sql_kpis',
-		'aud_unit_desglose_fk'
+		'aud_unit_sim_casos_relavera',
+		'aud_unit_demo_old_y_detalle'
 	);
 	foreach ($cases as $fn) {
 		try {
@@ -214,8 +213,9 @@ function aud_unit_sql_usuarios_empresa()
 {
 	$sql = sentencias(27, array(7, 0));
 	aud_assert(stripos($sql, '`auditoria`.`logs`') === false, 'Combo usuarios no sale de logs');
-	aud_assert(stripos($sql, '.`usuarios`') !== false, 'Lista usuarios de la empresa');
-	aud_assert(stripos($sql, '.`sucursal`') !== false, 'Usuarios ligados por sucursal de la empresa');
+	aud_assert(stripos($sql, '`exa`.`usuarios`') !== false, 'Lista usuarios de la empresa');
+	aud_assert(stripos($sql, '`exa`.`sucursal`') !== false, 'Usuarios ligados por sucursal de la empresa');
+	aud_assert(strpos($sql, '`Usu_Cods`') !== false && strpos($sql, '`N_Ctas`') !== false, 'Combo agrupa cuentas de la persona (sin repetidos)');
 	aud_assert(strpos($sql, 's.`Emp_Cod`=7') !== false, 'Filtra por empresa de sesion');
 	aud_assert(strpos($sql, 'IS NULL') === false, 'No incluye usuarios de otra empresa');
 
@@ -296,7 +296,7 @@ function aud_unit_estado_captura()
 	aud_assert(strpos($htmlOk, 'aud-captura-ok') !== false, 'Banner verde si la captura esta activa');
 
 	$def = aud_estado_captura(7, 0);
-	aud_assert(strpos($def['message'], 'AUDIT_TABLES') !== false, 'Sin reglas avisa el fallback de tablas');
+	aud_assert(empty($def['ok']) && strpos($def['message'], 'no se registrara actividad') !== false, 'Sin reglas avisa que no se registrara actividad hasta marcar modulos');
 }
 
 function aud_unit_front_export_banner()
@@ -304,14 +304,11 @@ function aud_unit_front_export_banner()
 	$front = file_get_contents(dirname(__FILE__) . '/../FRONT/aud_con_monitoreo_1.0.php');
 	aud_assert(strpos($front, 'exportMonitoreoCsv') !== false, 'FRONT exporta el filtro completo por CSV');
 	aud_assert(strpos($front, 'aud_html_banner_captura') !== false, 'FRONT muestra aviso de captura');
-	aud_assert(strpos($front, 'name="simular"') === false, 'Formulario de simular actividad no figura en pantalla');
-	aud_assert(strpos($front, 'btnToggleGraficos') === false, 'Boton de graficos comparativos removido de la pantalla');
+	aud_assert(strpos($front, 'confirm(') !== false, 'Simular pide confirmacion');
+	aud_assert(strpos($front, "name=\"simular\"") !== false, 'El formulario de simular conserva el input');
 	$js = file_get_contents(dirname(__FILE__) . '/../VALIDACIONES/aud_par_monitoreo.js');
 	aud_assert(strpos($js, 'exportMonitoreoCsv=1') !== false, 'Excel usa export del servidor');
 	aud_assert(strpos($js, 'serialize()') !== false, 'Excel envia los filtros actuales');
-	aud_assert(strpos($front, 'exportMonitoreoPdf') !== false, 'FRONT exporta el filtro por PDF');
-	aud_assert(strpos($front, 'btnExportPdf') !== false, 'Boton de exportar PDF presente en la barra de herramientas');
-	aud_assert(strpos($js, 'exportMonitoreoPdf=1') !== false, 'JS envia exportMonitoreoPdf al servidor');
 }
 
 function aud_exa_disponible($con)
@@ -462,68 +459,81 @@ function aud_unit_db_modulo_siempre_es_raiz()
 	@mysqli_close($con);
 }
 
+function aud_unit_sim_casos_relavera()
+{
+	$ids = array('anticipos', 'contratos', 'maquinaria', 'tecnicos', 'operario_vehiculos', 'inventario', 'cobranzas');
+	foreach ($ids as $id) {
+		$c = aud_sim_caso_por_id($id);
+		aud_assert($c !== null, 'El caso de simulacion relavera "' . $id . '" existe');
+		aud_assert(!empty($c['pcs_noms']) && !empty($c['tabs']), 'El caso "' . $id . '" tiene procesos y tablas');
+		aud_assert(preg_match($c['mod_re'], 'Relavera') === 1, 'El caso "' . $id . '" acepta el modulo Relavera');
+		aud_assert(aud_sim_modulo_valido(array('Pcs_Cod' => 1, 'Mod_Des' => 'Relavera'), $c) === true, 'Proceso bajo Relavera es valido para "' . $id . '"');
+		aud_assert(aud_sim_modulo_valido(array('Pcs_Cod' => 2, 'Mod_Des' => 'Contabilidad'), $c) === false, '"' . $id . '" rechaza Contabilidad');
+		aud_assert(aud_sim_modulo_valido(array('Pcs_Cod' => 3, 'Mod_Des' => 'Facturacion'), $c) === false, '"' . $id . '" rechaza Facturacion');
+		aud_assert(aud_sim_modulo_valido(array('Pcs_Cod' => 4, 'Mod_Des' => 'Auditoria'), $c) === false, '"' . $id . '" rechaza Auditoria');
+	}
+
+	$tabs = array();
+	$front = file_get_contents(dirname(__FILE__) . '/../FRONT/aud_con_monitoreo_1.0.php');
+	$logica = file_get_contents(dirname(__FILE__) . '/../LOGICA/aud_log_interpretar.php');
+	foreach (aud_sim_casos() as $c) {
+		foreach ($c['tabs'] as $t) {
+			if (isset($tabs[$t])) {
+				throw new Exception('La tabla ' . $t . ' se simula en dos procesos (' . $tabs[$t] . ' y ' . $c['id'] . ')');
+			}
+			$tabs[$t] = $c['id'];
+		}
+		aud_assert(strpos($logica, $c['pcs_noms'][0]) !== false, 'La logica del simulador conoce el proceso ' . $c['pcs_noms'][0] . ' del caso ' . $c['id']);
+	}
+	aud_assert(isset($tabs['anticipos_clientes']) && isset($tabs['manifiesto_contratos']) && isset($tabs['maquinaria_horometro']), 'Las tablas relavera se reparten entre casos');
+	aud_assert(strpos($front, 'getRowConsulta(23') !== false && strpos($front, 'aud_sim_modulo_valido') !== false, 'El FRONT resuelve y valida cada caso del simulador');
+	aud_assert(strpos($front, 'pcsAnt') !== false && strpos($front, 'pcsCob') !== false, 'El FRONT prepara demos de los nuevos procesos');
+	aud_assert(strpos($front, "'manifiesto_contratos'") !== false && strpos($front, "'inventario_dispositivos'") !== false, 'El FRONT siembra las tablas relavera');
+}
+
+function aud_unit_demo_old_y_detalle()
+{
+	$front = file_get_contents(dirname(__FILE__) . '/../FRONT/aud_con_monitoreo_1.0.php');
+	aud_assert(strpos($front, 'OLD:Man_Pes=12500') !== false, 'El UPDATE de manifiesto guarda valores anteriores');
+	aud_assert(strpos($front, 'OLD:Tud_Cup=15') !== false, 'El UPDATE de turno guarda cupo anterior');
+	aud_assert(strpos($front, 'OLD:MHor_Val=1250.00') !== false, 'El UPDATE de horometro guarda valor anterior');
+	aud_assert(strpos($front, 'OLD:Inv_Est=A') !== false, 'El UPDATE de inventario guarda estado anterior');
+	aud_assert(strpos($front, 'OLD:Pag_Mon=120.00') !== false, 'El UPDATE de pago guarda valor anterior');
+
+	$dac = file_get_contents(dirname(__FILE__) . '/../../DATA/DAC.php');
+	aud_assert(strpos($dac, 'AuditQueue::captureBefore') !== false, 'DAC captura el valor anterior antes de actualizar');
+	aud_assert(strpos($dac, 'AuditQueue::capture') !== false, 'DAC encola el movimiento despues de ejecutar');
+	aud_assert(strpos($dac, 'grabarv_registros') !== false && strpos($dac, 'capAuditoria') !== false, 'La capa de grabacion usa la captura');
+
+	$row = array(
+		'Log_Int' => 'MHor_Cod=DEMO-HOR-1 || OLD:MHor_Val=1250.00,MHor_Est=A',
+		'Log_Cam' => 'MHor_Val,MHor_Est',
+		'Log_Val' => '1310.00,~A~',
+		'Log_Fec' => '2026-01-15 10:00:00',
+		'Eve_Ini' => 'U',
+		'Eve_Des' => 'Actualizacion',
+		'Tab_Nom' => 'maquinaria_horometro',
+		'Tab_Cod' => 1,
+		'Usu_Cod' => 5,
+		'Emp_Cod' => 7,
+		'Log_Cod' => 99,
+		'Pcs_Lin' => 'Horometros de maquinaria'
+	);
+	$pares = array(
+		array('atr' => 'MHor_Val', 'eti' => 'Valor horometro', 'val' => '1310.00'),
+		array('atr' => 'MHor_Est', 'eti' => 'Estado', 'val' => 'A')
+	);
+	$html = aud_html_detalle($row, $pares);
+	aud_assert(isset($html) && is_string($html) && $html !== '', 'El detalle del UPDATE se renderiza');
+	aud_assert(strpos($html, 'Valor anterior') !== false, 'El detalle muestra la columna de valor anterior');
+	aud_assert(strpos($html, '1250.00') !== false && strpos($html, '1310.00') !== false, 'El detalle muestra antes y despues del UPDATE');
+	aud_assert(strpos($html, 'aud-det-badge-u') !== false, 'El detalle marca el evento como actualizacion');
+}
+
 if (isset($_SERVER['SCRIPT_FILENAME']) && realpath($_SERVER['SCRIPT_FILENAME']) === realpath(__FILE__)) {
 	$fails = aud_run_monitoreo_tests();
 	echo "\n========================================\n";
 	echo $fails === 0 ? "MONITOR OK\n" : ("FALLOS: " . $fails . "\n");
 	echo "========================================\n";
 	exit($fails === 0 ? 0 : 1);
-}
-
-function aud_unit_sql_filtro_texto_libre()
-{
-	// Busqueda con texto 'FACT-0099'
-	$sqlConQ = sentencias(12, array(7, '2026-01-01', '2026-01-31', 0, 0, 0, 0, 0, 25, 0, 0, 0, 'FACT-0099'));
-	aud_assert(strpos($sqlConQ, "`logs`.`Log_Val` LIKE '%FACT-0099%'") !== false, 'Filtro q busca en Log_Val');
-	aud_assert(strpos($sqlConQ, "`tablas`.`Tab_Ali` LIKE '%FACT-0099%'") !== false, 'Filtro q busca en Tab_Ali');
-	aud_assert(strpos($sqlConQ, "`procesos`.`Pcs_Lin` LIKE '%FACT-0099%'") !== false, 'Filtro q busca en Pcs_Lin');
-	aud_assert(strpos($sqlConQ, "`persona`.`Prs_Ape` LIKE '%FACT-0099%'") !== false, 'Filtro q busca en persona');
-
-	// Export CSV con texto '0999999999'
-	$sqlExport = sentencias(31, array(7, '2026-01-01', '2026-01-31', 0, 0, 0, 0, 0, 5000, 0, 0, 0, '0999999999'));
-	aud_assert(strpos($sqlExport, "`logs`.`Log_Val` LIKE '%0999999999%'") !== false, 'Export incluye filtro q');
-
-	// Busqueda sin texto
-	$sqlSinQ = sentencias(12, array(7, '2026-01-01', '2026-01-31', 0, 0, 0, 0, 0, 25, 0, 0, 0, ''));
-	aud_assert(strpos($sqlSinQ, "LIKE '%%") === false, 'Sin q no agrega clausula LIKE vacia');
-}
-
-function aud_unit_sql_kpis()
-{
-	$filtros = array(7, '2026-01-01', '2026-01-31', 0, 0, 0, 0, 0, 5000, 0, 0, 0, '');
-	
-	// Case 33: Conteo por Evento
-	$sql33 = sentencias(33, $filtros);
-	aud_assert(strpos($sql33, 'GROUP BY `eventos`.`Eve_Cod`') !== false, 'KPI 1 agrupa por evento');
-	aud_assert(strpos($sql33, '`logs`.`Emp_Cod`=7') !== false, 'KPI 1 filtra por empresa');
-
-	// Case 34: Tendencia diaria
-	$sql34 = sentencias(34, $filtros);
-	aud_assert(strpos($sql34, 'GROUP BY DATE(`logs`.`Log_Fec`)') !== false, 'KPI 2 agrupa por fecha');
-
-	// Case 35: Top Modulos
-	$sql35 = sentencias(35, $filtros);
-	aud_assert(strpos($sql35, 'GROUP BY `modulo`') !== false, 'KPI 3 agrupa por modulo');
-	aud_assert(strpos($sql35, 'LIMIT 7') !== false, 'KPI 3 limita a top 7');
-
-	// Case 36: Top Usuarios
-	$sql36 = sentencias(36, $filtros);
-	aud_assert(strpos($sql36, 'GROUP BY `logs`.`Usu_Cod`') !== false, 'KPI 4 agrupa por usuario');
-	aud_assert(strpos($sql36, 'LIMIT 7') !== false, 'KPI 4 limita a top 7');
-}
-
-function aud_unit_desglose_fk()
-{
-	// Validar resolucion natural sin conexion (fallback y formateo)
-	aud_assert(aud_formato_valor('Asi_Deh', 'D') === 'Debe', 'Asi_Deh D formatea como Debe');
-	aud_assert(aud_formato_valor('Asi_Deh', 'H') === 'Haber', 'Asi_Deh H formatea como Haber');
-	aud_assert(aud_formato_valor('Com_Val', '1250.5') === '1,250.50', 'Com_Val formatea moneda');
-	aud_assert(aud_formato_valor('Caj_Est', 'A') === 'Abierta', 'Caj_Est A formatea Abierta');
-	aud_assert(aud_formato_valor('Caj_Est', 'C') === 'Cerrada', 'Caj_Est C formatea Cerrada');
-
-	// Humanizacion de campos nuevos
-	aud_assert(aud_humanizar_campo('Cli_Cod') === 'Cliente', 'Etiqueta Cli_Cod');
-	aud_assert(aud_humanizar_campo('Prv_Cod') === 'Proveedor', 'Etiqueta Prv_Cod');
-	aud_assert(aud_humanizar_campo('Cta_Cod') === 'Cuenta contable', 'Etiqueta Cta_Cod');
-	aud_assert(aud_humanizar_campo('Pro_Cod') === 'Producto', 'Etiqueta Pro_Cod');
 }

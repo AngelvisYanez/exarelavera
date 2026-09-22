@@ -62,8 +62,16 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 		// Obtener conexion si no fue provista
 		$cerrarConAlFinal = false;
 		if (!$con) {
-			require_once dirname(__FILE__) . '/../LOGICA/aud_log_auditoria.php';
-			if (function_exists('aud_db_connect')) {
+			$Ses_Dat_Dis = isset($_SESSION['Ses_Dat_Dis']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']) : '';
+			if (!class_exists('Class_Log_Conexion_CfgMon')) {
+				require_once dirname(__FILE__) . '/aud_log_config_monitoreo.php';
+			}
+			if (class_exists('Class_Log_Conexion_CfgMon')) {
+				$conObj = new Class_Log_Conexion_CfgMon($Ses_Dat_Dis !== '' ? $Ses_Dat_Dis : null);
+				$con = $conObj->conexion;
+				$cerrarConAlFinal = false;
+			} elseif (function_exists('aud_db_connect')) {
+				require_once dirname(__FILE__) . '/../LOGICA/aud_log_auditoria.php';
 				$con = aud_db_connect();
 				$cerrarConAlFinal = true;
 			}
@@ -155,88 +163,68 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 		$dataA = $obtenerDatosPeriodo($pA_ini, $pA_fin);
 		$dataB = $obtenerDatosPeriodo($pB_ini, $pB_fin);
 
-		// Helper para calcular variacion porcentual con casos limite
-		$calcPct = function($valA, $valB) {
+		// Duracion efectiva (en dias) de cada periodo para normalizar la variacion
+		$calcDias = function($ini, $fin) {
+			$t1 = strtotime($ini);
+			$t2 = strtotime($fin);
+			if (!$t1 || !$t2 || $t2 < $t1) return 1;
+			return (int)max(1, floor(($t2 - $t1) / 86400) + 1);
+		};
+		$diasA = $calcDias($pA_ini, $pA_fin);
+		$diasB = $calcDias($pB_ini, $pB_fin);
+
+		// Helper para calcular la variacion porcentual sobre el ritmo diario promedio.
+		// Compara la tasa diaria del período B contra la del período A, de modo que
+		// períodos de distinta duración sean comparables. Devuelve null (sin base)
+		// cuando el período base no registró actividad.
+		$calcPct = function($valA, $valB) use ($diasA, $diasB) {
+			$valA = (float)$valA;
+			$valB = (float)$valB;
 			if ($valA == 0 && $valB == 0) return 0.0;
-			if ($valA == 0) return 100.0;
-			if ($valB == 0) return -100.0;
-			return round((($valB - $valA) / (float)$valA) * 100, 1);
+			if ($valA == 0) return null;
+			$tasaA = $valA / max(1, $diasA);
+			$tasaB = $valB / max(1, $diasB);
+			return round((($tasaB - $tasaA) / $tasaA) * 100, 1);
+		};
+
+		// Adjunta la informacion de dias y ritmo diario a cada indicador comparado
+		$detalleRitmo = function($valA, $valB) use ($diasA, $diasB) {
+			return array(
+				'dias_a' => $diasA,
+				'dias_b' => $diasB,
+				'promedio_diario_a' => round((float)$valA / max(1, $diasA), 1),
+				'promedio_diario_b' => round((float)$valB / max(1, $diasB), 1)
+			);
+		};
+
+		// Metrica comparada con su detalle de ritmo y la direccion en la que
+		// el cambio se considera favorable (subir es bueno / EsFalso => subir es malo)
+		$armarKpi = function($clave, $titulo, $icono, $color, $valA, $valB, $favorableSubida = true) use ($calcPct, $detalleRitmo) {
+			return array_merge(
+				array(
+					'clave' => $clave,
+					'titulo' => $titulo,
+					'icono' => $icono,
+					'color' => $color,
+					'favorable_subida' => $favorableSubida,
+					'valor_a' => $valA,
+					'valor_b' => $valB
+				),
+				$detalleRitmo($valA, $valB),
+				array('pct_cambio' => $calcPct($valA, $valB))
+			);
 		};
 
 		// 1. Metricas Principales (KPI Cards) - Términos: Ingresar, Actualizar, Eliminar
 		$kpisComparativa = array(
-			array(
-				'clave' => 'total_movimientos',
-				'titulo' => 'Total Movimientos',
-				'icono' => 'fa-database',
-				'color' => 'primary',
-				'valor_a' => $dataA['total_movimientos'],
-				'valor_b' => $dataB['total_movimientos'],
-				'pct_cambio' => $calcPct($dataA['total_movimientos'], $dataB['total_movimientos'])
-			),
-			array(
-				'clave' => 'inserciones',
-				'titulo' => 'Ingresos (Ingresar)',
-				'icono' => 'fa-plus-circle',
-				'color' => 'success',
-				'valor_a' => $dataA['eventos']['I'],
-				'valor_b' => $dataB['eventos']['I'],
-				'pct_cambio' => $calcPct($dataA['eventos']['I'], $dataB['eventos']['I'])
-			),
-			array(
-				'clave' => 'modificaciones',
-				'titulo' => 'Actualizaciones (Actualizar)',
-				'icono' => 'fa-pencil',
-				'color' => 'warning',
-				'valor_a' => $dataA['eventos']['U'],
-				'valor_b' => $dataB['eventos']['U'],
-				'pct_cambio' => $calcPct($dataA['eventos']['U'], $dataB['eventos']['U'])
-			),
-			array(
-				'clave' => 'eliminaciones',
-				'titulo' => 'Eliminaciones (Eliminar)',
-				'icono' => 'fa-trash',
-				'color' => 'danger',
-				'valor_a' => $dataA['eventos']['D'],
-				'valor_b' => $dataB['eventos']['D'],
-				'pct_cambio' => $calcPct($dataA['eventos']['D'], $dataB['eventos']['D'])
-			),
-			array(
-				'clave' => 'sesiones_totales',
-				'titulo' => 'Sesiones Iniciadas',
-				'icono' => 'fa-users',
-				'color' => 'info',
-				'valor_a' => $dataA['sesiones']['total'],
-				'valor_b' => $dataB['sesiones']['total'],
-				'pct_cambio' => $calcPct($dataA['sesiones']['total'], $dataB['sesiones']['total'])
-			),
-			array(
-				'clave' => 'promedio_min_uso',
-				'titulo' => 'Promedio Minutos de Uso',
-				'icono' => 'fa-clock-o',
-				'color' => 'purple',
-				'valor_a' => $dataA['sesiones']['promedio_min'],
-				'valor_b' => $dataB['sesiones']['promedio_min'],
-				'pct_cambio' => $calcPct($dataA['sesiones']['promedio_min'], $dataB['sesiones']['promedio_min'])
-			),
-			array(
-				'clave' => 'cierres_inactividad',
-				'titulo' => 'Cierres por Inactividad',
-				'icono' => 'fa-hourglass-end',
-				'color' => 'orange',
-				'valor_a' => $dataA['sesiones']['timeout'],
-				'valor_b' => $dataB['sesiones']['timeout'],
-				'pct_cambio' => $calcPct($dataA['sesiones']['timeout'], $dataB['sesiones']['timeout'])
-			),
-			array(
-				'clave' => 'cierres_forzados',
-				'titulo' => 'Cierres Forzados Admin',
-				'icono' => 'fa-ban',
-				'color' => 'dark',
-				'valor_a' => $dataA['sesiones']['forzadas'],
-				'valor_b' => $dataB['sesiones']['forzadas'],
-				'pct_cambio' => $calcPct($dataA['sesiones']['forzadas'], $dataB['sesiones']['forzadas'])
-			)
+			$armarKpi('total_movimientos', 'Total Movimientos', 'fa-database', 'primary', $dataA['total_movimientos'], $dataB['total_movimientos'], true),
+			$armarKpi('inserciones', 'Ingresos (Ingresar)', 'fa-plus-circle', 'success', $dataA['eventos']['I'], $dataB['eventos']['I'], true),
+			$armarKpi('modificaciones', 'Actualizaciones (Actualizar)', 'fa-pencil', 'warning', $dataA['eventos']['U'], $dataB['eventos']['U'], true),
+			$armarKpi('eliminaciones', 'Eliminaciones (Eliminar)', 'fa-trash', 'danger', $dataA['eventos']['D'], $dataB['eventos']['D'], false),
+			$armarKpi('sesiones_totales', 'Sesiones Iniciadas', 'fa-users', 'info', $dataA['sesiones']['total'], $dataB['sesiones']['total'], true),
+			$armarKpi('promedio_min_uso', 'Promedio Minutos de Uso', 'fa-clock-o', 'purple', $dataA['sesiones']['promedio_min'], $dataB['sesiones']['promedio_min'], true),
+			$armarKpi('cierres_inactividad', 'Cierres por Inactividad', 'fa-hourglass-end', 'orange', $dataA['sesiones']['timeout'], $dataB['sesiones']['timeout'], false),
+			$armarKpi('cierres_forzados', 'Cierres Forzados Admin', 'fa-ban', 'dark', $dataA['sesiones']['forzadas'], $dataB['sesiones']['forzadas'], false)
 		);
 
 		// 2. Modulos Comparativa
@@ -245,11 +233,10 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 		foreach ($todosModulos as $mod) {
 			$totA = isset($dataA['modulos'][$mod]) ? $dataA['modulos'][$mod] : 0;
 			$totB = isset($dataB['modulos'][$mod]) ? $dataB['modulos'][$mod] : 0;
-			$modulosComparativa[] = array(
-				'modulo' => $mod,
-				'total_a' => $totA,
-				'total_b' => $totB,
-				'pct_cambio' => $calcPct($totA, $totB)
+			$modulosComparativa[] = array_merge(
+				array('modulo' => $mod, 'total_a' => $totA, 'total_b' => $totB),
+				$detalleRitmo($totA, $totB),
+				array('pct_cambio' => $calcPct($totA, $totB))
 			);
 		}
 		usort($modulosComparativa, function($x, $y) {
@@ -364,9 +351,16 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 		// 8. Generacion de Observaciones Automatizadas
 		$observaciones = array();
 
+		// Si los periodos difieren en dias, se aclara la normalizacion aplicada
+		if ($diasA !== $diasB) {
+			$observaciones[] = "La variación porcentual se calcula sobre el ritmo diario promedio (Período A: {$diasA} día(s) · Período B: {$diasB} día(s)), garantizando una comparación justa entre períodos de distinta duración.";
+		}
+
 		// Variacion general
 		$pctMov = $calcPct($dataA['total_movimientos'], $dataB['total_movimientos']);
-		if ($pctMov > 0) {
+		if ($pctMov === null) {
+			$observaciones[] = "El período base no registró actividad transaccional, por lo que no es posible calcular la variación porcentual general sobre el ritmo diario.";
+		} elseif ($pctMov > 0) {
 			$observaciones[] = "Se observa un incremento general de actividad transaccional del +{$pctMov}% respecto al período base comparado.";
 		} elseif ($pctMov < 0) {
 			$observaciones[] = "Se registra una reducción transaccional del {$pctMov}% en el volumen total de operaciones auditadas.";
@@ -379,7 +373,11 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 		$delB = $dataB['eventos']['D'];
 		if ($delB > $delA && ($delB - $delA) >= 5) {
 			$pctDel = $calcPct($delA, $delB);
-			$observaciones[] = "ALERTA DE SEGURIDAD: Las operaciones de eliminación (Eliminar) crecieron un +{$pctDel}% (pasando de {$delA} a {$delB}). Se recomienda auditar los registros borrados.";
+			if ($pctDel === null) {
+				$observaciones[] = "ALERTA DE SEGURIDAD: El período base no registró eliminaciones y en el período evaluado se ejecutaron {$delB} operaciones de eliminación (Eliminar). Se recomienda auditar los registros borrados.";
+			} else {
+				$observaciones[] = "ALERTA DE SEGURIDAD: Las operaciones de eliminación (Eliminar) crecieron un +{$pctDel}% (pasando de {$delA} a {$delB}). Se recomienda auditar los registros borrados.";
+			}
 		} elseif ($delB === 0) {
 			$observaciones[] = "Excelente disciplina operativa: 0 operaciones de eliminación (Eliminar) registradas en el período evaluado.";
 		}
@@ -411,6 +409,8 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 			'periodo_b_label' => substr($pB_ini, 0, 10) . ' al ' . substr($pB_fin, 0, 10),
 			'periodo_a_fechas' => array('inicio' => $pA_ini, 'fin' => $pA_fin),
 			'periodo_b_fechas' => array('inicio' => $pB_ini, 'fin' => $pB_fin),
+			'periodo_a_dias' => $diasA,
+			'periodo_b_dias' => $diasB,
 			'kpis_comparativa' => $kpisComparativa,
 			'modulos_comparativa' => $modulosComparativa,
 			'horarios_comparativa' => $horariosComparativa,
@@ -449,15 +449,23 @@ if (!function_exists('aud_dash_preparar_whatsapp')) {
 		$texto = "*INFORME COMPARATIVO DE AUDITORÍA ERP*\n";
 		$texto .= "🏢 Empresa: " . $empresa . "\n";
 		if ($pa !== '') $texto .= "📅 Período A: " . $pa . "\n";
-		if ($pb !== '') $texto .= "📅 Período B: " . $pb . "\n\n";
+		if ($pb !== '') $texto .= "📅 Período B: " . $pb . "\n";
+		if (isset($datos['periodo_a_dias']) && isset($datos['periodo_b_dias'])) {
+			$texto .= "🗓️ Días analizados: A ({$datos['periodo_a_dias']}) → B ({$datos['periodo_b_dias']})\n";
+		}
+		$texto .= "\n";
 
 		if (!empty($datos['kpis_comparativa']) && is_array($datos['kpis_comparativa'])) {
 			$texto .= "📊 *Métricas Destacadas:*\n";
 			foreach ($datos['kpis_comparativa'] as $kpi) {
-				$signo = (isset($kpi['pct_cambio']) && $kpi['pct_cambio'] > 0) ? '+' : '';
 				$valB = isset($kpi['valor_b']) ? number_format($kpi['valor_b']) : '0';
-				$pct = isset($kpi['pct_cambio']) ? $kpi['pct_cambio'] : 0;
-				$texto .= "• " . $kpi['titulo'] . ": " . $valB . " ({$signo}{$pct}%)\n";
+				$pct = (isset($kpi['pct_cambio']) && $kpi['pct_cambio'] !== null) ? (float)$kpi['pct_cambio'] : null;
+				if ($pct === null) {
+					$txtPct = 'N/D (sin base)';
+				} else {
+					$txtPct = (($pct > 0) ? '+' : '') . number_format($pct, 1) . '%';
+				}
+				$texto .= "• " . $kpi['titulo'] . ": " . $valB . " (" . $txtPct . ")\n";
 			}
 		}
 
@@ -548,7 +556,7 @@ if (isset($_REQUEST['action'])) {
 			$mailEnviado = false;
 			$errMsg = '';
 
-			$phpMailerPath = dirname(__FILE__) . '/../../Librerias/PHPMailer_2023/src/PHPMailer.php';
+			$phpMailerPath = dirname(__FILE__) . '/../../Librerias/PHPMailer_2023/PHPMailer.php';
 			if (!file_exists($phpMailerPath)) {
 				$phpMailerPath = dirname(__FILE__) . '/../../Librerias/PHPMailer/class.phpmailer.php';
 			}
@@ -556,9 +564,9 @@ if (isset($_REQUEST['action'])) {
 			if (file_exists($phpMailerPath)) {
 				try {
 					if (strpos($phpMailerPath, '2023') !== false) {
-						require_once dirname(__FILE__) . '/../../Librerias/PHPMailer_2023/src/Exception.php';
-						require_once dirname(__FILE__) . '/../../Librerias/PHPMailer_2023/src/PHPMailer.php';
-						require_once dirname(__FILE__) . '/../../Librerias/PHPMailer_2023/src/SMTP.php';
+						require_once dirname(__FILE__) . '/../../Librerias/PHPMailer_2023/Exception.php';
+						require_once dirname(__FILE__) . '/../../Librerias/PHPMailer_2023/PHPMailer.php';
+						require_once dirname(__FILE__) . '/../../Librerias/PHPMailer_2023/SMTP.php';
 						$mail = new \PHPMailer\PHPMailer\PHPMailer(true);
 					} else {
 						require_once $phpMailerPath;

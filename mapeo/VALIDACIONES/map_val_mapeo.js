@@ -203,6 +203,10 @@ const MapeoState = {
     // Listados
     actividades: [],
     actividadesFiltradas: [],
+    sectores: [],
+    modoRegistroActual: 'ubicacion',
+    sectorEnfocadoId: null,
+    evidenciasTemporales: [],
     manifiestos: [],
     flota: [],
     emergencias: [],
@@ -293,6 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Carga de Datos
     cargarFlota();
+    cargarSectores();
     cargarActividades();
     cargarManifiestosBD();
     cargarEmergenciasActivas();
@@ -318,6 +323,7 @@ function initMap() {
     // Grupos de capas
     MapeoState.overlayLayers.vias = L.layerGroup().addTo(MapeoState.map);
     MapeoState.overlayLayers.zonas = L.layerGroup().addTo(MapeoState.map);
+    MapeoState.overlayLayers.sectores = L.layerGroup().addTo(MapeoState.map);
     MapeoState.overlayLayers.actividades = L.layerGroup().addTo(MapeoState.map);
     MapeoState.overlayLayers.vectores = L.layerGroup().addTo(MapeoState.map);
     MapeoState.overlayLayers.gps = L.layerGroup().addTo(MapeoState.map);
@@ -331,7 +337,78 @@ function initMap() {
     MapeoState.map.on('zoomend', () => {
         const zEl = document.getElementById('hud-zoom-level');
         if (zEl) zEl.textContent = `${MapeoState.map.getZoom()}x`;
+        if (!MapeoState.sectorEnfocadoId) {
+            renderActividadesMapa();
+        }
     });
+
+    // Soporte para parámetros URL y modo selector desde módulo de Labores
+    const urlParams = new URLSearchParams(window.location.search);
+    const pLat = parseFloat(urlParams.get('lat'));
+    const pLng = parseFloat(urlParams.get('lng'));
+    const pZoom = parseInt(urlParams.get('zoom'), 10);
+    const pModo = urlParams.get('modo');
+    const pSectorId = urlParams.get('sector_id');
+
+    // Iniciar con panel lateral, GPS HUD y botón SOS contraídos, y pestaña Sectores activa
+    if (pModo === 'selector' || pModo === 'ver' || window.parent !== window || window.opener) {
+        toggleSidebar(true);
+        toggleGpsHud(true);
+        activarTabSidebar('sectores');
+    }
+
+    if (!isNaN(pLat) && !isNaN(pLng)) {
+        if (pModo === 'ver') {
+            // En modo ver, enfocar directamente sin el marcador genérico de asignación
+            setTimeout(() => {
+                MapeoState.map.setView([pLat, pLng], !isNaN(pZoom) ? pZoom : 20);
+                enfocarYMostrarSector(pSectorId, pLat, pLng);
+            }, 350);
+        } else {
+            setTimeout(() => {
+                MapeoState.map.setView([pLat, pLng], !isNaN(pZoom) ? pZoom : 20);
+                const focusCircle = L.circleMarker([pLat, pLng], {
+                    radius: 12,
+                    color: '#f59e0b',
+                    weight: 3,
+                    fillColor: '#fbbf24',
+                    fillOpacity: 0.7
+                }).addTo(MapeoState.map);
+                focusCircle.bindPopup(`
+                    <div style="text-align:center; font-family:'Segoe UI',sans-serif; min-width:170px;">
+                        <b style="color:#b45309;">📍 Ubicaci&oacute;n Seleccionada</b><br>
+                        <span style="font-size:11px; color:#475569;">Lat: ${pLat.toFixed(6)}, Lng: ${pLng.toFixed(6)}</span>
+                        ${(window.parent !== window || window.opener) ? `<br><button type="button" class="btn btn-xs btn-primary" style="margin-top:6px; font-weight:600; padding:2px 8px;" onclick="asignarPuntoAlFormulario(${pLat}, ${pLng})"><i class="fa fa-check"></i> Asignar al Formulario</button>` : ''}
+                    </div>
+                `).openPopup();
+            }, 400);
+        }
+    }
+
+    if (pModo === 'selector' || window.parent !== window || window.opener) {
+        MapeoState.map.on('click', e => {
+            const cLat = e.latlng.lat;
+            const cLng = e.latlng.lng;
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent(`
+                    <div style="font-family:'Segoe UI',sans-serif; text-align:center; min-width:215px; padding:6px;">
+                        <strong style="color:#0f766e; font-size:13px;"><i class="fa fa-map-marker"></i> Punto Geod&eacute;sico Marcado</strong><br>
+                        <span style="font-size:11px; color:#475569; display:block; margin:3px 0 8px 0;">Lat: <b>${cLat.toFixed(6)}</b>, Lng: <b>${cLng.toFixed(6)}</b></span>
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <button type="button" class="btn btn-xs btn-success" style="font-weight:700; padding:5px 8px; text-align:left; border-radius:4px;" onclick="MapeoState.map.closePopup(); abrirModalRegistroActividad({ lat: ${cLat}, lng: ${cLng}, esMarcador: true, modoPreferido: 'ubicacion' });">
+                                <i class="fa fa-plus-circle"></i> 1. Guardar como Nuevo Sector<br>
+                                <span style="font-size:10px; font-weight:normal; opacity:0.95;">Registra en BD (finca_actividad) y asigna a Labores</span>
+                            </button>
+                            <button type="button" class="btn btn-xs btn-default" style="font-weight:600; padding:4px 8px; text-align:left; border-color:#cbd5e1; border-radius:4px;" onclick="asignarPuntoAlFormulario(${cLat}, ${cLng})">
+                                <i class="fa fa-crosshairs text-primary"></i> 2. Solo Pasar Coordenadas GPS
+                            </button>
+                        </div>
+                    </div>
+                `)
+                .openOn(MapeoState.map);
+        });
+    }
 }
 
 /**
@@ -466,6 +543,16 @@ function initGeomanDrawing() {
         drawText: false
     });
 
+    MapeoState.map.pm.setGlobalOptions({
+        cursorMarker: false
+    });
+
+    MapeoState.map.on('pm:drawstart', e => {
+        if (e.shape === 'Marker' && MapeoState.map.pm.Draw && MapeoState.map.pm.Draw.Marker) {
+            MapeoState.map.pm.Draw.Marker.setOptions({ cursorMarker: false });
+        }
+    });
+
     MapeoState.map.pm.setPathOptions({
         color: '#1b7a4a',
         fillColor: '#1b7a4a',
@@ -495,7 +582,11 @@ function initGeomanDrawing() {
             center = [b.lat, b.lng];
         }
 
+        const esMarcador = (e.shape === 'Marker' || geojson.geometry.type === 'Point');
+
         abrirModalRegistroActividad({
+            shape: e.shape,
+            esMarcador: esMarcador,
             lat: center[0],
             lng: center[1],
             area_m2: areaM2.toFixed(2),
@@ -775,8 +866,14 @@ function actualizarIndicadorOffline(online) {
 }
 
 function guardarEnBufferOffline(tipo, item) {
+    if (typeof OfflineManager !== 'undefined') {
+        OfflineManager.guardarRegistro(tipo, item);
+    }
     if (tipo === 'actividad') {
         MapeoState.offlineQueue.actividades.push(item);
+    } else if (tipo === 'sector') {
+        if (!MapeoState.offlineQueue.sectores) MapeoState.offlineQueue.sectores = [];
+        MapeoState.offlineQueue.sectores.push(item);
     } else if (tipo === 'gps') {
         MapeoState.offlineQueue.gps.push(item);
     }
@@ -836,6 +933,7 @@ function cargarActividades() {
             if (res.success && Array.isArray(res.actividades)) {
                 MapeoState.actividades = res.actividades;
                 aplicarFiltrosActividades();
+                renderSectoresMapa();
             }
         })
         .catch(err => {
@@ -862,6 +960,25 @@ function limpiarFiltrosActividades() {
     if (document.getElementById('filtro-act-tipo')) document.getElementById('filtro-act-tipo').value = '';
     if (document.getElementById('filtro-act-estado')) document.getElementById('filtro-act-estado').value = '';
     aplicarFiltrosActividades();
+}
+
+function filtrarActividadesPorSector(nombreSector) {
+    document.querySelectorAll('.sidebar-tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === 'actividades');
+    });
+    document.querySelectorAll('.tab-pane').forEach(p => {
+        p.classList.toggle('active', p.id === 'tab-pane-actividades');
+    });
+
+    MapeoState.actividadesFiltradas = MapeoState.actividades.filter(act => {
+        const obs = (act.observaciones || '').toLowerCase();
+        const secNom = (nombreSector || '').toLowerCase();
+        return obs.includes(secNom) || (act.sector_nombre && act.sector_nombre.toLowerCase().includes(secNom));
+    });
+
+    renderActividadesLista();
+    actualizarKpisOperacion();
+    mostrarToast(`Mostrando labores vinculadas a: ${nombreSector}`);
 }
 
 function actualizarKpisOperacion() {
@@ -897,21 +1014,26 @@ function renderActividadesLista() {
     MapeoState.actividadesFiltradas.forEach(act => {
         const badgeClass = act.estado_badge || 'info';
         const volText = act.volumen_m3 > 0 ? ` &bull; <b>${act.volumen_m3} m³</b>` : '';
-        const iconoTipo = act.tipo === 'reporte_alerta' ? 'fa-exclamation-triangle text-danger' : 'fa-clipboard text-success';
+        const actIconRaw = act.icono || (act.tipo === 'reporte_alerta' ? 'fa-exclamation-triangle' : (act.tipo === 'monitoreo_piezometro' ? 'fa-eye' : (act.tipo === 'descarga_humeda' ? 'fa-tint' : (act.tipo === 'compactacion_dique' ? 'fa-cogs' : 'fa-truck'))));
+        const actIcon = actIconRaw.indexOf('fa-') === 0 ? actIconRaw : `fa-${actIconRaw}`;
+        const actColor = act.color || (act.tipo === 'reporte_alerta' ? '#ef4444' : (act.tipo === 'descarga_humeda' ? '#06b6d4' : (act.tipo === 'compactacion_dique' ? '#ea580c' : '#10b981')));
         
         html += `
-            <div class="actividad-card ${act.tipo === 'reporte_alerta' ? 'border-danger' : ''}" onclick="centrarActividad('${act.id}')">
+            <div class="actividad-card ${act.tipo === 'reporte_alerta' ? 'border-danger' : ''}" style="border-left: 4px solid ${actColor};" onclick="centrarActividad('${act.id}')">
                 <div class="act-card-header">
-                    <span class="act-card-title"><i class="fa ${iconoTipo}"></i> ${act.tipo_label}</span>
+                    <span class="act-card-title" style="color:${actColor};"><i class="fa ${actIcon}"></i> ${act.tipo_label}</span>
                     <span class="badge-act ${badgeClass}">${act.estado}</span>
                 </div>
                 <div class="act-card-body">
+                    <div style="font-size:12px; font-weight:700; color:#0f766e; margin-bottom:4px;">
+                        <i class="fa fa-map-marker text-danger"></i> Ubicación: ${act.ubicacion_nombre || 'Frente Central de Vertido'}
+                    </div>
                     <strong><i class="fa fa-truck"></i> ${act.volqueta_num}</strong> &bull; ${act.chofer}${volText}<br>
                     <span style="color:#64748b;">${act.observaciones || 'Sin detalles adicionales'}</span>
                 </div>
                 <div class="act-card-meta">
                     <span><i class="fa fa-calendar-o"></i> ${act.fecha}</span>
-                    <span><i class="fa fa-map-marker"></i> ${parseFloat(act.lat).toFixed(4)}, ${parseFloat(act.lng).toFixed(4)}</span>
+                    <span title="Coordenadas GPS"><i class="fa fa-crosshairs"></i> ${parseFloat(act.lat).toFixed(4)}, ${parseFloat(act.lng).toFixed(4)}</span>
                 </div>
             </div>
         `;
@@ -921,48 +1043,546 @@ function renderActividadesLista() {
     document.getElementById('total-actividades-count').textContent = MapeoState.actividadesFiltradas.length;
 }
 
+/**
+ * Genera el marcado HTML para un Pin tipo gota (Teardrop) en Leaflet o vistas previas
+ */
+function crearPinHtml(icono, color, esPulso = false, tamano = 32) {
+    const iconClass = icono ? (icono.indexOf('fa-') === 0 ? icono : `fa-${icono}`) : 'fa-map-marker';
+    const pinColor = color || '#8b5cf6';
+    const pulseClass = esPulso ? ' pin-pulse' : '';
+    const headSize = tamano;
+    const iconFontSize = Math.round(tamano * 0.42);
+    return `
+        <div class="pin-marker-wrapper${pulseClass}" style="width:${headSize}px; height:${headSize + 6}px;">
+            <div class="pin-marker-head" style="background:${pinColor}; width:${headSize}px; height:${headSize}px;">
+                <i class="fa ${iconClass}" style="font-size:${iconFontSize}px;"></i>
+            </div>
+            <div class="pin-marker-shadow"></div>
+        </div>
+    `;
+}
+
+/**
+ * Controladores del Selector de Icono y Color para Pins
+ */
+function seleccionarIconoPin(tipo, icono) {
+    const inputId = tipo === 'sec' ? 'form-sec-icono' : 'form-act-icono';
+    const swatchesId = tipo === 'sec' ? 'sec-icon-swatches' : 'act-icon-swatches';
+    const input = document.getElementById(inputId);
+    if (input) input.value = icono;
+
+    const container = document.getElementById(swatchesId);
+    if (container) {
+        container.querySelectorAll('.pin-icon-btn').forEach(btn => {
+            if (btn.dataset.icon === icono) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        });
+    }
+    actualizarPreviewPin(tipo);
+}
+
+function seleccionarColorPin(tipo, color) {
+    const inputId = tipo === 'sec' ? 'form-sec-color' : 'form-act-color';
+    const swatchesId = tipo === 'sec' ? 'sec-color-swatches' : 'act-color-swatches';
+    const input = document.getElementById(inputId);
+    if (input) input.value = color;
+
+    const container = document.getElementById(swatchesId);
+    if (container) {
+        container.querySelectorAll('.pin-color-chip').forEach(chip => {
+            if (chip.dataset.color && chip.dataset.color.toLowerCase() === color.toLowerCase()) {
+                chip.classList.add('selected');
+            } else {
+                chip.classList.remove('selected');
+            }
+        });
+    }
+    actualizarPreviewPin(tipo);
+}
+
+function actualizarPreviewPin(tipo) {
+    const previewId = tipo === 'sec' ? 'preview-sec-pin' : 'preview-act-pin';
+    const iconoId = tipo === 'sec' ? 'form-sec-icono' : 'form-act-icono';
+    const colorId = tipo === 'sec' ? 'form-sec-color' : 'form-act-color';
+
+    const cont = document.getElementById(previewId);
+    if (!cont) return;
+
+    const icono = document.getElementById(iconoId) ? document.getElementById(iconoId).value : (tipo === 'sec' ? 'fa-map-marker' : 'fa-truck');
+    const color = document.getElementById(colorId) ? document.getElementById(colorId).value : (tipo === 'sec' ? '#8b5cf6' : '#10b981');
+    const esAlerta = tipo === 'act' && document.getElementById('form-act-estado') && document.getElementById('form-act-estado').value === 'Alerta Crítica';
+
+    cont.innerHTML = crearPinHtml(icono, color, esAlerta, 28);
+}
+
+function onCategoriaSectorChange(selectElem) {
+    if (!selectElem) return;
+    const cat = selectElem.value;
+    const mapaCat = {
+        'Sector Operativo': { icon: 'fa-cubes', color: '#8b5cf6' },
+        'Frente de Vertido': { icon: 'fa-cubes', color: '#ea580c' },
+        'Edificio / Infraestructura': { icon: 'fa-building', color: '#3b82f6' },
+        'Garita / Balanza': { icon: 'fa-shield', color: '#0f766e' },
+        'Dique de Contención': { icon: 'fa-tint', color: '#06b6d4' },
+        'Punto de Monitoreo': { icon: 'fa-eye', color: '#10b981' },
+        'Taller / Maestranza': { icon: 'fa-wrench', color: '#64748b' },
+        'Instalación General': { icon: 'fa-map-marker', color: '#8b5cf6' }
+    };
+    if (mapaCat[cat]) {
+        seleccionarIconoPin('sec', mapaCat[cat].icon);
+        seleccionarColorPin('sec', mapaCat[cat].color);
+    }
+}
+
+function onTipoActividadChange(selectElem) {
+    if (!selectElem) return;
+    const tipo = selectElem.value;
+    const mapaTipo = {
+        'descarga_relave': { icon: 'fa-truck', color: '#10b981' },
+        'descarga_humeda': { icon: 'fa-tint', color: '#06b6d4' },
+        'compactacion_dique': { icon: 'fa-cogs', color: '#ea580c' },
+        'acarreo_material': { icon: 'fa-truck', color: '#3b82f6' },
+        'monitoreo_piezometro': { icon: 'fa-eye', color: '#0f766e' },
+        'mantenimiento_vias': { icon: 'fa-road', color: '#64748b' },
+        'reporte_alerta': { icon: 'fa-exclamation-triangle', color: '#ef4444' }
+    };
+    if (mapaTipo[tipo]) {
+        seleccionarIconoPin('act', mapaTipo[tipo].icon);
+        seleccionarColorPin('act', mapaTipo[tipo].color);
+    }
+}
+
+function onEstadoActividadChange(selectElem) {
+    if (!selectElem) return;
+    if (selectElem.value === 'Alerta Crítica') {
+        seleccionarIconoPin('act', 'fa-exclamation-triangle');
+        seleccionarColorPin('act', '#ef4444');
+    }
+    actualizarPreviewPin('act');
+}
+
+// ==========================================================================
+// EVIDENCIAS FOTOGRÁFICAS, COMPRESIÓN CANVAS Y LIGHTBOX (LOCATOR)
+// ==========================================================================
+
+/**
+ * Comprime imágenes en el cliente mediante un canvas off-screen antes de enviarlas por red.
+ * Reduce fotos pesadas de cámaras de 10-15MB a archivos JPEG ligeros de ~150KB.
+ */
+function comprimirImagenWeb(file, maxDim, calidad) {
+    if (typeof maxDim === 'undefined') maxDim = 1280;
+    if (typeof calidad === 'undefined') calidad = 0.82;
+
+    return new Promise(function(resolve, reject) {
+        if (!file || !file.type.match(/image.*/)) {
+            return reject(new Error('El archivo seleccionado no es una imagen válida.'));
+        }
+
+        var reader = new FileReader();
+        reader.onerror = function() { reject(new Error('Error al leer el archivo.')); };
+        reader.onload = function(e) {
+            var img = new Image();
+            img.onerror = function() { reject(new Error('Error al decodificar la imagen.')); };
+            img.onload = function() {
+                var width = img.width;
+                var height = img.height;
+
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round((height * maxDim) / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round((width * maxDim) / height);
+                        height = maxDim;
+                    }
+                }
+
+                var canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+
+                var ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+
+                var dataUrl = canvas.toDataURL('image/jpeg', calidad);
+                var bytesEstimados = Math.round((dataUrl.length * 3) / 4);
+
+                resolve({
+                    dataUrl: dataUrl,
+                    width: width,
+                    height: height,
+                    tamanoEstimado: bytesEstimados,
+                    nombreOriginal: file.name
+                });
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function procesarEvidenciasSeleccionadas(fileList) {
+    if (!fileList || fileList.length === 0) return;
+
+    if (!Array.isArray(MapeoState.evidenciasTemporales)) {
+        MapeoState.evidenciasTemporales = [];
+    }
+
+    var previewCont = document.getElementById('evidencias-preview-container');
+    var files = Array.prototype.slice.call(fileList);
+
+    files.forEach(function(file) {
+        var tempId = 'evi-load-' + Math.random().toString(36).substr(2, 9);
+        if (previewCont) {
+            var loadingCard = document.createElement('div');
+            loadingCard.id = tempId;
+            loadingCard.className = 'evidencia-preview-card';
+            loadingCard.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; color:#94a3b8; font-size:10px;"><i class="fa fa-spinner fa-spin" style="font-size:16px; margin-bottom:4px; color:#10b981;"></i><span>Optimizando...</span></div>';
+            previewCont.appendChild(loadingCard);
+        }
+
+        comprimirImagenWeb(file, 1280, 0.82)
+            .then(function(comp) {
+                return fetch('../LOGICA/map_log_mapeo.php?action=subir_evidencia', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        imagen_base64: comp.dataUrl,
+                        nombre: file.name
+                    })
+                }).then(function(r) { return r.json(); }).then(function(resData) {
+                    var el = document.getElementById(tempId);
+                    if (el) el.remove();
+
+                    if (resData.success) {
+                        var evidenciaObj = {
+                            archivo: resData.archivo,
+                            url: resData.url,
+                            nombre: resData.nombre_original || file.name,
+                            tamano: resData.tamano || comp.tamanoEstimado,
+                            fecha: resData.fecha
+                        };
+                        MapeoState.evidenciasTemporales.push(evidenciaObj);
+                        renderPreviewEvidencias();
+                        mostrarToast('Evidencia guardada (' + Math.round(evidenciaObj.tamano / 1024) + ' KB).');
+                    } else {
+                        alert('Error al subir imagen: ' + resData.message);
+                    }
+                });
+            })
+            .catch(function(err) {
+                console.error('Error al procesar evidencia:', err);
+                var el = document.getElementById(tempId);
+                if (el) el.remove();
+                alert('No se pudo procesar la evidencia: ' + err.message);
+            });
+    });
+
+    var inCam = document.getElementById('form-act-evidencias-camara');
+    var inArch = document.getElementById('form-act-evidencias-archivo');
+    if (inCam) inCam.value = '';
+    if (inArch) inArch.value = '';
+}
+
+function renderPreviewEvidencias() {
+    var previewCont = document.getElementById('evidencias-preview-container');
+    if (!previewCont) return;
+
+    previewCont.innerHTML = '';
+    MapeoState.evidenciasTemporales.forEach(function(evi, idx) {
+        var card = document.createElement('div');
+        card.className = 'evidencia-preview-card';
+        var kbSize = Math.round((evi.tamano || 0) / 1024);
+        var safeUrl = (evi.url || '').replace(/'/g, "\\'");
+        var safeNom = (evi.nombre || 'Evidencia').replace(/'/g, "\\'");
+
+        card.innerHTML = 
+            '<img src="' + evi.url + '" alt="' + (evi.nombre || '') + '" onclick="abrirLightbox(\'' + safeUrl + '\', \'' + safeNom + '\')" title="Clic para ampliar" />' +
+            '<button type="button" class="btn-remove-photo" onclick="eliminarEvidenciaTemporal(' + idx + ')" title="Quitar">' +
+                '<i class="fa fa-times"></i>' +
+            '</button>' +
+            '<span class="photo-size-tag">' + kbSize + ' KB</span>';
+        previewCont.appendChild(card);
+    });
+}
+
+function eliminarEvidenciaTemporal(index) {
+    if (index >= 0 && index < MapeoState.evidenciasTemporales.length) {
+        MapeoState.evidenciasTemporales.splice(index, 1);
+        renderPreviewEvidencias();
+    }
+}
+
+/**
+ * Captura directa de la posición GPS del dispositivo móvil con alta precisión
+ */
+function capturarGpsActualDispositivo() {
+    var btn = document.querySelector('.btn-gps-direct-capture');
+    if (btn) {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Conectando GPS...';
+    }
+
+    var aplicarCoords = function(lat, lng, acc) {
+        var latInput = document.getElementById('form-act-lat');
+        var lngInput = document.getElementById('form-act-lng');
+        if (latInput) latInput.value = parseFloat(lat).toFixed(6);
+        if (lngInput) lngInput.value = parseFloat(lng).toFixed(6);
+
+        if (MapeoState.layerTemporal && typeof MapeoState.layerTemporal.setLatLng === 'function') {
+            MapeoState.layerTemporal.setLatLng([lat, lng]);
+        }
+
+        if (btn) {
+            btn.classList.remove('active');
+            btn.innerHTML = '<i class="fa fa-check text-success"></i> GPS Listo';
+            setTimeout(function() {
+                btn.innerHTML = '<i class="fa fa-crosshairs"></i> 🎯 Capturar GPS del Dispositivo';
+            }, 2500);
+        }
+
+        mostrarToast('🎯 Posición GPS capturada (±' + Math.round(acc || 5) + ' m).');
+    };
+
+    // Si ya existe posición reciente en la telemetría viva
+    if (MapeoState.stats && MapeoState.stats.lastLat && MapeoState.stats.lastLng) {
+        aplicarCoords(MapeoState.stats.lastLat, MapeoState.stats.lastLng, 5);
+        return;
+    }
+
+    if (!navigator.geolocation) {
+        alert('La geolocalización GPS no está soportada por su navegador o dispositivo.');
+        if (btn) {
+            btn.classList.remove('active');
+            btn.innerHTML = '<i class="fa fa-crosshairs"></i> 🎯 Capturar GPS del Dispositivo';
+        }
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {
+            aplicarCoords(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+        },
+        function(err) {
+            console.warn('Error GPS:', err);
+            alert('No se pudo acceder al GPS: ' + err.message + '. Conceda permisos de ubicación en su navegador.');
+            if (btn) {
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="fa fa-crosshairs"></i> 🎯 Capturar GPS del Dispositivo';
+            }
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+}
+
+/**
+ * Visor Lightbox para evidencias fotográficas
+ */
+function abrirLightbox(url, caption) {
+    var modal = document.getElementById('locator-lightbox');
+    var img = document.getElementById('locator-lightbox-img');
+    var cap = document.getElementById('locator-lightbox-caption');
+    if (!modal || !img) return;
+
+    img.src = url;
+    if (cap) cap.innerHTML = caption ? unescape(caption) : '';
+    modal.classList.add('active');
+}
+
+function cerrarLightbox() {
+    var modal = document.getElementById('locator-lightbox');
+    var img = document.getElementById('locator-lightbox-img');
+    if (modal) modal.classList.remove('active');
+    if (img) img.src = '';
+}
+
+/**
+ * Retorna la lista de actividades asociadas a un sector específico
+ */
+function obtenerActividadesDeSector(sec) {
+    if (!MapeoState.actividades || !Array.isArray(MapeoState.actividades)) return [];
+    var secIdStr = String(sec.id || '');
+    var secNom = (sec.nombre || '').trim().toLowerCase();
+
+    return MapeoState.actividades.filter(function(act) {
+        if (secIdStr && act.fnc_cod && String(act.fnc_cod) === secIdStr) return true;
+
+        var actUbi = (act.ubicacion_nombre || '').trim().toLowerCase();
+        var actObs = (act.observaciones || '').trim().toLowerCase();
+        if (secNom && (actUbi.indexOf(secNom) !== -1 || actObs.indexOf(secNom) !== -1)) return true;
+
+        if (sec.lat && sec.lng && act.lat && act.lng) {
+            var dLat = Math.abs(parseFloat(sec.lat) - parseFloat(act.lat));
+            var dLng = Math.abs(parseFloat(sec.lng) - parseFloat(act.lng));
+            if (dLat < 0.0013 && dLng < 0.0013) return true;
+        }
+
+        return false;
+    });
+}
+
+/**
+ * Modo Enfoque de Sector: Centra el mapa en el sector y revela sus eventos sin saturación visual
+ */
+function enfocarSector(secId) {
+    if (!Array.isArray(MapeoState.sectores)) return;
+    var sec = MapeoState.sectores.find(function(s) { return String(s.id) === String(secId); });
+    if (!sec) return;
+
+    MapeoState.sectorEnfocadoId = sec.id;
+
+    var banner = document.getElementById('sector-focus-banner');
+    var title = document.getElementById('sector-focus-title');
+    var count = document.getElementById('sector-focus-count');
+    var evts = obtenerActividadesDeSector(sec);
+
+    if (title) title.innerHTML = '<i class="fa ' + (sec.icono || 'fa-map-marker') + '"></i> Sector: <b>' + sec.nombre + '</b>';
+    if (count) count.textContent = evts.length + (evts.length === 1 ? ' evento registrado' : ' eventos registrados');
+    if (banner) banner.style.display = 'flex';
+
+    if (sec._poly && typeof sec._poly.getBounds === 'function') {
+        MapeoState.map.fitBounds(sec._poly.getBounds(), { padding: [60, 60], maxZoom: 19 });
+    } else if (sec.lat && sec.lng) {
+        MapeoState.map.setView([parseFloat(sec.lat), parseFloat(sec.lng)], 19, { animate: true });
+    }
+
+    renderActividadesMapa();
+    mostrarToast('📍 Enfocando ' + sec.nombre + ' (' + evts.length + ' eventos).');
+}
+
+/**
+ * Salir del Modo Enfoque y regresar a la vista macro limpia
+ */
+function salirDeModoEnfoqueSector() {
+    MapeoState.sectorEnfocadoId = null;
+    var banner = document.getElementById('sector-focus-banner');
+    if (banner) banner.style.display = 'none';
+
+    centrarRelavera();
+    renderActividadesMapa();
+    mostrarToast('Vista general de todos los sectores restaurada.');
+}
+
+/**
+ * Renderizado optimizado de pines de actividades en el mapa con tira de evidencias
+ */
 function renderActividadesMapa() {
+    if (!MapeoState.overlayLayers.actividades) return;
     MapeoState.overlayLayers.actividades.clearLayers();
 
-    MapeoState.actividadesFiltradas.forEach(act => {
-        const color = act.tipo === 'reporte_alerta' ? '#ef4444' : '#10b981';
-        const marker = L.circleMarker([act.lat, act.lng], {
-            radius: 8,
-            fillColor: color,
-            color: '#ffffff',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.85
+    var zoomActual = MapeoState.map ? MapeoState.map.getZoom() : 17;
+    var hayFiltroBusqueda = MapeoState.actividadesFiltradas.length < MapeoState.actividades.length;
+
+    var listaAMostrar = [];
+
+    // MODO 1: Si hay un sector enfocado explícitamente
+    if (MapeoState.sectorEnfocadoId) {
+        var secEnfocado = MapeoState.sectores.find(function(s) { return String(s.id) === String(MapeoState.sectorEnfocadoId); });
+        if (secEnfocado) {
+            listaAMostrar = obtenerActividadesDeSector(secEnfocado);
+        } else {
+            listaAMostrar = MapeoState.actividadesFiltradas;
+        }
+    } 
+    // MODO 2: Si el usuario aplicó un filtro o búsqueda desde el panel lateral
+    else if (hayFiltroBusqueda) {
+        listaAMostrar = MapeoState.actividadesFiltradas;
+    }
+    // MODO 3: Vista macro general
+    else {
+        if (zoomActual >= 18) {
+            listaAMostrar = MapeoState.actividadesFiltradas;
+        } else {
+            // En vista macro (< 18), solo mostrar eventos con Alerta Crítica para evitar sobrecarga visual
+            listaAMostrar = MapeoState.actividadesFiltradas.filter(function(a) {
+                return a.tipo === 'reporte_alerta' || a.estado === 'Alerta Crítica';
+            });
+        }
+    }
+
+    listaAMostrar.forEach(function(act) {
+        var actIconRaw = act.icono || (act.tipo === 'reporte_alerta' ? 'fa-exclamation-triangle' : (act.tipo === 'monitoreo_piezometro' ? 'fa-eye' : (act.tipo === 'descarga_humeda' ? 'fa-tint' : (act.tipo === 'compactacion_dique' ? 'fa-cogs' : 'fa-truck'))));
+        var actIcon = actIconRaw.indexOf('fa-') === 0 ? actIconRaw : ('fa-' + actIconRaw);
+        var actColor = act.color || (act.tipo === 'reporte_alerta' ? '#ef4444' : (act.tipo === 'descarga_humeda' ? '#06b6d4' : (act.tipo === 'compactacion_dique' ? '#ea580c' : '#10b981')));
+        var esAlerta = act.tipo === 'reporte_alerta' || act.estado === 'Alerta Crítica';
+
+        var iconHtml = crearPinHtml(actIcon, actColor, esAlerta, 30);
+        var icon = L.divIcon({
+            html: iconHtml,
+            className: 'leaflet-custom-pin',
+            iconSize: [30, 36],
+            iconAnchor: [15, 36],
+            popupAnchor: [0, -36]
         });
 
-        marker.bindPopup(`
-            <div style="min-width:220px; font-family:'Segoe UI', sans-serif;">
-                <div style="font-weight:700; color:${color}; font-size:14px; margin-bottom:4px;">
-                    <i class="fa fa-clipboard"></i> ${act.tipo_label}
-                </div>
-                <div style="font-size:12px; line-height:1.4; color:#334155; margin-bottom:8px;">
-                    <b>Código:</b> ${act.id}<br>
-                    <b>Volqueta:</b> ${act.volqueta_num}<br>
-                    <b>Chofer:</b> ${act.chofer}<br>
-                    <b>Fecha:</b> ${act.fecha}<br>
-                    <b>Estado:</b> <span class="badge-act ${act.estado_badge}">${act.estado}</span><br>
-                    ${act.volumen_m3 > 0 ? `<b>Cubicaje:</b> ${act.volumen_m3} m³<br>` : ''}
-                    ${act.area_m2 > 0 ? `<b>Área:</b> ${act.area_m2} m²<br>` : ''}
-                    <b>Notas:</b> ${act.observaciones}
-                </div>
-                <div style="text-align:right;">
-                    <button class="btn btn-xs btn-danger" onclick="eliminarActividad('${act.id}')">
-                        <i class="fa fa-trash"></i> Eliminar
-                    </button>
-                </div>
-            </div>
-        `);
+        var marker = L.marker([act.lat, act.lng], { icon: icon });
+
+        // Tira de miniaturas de evidencias
+        var evidenciasHtml = '';
+        if (Array.isArray(act.evidencias) && act.evidencias.length > 0) {
+            var thumbsHtml = act.evidencias.map(function(evi) {
+                var url = (typeof evi === 'object' && evi.url) ? evi.url : (typeof evi === 'string' ? evi : '');
+                if (!url) return '';
+                var safeUrl = url.replace(/'/g, "\\'");
+                var nomEvi = (typeof evi === 'object' && evi.nombre) ? evi.nombre : 'Evidencia';
+                var safeTitle = escape((act.tipo_label || '') + ' - ' + (act.ubicacion_nombre || 'Evidencia'));
+                return '<div class="evidencia-thumb-item" onclick="abrirLightbox(\'' + safeUrl + '\', \'' + safeTitle + '\')" title="Ampliar ' + nomEvi + '">' +
+                           '<img src="' + url + '" alt="Evidencia" loading="lazy" />' +
+                           '<div class="thumb-overlay-zoom"><i class="fa fa-search-plus"></i></div>' +
+                       '</div>';
+            }).join('');
+
+            if (thumbsHtml) {
+                evidenciasHtml = 
+                    '<div class="evidencia-popup-section">' +
+                        '<div class="evidencia-popup-title">' +
+                            '<span><i class="fa fa-camera text-primary"></i> Evidencias (' + act.evidencias.length + ')</span>' +
+                            '<span style="font-size:10px; color:#64748b;">Toca para ampliar</span>' +
+                        '</div>' +
+                        '<div class="evidencias-thumb-strip">' +
+                            thumbsHtml +
+                        '</div>' +
+                    '</div>';
+            }
+        }
+
+        marker.bindPopup(
+            '<div style="min-width:240px; font-family:\'Segoe UI\', sans-serif;">' +
+                '<div style="font-weight:700; color:' + actColor + '; font-size:14px; margin-bottom:4px;">' +
+                    '<i class="fa ' + actIcon + '"></i> ' + act.tipo_label +
+                '</div>' +
+                '<div style="font-size:12px; line-height:1.4; color:#334155; margin-bottom:8px;">' +
+                    '<div style="padding:4px 6px; background:#f0fdf4; border-left:3px solid ' + actColor + '; border-radius:3px; margin-bottom:6px;">' +
+                        '<b>Ubicación / Sector:</b> <strong style="color:#0f766e;">' + (act.ubicacion_nombre || 'Frente Central de Vertido') + '</strong>' +
+                    '</div>' +
+                    '<b>Código:</b> ' + act.id + '<br>' +
+                    '<b>Volqueta:</b> ' + act.volqueta_num + '<br>' +
+                    '<b>Chofer:</b> ' + act.chofer + '<br>' +
+                    '<b>Fecha:</b> ' + act.fecha + '<br>' +
+                    '<b>Estado:</b> <span class="badge-act ' + act.estado_badge + '">' + act.estado + '</span><br>' +
+                    (act.volumen_m3 > 0 ? ('<b>Cubicaje:</b> ' + act.volumen_m3 + ' m³<br>') : '') +
+                    (act.area_m2 > 0 ? ('<b>Área:</b> ' + act.area_m2 + ' m²<br>') : '') +
+                    '<b>Notas:</b> ' + act.observaciones +
+                '</div>' +
+                evidenciasHtml +
+                '<div style="text-align:right; margin-top:8px;">' +
+                    '<button class="btn btn-xs btn-danger" onclick="eliminarActividad(\'' + act.id + '\')">' +
+                        '<i class="fa fa-trash"></i> Eliminar' +
+                    '</button>' +
+                '</div>' +
+            '</div>'
+        );
 
         MapeoState.overlayLayers.actividades.addLayer(marker);
 
         if (act.geometria) {
-            const geoLayer = L.geoJSON(act.geometria, {
-                style: { color: color, weight: 2, fillOpacity: 0.2 }
+            var geoLayer = L.geoJSON(act.geometria, {
+                style: { color: actColor, weight: 2, fillOpacity: 0.2 }
             });
             MapeoState.overlayLayers.actividades.addLayer(geoLayer);
         }
@@ -975,39 +1595,584 @@ function centrarActividad(id) {
     MapeoState.map.setView([act.lat, act.lng], 19, { animate: true });
 }
 
+function setModoRegistro(modo) {
+    MapeoState.modoRegistroActual = modo;
+    const btnUbicacion = document.getElementById('btn-tab-modo-ubicacion');
+    const btnEvento = document.getElementById('btn-tab-modo-evento');
+    const panelUbicacion = document.getElementById('panel-modo-ubicacion');
+    const panelEvento = document.getElementById('panel-modo-evento');
+    const btnGuardarSector = document.getElementById('btn-guardar-sector');
+    const btnGuardarAct = document.getElementById('btn-guardar-actividad');
+    const titulo = document.getElementById('modal-registro-titulo');
+    const icono = document.getElementById('modal-registro-icon');
+
+    if (modo === 'ubicacion') {
+        if (btnUbicacion) {
+            btnUbicacion.style.background = '#10b981';
+            btnUbicacion.style.color = '#fff';
+        }
+        if (btnEvento) {
+            btnEvento.style.background = 'transparent';
+            btnEvento.style.color = '#64748b';
+        }
+        if (panelUbicacion) panelUbicacion.style.display = 'block';
+        if (panelEvento) panelEvento.style.display = 'none';
+        if (btnGuardarSector) btnGuardarSector.style.display = 'inline-flex';
+        if (btnGuardarAct) btnGuardarAct.style.display = 'none';
+        if (titulo) titulo.textContent = 'Registrar Punto de Referencia / Sector (Ubicación)';
+        if (icono) icono.className = 'fa fa-map-marker text-success';
+        setTimeout(() => {
+            const nomInput = document.getElementById('form-sec-nombre');
+            if (nomInput) nomInput.focus();
+        }, 100);
+    } else {
+        if (btnUbicacion) {
+            btnUbicacion.style.background = 'transparent';
+            btnUbicacion.style.color = '#64748b';
+        }
+        if (btnEvento) {
+            btnEvento.style.background = '#1b7a4a';
+            btnEvento.style.color = '#fff';
+        }
+        if (panelUbicacion) panelUbicacion.style.display = 'none';
+        if (panelEvento) panelEvento.style.display = 'block';
+        if (btnGuardarSector) btnGuardarSector.style.display = 'none';
+        if (btnGuardarAct) btnGuardarAct.style.display = 'inline-flex';
+        if (titulo) titulo.textContent = 'Registrar Evento Operativo en Relavera';
+        if (icono) icono.className = 'fa fa-truck text-success';
+    }
+}
+
 function abrirModalRegistroActividad(datosGeometria = {}) {
     const modal = document.getElementById('modal-registro-actividad');
     if (!modal) return;
 
     const lat = datosGeometria.lat || RELAVERA_CONFIG.center[0];
     const lng = datosGeometria.lng || RELAVERA_CONFIG.center[1];
-    
-    document.getElementById('form-act-lat').value = lat;
-    document.getElementById('form-act-lng').value = lng;
-    document.getElementById('form-act-area').value = datosGeometria.area_m2 || '0';
-    document.getElementById('form-act-longitud').value = datosGeometria.longitud_m || '0';
-    document.getElementById('form-act-fecha').value = new Date().toISOString().slice(0, 16);
-    document.getElementById('form-act-obs').value = '';
+    const areaM2 = parseFloat(datosGeometria.area_m2) || 0;
+    const hectareas = (areaM2 / 10000).toFixed(4);
+    const longitudM = datosGeometria.longitud_m || '0';
+
+    // 1. Inputs de Ubicación / Sector (finca_actividad)
+    const secLat = document.getElementById('form-sec-lat');
+    const secLng = document.getElementById('form-sec-lng');
+    const secHec = document.getElementById('form-sec-hec');
+    const secLon = document.getElementById('form-sec-longitud');
+    const secNom = document.getElementById('form-sec-nombre');
+    const secDir = document.getElementById('form-sec-dir');
+    if (secLat) secLat.value = lat;
+    if (secLng) secLng.value = lng;
+    if (secHec) secHec.value = hectareas;
+    if (secLon) secLon.value = longitudM;
+    if (secNom) secNom.value = '';
+    if (secDir) secDir.value = '';
+
+    // 2. Inputs de Evento Operativo (relavera_actividades)
+    const actLat = document.getElementById('form-act-lat');
+    const actLng = document.getElementById('form-act-lng');
+    const actArea = document.getElementById('form-act-area');
+    const actLon = document.getElementById('form-act-longitud');
+    const actFec = document.getElementById('form-act-fecha');
+    const actObs = document.getElementById('form-act-obs');
+    const actUbi = document.getElementById('form-act-ubicacion-nombre');
+    const actSecSel = document.getElementById('form-act-sector');
+
+    if (actLat) actLat.value = lat;
+    if (actLng) actLng.value = lng;
+    if (actArea) actArea.value = datosGeometria.area_m2 || '0';
+    if (actLon) actLon.value = longitudM;
+    if (actFec) actFec.value = new Date().toISOString().slice(0, 16);
+    if (actObs) actObs.value = '';
+
+    // Detección inteligente del Nombre de la Ubicación / Sector
+    let ubiDetectada = 'Frente Central de Descarga';
+    let sectorMatchId = '';
+
+    // 1) Si hay sectores registrados en finca_actividad, buscar el más cercano (< 90 metros)
+    if (Array.isArray(MapeoState.sectores) && MapeoState.sectores.length > 0) {
+        let minDist = 999999;
+        MapeoState.sectores.forEach(s => {
+            const d = Math.sqrt(Math.pow(s.lat - lat, 2) + Math.pow(s.lng - lng, 2));
+            if (d < minDist) {
+                minDist = d;
+                if (d < 0.0009) {
+                    ubiDetectada = s.nombre;
+                    sectorMatchId = s.id;
+                }
+            }
+        });
+    }
+
+    // 2) Si no hay sector cercano, consultar microzonas de relavera
+    if (!sectorMatchId && typeof RELAVERA_CONFIG !== 'undefined' && Array.isArray(RELAVERA_CONFIG.microzonas)) {
+        const pt = turf.point([lng, lat]);
+        RELAVERA_CONFIG.microzonas.forEach(z => {
+            try {
+                const poly = turf.polygon([z.coordenadas.map(p => [p[1], p[0]])]);
+                if (turf.booleanPointInPolygon(pt, poly)) {
+                    ubiDetectada = z.nombre.split('/')[0].trim();
+                }
+            } catch(e) {}
+        });
+    }
+
+    if (actUbi) actUbi.value = ubiDetectada;
+    if (actSecSel) actSecSel.value = sectorMatchId;
 
     MapeoState.geometriaTemporal = datosGeometria.geometria || null;
+    MapeoState.layerTemporal = datosGeometria.layerRef || null;
+
+    // Detección automática del modo según pestaña activa en el panel lateral (Actividades vs Sectores)
+    let modoPorPestana = 'ubicacion';
+    const tabActiva = document.querySelector('.sidebar-tab-btn.active');
+    if (tabActiva && tabActiva.dataset) {
+        if (tabActiva.dataset.tab === 'actividades') {
+            modoPorPestana = 'evento';
+        } else if (tabActiva.dataset.tab === 'sectores') {
+            modoPorPestana = 'ubicacion';
+        }
+    }
+
+    // Inicializar personalizador de pines según categoría/tipo o defaults
+    const catSel = document.getElementById('form-sec-categoria');
+    if (catSel) {
+        onCategoriaSectorChange(catSel);
+    } else {
+        seleccionarIconoPin('sec', 'fa-map-marker');
+        seleccionarColorPin('sec', '#8b5cf6');
+    }
+
+    const tipoSel = document.getElementById('form-act-tipo');
+    if (tipoSel) {
+        onTipoActividadChange(tipoSel);
+    } else {
+        seleccionarIconoPin('act', 'fa-truck');
+        seleccionarColorPin('act', '#10b981');
+    }
+    actualizarPreviewPin('sec');
+    actualizarPreviewPin('act');
+
+    const modoInicial = datosGeometria.modoPreferido || modoPorPestana;
+    setModoRegistro(modoInicial);
+
+    // Resetear contenedor de evidencias fotográficas
+    MapeoState.evidenciasTemporales = [];
+    const prevCont = document.getElementById('evidencias-preview-container');
+    if (prevCont) prevCont.innerHTML = '';
+
     modal.classList.add('active');
 }
 
-function cerrarModalActividad() {
+/**
+ * Limpia y retira del mapa cualquier capa o marcador temporal dibujado antes de guardar
+ */
+function limpiarLayerTemporal() {
+    if (MapeoState.layerTemporal) {
+        try {
+            if (MapeoState.overlayLayers && MapeoState.overlayLayers.vectores) {
+                MapeoState.overlayLayers.vectores.removeLayer(MapeoState.layerTemporal);
+            }
+            if (MapeoState.map && MapeoState.map.hasLayer(MapeoState.layerTemporal)) {
+                MapeoState.map.removeLayer(MapeoState.layerTemporal);
+            }
+        } catch (err) {
+            console.warn('Error al remover capa temporal:', err);
+        }
+        MapeoState.layerTemporal = null;
+    }
+    MapeoState.geometriaTemporal = null;
+}
+
+function cerrarModalActividad(esGuardado = false) {
     const modal = document.getElementById('modal-registro-actividad');
     if (modal) modal.classList.remove('active');
+
+    MapeoState.evidenciasTemporales = [];
+    const prevCont = document.getElementById('evidencias-preview-container');
+    if (prevCont) prevCont.innerHTML = '';
+
+    // Si se cancela o se cierra sin haber guardado, retirar del mapa el dibujo/marcador temporal
+    if (!esGuardado) {
+        limpiarLayerTemporal();
+    }
+}
+
+function guardarSectorFormulario() {
+    const nomInput = document.getElementById('form-sec-nombre');
+    const catInput = document.getElementById('form-sec-categoria');
+    const dirInput = document.getElementById('form-sec-dir');
+    const latInput = document.getElementById('form-sec-lat');
+    const lngInput = document.getElementById('form-sec-lng');
+    const hecInput = document.getElementById('form-sec-hec');
+    const lonInput = document.getElementById('form-sec-longitud');
+
+    const nombre = nomInput ? nomInput.value.trim() : '';
+    if (!nombre) {
+        alert('Por favor ingrese el Nombre de la Ubicación o Sector (ej. Edificio Administrativo, Sector A1, etc.)');
+        if (nomInput) nomInput.focus();
+        return;
+    }
+
+    const secIcono = document.getElementById('form-sec-icono') ? document.getElementById('form-sec-icono').value : 'fa-map-marker';
+    const secColor = document.getElementById('form-sec-color') ? document.getElementById('form-sec-color').value : '#8b5cf6';
+
+    const payload = {
+        nombre: nombre,
+        categoria: catInput ? catInput.value : 'Sector Operativo',
+        direccion: dirInput ? dirInput.value.trim() : '',
+        lat: parseFloat(latInput ? latInput.value : 0),
+        lng: parseFloat(lngInput ? lngInput.value : 0),
+        hectareas: parseFloat(hecInput ? hecInput.value : 0) || 0,
+        longitud_m: parseFloat(lonInput ? lonInput.value : 0) || 0,
+        icono: secIcono,
+        color: secColor,
+        geometria: MapeoState.geometriaTemporal
+    };
+
+    if (!navigator.onLine || (typeof OfflineManager !== 'undefined' && !OfflineManager.isOnline())) {
+        guardarEnBufferOffline('sector', payload);
+        MapeoState.sectores.unshift(payload);
+        limpiarLayerTemporal();
+        cerrarModalActividad(true);
+        renderSectoresMapa();
+        renderSectoresLista();
+        poblarSelectoresSectores();
+        mostrarToast(`Sector "${nombre}" guardado localmente (Modo Offline).`);
+        return;
+    }
+
+    fetch('../LOGICA/map_log_mapeo.php?action=guardar_sector', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            limpiarLayerTemporal();
+            cerrarModalActividad(true);
+            cargarSectores();
+            mostrarToast(`Sector / Ubicaci&oacute;n "${nombre}" guardado en finca_actividad.`);
+            const msgObj = {
+                type: 'SECTOR_CREADO',
+                id: res.id || (res.sector ? res.sector.id : null),
+                nombre: nombre,
+                categoria: payload.categoria,
+                direccion: payload.direccion,
+                lat: payload.lat,
+                lng: payload.lng,
+                icono: secIcono,
+                color: secColor
+            };
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage(msgObj, '*');
+            } else if (window.opener) {
+                window.opener.postMessage(msgObj, '*');
+            }
+        } else {
+            alert('Error: ' + res.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        guardarEnBufferOffline('sector', payload);
+        limpiarLayerTemporal();
+        cerrarModalActividad(true);
+        mostrarToast(`Sector "${nombre}" guardado localmente (modo offline).`);
+    });
+}
+
+function cargarSectores() {
+    fetch('../LOGICA/map_log_mapeo.php?action=get_sectores')
+        .then(r => r.json())
+        .then(res => {
+            if (res.success && Array.isArray(res.sectores)) {
+                MapeoState.sectores = res.sectores;
+                renderSectoresMapa();
+                renderSectoresLista();
+                poblarSelectoresSectores();
+            }
+        })
+        .catch(err => {
+            console.error('Error cargando sectores:', err);
+        });
+}
+
+function renderSectoresMapa() {
+    if (!MapeoState.overlayLayers.sectores) return;
+    MapeoState.overlayLayers.sectores.clearLayers();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const pModo = urlParams.get('modo');
+    const pSectorId = urlParams.get('sector_id');
+    const pLat = parseFloat(urlParams.get('lat'));
+    const pLng = parseFloat(urlParams.get('lng'));
+    const mostrarBotonAsignar = (pModo !== 'ver') && (window.parent !== window || window.opener);
+
+    MapeoState.sectores.forEach(sec => {
+        if (!sec.lat || !sec.lng) return;
+
+        const secIconRaw = sec.icono || 'fa-map-marker';
+        const secIcon = secIconRaw.indexOf('fa-') === 0 ? secIconRaw : `fa-${secIconRaw}`;
+        const secColor = sec.color || '#8b5cf6';
+
+        // Si tiene geometría poligonal o multilínea
+        if (sec.geometria && (sec.geometria.type === 'Polygon' || sec.geometria.type === 'MultiPolygon')) {
+            const poly = L.geoJSON(sec.geometria, {
+                style: {
+                    color: secColor,
+                    fillColor: secColor,
+                    fillOpacity: 0.3,
+                    weight: 2
+                }
+            });
+            poly.bindTooltip(`<b>${sec.nombre}</b>`, { permanent: false, direction: 'center' });
+            poly.bindPopup(`
+                <div style="font-family:'Segoe UI',sans-serif; min-width:200px;">
+                    <strong style="color:${secColor}; font-size:13px;"><i class="fa ${secIcon}"></i> ${sec.nombre}</strong><br>
+                    <span style="font-size:11px; color:#475569;">${sec.direccion || 'Sector registrado en finca_actividad'}</span><br>
+                    <hr style="margin:6px 0; border:0; border-top:1px solid #e2e8f0;">
+                    <b>&Aacute;rea:</b> ${sec.hectareas} ha<br>
+                    <b>Coordenadas:</b> ${parseFloat(sec.lat).toFixed(6)}, ${parseFloat(sec.lng).toFixed(6)}
+                    ${mostrarBotonAsignar ? `
+                        <div style="margin-top:8px; padding-top:6px; border-top:1px solid #e2e8f0;">
+                            <button type="button" class="btn btn-xs btn-success" style="width:100%; font-weight:600;" onclick="seleccionarSectorParaFormulario(${sec.id}, '${escape(sec.nombre)}', ${sec.lat}, ${sec.lng}, '${escape(sec.direccion || '')}')">
+                                <i class="fa fa-check"></i> Asignar a Labores
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `);
+            MapeoState.overlayLayers.sectores.addLayer(poly);
+            sec._poly = poly;
+        }
+
+        // Marcador del Sector / Ubicación con Badge Inteligente y Conteo de Eventos
+        var evts = obtenerActividadesDeSector(sec);
+        var numEventos = evts.length;
+        var hasAlert = evts.some(function(e) { return e.tipo === 'reporte_alerta' || e.estado === 'Alerta Crítica'; });
+
+        var badgeCountHtml = numEventos > 0
+            ? '<span class="sec-count-badge">' + numEventos + (numEventos === 1 ? ' evento' : ' eventos') + '</span>'
+            : '<span class="sec-count-badge" style="background:#64748b;">0</span>';
+
+        var pillHtml = 
+            '<div class="sector-badge-pill ' + (hasAlert ? 'has-alert' : '') + '" style="border-color:' + secColor + ';" title="Clic para enfocar ' + sec.nombre + ' y ver ' + numEventos + ' eventos">' +
+                '<span class="sec-icon" style="background:' + secColor + ';"><i class="fa ' + secIcon + '"></i></span>' +
+                '<span class="sec-nombre">' + sec.nombre + '</span>' +
+                badgeCountHtml +
+            '</div>';
+
+        var icon = L.divIcon({
+            html: pillHtml,
+            className: 'sector-badge-container',
+            iconSize: null,
+            iconAnchor: [60, 18],
+            popupAnchor: [0, -18]
+        });
+        var marker = L.marker([sec.lat, sec.lng], { icon: icon });
+        marker.on('click', function() {
+            enfocarSector(sec.id);
+        });
+        marker.bindTooltip('<b>' + sec.nombre + '</b> (' + numEventos + ' eventos)', { permanent: false, direction: 'top' });
+        marker.bindPopup(`
+            <div style="font-family:'Segoe UI',sans-serif; min-width:210px;">
+                <div style="font-weight:700; color:${secColor}; font-size:14px; margin-bottom:4px;">
+                    <i class="fa ${secIcon}"></i> ${sec.nombre}
+                </div>
+                <div style="font-size:12px; color:#334155; line-height:1.4;">
+                    <b>Referencia:</b> ${sec.direccion || 'Ubicaci&oacute;n f&iacute;sica permanente'}<br>
+                    <b>&Aacute;rea:</b> ${sec.hectareas || '0'} ha<br>
+                    <b>Eventos Operativos:</b> <span class="badge-act success">${numEventos} registrados</span><br>
+                    <b>Lat, Lng:</b> ${parseFloat(sec.lat).toFixed(6)}, ${parseFloat(sec.lng).toFixed(6)}<br>
+                    <span style="display:inline-block; margin-top:4px; padding:2px 6px; background:#f8fafc; border:1px solid #e2e8f0; color:${secColor}; border-radius:4px; font-size:10px; font-weight:700;">
+                        C&oacute;digo BD: ${sec.id}
+                    </span>
+                    <div style="margin-top:8px; padding-top:6px; border-top:1px solid #e2e8f0; display:flex; gap:6px;">
+                        <button type="button" class="btn btn-xs btn-primary" style="flex:1; font-weight:600;" onclick="enfocarSector(${sec.id})">
+                            <i class="fa fa-crosshairs"></i> Enfocar Eventos
+                        </button>
+                        ${mostrarBotonAsignar ? `
+                            <button type="button" class="btn btn-xs btn-success" style="flex:1; font-weight:600;" onclick="seleccionarSectorParaFormulario(${sec.id}, '${escape(sec.nombre)}', ${sec.lat}, ${sec.lng}, '${escape(sec.direccion || '')}')">
+                                <i class="fa fa-check"></i> Asignar
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `);
+        MapeoState.overlayLayers.sectores.addLayer(marker);
+        sec._marker = marker;
+    });
+
+    if (pModo === 'ver') {
+        enfocarYMostrarSector(pSectorId, pLat, pLng);
+    }
+}
+
+function enfocarYMostrarSector(secId, lat, lng) {
+    if (!Array.isArray(MapeoState.sectores)) return;
+    let target = null;
+    if (secId) {
+        target = MapeoState.sectores.find(s => String(s.id) === String(secId));
+    }
+    if (!target && !isNaN(lat) && !isNaN(lng)) {
+        target = MapeoState.sectores.find(s => {
+            return Math.abs(parseFloat(s.lat) - parseFloat(lat)) < 0.0003 &&
+                   Math.abs(parseFloat(s.lng) - parseFloat(lng)) < 0.0003;
+        });
+    }
+
+    if (target && target._marker) {
+        MapeoState.map.setView([parseFloat(target.lat), parseFloat(target.lng)], 20);
+        setTimeout(() => {
+            target._marker.openPopup();
+        }, 300);
+    } else if (!isNaN(lat) && !isNaN(lng)) {
+        const secNombre = target ? target.nombre : 'Sector Georreferenciado';
+        const secDir = target ? target.direccion : 'Ubicaci&oacute;n f&iacute;sica permanente';
+        const secHec = target ? (target.hectareas || '0') : '0';
+        const secCod = target ? target.id : (secId || '');
+        const secColor = target ? (target.color || '#8b5cf6') : '#8b5cf6';
+        const secIcon = target ? (target.icono || 'fa-map-marker') : 'fa-map-marker';
+
+        const popupContent = `
+            <div style="font-family:'Segoe UI',sans-serif; min-width:210px;">
+                <div style="font-weight:700; color:${secColor}; font-size:14px; margin-bottom:4px;">
+                    <i class="fa ${secIcon}"></i> ${secNombre}
+                </div>
+                <div style="font-size:12px; color:#334155; line-height:1.4;">
+                    <b>Referencia:</b> ${secDir || 'Ubicaci&oacute;n f&iacute;sica permanente'}<br>
+                    <b>&Aacute;rea:</b> ${secHec} ha<br>
+                    <b>Lat, Lng:</b> ${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}<br>
+                    ${secCod ? `
+                        <span style="display:inline-block; margin-top:4px; padding:2px 6px; background:#f8fafc; border:1px solid #e2e8f0; color:${secColor}; border-radius:4px; font-size:10px; font-weight:700;">
+                            C&oacute;digo BD: ${secCod}
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        MapeoState.map.setView([lat, lng], 20);
+        setTimeout(() => {
+            L.popup()
+                .setLatLng([lat, lng])
+                .setContent(popupContent)
+                .openOn(MapeoState.map);
+        }, 300);
+    }
+}
+
+function renderSectoresLista() {
+    const cont = document.getElementById('lista-sectores-container');
+    const badgeCount = document.getElementById('total-sectores-count');
+    if (badgeCount) badgeCount.textContent = MapeoState.sectores.length;
+    if (!cont) return;
+
+    if (MapeoState.sectores.length === 0) {
+        cont.innerHTML = `
+            <div style="text-align:center; padding:25px 10px; color:#94a3b8;">
+                <i class="fa fa-map-marker" style="font-size:28px; margin-bottom:8px;"></i>
+                <p style="font-size:12px; margin:0;">No hay sectores registrados aún.</p>
+                <span style="font-size:11px; color:#cbd5e1;">Coloca un punto en el mapa y elígelo como "Punto de Referencia / Sector" para crearlo.</span>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+    MapeoState.sectores.forEach(sec => {
+        const secIconRaw = sec.icono || 'fa-map-marker';
+        const secIcon = secIconRaw.indexOf('fa-') === 0 ? secIconRaw : `fa-${secIconRaw}`;
+        const secColor = sec.color || '#8b5cf6';
+        const evts = obtenerActividadesDeSector(sec);
+        html += `
+            <div class="actividad-card" style="border-left: 4px solid ${secColor}; cursor:pointer;" onclick="enfocarSector(${sec.id})">
+                <div class="act-card-header">
+                    <span class="act-card-title" style="color:${secColor};"><i class="fa ${secIcon}"></i> ${sec.nombre}</span>
+                    <span style="font-size:10px; background:${secColor}; color:#fff; padding:2px 7px; border-radius:10px; font-weight:700;">${evts.length} evts</span>
+                </div>
+                <div class="act-card-body">
+                    <span style="color:#475569;">${sec.direccion || 'Sin referencia adicional'}</span><br>
+                    <span style="font-size:11px; color:#64748b;">Área: <b>${sec.hectareas} ha</b></span>
+                </div>
+                <div class="act-card-meta">
+                    <span><i class="fa fa-crosshairs"></i> ${parseFloat(sec.lat).toFixed(4)}, ${parseFloat(sec.lng).toFixed(4)}</span>
+                    <button class="btn btn-xs" style="background:${secColor}; color:#fff; border:none; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600;">
+                        <i class="fa fa-crosshairs"></i> Enfocar
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    cont.innerHTML = html;
+}
+
+function centrarSector(lat, lng) {
+    if (MapeoState.map && lat && lng) {
+        MapeoState.map.setView([lat, lng], 19, { animate: true });
+    }
+}
+
+function poblarSelectoresSectores() {
+    const sel = document.getElementById('form-act-sector');
+    if (!sel) return;
+
+    sel.innerHTML = '<option value="">(Sin sector específico / Punto libre)</option>';
+    MapeoState.sectores.forEach(sec => {
+        const opt = document.createElement('option');
+        opt.value = sec.id;
+        opt.textContent = `${sec.nombre}${sec.direccion ? ' - ' + sec.direccion : ''}`;
+        sel.appendChild(opt);
+    });
+}
+
+function onSectorSelectChange(sel) {
+    const ubiInput = document.getElementById('form-act-ubicacion-nombre');
+    if (!ubiInput || !sel) return;
+    if (sel.selectedIndex > 0) {
+        const fullText = sel.options[sel.selectedIndex].text;
+        const nombreSector = fullText.split(' - ')[0].trim();
+        ubiInput.value = nombreSector;
+    }
 }
 
 function guardarActividadFormulario() {
     const tipoSelect = document.getElementById('form-act-tipo');
     const volquetaSelect = document.getElementById('form-act-volqueta');
-    const choferInput = document.getElementById('form-act-chofer');
+    const choferSelect = document.getElementById('form-act-chofer');
     const estadoSelect = document.getElementById('form-act-estado');
+    const sectorSelect = document.getElementById('form-act-sector');
+    const ubiInput = document.getElementById('form-act-ubicacion-nombre');
+
+    const ubicacionNombre = ubiInput ? ubiInput.value.trim() : '';
+    if (!ubicacionNombre) {
+        alert('Por favor ingrese el Nombre de la Ubicación / Sector del evento.');
+        if (ubiInput) ubiInput.focus();
+        return;
+    }
 
     const tipoVal = tipoSelect.value;
     const tipoLabel = tipoSelect.options[tipoSelect.selectedIndex].text;
-    const volquetaVal = volquetaSelect.value;
-    const choferVal = choferInput.value || 'Manuel Carrión';
+
+    // Obtener datos del vehículo / maquinaria seleccionado
+    const selVolOpt = volquetaSelect.options[volquetaSelect.selectedIndex];
+    const volquetaVal = selVolOpt && selVolOpt.dataset.codigo 
+        ? `${selVolOpt.dataset.codigo} (${selVolOpt.dataset.placa})` 
+        : (volquetaSelect.value || 'VOL-01');
+    const placaVal = selVolOpt && selVolOpt.dataset.placa 
+        ? selVolOpt.dataset.placa 
+        : (volquetaSelect.value || 'N/A');
+
+    // Obtener datos del chofer / operador seleccionado
+    const selChoOpt = choferSelect.options[choferSelect.selectedIndex];
+    const choferVal = selChoOpt && selChoOpt.value 
+        ? selChoOpt.value 
+        : (choferSelect.value || 'Operador en Campo');
+
+    // Sector asociado si se seleccionó uno
+    const fncCodVal = sectorSelect && sectorSelect.value ? parseInt(sectorSelect.value) : null;
+
     const lat = parseFloat(document.getElementById('form-act-lat').value);
     const lng = parseFloat(document.getElementById('form-act-lng').value);
     const volumen = parseFloat(document.getElementById('form-act-volumen').value) || 0;
@@ -1018,12 +2183,17 @@ function guardarActividadFormulario() {
     const estado = estadoSelect.value;
     const badge = estado === 'Completada' ? 'success' : (estado === 'En Progreso' ? 'warning' : 'info');
 
+    const actIcono = document.getElementById('form-act-icono') ? document.getElementById('form-act-icono').value : 'fa-truck';
+    const actColor = document.getElementById('form-act-color') ? document.getElementById('form-act-color').value : '#10b981';
+
     const payload = {
         id: 'ACT-' + Date.now(),
         tipo: tipoVal,
         tipo_label: tipoLabel,
+        fnc_cod: fncCodVal,
+        ubicacion_nombre: ubicacionNombre,
         volqueta_num: volquetaVal,
-        placa: 'OBA-7821',
+        placa: placaVal,
         chofer: choferVal,
         lat: lat,
         lng: lng,
@@ -1034,13 +2204,17 @@ function guardarActividadFormulario() {
         observaciones: obs,
         estado: estado,
         estado_badge: badge,
-        geometria: MapeoState.geometriaTemporal
+        icono: actIcono,
+        color: actColor,
+        geometria: MapeoState.geometriaTemporal,
+        evidencias: Array.isArray(MapeoState.evidenciasTemporales) ? [...MapeoState.evidenciasTemporales] : []
     };
 
     if (!navigator.onLine) {
         guardarEnBufferOffline('actividad', payload);
         MapeoState.actividades.unshift(payload);
-        cerrarModalActividad();
+        limpiarLayerTemporal();
+        cerrarModalActividad(true);
         aplicarFiltrosActividades();
         mostrarToast('Actividad guardada en modo offline.');
         return;
@@ -1054,7 +2228,8 @@ function guardarActividadFormulario() {
     .then(r => r.json())
     .then(res => {
         if (res.success) {
-            cerrarModalActividad();
+            limpiarLayerTemporal();
+            cerrarModalActividad(true);
             cargarActividades();
             mostrarToast('Actividad registrada correctamente en el mapa.');
         } else {
@@ -1063,7 +2238,8 @@ function guardarActividadFormulario() {
     })
     .catch(() => {
         guardarEnBufferOffline('actividad', payload);
-        cerrarModalActividad();
+        limpiarLayerTemporal();
+        cerrarModalActividad(true);
         mostrarToast('Red inestable: actividad guardada en caché local.');
     });
 }
@@ -1623,24 +2799,74 @@ function cargarFlota() {
     fetch('../LOGICA/map_log_mapeo.php?action=get_flota')
         .then(r => r.json())
         .then(res => {
-            if (res.success && Array.isArray(res.flota)) {
-                MapeoState.flota = res.flota;
+            if (res.success) {
+                MapeoState.flota = Array.isArray(res.flota) ? res.flota : [];
+                MapeoState.vehiculos = Array.isArray(res.vehiculos) ? res.vehiculos : MapeoState.flota;
+                MapeoState.choferes = Array.isArray(res.choferes) ? res.choferes : [];
                 poblarSelectoresFlota();
             }
+        })
+        .catch(err => {
+            console.warn('Error al cargar flota desde BD:', err);
         });
 }
 
 function poblarSelectoresFlota() {
-    const sel = document.getElementById('form-act-volqueta');
-    if (!sel) return;
+    const selVol = document.getElementById('form-act-volqueta');
+    const selCho = document.getElementById('form-act-chofer');
 
-    sel.innerHTML = '';
-    MapeoState.flota.forEach(v => {
-        const opt = document.createElement('option');
-        opt.value = `${v.codigo} (${v.placa})`;
-        opt.textContent = `${v.codigo} - ${v.placa} - ${v.chofer}`;
-        sel.appendChild(opt);
-    });
+    // 1. Poblar Volquetas / Maquinaria
+    if (selVol && Array.isArray(MapeoState.vehiculos)) {
+        selVol.innerHTML = '<option value="">-- Seleccione Maquinaria / Volqueta --</option>';
+        MapeoState.vehiculos.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.placa || v.codigo;
+            opt.dataset.codigo = v.codigo;
+            opt.dataset.placa = v.placa;
+            opt.dataset.capacidad = v.capacidad_m3 || 16.0;
+            opt.dataset.marca = v.marca || '';
+            const descMarca = v.marca && v.marca !== 'Volqueta / Maquinaria' ? ` (${v.marca})` : '';
+            opt.textContent = `${v.codigo} - Placa: ${v.placa}${descMarca}`;
+            selVol.appendChild(opt);
+        });
+
+        // Evento cambio de volqueta para actualizar cubicaje por defecto
+        selVol.onchange = function() {
+            const selectedOpt = selVol.options[selVol.selectedIndex];
+            if (selectedOpt && selectedOpt.dataset.capacidad) {
+                const volInput = document.getElementById('form-act-volumen');
+                if (volInput && (!volInput.value || volInput.value === '16.0' || volInput.value === '0')) {
+                    volInput.value = selectedOpt.dataset.capacidad;
+                }
+            }
+        };
+    }
+
+    // 2. Poblar Choferes / Operadores
+    if (selCho && Array.isArray(MapeoState.choferes)) {
+        selCho.innerHTML = '<option value="">-- Seleccione Chofer / Operador --</option>';
+        MapeoState.choferes.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.nombre;
+            opt.dataset.codigo = c.codigo;
+            opt.dataset.cedula = c.cedula || '';
+            const descCed = c.cedula ? ` (CI: ${c.cedula})` : '';
+            opt.textContent = `${c.nombre}${descCed}`;
+            selCho.appendChild(opt);
+        });
+    }
+
+    // 3. Sincronizar también selector de Playback histórico
+    const pbSel = document.getElementById('playback-vehicle-select');
+    if (pbSel && Array.isArray(MapeoState.vehiculos) && MapeoState.vehiculos.length > 0) {
+        pbSel.innerHTML = '';
+        MapeoState.vehiculos.slice(0, 30).forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.codigo;
+            opt.textContent = `${v.codigo} (${v.placa})${v.marca ? ' - ' + v.marca : ''}`;
+            pbSel.appendChild(opt);
+        });
+    }
 }
 
 function toggleLayerGroup(layerName, isChecked) {
@@ -1664,6 +2890,25 @@ function initEventHandlers() {
             if (pane) pane.classList.add('active');
         });
     });
+
+    // Cierre seguro con tecla Escape y clic en el fondo del modal
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+            const modal = document.getElementById('modal-registro-actividad');
+            if (modal && modal.classList.contains('active')) {
+                cerrarModalActividad(false);
+            }
+        }
+    });
+
+    const modalReg = document.getElementById('modal-registro-actividad');
+    if (modalReg) {
+        modalReg.addEventListener('click', e => {
+            if (e.target === modalReg) {
+                cerrarModalActividad(false);
+            }
+        });
+    }
 }
 
 function mostrarToast(msg) {
@@ -1687,12 +2932,135 @@ function mostrarToast(msg) {
         toast.style.transform = 'translateY(10px)';
     }, 3500);
 }
-
 function centrarRelavera() {
     MapeoState.map.setView(RELAVERA_CONFIG.center, 18, { animate: true });
 }
 
-function toggleSidebar() {
-    const sb = document.getElementById('sidebar-mapeo');
-    if (sb) sb.classList.toggle('collapsed');
+function activarTabSidebar(tabName) {
+    document.querySelectorAll('.sidebar-tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tabName);
+    });
+    document.querySelectorAll('.tab-pane').forEach(p => {
+        p.classList.toggle('active', p.id === `tab-pane-${tabName}`);
+    });
 }
+window.activarTabSidebar = activarTabSidebar;
+
+function toggleSidebar(forceState) {
+    const sb = document.getElementById('sidebar-mapeo');
+    const ws = document.getElementById('mapeo-workspace');
+    const sosBtn = document.getElementById('btn-sos-flotante') || document.querySelector('.floating-sos-btn');
+    if (!sb) return;
+    if (typeof forceState === 'boolean') {
+        sb.classList.toggle('collapsed', forceState);
+    } else {
+        sb.classList.toggle('collapsed');
+    }
+    const isCollapsed = sb.classList.contains('collapsed');
+    if (ws) ws.classList.toggle('sidebar-collapsed', isCollapsed);
+    if (sosBtn) {
+        sosBtn.style.right = isCollapsed ? '20px' : '400px';
+    }
+    setTimeout(() => {
+        if (MapeoState.map) {
+            MapeoState.map.invalidateSize();
+        }
+    }, 320);
+}
+window.toggleSidebar = toggleSidebar;
+
+function toggleGpsHud(forceState) {
+    const hud = document.getElementById('hud-gps-telemetria');
+    if (!hud) return;
+    if (typeof forceState === 'boolean') {
+        hud.classList.toggle('collapsed', forceState);
+    } else {
+        hud.classList.toggle('collapsed');
+    }
+}
+window.toggleGpsHud = toggleGpsHud;
+
+function toggleSosBtn(e) {
+    if (e) e.stopPropagation();
+    const btn = document.getElementById('btn-sos-flotante') || document.querySelector('.floating-sos-btn');
+    if (btn) btn.classList.toggle('collapsed');
+}
+window.toggleSosBtn = toggleSosBtn;
+
+function handleSosClick(e) {
+    if (e && e.target && e.target.closest('.btn-toggle-sos')) return;
+    abrirModalSOS();
+}
+window.handleSosClick = handleSosClick;
+
+/**
+ * Funciones de Enlace y Comunicación con el Módulo de Labores (ban_alt_labores_relavera.php)
+ */
+window.asignarPuntoAlFormulario = function(lat, lng) {
+    const msg = {
+        type: 'COORDENADA_CAPTURADA',
+        lat: parseFloat(lat),
+        lng: parseFloat(lng)
+    };
+    if (window.parent && window.parent !== window) {
+        window.parent.postMessage(msg, '*');
+    } else if (window.opener) {
+        window.opener.postMessage(msg, '*');
+        window.close();
+    } else {
+        alert(`Coordenadas capturadas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+    }
+};
+
+function sanitizarTexto(str) {
+    if (str === undefined || str === null) return '';
+    var txt = String(str);
+    if (txt.indexOf('%') !== -1) {
+        try {
+            txt = decodeURIComponent(txt);
+        } catch(e) {
+            try { txt = decodeURIComponent(escape(txt)); } catch(e2) {}
+        }
+    }
+    txt = txt
+        .replace(/\u00c3\u00a1/g, '\u00e1')
+        .replace(/\u00c3\u00a9/g, '\u00e9')
+        .replace(/\u00c3\u00ad/g, '\u00ed')
+        .replace(/\u00c3\u00b3/g, '\u00f3')
+        .replace(/\u00c3\u00ba/g, '\u00fa')
+        .replace(/\u00c3\u00b1/g, '\u00f1')
+        .replace(/\u00c3\u0081/g, '\u00c1')
+        .replace(/\u00c3\u0089/g, '\u00c9')
+        .replace(/\u00c3\u008d/g, '\u00cd')
+        .replace(/\u00c3\u0093/g, '\u00d3')
+        .replace(/\u00c3\u009a/g, '\u00da')
+        .replace(/\u00c3\u0091/g, '\u00d1')
+        .replace(/\u00dd/g, '\u00ed')
+        .replace(/\u00be/g, '\u00f3')
+        .replace(/&oacute;/gi, '\u00f3').replace(/&aacute;/gi, '\u00e1').replace(/&eacute;/gi, '\u00e9')
+        .replace(/&iacute;/gi, '\u00ed').replace(/&uacute;/gi, '\u00fa').replace(/&ntilde;/gi, '\u00f1')
+        .replace(/&Oacute;/gi, '\u00d3').replace(/&Aacute;/gi, '\u00c1').replace(/&Eacute;/gi, '\u00c9')
+        .replace(/&Iacute;/gi, '\u00cd').replace(/&Uacute;/gi, '\u00da').replace(/&Ntilde;/gi, '\u00d1');
+    return txt.replace(/<[^>]*>?/gm, '').trim();
+}
+
+window.seleccionarSectorParaFormulario = function(id, nombre, lat, lng, direccion) {
+    const nomLimpio = sanitizarTexto(nombre);
+    const dirLimpia = sanitizarTexto(direccion || '');
+    const msg = {
+        type: 'SECTOR_SELECCIONADO',
+        id: id,
+        nombre: nomLimpio,
+        direccion: dirLimpia,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng)
+    };
+    if (window.parent && window.parent !== window) {
+        window.parent.postMessage(msg, '*');
+    } else if (window.opener) {
+        window.opener.postMessage(msg, '*');
+        window.close();
+    } else {
+        alert(`Sector seleccionado: ${nomLimpio}`);
+    }
+};

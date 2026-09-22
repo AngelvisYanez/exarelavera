@@ -18,8 +18,13 @@ if (!function_exists('sentencias_dashboard')) {
 	function sentencias_dashboard($transaccion, $opciones = array())
 	{
 		$masterDb = '`exa`';
-		if (function_exists('aud_master_db')) {
-			$dbMaster = aud_master_db();
+		if (function_exists('aud_sql_db_dis')) {
+			$db = preg_replace('/[^a-zA-Z0-9_]/', '', (string)aud_sql_db_dis());
+			if ($db !== '' && $db !== 'exa_master') {
+				$masterDb = "`{$db}`";
+			}
+		} elseif (function_exists('aud_master_db')) {
+			$dbMaster = preg_replace('/[^a-zA-Z0-9_]/', '', (string)aud_master_db());
 			if ($dbMaster !== '' && $dbMaster !== 'exa_master') {
 				$masterDb = "`{$dbMaster}`";
 			}
@@ -46,10 +51,11 @@ if (!function_exists('sentencias_dashboard')) {
 				// Resumen global de eventos en rango para la empresa
 				return "SELECT 
 							COUNT(*) AS Total_Movimientos,
-							SUM(CASE WHEN l.Eve_Cod = 'I' THEN 1 ELSE 0 END) AS Total_Insert,
-							SUM(CASE WHEN l.Eve_Cod = 'U' THEN 1 ELSE 0 END) AS Total_Update,
-							SUM(CASE WHEN l.Eve_Cod = 'D' THEN 1 ELSE 0 END) AS Total_Delete
+							SUM(CASE WHEN ev.Eve_Ini = 'I' THEN 1 ELSE 0 END) AS Total_Insert,
+							SUM(CASE WHEN ev.Eve_Ini = 'U' THEN 1 ELSE 0 END) AS Total_Update,
+							SUM(CASE WHEN ev.Eve_Ini = 'D' THEN 1 ELSE 0 END) AS Total_Delete
 						FROM `auditoria`.`logs` l
+						LEFT JOIN `auditoria`.`eventos` ev ON l.Eve_Cod = ev.Eve_Cod
 						WHERE l.Emp_Cod = {$emp}
 						  AND l.Log_Fec >= '{$ini}' AND l.Log_Fec <= '{$fin}'";
 
@@ -122,10 +128,11 @@ if (!function_exists('sentencias_dashboard')) {
 							COALESCE(p.Prs_Ape, '') AS UsuarioApellido,
 							COALESCE(p.Prs_Ced, CONCAT('ID ', l.Usu_Cod)) AS Login,
 							COUNT(*) AS Total_Operaciones,
-							SUM(CASE WHEN l.Eve_Cod = 'D' THEN 1 ELSE 0 END) AS Total_Eliminaciones,
-							SUM(CASE WHEN l.Eve_Cod = 'U' THEN 1 ELSE 0 END) AS Total_Modificaciones,
-							SUM(CASE WHEN l.Eve_Cod = 'I' THEN 1 ELSE 0 END) AS Total_Inserciones
+							SUM(CASE WHEN ev.Eve_Ini = 'D' THEN 1 ELSE 0 END) AS Total_Eliminaciones,
+							SUM(CASE WHEN ev.Eve_Ini = 'U' THEN 1 ELSE 0 END) AS Total_Modificaciones,
+							SUM(CASE WHEN ev.Eve_Ini = 'I' THEN 1 ELSE 0 END) AS Total_Inserciones
 						FROM `auditoria`.`logs` l
+						LEFT JOIN `auditoria`.`eventos` ev ON l.Eve_Cod = ev.Eve_Cod
 						LEFT JOIN {$masterDb}.`usuarios` u ON l.Usu_Cod = u.Usu_Cod
 						LEFT JOIN {$masterDb}.`persona` p ON u.Prs_Cod = p.Prs_Cod
 						WHERE l.Emp_Cod = {$emp}
@@ -134,10 +141,50 @@ if (!function_exists('sentencias_dashboard')) {
 						ORDER BY Total_Operaciones DESC
 						LIMIT {$lim}";
 
+			case 7:
+				// Top plantas de beneficio con actividad en el periodo.
+				// El valor de Pla_Cod se extrae del par Log_Cam/Log_Val por posicion.
+				$posPla = "LENGTH(SUBSTRING_INDEX(l.`Log_Cam`, 'Pla_Cod', 1)) - LENGTH(REPLACE(SUBSTRING_INDEX(l.`Log_Cam`, 'Pla_Cod', 1), ',', '')) + 1";
+				$valPla = "CAST(REPLACE(TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(l.`Log_Val`, ',', {$posPla}), ',', -1)), '~', '') AS UNSIGNED)";
+				return "SELECT
+							{$valPla} AS Pla_Cod,
+							COALESCE(mp.`Pla_Nom`, CONCAT('Planta #', {$valPla})) AS Planta,
+							COUNT(*) AS Total,
+							COUNT(DISTINCT l.Usu_Cod) AS Usuarios,
+							SUM(CASE WHEN ev.Eve_Ini = 'I' THEN 1 ELSE 0 END) AS Inserts,
+							SUM(CASE WHEN ev.Eve_Ini = 'U' THEN 1 ELSE 0 END) AS Updates,
+							SUM(CASE WHEN ev.Eve_Ini = 'D' THEN 1 ELSE 0 END) AS Deletes
+						FROM `auditoria`.`logs` l
+						LEFT JOIN `auditoria`.`eventos` ev ON l.Eve_Cod = ev.Eve_Cod
+						LEFT JOIN {$masterDb}.`manifiesto_plantas` mp ON mp.`Pla_Cod` = {$valPla}
+						WHERE l.Emp_Cod = {$emp}
+						  AND l.Log_Fec >= '{$ini}' AND l.Log_Fec <= '{$fin}'
+						  AND l.`Log_Cam` LIKE '%Pla_Cod%'
+						  AND {$valPla} > 0
+						GROUP BY Pla_Cod, Planta
+						ORDER BY Total DESC
+						LIMIT {$lim}";
+
+			case 8:
+				// Comportamiento diario por usuario (para curva apilada de ultimos dias)
+				return "SELECT
+							l.Usu_Cod,
+							COALESCE(p.`Prs_Nom`, CONCAT('Usuario #', l.Usu_Cod)) AS UsuarioNombre,
+							COALESCE(p.`Prs_Ape`, '') AS UsuarioApellido,
+							DATE(l.Log_Fec) AS Dia,
+							COUNT(*) AS Total
+						FROM `auditoria`.`logs` l
+						LEFT JOIN {$masterDb}.`usuarios` u ON l.Usu_Cod = u.`Usu_Cod`
+						LEFT JOIN {$masterDb}.`persona` p ON u.`Prs_Cod` = p.`Prs_Cod`
+						WHERE l.Emp_Cod = {$emp}
+						  AND l.Log_Fec >= '{$ini}' AND l.Log_Fec <= '{$fin}'
+						GROUP BY l.Usu_Cod, UsuarioNombre, UsuarioApellido, Dia
+						ORDER BY Dia ASC, Total DESC";
+
 			case 9:
 				// Datos de la empresa
 				return "SELECT Emp_Cod, Emp_Nom, Emp_Ruc 
-						FROM {$masterDb}.`empresa` 
+						FROM {$masterDb}.`empresas` 
 						WHERE Emp_Cod = {$emp} 
 						LIMIT 1";
 

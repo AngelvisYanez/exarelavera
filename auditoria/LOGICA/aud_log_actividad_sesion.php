@@ -67,6 +67,32 @@ if (!function_exists('aud_ses_asegurar_esquema')) {
 			return;
 		}
 
+		// La tabla sesion puede no existir (importaciones previas del dump
+		// antiguo o instalaciones nuevas). Crearla de forma idempotente con el
+		// esquema completo que el resto del modulo espera; las sentencias
+		// CREATE/ALTER siguientes son no-op cuando ya existe.
+		@mysqli_query($con, "CREATE TABLE IF NOT EXISTS `auditoria`.`sesion` (
+			`Ses_Cod` int(11) NOT NULL,
+			`Usu_Cod` int(11) NOT NULL,
+			`Ses_Int` datetime DEFAULT NULL,
+			`Ses_Out` datetime DEFAULT NULL,
+			`Emp_Cod` int(11) DEFAULT NULL,
+			`Suc_Cod` int(11) DEFAULT NULL,
+			`Ses_Ip` varchar(45) DEFAULT NULL,
+			`Ses_Ubi` varchar(120) DEFAULT NULL,
+			`Ses_Nav` varchar(255) DEFAULT NULL,
+			`Ses_Ult_Act` datetime DEFAULT NULL,
+			`Ses_Min_Uso` int(11) NOT NULL DEFAULT 0,
+			`Ses_Est` char(1) NOT NULL DEFAULT 'A',
+			`Ses_Token` varchar(64) DEFAULT NULL,
+			PRIMARY KEY (`Ses_Cod`),
+			KEY `Usu_Cod` (`Usu_Cod`),
+			KEY `idx_ses_est_act` (`Ses_Est`, `Ses_Ult_Act`),
+			KEY `idx_ses_emp` (`Emp_Cod`),
+			KEY `idx_ses_usu` (`Usu_Cod`),
+			KEY `idx_ses_int` (`Ses_Int`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 		$columnasActuales = array();
 		$r = @mysqli_query($con, sentencias_actividad_sesion(1, array()));
 		if ($r) {
@@ -130,6 +156,12 @@ if (!function_exists('aud_ses_asegurar_esquema')) {
 		}
 		if (empty($indicesActuales['idx_ses_emp'])) {
 			@mysqli_query($con, "ALTER TABLE `auditoria`.`sesion` ADD INDEX `idx_ses_emp` (`Emp_Cod`)");
+		}
+		if (empty($indicesActuales['idx_ses_usu'])) {
+			@mysqli_query($con, "ALTER TABLE `auditoria`.`sesion` ADD INDEX `idx_ses_usu` (`Usu_Cod`)");
+		}
+		if (empty($indicesActuales['idx_ses_int'])) {
+			@mysqli_query($con, "ALTER TABLE `auditoria`.`sesion` ADD INDEX `idx_ses_int` (`Ses_Int`)");
 		}
 
 		$esquemaListo = true;
@@ -300,7 +332,7 @@ if (!function_exists('aud_ses_detectar_ubicacion')) {
 						}
 					}
 				}
-			} catch (Throwable $e) {
+			} catch (\Exception $e) {
 				// Silencioso
 			}
 		}
@@ -333,41 +365,53 @@ if (!function_exists('aud_ses_registrar_inicio')) {
 
 		aud_ses_asegurar_esquema($con);
 
-		// Obtener siguiente Ses_Cod
-		$sqlNext = "SELECT (IFNULL(MAX(`Ses_Cod`), 0) + 1) AS `next_cod` FROM `auditoria`.`sesion`";
-		$rNext = @mysqli_query($con, $sqlNext);
-		$nextCod = 1;
-		if ($rNext) {
-			$rowNext = mysqli_fetch_assoc($rNext);
-			$nextCod = !empty($rowNext['next_cod']) ? (int)$rowNext['next_cod'] : 1;
-			mysqli_free_result($rNext);
-		}
-
 		$ahora = date('Y-m-d H:i:s');
 		$ip = aud_ses_detectar_ip();
 		$ubi = aud_ses_detectar_ubicacion($ip);
 		$nav = aud_ses_detectar_navegador();
 		$token = session_id() !== '' ? session_id() : md5(uniqid((string)$usuCod, true));
 
-		$sqlIns = sentencias_actividad_sesion(3, array(
-			$nextCod,
-			(int)$usuCod,
-			$ahora,
-			(int)$empCod,
-			(int)$sucCod,
-			$ip,
-			$ubi,
-			$nav,
-			$token
-		));
+		// Ses_Cod se calcula como MAX+1 sin AUTO_INCREMENT ni cerrojo. Dos inicios
+		// de sesion concurrentes pueden obtener el mismo codigo y el INSERT fallar
+		// en silencio (@). Reintentar en caso de clave duplicada (ERRNO 1062) y
+		// devolver 0 solo si despues de varios intentos no se pudo insertar, para
+		// que el heartbeat nunca actue sobre un Ses_Cod que no tiene fila propia.
+		$codInsertado = 0;
+		for ($intento = 0; $intento < 5; $intento++) {
+			$sqlNext = "SELECT (IFNULL(MAX(`Ses_Cod`), 0) + 1) AS `next_cod` FROM `auditoria`.`sesion`";
+			$rNext = @mysqli_query($con, $sqlNext);
+			$nextCod = 1;
+			if ($rNext) {
+				$rowNext = mysqli_fetch_assoc($rNext);
+				$nextCod = !empty($rowNext['next_cod']) ? (int)$rowNext['next_cod'] : 1;
+				mysqli_free_result($rNext);
+			}
 
-		@mysqli_query($con, $sqlIns);
+			$sqlIns = sentencias_actividad_sesion(3, array(
+				$nextCod,
+				(int)$usuCod,
+				$ahora,
+				(int)$empCod,
+				(int)$sucCod,
+				$ip,
+				$ubi,
+				$nav,
+				$token
+			));
+
+			if (@mysqli_query($con, $sqlIns)) {
+				$codInsertado = $nextCod;
+				break;
+			}
+
+			// Posible colision de sesiones concurrentes: recalcular y reintentar.
+		}
 
 		if ($closeOnExit) {
 			@mysqli_close($con);
 		}
 
-		return $nextCod;
+		return $codInsertado;
 	}
 }
 
@@ -407,8 +451,12 @@ if (!function_exists('aud_ses_heartbeat_ping')) {
 		}
 
 		if (!$sesion) {
+			// La fila no existe o fue mal vinculada (p.ej. Ses_Cod de otro usuario).
+			// NO forzar logout: evita expulsiones involuntarias con cierre por
+			// inactividad desactivado. Solo las acciones explicitas del admin
+			// (forzada/cerrada) cierran la sesion del navegador.
 			if ($closeOnExit) @mysqli_close($con);
-			return array('success' => false, 'forzar_logout' => true, 'motivo' => 'no_existe', 'mensaje' => 'Sesion no encontrada.');
+			return array('success' => false, 'forzar_logout' => false, 'motivo' => 'no_existe', 'mensaje' => 'Sesion no encontrada.');
 		}
 
 		// Si fue forzada por el admin
@@ -502,6 +550,75 @@ if (!function_exists('aud_ses_cerrar_forzada')) {
 }
 
 /**
+ * Valida que una sesion pueda ser finalizada forzosamente por el Administrador.
+ *
+ * Evita: procesos sobre sesiones inexistentes, auto-desconexion del propio
+ * administrador, cerrar sesiones de otra empresa y cerrar sesiones que ya no
+ * estan activas (cerradas/expulsadas).
+ *
+ * @param int $sesTarget
+ * @param int $empSesion Empresa del administrador que ejecuta la accion.
+ * @param int $sesionActual Ses_Cod de la propia sesion del administrador.
+ * @param mysqli|null $con
+ * @return array {success, error, sesion}
+ */
+if (!function_exists('aud_ses_validar_cierre_forzado')) {
+	function aud_ses_validar_cierre_forzado($sesTarget, $empSesion = 0, $sesionActual = 0, $con = null)
+	{
+		$closeOnExit = false;
+		if (!$con) {
+			$dbConn = new Class_Log_Conexion_Actividad();
+			$con = $dbConn->conexion;
+			$closeOnExit = true;
+		}
+		if (!$con) {
+			return array('success' => false, 'error' => 'Sin conexion a base de datos');
+		}
+
+		aud_ses_asegurar_esquema($con);
+
+		$sesTarget = (int)$sesTarget;
+		if ($sesTarget <= 0) {
+			if ($closeOnExit) @mysqli_close($con);
+			return array('success' => false, 'error' => 'Codigo de sesion invalido');
+		}
+
+		$r = @mysqli_query($con, sentencias_actividad_sesion(12, array($sesTarget)));
+		$sesion = $r ? mysqli_fetch_assoc($r) : null;
+		if ($r) {
+			mysqli_free_result($r);
+		}
+
+		if (!$sesion) {
+			if ($closeOnExit) @mysqli_close($con);
+			return array('success' => false, 'error' => 'La sesion indicada no existe o fue eliminada.');
+		}
+
+		$estadoSes = isset($sesion['Ses_Est']) ? (string)$sesion['Ses_Est'] : '';
+		$empSesTarget = isset($sesion['Emp_Cod']) ? (int)$sesion['Emp_Cod'] : 0;
+
+		if ((int)$sesionActual > 0 && (int)$sesion['Ses_Cod'] === (int)$sesionActual) {
+			if ($closeOnExit) @mysqli_close($con);
+			return array('success' => false, 'error' => 'No puede finalizar su propia sesion desde el monitor.', 'sesion' => $sesion);
+		}
+
+		if ((int)$empSesion > 0 && $empSesTarget > 0 && $empSesTarget !== (int)$empSesion) {
+			if ($closeOnExit) @mysqli_close($con);
+			return array('success' => false, 'error' => 'No puede finalizar sesiones de otra empresa.', 'sesion' => $sesion);
+		}
+
+		if (!in_array($estadoSes, array('A', 'I'), true)) {
+			$estadoLbl = $estadoSes === 'F' ? 'expulsada por el Administrador' : ($estadoSes === 'C' ? 'cerrada' : $estadoSes);
+			if ($closeOnExit) @mysqli_close($con);
+			return array('success' => false, 'error' => 'La sesion ya no se encuentra activa (estado: ' . $estadoLbl . ').', 'sesion' => $sesion);
+		}
+
+		if ($closeOnExit) @mysqli_close($con);
+		return array('success' => true, 'error' => '', 'sesion' => $sesion);
+	}
+}
+
+/**
  * Lista la actividad de usuarios y calcula el estado semaforizado en tiempo real.
  *
  * @param int $empCod
@@ -514,8 +631,8 @@ if (!function_exists('aud_ses_cerrar_forzada')) {
  * @return array
  */
 if (!function_exists('aud_ses_listar_actividad')) {
-	function aud_ses_listar_actividad($empCod = 0, $estado = '', $rolCod = 0, $limite = 100, $con = null, $desde = '', $hasta = '')
-	{
+function aud_ses_listar_actividad($empCod = 0, $estado = '', $rolCod = 0, $limite = 100, $con = null, $desde = '', $hasta = '', $usuObservador = 0)
+{
 		$closeOnExit = false;
 		if (!$con) {
 			$dbConn = new Class_Log_Conexion_Actividad();
@@ -576,19 +693,57 @@ if (!function_exists('aud_ses_listar_actividad')) {
 				$row['BadgeTexto'] = $badgeTexto;
 				$row['NombreCompleto'] = $nombreCompleto;
 				$row['TiempoFormateado'] = $tiempoFormateado;
+				$row['MinutosInactivo'] = $minDesdeAct;
 
 				$items[] = $row;
 			}
 			mysqli_free_result($rList);
 		}
 
+		// Validaciones en tiempo real: sesiones activas por usuario (acceso multiple)
+		// y marcar la propia sesion del observador para impedir auto-desconexion.
+		$mapActivas = array();
+		$rAct = @mysqli_query($con, sentencias_actividad_sesion(13, array($empCod)));
+		if ($rAct) {
+			while ($ra = mysqli_fetch_assoc($rAct)) {
+				$mapActivas[(int)$ra['Usu_Cod']] = (int)$ra['Total_Activas'];
+			}
+			mysqli_free_result($rAct);
+		}
+
+		$usuariosMultiples = array();
+		foreach ($items as $idx => $it) {
+			$usu = isset($it['Usu_Cod']) ? (int)$it['Usu_Cod'] : 0;
+			$activas = isset($mapActivas[$usu]) ? $mapActivas[$usu] : 0;
+			if ($activas === 0 && isset($it['Ses_Est']) && $it['Ses_Est'] === 'A') {
+				$activas = 1;
+			}
+			$items[$idx]['sesiones_activas'] = $activas;
+			$items[$idx]['es_mi_sesion'] = ($usuObservador > 0 && $usu === $usuObservador);
+
+			if ($activas > 1 && isset($it['NombreCompleto'])) {
+				$usuariosMultiples[] = array(
+					'usu_cod' => $usu,
+					'nombre' => $it['NombreCompleto'],
+					'total' => $activas
+				);
+			}
+		}
+
 		// Consultar KPIs
 		$sqlKpis = sentencias_actividad_sesion(10, array($empCod));
 		$rKpi = @mysqli_query($con, $sqlKpis);
-		$kpis = $rKpi ? mysqli_fetch_assoc($rKpi) : array();
+		$kpisRaw = $rKpi ? mysqli_fetch_assoc($rKpi) : array();
 		if ($rKpi) {
 			mysqli_free_result($rKpi);
 		}
+		$kpis = array(
+			'en_linea' => !empty($kpisRaw['En_Linea']) ? (int)$kpisRaw['En_Linea'] : 0,
+			'ausentes' => !empty($kpisRaw['Ausentes']) ? (int)$kpisRaw['Ausentes'] : 0,
+			'total_hoy' => !empty($kpisRaw['Sesiones_Hoy']) ? (int)$kpisRaw['Sesiones_Hoy'] : 0,
+			'expulsados_hoy' => !empty($kpisRaw['Expulsados_Hoy']) ? (int)$kpisRaw['Expulsados_Hoy'] : 0,
+			'promedio_minutos' => !empty($kpisRaw['Promedio_Min_Uso']) ? (float)$kpisRaw['Promedio_Min_Uso'] : 0
+		);
 
 		// Consultar Top Usuarios
 		$sqlTop = sentencias_actividad_sesion(11, array($empCod));
@@ -610,7 +765,12 @@ if (!function_exists('aud_ses_listar_actividad')) {
 		return array(
 			'items' => $items,
 			'kpis' => $kpis,
-			'top_usuarios' => $topUsuarios
+			'top_usuarios' => $topUsuarios,
+			'validaciones' => array(
+				'total_sesiones_activas' => (int)array_sum($mapActivas),
+				'usuarios_con_multiples_sesiones' => $usuariosMultiples,
+				'sesion_actual' => (int)$usuObservador
+			)
 		);
 	}
 }
@@ -661,7 +821,9 @@ if (basename(isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 
 
 	if ($action === 'cerrar_forzada') {
 		$usuCod = isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
-		$esAdmin = aud_cfg_es_admin_sistemas($usuCod);
+		$obBD_con1 = class_exists('Class_Log_Datos_CfgMon') ? new Class_Log_Datos_CfgMon() : null;
+		$obBD_con2 = class_exists('Class_Log_Conexion_CfgMon') ? new Class_Log_Conexion_CfgMon() : null;
+		$esAdmin = $obBD_con1 && $obBD_con2 ? aud_cfg_es_admin_sistemas($obBD_con1, $obBD_con2, $usuCod) : false;
 		if (!$esAdmin) {
 			echo json_encode(array('success' => false, 'error' => 'Permiso denegado. Solo el Administrador de Sistemas puede forzar cierres de sesion.'));
 			exit;
@@ -673,8 +835,45 @@ if (basename(isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 
 			exit;
 		}
 
+		$empSesion = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
+		$sesionActual = isset($_SESSION['Ses_Ses_Cod']) ? (int)$_SESSION['Ses_Ses_Cod'] : 0;
+
+		$validacion = aud_ses_validar_cierre_forzado($sesTarget, $empSesion, $sesionActual, null);
+		if (!$validacion['success']) {
+			echo json_encode(array('success' => false, 'error' => $validacion['error']));
+			exit;
+		}
+
 		$ok = aud_ses_cerrar_forzada($sesTarget);
 		echo json_encode(array('success' => $ok));
+		exit;
+	}
+
+	if ($action === 'consultar_actividad') {
+		// El heartbeat solo ocurre cuando el monitor de usuarios esta abierto:
+		// refresca la propia sesion del observador para que figure como en linea.
+		$sesCod = isset($_SESSION['Ses_Ses_Cod']) ? (int)$_SESSION['Ses_Ses_Cod'] : 0;
+		$usuCod = isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
+		if ($sesCod > 0 && $usuCod > 0) {
+			aud_ses_heartbeat_ping($sesCod, $usuCod);
+		}
+
+		$empCod = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
+		$estado = isset($_GET['estado']) ? trim($_GET['estado']) : '';
+		$rolCod = isset($_GET['rol']) ? (int)$_GET['rol'] : 0;
+		$desde  = isset($_GET['from']) ? trim($_GET['from']) : (isset($_GET['desde']) ? trim($_GET['desde']) : '');
+		$hasta  = isset($_GET['to']) ? trim($_GET['to']) : (isset($_GET['hasta']) ? trim($_GET['hasta']) : '');
+
+		$datos = aud_ses_listar_actividad($empCod, $estado, $rolCod, 100, null, $desde, $hasta, $usuCod);
+		echo json_encode(array(
+			'success' => true,
+			'data' => array(
+				'sesiones' => isset($datos['items']) ? $datos['items'] : array(),
+				'kpis' => isset($datos['kpis']) ? $datos['kpis'] : array(),
+				'top_usuarios' => isset($datos['top_usuarios']) ? $datos['top_usuarios'] : array(),
+				'validaciones' => isset($datos['validaciones']) ? $datos['validaciones'] : array()
+			)
+		));
 		exit;
 	}
 
@@ -684,8 +883,9 @@ if (basename(isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 
 		$rolCod = isset($_GET['rol']) ? (int)$_GET['rol'] : 0;
 		$desde  = isset($_GET['desde']) ? trim($_GET['desde']) : '';
 		$hasta  = isset($_GET['hasta']) ? trim($_GET['hasta']) : '';
+		$usuObservador = isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
 
-		$datos = aud_ses_listar_actividad($empCod, $estado, $rolCod, 100, null, $desde, $hasta);
+		$datos = aud_ses_listar_actividad($empCod, $estado, $rolCod, 100, null, $desde, $hasta, $usuObservador);
 		echo json_encode(array('success' => true, 'data' => $datos));
 		exit;
 	}

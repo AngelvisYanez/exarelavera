@@ -1,75 +1,37 @@
-# Auditoría y Monitoreo en Exa Contable - RCET
+# Auditoría y Monitoreo en EXA
 
 ## Objetivo
 
-El módulo de auditoría registra la actividad de los usuarios sobre operaciones de base de datos (`INSERT`, `UPDATE`, `DELETE`) y sobre sesiones (inicio, cierre, error de login), y permite consultarla desde el monitor con filtros, detalle interpretable y exportación.
+El módulo de auditoría registra actividad de usuarios sobre operaciones de base de
+datos (`INSERT`, `UPDATE`, `DELETE`) y permite consultarla desde el monitor, controlar
+sesiones en tiempo real y generar reportes de gestión con envío por PDF, correo y WhatsApp.
 
-La captura se hace de forma centralizada desde `DATA/MysqlDatos.php` y la persistencia se escribe en la base `auditoria`, tabla `logs`.
-
----
-
-## 1) Componentes
-
-| Capa | Archivo | Función |
-|---|---|---|
-| Bootstrap | `Librerias/config.php/register_globals.php` | Carga `AuditQueue` en cada request |
-| Captura | `DATA/MysqlDatos.php`, `DATA/GestorErrores.php` | Hooks `captureBefore()` / `capture()` / `flush()` |
-| Cola diferida | `auditoria/LOGICA/aud_log_queue.php` | Encola en memoria y persiste tras responder |
-| Sesiones | `auditoria/LOGICA/aud_log_auditoria.php` | Login, logout, error de login (`auditoria.sesion`) |
-| Monitor | `auditoria/FRONT/aud_con_monitoreo_1.0.php` + `LOGICA/aud_log_monitoreo.php` + `LOGICA/aud_sql_monitoreo.php` | Consulta de actividad (jqGrid) |
-| Actividad en vivo / Sesiones | `auditoria/FRONT/aud_con_actividad_usuarios_1.0.php` + `LOGICA/aud_log_actividad_sesion.php` + `LOGICA/aud_log_config_monitoreo.php` | Usuarios en línea, auto-refresco, cierre forzado de sesión |
-| Dashboard comparativo | `auditoria/FRONT/aud_con_dashboard_comparativo_1.0.php` + `LOGICA/aud_log_dashboard.php` | Estadísticas Período A vs B (gráficas, KPIs, observaciones) |
-| Configuración | `auditoria/FRONT/aud_adm_config_monitoreo_1.0.php` + `LOGICA/aud_log_config_monitoreo.php` + `LOGICA/aud_sql_config_monitoreo.php` | Reglas por empresa (`auditoria.cfg_monitoreo`) |
-| Reportes PDF | `auditoria/LOGICA/aud_rep_monitoreo_pdf.php`, `aud_rep_comparativa_pdf.php` | Exportación formal del monitor y del dashboard comparativo |
-| Interpretación | `auditoria/LOGICA/aud_log_interpretar.php` | Lenguaje natural del detalle, resolución de nombres |
-| Validaciones JS | `auditoria/VALIDACIONES/aud_par_monitoreo.js`, `aud_par_config_monitoreo.js` | Grids y formularios |
-| BD | `db/auditoria.sql`, `db/auditoria_config_monitoreo.sql`, `db/auditoria_menu.sql`, `db/auditoria_local.sql` | Esquema, seed de menú |
-
-### Convención de encabezados (UI)
-
-Todas las pantallas del módulo de auditoría muestran **un solo título**, sobre el fondo azul del `exa-header`. No se usa la barra gris de título (`BarraTitulo`) en los front-ends del módulo; el título único del encabezado desplaza a la antigua barra duplicada.
+La captura se hace de forma centralizada desde `DATA/MysqlDatos.php` y la persistencia se
+escribe en la base `auditoria` (tablas `logs`, `cfg_monitoreo`, `sesion`).
 
 ---
 
-## 2) Requisitos para que funcione
+## 1) Requisitos para que funcione
 
 - Tener accesible la base `auditoria`.
-- Tener accesible la **base maestra** definida en `DB_DATABASE` (por defecto `exa_master`): es donde viven los catálogos `usuarios`, `persona`, `empresas`, `sucursal`, `procesos` y `organizado`. El login ya consulta estos catálogos ahí.
-- Incluir `Librerias/config.php/register_globals.php` en el flujo normal del sistema (carga `AuditQueue`).
-
-### Resolución de catálogos: `aud_master_db()`
-
-El módulo NO asume un nombre fijo para la base de catálogos. Todos los JOINs y lookups usan el helper `aud_master_db()` (definido con guard `function_exists` en `aud_sql_monitoreo.php`, `aud_sql_config_monitoreo.php`, `aud_log_queue.php` y `aud_log_auditoria.php`):
-
-```php
-function aud_master_db()
-{
-    if (class_exists('Env')) {
-        $db = \Env::get('DB_DATABASE', 'exa_master');
-        if (is_string($db) && $db !== '') {
-            return preg_replace('/[^a-zA-Z0-9_]/', '', $db);
-        }
-    }
-    return 'exa_master';
-}
-```
-
-- El nombre se toma de `.env` (`DB_DATABASE`) y se sanitiza; fallback `exa_master`.
-- Así el mismo código funciona en instalaciones donde el catálogo está en otra base (p. ej. entornos heredados que usan `exa`).
+- Tener accesible la base distribuida de la empresa (`Ses_Dat_Dis`) y `exa`
+  (catálogo de procesos/organización).
+- Incluir `Librerias/config.php/register_globals.php` en el flujo normal del sistema
+  (carga `AuditQueue`).
+- Haber registrado el menú del módulo una sola vez por entorno:
+  `php auditoria/TEST/aud_register_menu.php [base_de_datos]`.
 
 ---
 
-## 3) Activación por variables de entorno
+## 2) Activación por variables de entorno
 
-Configurar en `.env` (valores de referencia en `.env.example`):
+Configurar en `.env` (o validar valores en `.env.example`):
 
 ```env
 AUDIT_ENABLED=true
 AUDIT_TABLES=comprobantes,asientos,manifiesto,manifiesto_turnos_cab,manifiesto_turnos_det,manifiesto_visitante,manifiesto_evento,ventas,ventas_det
 AUDIT_MAX_QUEUE=150
 AUDIT_RETENTION_DAYS=180
-AUDIT_IDLE_LOGOUT=false
-AUDIT_GEOIP=false
 ```
 
 ### Significado
@@ -78,8 +40,8 @@ AUDIT_GEOIP=false
   Activa/desactiva la captura global. Si está en `false`, no se registran eventos nuevos.
 
 - `AUDIT_TABLES`
-  Fallback por tablas cuando la empresa **no** tiene reglas en `cfg_monitoreo`.
-  - Puede usar `*` o `all` para permitir todas.
+  Lista de tablas por defecto (legacy). Ya **no** se usa como fallback: sin reglas en
+  `cfg_monitoreo` no se registra actividad.
 
 - `AUDIT_MAX_QUEUE`
   Tope de eventos en memoria por request (rango efectivo 20..500).
@@ -87,134 +49,239 @@ AUDIT_GEOIP=false
 - `AUDIT_RETENTION_DAYS`
   Días de retención en `auditoria.logs` (mínimo 30).
 
-- `AUDIT_IDLE_LOGOUT`
-  Cierre automático de sesión por inactividad (15 minutos). Por defecto `false` (desactivado): **no** se expulsa a los usuarios por inactividad y **no** se destruye su sesión PHP. Al ponerlo en `true` se activa el modal de advertencia de 60 segundos y el logout automático.
+---
 
-- `AUDIT_GEOIP`
-  Geo-ubicación por IP pública con el servicio externo `ip-api.com` (se guarda en `auditoria.sesion.Ses_Ubi`). Por defecto `false` (desactivado): no se envían IPs del cliente a terceros ni hay dependencia de internet al iniciar sesión. Al ponerlo en `true` se resuelve ciudad+país con timeout corto.
+## 3) Estructura del módulo
+
+```
+auditoria/
+├── FRONT/           Pantallas ejecutables (configuración, monitoreo, sesiones, dashboards)
+├── VALIDACIONES/    JavaScript de cada pantalla
+├── RECURSOS/        Estilos visuales compartidos (aud_monitoreo_ui_1.0.css)
+├── LOGICA/          Lógica de negocio, SQL, cola de captura y servicios AJAX
+├── TEST/            Suite de pruebas y scripts de verificación
+├── docs/            Esta documentación
+└── LOGICA/reedme.txt  Nota legacy del esquema de captura anterior (grabarAuditoria)
+```
+
+### Pantallas disponibles
+
+| Pantalla | Archivo | Descripción |
+| --- | --- | --- |
+| Configuración de monitoreo | `FRONT/aud_adm_config_monitoreo_1.0.php` | Reglas por módulo/directorio/proceso por empresa |
+| Monitor de actividades | `FRONT/aud_con_monitoreo_1.0.php` | Consulta del historial de actividades y exportar |
+| Actividad de usuarios y sesiones | `FRONT/aud_con_actividad_usuarios_1.0.php` | Sesiones en vivo, KPIs y cierre forzado |
+| Dashboard de monitoreo | `FRONT/aud_con_dashboard_monitoreo_1.0.php` | Tablero ejecutivo con PDF/WhatsApp/correo |
+| Dashboard comparativo | `FRONT/aud_con_dashboard_comparativo_1.0.php` | Comparativa entre dos períodos con PDF/WhatsApp/correo |
 
 ---
 
-## 4) Flujo técnico resumido
+## 4) Configuración funcional (por empresa)
+
+Pantalla:
+
+- `auditoria/FRONT/aud_adm_config_monitoreo_1.0.php`
+
+Lógica:
+
+- `auditoria/LOGICA/aud_log_config_monitoreo.php`
+- `auditoria/LOGICA/aud_sql_config_monitoreo.php`
+
+Tabla:
+
+- `auditoria.cfg_monitoreo` (única por `Emp_Cod`, `Org_Cod`, `Pcs_Cod`)
+
+### Cómo opera el filtro
+
+- Si la empresa tiene reglas activas en `cfg_monitoreo`, se registra solo:
+  - módulo completo (`Pcs_Cod=0` sobre `Org_Cod` de módulo),
+  - directorio completo (`Pcs_Cod=0` sobre `Org_Cod` de directorio),
+  - o proceso puntual (`Pcs_Cod>0`).
+- Si no hay reglas para la empresa, **no** se registra actividad: la cobertura total se
+  logra marcando los módulos/directorios/procesos en Configuración de monitoreo.
+
+### Experiencia de la pantalla
+
+- **Árbol jerárquico** módulo → directorio → proceso, con interruptores (switch) que
+  reflejan estados completos, parciales (ámbar) o apagados.
+- **Vista Lista y Grid**: el conmutador `Lista`/`Grid` alterna entre el árbol colapsable
+  y una tabla plana por módulo. Al cambiar de vista se conserva la selección sin guardar.
+- **Contadores por módulo** `auditados/total` (verde si completo, ámbar si parcial) y un
+  resumen global en la barra de estado (`N regla(s), X/Y procesos auditados`).
+- **Filtros de validación**:
+  - *Filtrar por Rol* y *Filtrar por Usuario* (los usuarios se agrupan por persona; el
+    combo muestra `(N cuentas)` y sus roles). Los procesos autorizados del rol/usuario
+    quedan resaltados con el distintivo **Asignado**, sin ocultar el resto.
+  - *Estado de Auditoría* (todos / solo marcados / solo sin marcar).
+  - *Modo Estricto*: oculta lo que no pertenece al rol/usuario seleccionado.
+  - Botones **Marcar asignados** / **Desmarcar asignados**: marcan solo los procesos
+    autorizados del filtro actual.
+  - Búsqueda libre por módulo, directorio o proceso.
+- **Cambios sin guardar**: al modificar la selección aparece el aviso
+  *Cambios sin guardar* y el botón **Guardar** pasa a ámbar; también hay confirmación al
+  salir de la página. El aviso se limpia al guardar o recargar.
+- **Guardado**: envía reglas compactadas (módulo o directorio completo como una sola
+  regla `Pcs_Cod=0`) y deja traza en `auditoria.logs` (campo `Cfg_Reglas`).
+- **Permisos**: solo el *Administrador de Sistemas* edita. Un rol delegado ve la pantalla
+  en **modo solo lectura** con el árbol filtrado por sus permisos (`perfiorgan`).
+
+---
+
+## 5) Flujo técnico resumido
 
 1. El sistema ejecuta SQL por `MysqlDatos::consulta()` o `MysqlDatos::grabarv_registros()`.
 2. `AuditQueue::captureBefore()` guarda contexto previo para `UPDATE/DELETE` (valor anterior).
-3. `AuditQueue::capture()` encola el evento con usuario, empresa, sucursal, proceso y datos (captura < 1 ms, no necesita MySQL).
-4. `AuditQueue::flush(false)` persiste en `auditoria.logs` después de responder; en requests AJAX no toca buffers ni rompe el JSON.
-5. En shutdown existe persistencia de respaldo.
-6. Si MySQL no está disponible o la extensión mysqli no está cargada, el flush falla en silencio (sin excepciones hacia el usuario).
+3. `AuditQueue::capture()` encola evento con usuario, empresa, sucursal, proceso y datos.
+4. `AuditQueue::flush(false)` persiste en `auditoria.logs` en requests AJAX (sin romper JSON).
+5. En shutdown también existe persistencia de respaldo.
 
-Archivo clave de cola: `auditoria/LOGICA/aud_log_queue.php`.
+La solicitud consulta las reglas activas solo al persistir: sin configuración la cola
+descarta los eventos (`hasCfgRules()`). Archivo clave:
 
-### Filtro al persistir
-
-- Si la empresa tiene reglas activas en `cfg_monitoreo`, se registra solo:
-  - módulo completo (`Pcs_Cod=0` sobre `Org_Cod` raíz),
-  - directorio completo (`Pcs_Cod=0` sobre `Org_Cod` de directorio),
-  - o proceso puntual (`Pcs_Cod>0`),
-  - incluyendo cualquier tabla que esos procesos toquen.
-- Si no hay reglas para la empresa, aplica el fallback `AUDIT_TABLES`.
-- Nunca se audita la propia tabla `auditoria.logs` ni tablas internas/temporales.
-
----
-
-## 5) Configuración funcional (por empresa)
-
-Pantalla: `Auditoría → Configuración de monitoreo` (`aud_adm_config_monitoreo_1.0.php`).
-
-- Árbol de módulos/directorios/procesos leído de `procesos`+`organizado` de la base maestra.
-- Marcar un módulo lo compacta todo (regla de módulo); se puede bajar a directorio o proceso puntual.
-- "Marcar todos" genera reglas de módulo para todo el árbol.
-- Las reglas se guardan por empresa en `auditoria.cfg_monitoreo`; el banner del monitor muestra si la captura está activa y cuántas reglas hay.
+- `auditoria/LOGICA/aud_log_queue.php`
 
 ---
 
 ## 6) Uso del monitor de actividades
 
-Pantalla: `auditoria/FRONT/aud_con_monitoreo_1.0.php`.
+Pantalla:
+
+- `auditoria/FRONT/aud_con_monitoreo_1.0.php`
 
 Qué permite:
 
 - filtrar por fechas, evento, módulo, directorio, proceso, usuario y sucursal;
-- ver usuario/empresa/sucursal por nombre (JOINs contra la base maestra; si no hay coincidencia muestra "Usuario N" / "Empresa N");
-- abrir el detalle de cada registro con descripción en lenguaje natural (`aud_log_interpretar.php`);
-- exportar CSV y PDF con los filtros actuales (`aud_rep_monitoreo_pdf.php`);
-- simular actividad a demanda (útil para verificar la captura).
+- abrir detalle por registro (con valor anterior en `UPDATE`);
+- exportar CSV y generar Excel con los filtros actuales.
 
-### Auditoría de sesiones
+Interpretación de lenguaje natural (detalle/modal):
 
-`aud_log_auditoria.php` registra en `auditoria.sesion`:
-
-- inicio de sesión (con proceso `*index.php` de la base maestra),
-- cierre de sesión,
-- intentos fallidos de login (búsqueda de usuario por cédula/empresa contra la base maestra).
-
-### Monitor de actividad y sesiones de usuario
-
-Pantalla: `auditoria/FRONT/aud_con_actividad_usuarios_1.0.php`.
-
-- Tarjetas KPI: usuarios en línea, ausentes, sesiones de hoy y tiempo promedio de uso.
-- Tabla de sesiones con presets de período (Hoy / Ayer / 1 semana / 1 mes / 3 meses) y calendario personalizado; filtros por estado (en línea / ausente / cerradas), rol y texto libre.
-- Barra lateral con el "Mayor tiempo de uso" e información de inactividad. El cierre automático por inactividad (15 min) está desactivado por defecto en producción (`AUDIT_IDLE_LOGOUT=false`): las sesiones inactivas se conservan y nadie es expulsado.
-- Auto-refresco configurable (15s / 30s / 1 min / desactivado) con indicador "En Vivo" (basado en el heartbeat del navegador, que se mantiene activo).
-- El Administrador de Sistemas puede forzar el cierre de una sesión desde el botón "Desconectar" (acción `cerrar_forzada` en `aud_log_actividad_sesion.php`).
-- El layout usa una cuadrícula CSS (`aud-main-grid`) responsiva: tabla + barra lateral de 300px, que colapsa a una columna en pantallas menores a 992px y aprovecha el alto completo de la ventana.
-
-### Dashboard comparativo
-
-Pantalla: `auditoria/FRONT/aud_con_dashboard_comparativo_1.0.php`.
-
-- Compara dos períodos (A = base histórica, B = evaluado/actual) con presets o fechas libres.
-- KPIs comparativos, tendencia diaria (A vs B), comparativa por módulo/operaciones, franja horaria y sesiones/seguridad.
-- Tablas desglosadas (variación por módulo, usuarios más activos) y diagnóstico automatizado con observaciones.
-- Exportación a PDF (`aud_rep_comparativa_pdf.php`), correo y WhatsApp.
-
-### Reportes PDF
-
-Los reportes del monitor (`aud_rep_monitoreo_pdf.php`) y del dashboard comparativo (`aud_rep_comparativa_pdf.php`) generan la cabecera con empresa, sucursal, emisor y período consultado. La fila de metadatos ya **no** incluye el texto "ExaContable Security & Audit Engine"; la marca se eliminó de los encabezados de ambos PDF.
+- `auditoria/LOGICA/aud_log_interpretar.php`
 
 ---
 
-## 7) Instalación de base de datos
+## 7) Actividad de usuarios y sesiones (tiempo real)
 
-1. Ejecutar `db/auditoria.sql` (esquema `auditoria`: `logs`, `sesion`, `eventos`, `tablas`, `campos`, `cfg_monitoreo`).
-2. Ejecutar `db/auditoria_menu.sql` para registrar las opciones de menú (ajustar códigos de perfil según instalación).
-3. Opcional en desarrollo: `db/auditoria_local.sql` y `db/auditoria_config_monitoreo.sql`.
+Pantalla:
+
+- `auditoria/FRONT/aud_con_actividad_usuarios_1.0.php`
+
+Servicio AJAX:
+
+- `auditoria/LOGICA/aud_log_actividad_sesion.php` (acciones `consultar_actividad`,
+  `ping`, `cerrar_forzada`, `cerrar_por_inactividad`, `registrar_inicio`)
+- `auditoria/LOGICA/aud_sql_actividad_sesion.php`
+
+Tabla:
+
+- `auditoria.sesion` (incluye `ses_ip`, `ses_ubi`, `ses_nav`, `ses_ult_act`,
+  `ses_min_uso`, `ses_est`, `ses_token`)
+
+Qué permite:
+
+- ver usuarios **en línea** en vivo (indicador *En Vivo*, auto-refresco 15/30/60 s o
+  desactivado, por defecto 30 s);
+- KPIs: usuarios En Línea, Ausentes, Sesiones Hoy y Tiempo Promedio de Uso;
+- semáforo de estado: `en_linea` (< 5 min), `ausente` (5–15 min), `inactiva`/cerrada,
+  más `forzada` al ser expulsado;
+- alerta en tiempo real de **acceso múltiple** (usuario con más de una sesión activa);
+- panel lateral *Mayor Tiempo de Uso*;
+- filtros por estado, rol, texto (usuario/IP) y período (presets Hoy/Ayer/1 semana/1 mes/3 meses);
+- **cierre forzado** de sesión (solo Administrador de Sistemas; no puede desconectar su
+  propia sesión ni cerrar sesiones de otra empresa).
+
+Notas de seguridad:
+
+- El cierre automático por inactividad y la geolocalización por IP están
+  **desactivados por defecto en producción**; las sesiones inactivas se conservan.
+- Se registra `Ses_Token` para el control heartbeat de cada sesión.
 
 ---
 
-## 8) Pruebas
+## 8) Dashboard comparativo
 
-Suite completa (unitarias de cola, monitor, configuración y usuarios simultáneos):
+Pantalla:
+
+- `auditoria/FRONT/aud_con_dashboard_comparativo_1.0.php`
+
+Lógica y servicio:
+
+- `auditoria/LOGICA/aud_log_dashboard.php` (acciones `consultar`, `exportar_pdf`,
+  `enviar_correo`, `enviar_whatsapp`)
+- `auditoria/LOGICA/aud_rep_comparativa_pdf.php`
+
+Qué permite:
+
+- comparar dos períodos (base vs comparado) con KPIs de variación;
+- gráficos por módulo, por horas (24 franjas) y por usuarios;
+- observaciones automáticas sobre el comportamiento del período;
+- exportar **PDF** del comparativo;
+- enviar por **correo** y por **WhatsApp** (vía API ERP y apertura directa en WhatsApp Web).
+
+---
+
+## 9) Dashboard de monitoreo
+
+Pantalla:
+
+- `auditoria/FRONT/aud_con_dashboard_monitoreo_1.0.php`
+
+Lógica y servicio:
+
+- `auditoria/LOGICA/aud_log_dashboard_monitoreo.php` (acciones `consultar`,
+  `exportar_pdf`, `enviar_correo`, `enviar_whatsapp`)
+- `auditoria/LOGICA/aud_rep_monitoreo_pdf.php`
+
+Qué permite:
+
+- resumen ejecutivo del período (total de movimientos);
+- desglose por módulo, plantas y usuarios más activos;
+- distribución horaria (24 franjas) y tendencia diaria;
+- exportar **PDF** del reporte;
+- enviar por **correo** (PHPMailer) y por **WhatsApp** (API + Web).
+
+---
+
+## 10) Validación y pruebas
+
+### 10.1 Verificar coherencia de captura con configuración
 
 ```bash
-php auditoria/TEST/aud_run_tests.php
+php auditoria/TEST/aud_verify_captura.php
 ```
 
-Salida esperada: `TODAS LAS PRUEBAS OK`.
+Resultado esperado:
 
-Otras herramientas:
+- `RESULTADO: CAPTURA COHERENTE CON LA CONFIGURACION`
+
+### 10.2 Suite completa de pruebas
 
 ```bash
-php auditoria/TEST/aud_verify_captura.php     # coherencia captura vs configuracion
-php auditoria/TEST/aud_unit_monitoreo.php     # solo monitor
+php -d date.timezone=America/Guayaquil auditoria/TEST/aud_run_tests.php
 ```
 
-Notas:
+Cubre: cola de captura, monitor (proceso–módulo), configuración, actividad de usuarios,
+dashboards (comparativo y monitoreo con PDF/WhatsApp) y **concurrencia** (8 usuarios en
+paralelo con procesos reales registrados). Resultado esperado:
 
-- Los tests de BD usan datos reservados (`Usu_Cod >= 900001`, `Emp_Cod >= 999001`) y se limpian solos.
-- Si el catálogo local no está en `DB_DATABASE` sino en otra base (p. ej. `exa`), el runner lo detecta y apunta `DB_DATABASE` a esa base solo para el proceso de pruebas.
-- En Windows con PHP CLI sin extensiones cargadas, apuntar `PHPRC` a un ini temporal con `extension_dir` + `extension=php_mysqli.dll` antes de correr la suite.
+- `TODAS LAS PRUEBAS OK`
+
+### 10.3 Registro del menú
+
+```bash
+php auditoria/TEST/aud_register_menu.php [base_de_datos]
+```
 
 ---
 
-## 9) Solución de problemas comunes
+## 11) Solución de problemas comunes
 
 ### No se registra nada
 
 - Confirmar `AUDIT_ENABLED=true`.
 - Confirmar que el usuario tiene `Ses_Emp_Cod` válido.
-- Verificar conexión a la base `auditoria`.
+- Verificar conexión a base `auditoria`.
+- Verificar que la empresa tenga reglas en `cfg_monitoreo` (sin reglas no se registra).
 
 ### Se registra, pero no aparece en el monitor
 
@@ -225,18 +292,31 @@ Notas:
 ### Se registra fuera de lo esperado
 
 - Si hay reglas en `cfg_monitoreo`, revisar selección de módulo/directorio/proceso.
-- Si no hay reglas, revisar `AUDIT_TABLES`.
+- Si no hay reglas, no se registra actividad: marcar los módulos en Configuración de monitoreo.
 
-### El monitor muestra "Usuario 123" / "Empresa 123"
+### No aparecen sesiones en Actividad de Usuarios
 
-- Ese es el fallback cuando el JOIN contra la base maestra no encuentra el registro.
-- Causa típica: el catálogo de esa empresa/sucursal no existe (o está desactualizado) en la base `DB_DATABASE`.
-- Verificar que `usuarios`, `persona`, `empresas`, `sucursal` y `procesos` existan y estén poblados en la base maestra; los JOINs están en `aud_logs_joins()` / `aud_logs_select()` de `aud_sql_monitoreo.php` y en `aud_valor_codigo_lookup()` de `aud_log_interpretar.php`.
+- Confirmar que la sesión se registró al iniciar (`aud_ses_registrar_inicio`) o que el
+  heartbeat `ping` está activo.
+- Verificar la empresa/sucursal del filtro y que `auditoria.sesion` tenga columnas nuevas.
+- Revisar que el cierre por inactividad siga desactivado si no se desea expulsar usuarios.
+
+### El PDF/WhatsApp/correo del dashboard no se genera
+
+- Validar permisos de escritura en el directorio temporal de FPDF.
+- Revisar la configuración SMTP/PHPMailer y el número de teléfono (normalización WA).
+
+### Modal muestra códigos en vez de nombres
+
+- Validar joins de empresa/usuario/proceso en `aud_sql_monitoreo.php`.
+- Validar funciones de interpretación en `aud_log_interpretar.php`.
 
 ---
 
-## 10) Recomendación operativa
+## 12) Recomendación operativa
 
 - Mantener reglas por módulo/directorio para reducir ruido.
 - Usar proceso puntual solo cuando se necesite alta precisión.
 - Revisar periódicamente el volumen de `auditoria.logs` y ajustar `AUDIT_RETENTION_DAYS`.
+- Supervisar con Actividad de Usuarios los accesos múltiples (posibles credenciales
+  compartidas) y aplicar cierre forzado solo en casos confirmados.

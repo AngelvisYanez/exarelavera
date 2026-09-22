@@ -954,7 +954,7 @@ $secciones = array(
             <ul class="nav nav-tabs" role="tablist">
                 <li role="presentation" class="active"><a href="#tabSI" role="tab" data-toggle="tab" data-tipo="SI"><i class="glyphicon glyphicon-home"></i> Internos</a></li>
                 <li role="presentation"><a href="#tabSE" role="tab" data-toggle="tab" data-tipo="SE"><i class="glyphicon glyphicon-globe"></i> Externos</a></li>
-                <li role="presentation"><a href="#tabEV" role="tab" data-toggle="tab" data-tipo="EV"><i class="glyphicon glyphicon-time"></i> Eventuales</a></li>
+                <li role="presentation" style="display: none;"><a href="#tabEV" role="tab" data-toggle="tab" data-tipo="EV"><i class="glyphicon glyphicon-time"></i> Eventuales</a></li>
             </ul>
             <div class="tab-content">
                 <?php foreach ($secciones as $tipo => $sec) {

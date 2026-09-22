@@ -3,41 +3,12 @@
  * Cola de auditor�a diferida: captura I/U/D de cualquier m�dulo/proceso
  * y persiste despu�s de responder. Si hay reglas en cfg_monitoreo, solo
  * se graban los m�dulos, directorios y procesos marcados (cualquier tabla
- * que toquen). Sin reglas, aplica el fallback AUDIT_TABLES.
+ * que toquen). Sin reglas, no se registra actividad: la cobertura total se
+ * logra marcando los m�dulos en Configuracion de monitoreo.
  *
  * @package auditoria.LOGICA
  */
 require_once(dirname(__FILE__) . '/../../DATA/libs/Env.php');
-
-/** Base maestra de catalogo (usuarios, persona, empresas, sucursal, procesos, organizado). */
-if (!function_exists('aud_master_db')) {
-	function aud_master_db()
-	{
-		if (session_id() !== '' && !empty($_SESSION['Ses_Dat_Dis'])) {
-			$db = preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']);
-			if ($db !== '' && $db !== 'exa_master') {
-				return $db;
-			}
-		}
-		if (!empty($GLOBALS['Ses_Dat_Dis'])) {
-			$db = preg_replace('/[^a-zA-Z0-9_]/', '', $GLOBALS['Ses_Dat_Dis']);
-			if ($db !== '' && $db !== 'exa_master') {
-				return $db;
-			}
-		}
-		if (class_exists('Env')) {
-			$db = \Env::get('DB_DATABASE_CORP', '');
-			if (is_string($db) && $db !== '' && $db !== 'exa_master') {
-				return preg_replace('/[^a-zA-Z0-9_]/', '', $db);
-			}
-			$db2 = \Env::get('DB_DATABASE', '');
-			if (is_string($db2) && $db2 !== '' && $db2 !== 'exa_master') {
-				return preg_replace('/[^a-zA-Z0-9_]/', '', $db2);
-			}
-		}
-		return 'exa';
-	}
-}
 
 class AuditQueue
 {
@@ -46,11 +17,8 @@ class AuditQueue
     const SKIP_SCHEMAS = 'auditoria,mysql,information_schema,performance_schema,sys';
     const DEFAULT_MAX_QUEUE = 150;
     const DEFAULT_RETENTION_DAYS = 180;
-    const AUDIT_DB = 'auditoria';
 
     private static $queue = array();
-    private static $txnLevel = 0;
-    private static $txnQueue = array();
     private static $registered = false;
     private static $flushing = false;
     private static $schemaReady = false;
@@ -71,80 +39,9 @@ class AuditQueue
         return count(self::$queue);
     }
 
-    public static function stagedCount()
-    {
-        $c = 0;
-        foreach (self::$txnQueue as $levelQueue) {
-            $c += count($levelQueue);
-        }
-        return $c;
-    }
-
-    public static function inTransaction()
-    {
-        return self::$txnLevel > 0;
-    }
-
-    public static function beginTransaction($conexion = null)
-    {
-        self::$txnLevel++;
-        $idx = self::$txnLevel - 1;
-        if (!isset(self::$txnQueue[$idx])) {
-            self::$txnQueue[$idx] = array();
-        }
-    }
-
-    public static function commit($conexion = null)
-    {
-        if (self::$txnLevel <= 0) {
-            return;
-        }
-        $idx = self::$txnLevel - 1;
-        $events = isset(self::$txnQueue[$idx]) ? self::$txnQueue[$idx] : array();
-        unset(self::$txnQueue[$idx]);
-        self::$txnLevel--;
-
-        $max = (int)\Env::get('AUDIT_MAX_QUEUE', self::DEFAULT_MAX_QUEUE);
-        if ($max < 20) $max = 20;
-        if ($max > 500) $max = 500;
-
-        if (self::$txnLevel > 0) {
-            $parentIdx = self::$txnLevel - 1;
-            if (!isset(self::$txnQueue[$parentIdx])) {
-                self::$txnQueue[$parentIdx] = array();
-            }
-            foreach ($events as $ev) {
-                if (count(self::$txnQueue[$parentIdx]) < $max) {
-                    self::$txnQueue[$parentIdx][] = $ev;
-                }
-            }
-        } else {
-            foreach ($events as $ev) {
-                if (count(self::$queue) < $max) {
-                    self::$queue[] = $ev;
-                }
-            }
-            if (!empty(self::$queue)) {
-                self::registerFlush();
-            }
-        }
-    }
-
-    public static function rollback($conexion = null)
-    {
-        if (self::$txnLevel <= 0) {
-            return;
-        }
-        $idx = self::$txnLevel - 1;
-        unset(self::$txnQueue[$idx]);
-        self::$txnLevel--;
-    }
-
     public static function resetForTests()
     {
         self::$queue = array();
-        self::$txnLevel = 0;
-        self::$txnQueue = array();
         self::$flushing = false;
         self::$schemaReady = false;
         self::$tables = null;
@@ -243,16 +140,6 @@ class AuditQueue
         }
         if ($max > 500) {
             $max = 500;
-        }
-        if (self::$txnLevel > 0) {
-            $idx = self::$txnLevel - 1;
-            if (!isset(self::$txnQueue[$idx])) {
-                self::$txnQueue[$idx] = array();
-            }
-            if (count(self::$txnQueue[$idx]) < $max) {
-                self::$txnQueue[$idx][] = $evento;
-            }
-            return;
         }
         if (count(self::$queue) >= $max) {
             return;
@@ -527,7 +414,7 @@ class AuditQueue
         }
         $cut = date('Y-m-d H:i:s', strtotime('-'.$days.' days'));
         $cutEsc = mysqli_real_escape_string($con, $cut);
-        self::q($con, "DELETE FROM `".self::AUDIT_DB."`.`logs` WHERE `Log_Fec` < '{$cutEsc}' LIMIT 800");
+        self::q($con, "DELETE FROM `logs` WHERE `Log_Fec` < '{$cutEsc}' LIMIT 800");
     }
 
     private static function parseSql($sql, $conexion)
@@ -658,7 +545,7 @@ class AuditQueue
         if (!self::isProcessEnabled($con, $emp, $pcsCod, isset($evento['dat_dis']) ? $evento['dat_dis'] : '')) {
             return;
         }
-        if (!self::hasCfgRules($con, $emp) && !self::isWhitelistedTable($evento['table'])) {
+        if (!self::hasCfgRules($con, $emp)) {
             return;
         }
         $eveCod = self::lookupEveCod($con, $evento['eve']);
@@ -689,11 +576,11 @@ class AuditQueue
         $valEsc = mysqli_real_escape_string($con, $val);
         $intEsc = mysqli_real_escape_string($con, $int);
 
-        $sql = "INSERT INTO `".self::AUDIT_DB."`.`logs`(`Usu_Cod`,`Pcs_Cod`,`Tab_Cod`,`Log_Fec`,`Eve_Cod`,`Log_Cam`,`Log_Val`,`Log_Int`,`Emp_Cod`,`Suc_Cod`)
+        $sql = "INSERT INTO `logs`(`Usu_Cod`,`Pcs_Cod`,`Tab_Cod`,`Log_Fec`,`Eve_Cod`,`Log_Cam`,`Log_Val`,`Log_Int`,`Emp_Cod`,`Suc_Cod`)
             VALUES({$usu},{$pcsCod},{$tabCod},'{$fec}',{$eveCod},'{$camEsc}','{$valEsc}','{$intEsc}',{$emp},{$suc})";
         $ok = self::q($con, $sql);
         if (!$ok && (int)mysqli_errno($con) === 1054) {
-            $sql = "INSERT INTO `".self::AUDIT_DB."`.`logs`(`Usu_Cod`,`Pcs_Cod`,`Tab_Cod`,`Log_Fec`,`Eve_Cod`,`Log_Cam`,`Log_Val`,`Log_Int`)
+            $sql = "INSERT INTO `logs`(`Usu_Cod`,`Pcs_Cod`,`Tab_Cod`,`Log_Fec`,`Eve_Cod`,`Log_Cam`,`Log_Val`,`Log_Int`)
                 VALUES({$usu},{$pcsCod},{$tabCod},'{$fec}',{$eveCod},'{$camEsc}','{$valEsc}','{$intEsc}')";
             self::q($con, $sql);
         }
@@ -701,16 +588,19 @@ class AuditQueue
 
     private static function connectAuditoria($batch)
     {
-        $db = self::AUDIT_DB;
+        $db = 'auditoria';
+        if (!empty($batch[0]['dat_aut'])) {
+            $db = preg_replace('/[^a-zA-Z0-9_]/', '', $batch[0]['dat_aut']);
+        }
+        if ($db === '') {
+            $db = 'auditoria';
+        }
         $host = \Env::get('DB_HOST', '127.0.0.1');
         $user = \Env::get('DB_USERNAME', 'root');
         $pass = \Env::get('DB_PASSWORD', '');
         $port = (int)\Env::get('DB_PORT', 3306);
         if ($pass === null) {
             $pass = '';
-        }
-        if (!function_exists('mysqli_init')) {
-            return null;
         }
         if (function_exists('mysqli_report')) {
             mysqli_report(MYSQLI_REPORT_OFF);
@@ -730,13 +620,8 @@ class AuditQueue
     private static function q($con, $sql)
     {
         try {
-            $r = @mysqli_query($con, $sql);
-            if (!$r && $con && function_exists('mysqli_errno') && mysqli_errno($con) !== 0) {
-                error_log('AuditQueue SQL[' . mysqli_errno($con) . ']: ' . mysqli_error($con) . ' | SQL: ' . substr($sql, 0, 300));
-            }
-            return $r;
+            return @mysqli_query($con, $sql);
         } catch (Exception $e) {
-            error_log('AuditQueue exception: ' . $e->getMessage());
             return false;
         }
     }
@@ -747,14 +632,14 @@ class AuditQueue
             return;
         }
         self::$schemaReady = true;
-        self::q($con, "CREATE TABLE IF NOT EXISTS `".self::AUDIT_DB."`.`eventos` (
+        self::q($con, "CREATE TABLE IF NOT EXISTS `eventos` (
             `Eve_Cod` int(11) NOT NULL AUTO_INCREMENT,
             `Eve_Ini` char(1) NOT NULL,
             `Eve_Des` varchar(100) DEFAULT NULL,
             PRIMARY KEY (`Eve_Cod`),
             KEY `Eve_Ini` (`Eve_Ini`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-        self::q($con, "CREATE TABLE IF NOT EXISTS `".self::AUDIT_DB."`.`tablas` (
+        self::q($con, "CREATE TABLE IF NOT EXISTS `tablas` (
             `Tab_Cod` int(11) NOT NULL AUTO_INCREMENT,
             `Tab_Nom` varchar(64) NOT NULL,
             `Tab_Des` varchar(255) DEFAULT NULL,
@@ -762,7 +647,7 @@ class AuditQueue
             PRIMARY KEY (`Tab_Cod`),
             KEY `Tab_Nom` (`Tab_Nom`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-        self::q($con, "CREATE TABLE IF NOT EXISTS `".self::AUDIT_DB."`.`logs` (
+        self::q($con, "CREATE TABLE IF NOT EXISTS `logs` (
             `Log_Cod` bigint(20) NOT NULL AUTO_INCREMENT,
             `Usu_Cod` int(11) NOT NULL,
             `Pcs_Cod` int(11) NOT NULL,
@@ -778,7 +663,7 @@ class AuditQueue
             KEY `Emp_Fec` (`Emp_Cod`,`Log_Fec`),
             KEY `Usu_Fec` (`Usu_Cod`,`Log_Fec`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-        self::q($con, "INSERT IGNORE INTO `".self::AUDIT_DB."`.`eventos` (`Eve_Cod`, `Eve_Ini`, `Eve_Des`) VALUES
+        self::q($con, "INSERT IGNORE INTO `eventos` (`Eve_Cod`, `Eve_Ini`, `Eve_Des`) VALUES
             (1, 'F', 'Fallido'), (2, 'I', 'Insertar'), (3, 'U', 'Actualizar'), (4, 'D', 'Eliminar')");
         $seedTabs = array(
             'usuarios' => 'Usuarios del sistema',
@@ -796,7 +681,7 @@ class AuditQueue
         foreach ($seedTabs as $nom => $des) {
             $nomEsc = mysqli_real_escape_string($con, $nom);
             $desEsc = mysqli_real_escape_string($con, $des);
-            $exists = self::q($con, "SELECT `Tab_Cod` FROM `".self::AUDIT_DB."`.`tablas` WHERE `Tab_Nom` = '{$nomEsc}' LIMIT 1");
+            $exists = self::q($con, "SELECT `Tab_Cod` FROM `tablas` WHERE `Tab_Nom` = '{$nomEsc}' LIMIT 1");
             $row = ($exists && is_object($exists)) ? mysqli_fetch_assoc($exists) : null;
             if ($exists && is_object($exists)) {
                 mysqli_free_result($exists);
@@ -811,21 +696,21 @@ class AuditQueue
                 if ($nom === 'ventas') $aliEsc = 'Facturas de venta';
                 if ($nom === 'ventas_det') $aliEsc = 'Detalle de venta';
                 if ($nom === 'caja_aper') $aliEsc = 'Caja';
-                self::q($con, "INSERT INTO `".self::AUDIT_DB."`.`tablas`(`Tab_Nom`,`Tab_Des`,`Tab_Ali`) VALUES('{$nomEsc}','{$desEsc}','{$aliEsc}')");
+                self::q($con, "INSERT INTO `tablas`(`Tab_Nom`,`Tab_Des`,`Tab_Ali`) VALUES('{$nomEsc}','{$desEsc}','{$aliEsc}')");
             }
         }
-        $r = self::q($con, "SHOW COLUMNS FROM `".self::AUDIT_DB."`.`logs` LIKE 'Emp_Cod'");
+        $r = self::q($con, "SHOW COLUMNS FROM `logs` LIKE 'Emp_Cod'");
         if ($r && mysqli_num_rows($r) == 0) {
-            self::q($con, "ALTER TABLE `".self::AUDIT_DB."`.`logs`
+            self::q($con, "ALTER TABLE `logs`
                 ADD `Emp_Cod` int(11) DEFAULT NULL,
                 ADD `Suc_Cod` int(11) DEFAULT NULL,
                 ADD KEY `Emp_Fec` (`Emp_Cod`,`Log_Fec`)");
-            self::q($con, "ALTER TABLE `".self::AUDIT_DB."`.`logs` MODIFY `Log_Cam` varchar(255) DEFAULT NULL");
+            self::q($con, "ALTER TABLE `logs` MODIFY `Log_Cam` varchar(255) DEFAULT NULL");
         }
         if ($r) {
             @mysqli_free_result($r);
         }
-        self::q($con, "CREATE TABLE IF NOT EXISTS `".self::AUDIT_DB."`.`cfg_monitoreo` (
+        self::q($con, "CREATE TABLE IF NOT EXISTS `cfg_monitoreo` (
             `Cfg_Cod` INT(11) NOT NULL AUTO_INCREMENT,
             `Emp_Cod` INT(11) NOT NULL,
             `Org_Cod` INT(11) NOT NULL,
@@ -837,7 +722,7 @@ class AuditQueue
             UNIQUE KEY `uk_emp_org_pcs` (`Emp_Cod`,`Org_Cod`,`Pcs_Cod`),
             KEY `idx_emp_est` (`Emp_Cod`,`Cfg_Est`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-        self::q($con, "CREATE TABLE IF NOT EXISTS `".self::AUDIT_DB."`.`campos` (
+        self::q($con, "CREATE TABLE IF NOT EXISTS `campos` (
             `Cam_Cod` INT(11) NOT NULL AUTO_INCREMENT,
             `Tab_Cod` INT(11) NOT NULL,
             `Cam_Atr` VARCHAR(64) NOT NULL,
@@ -846,15 +731,15 @@ class AuditQueue
             PRIMARY KEY (`Cam_Cod`),
             KEY `Tab_Atr` (`Tab_Cod`,`Cam_Atr`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-        self::q($con, "ALTER TABLE `".self::AUDIT_DB."`.`logs` ADD INDEX `Pcs_Fec` (`Pcs_Cod`,`Log_Fec`)");
-        self::q($con, "INSERT IGNORE INTO `".self::AUDIT_DB."`.`tablas` (`Tab_Nom`,`Tab_Des`,`Tab_Ali`) VALUES
+        self::q($con, "ALTER TABLE `logs` ADD INDEX `Pcs_Fec` (`Pcs_Cod`,`Log_Fec`)");
+        self::q($con, "INSERT IGNORE INTO `tablas` (`Tab_Nom`,`Tab_Des`,`Tab_Ali`) VALUES
             ('cfg_monitoreo','Configuracion de monitoreo','Configuracion de monitoreo'),
             ('sesion','Sesiones de usuario','Sesion')");
     }
 
     /**
      * Si la empresa tiene reglas en cfg_monitoreo, solo persiste procesos/modulos habilitados.
-     * Sin reglas: permite el proceso (el fallback AUDIT_TABLES se aplica en persistOne).
+     * Sin reglas: persistOne descarta el evento (no se registra actividad).
      */
     private static function cfgCount($con, $emp)
     {
@@ -864,7 +749,7 @@ class AuditQueue
         }
         if (!isset(self::$cfgCache[$emp])) {
             $count = 0;
-            $r = self::q($con, "SELECT COUNT(*) AS c FROM `".self::AUDIT_DB."`.`cfg_monitoreo` WHERE `Emp_Cod`={$emp} AND `Cfg_Est`='A'");
+            $r = self::q($con, "SELECT COUNT(*) AS c FROM `cfg_monitoreo` WHERE `Emp_Cod`={$emp} AND `Cfg_Est`='A'");
             if ($r) {
                 $row = mysqli_fetch_assoc($r);
                 mysqli_free_result($r);
@@ -892,7 +777,7 @@ class AuditQueue
 
         $pcsCod = (int)$pcsCod;
         if ($pcsCod > 0) {
-            $r = self::q($con, "SELECT 1 AS ok FROM `".self::AUDIT_DB."`.`cfg_monitoreo`
+            $r = self::q($con, "SELECT 1 AS ok FROM `cfg_monitoreo`
                 WHERE `Emp_Cod`={$emp} AND `Cfg_Est`='A' AND `Pcs_Cod`={$pcsCod} LIMIT 1");
             if ($r) {
                 $row = mysqli_fetch_assoc($r);
@@ -906,7 +791,7 @@ class AuditQueue
                 if ($org <= 0) {
                     continue;
                 }
-                $r = self::q($con, "SELECT 1 AS ok FROM `".self::AUDIT_DB."`.`cfg_monitoreo`
+                $r = self::q($con, "SELECT 1 AS ok FROM `cfg_monitoreo`
                     WHERE `Emp_Cod`={$emp} AND `Cfg_Est`='A' AND `Org_Cod`={$org} AND `Pcs_Cod`=0 LIMIT 1");
                 if ($r) {
                     $row = mysqli_fetch_assoc($r);
@@ -978,9 +863,9 @@ class AuditQueue
 
     private static function menuDatabases($datDis)
     {
-        $dbs = array(aud_master_db());
+        $dbs = array('exa');
         $db = preg_replace('/[^a-zA-Z0-9_]/', '', (string)$datDis);
-        if ($db !== '' && $db !== aud_master_db() && !in_array($db, $dbs, true)) {
+        if ($db !== '' && $db !== 'exa' && !in_array($db, $dbs, true)) {
             $dbs[] = $db;
         }
         return $dbs;
@@ -990,7 +875,7 @@ class AuditQueue
     {
         $fallback = array('F' => 1, 'I' => 2, 'U' => 3, 'D' => 4);
         $ini = mysqli_real_escape_string($con, $eveIni);
-        $r = self::q($con, "SELECT `Eve_Cod` FROM `".self::AUDIT_DB."`.`eventos` WHERE `Eve_Ini` = '{$ini}' LIMIT 1");
+        $r = self::q($con, "SELECT `Eve_Cod` FROM `eventos` WHERE `Eve_Ini` = '{$ini}' LIMIT 1");
         if ($r) {
             $row = mysqli_fetch_assoc($r);
             mysqli_free_result($r);
@@ -1004,7 +889,7 @@ class AuditQueue
     private static function lookupTabCod($con, $table, $datDis = '')
     {
         $nom = mysqli_real_escape_string($con, $table);
-        $r = self::q($con, "SELECT `Tab_Cod` FROM `".self::AUDIT_DB."`.`tablas` WHERE `Tab_Nom` = '{$nom}' LIMIT 1");
+        $r = self::q($con, "SELECT `Tab_Cod` FROM `tablas` WHERE `Tab_Nom` = '{$nom}' LIMIT 1");
         $id = 0;
         if ($r) {
             $row = mysqli_fetch_assoc($r);
@@ -1016,10 +901,10 @@ class AuditQueue
         if ($id <= 0) {
             $ali = str_replace('_', ' ', $table);
             $aliEsc = mysqli_real_escape_string($con, $ali);
-            self::q($con, "INSERT INTO `".self::AUDIT_DB."`.`tablas`(`Tab_Nom`,`Tab_Des`,`Tab_Ali`) VALUES('{$nom}','{$aliEsc}','{$aliEsc}')");
+            self::q($con, "INSERT INTO `tablas`(`Tab_Nom`,`Tab_Des`,`Tab_Ali`) VALUES('{$nom}','{$aliEsc}','{$aliEsc}')");
             $id = (int)mysqli_insert_id($con);
             if ($id <= 0) {
-                $r = self::q($con, "SELECT `Tab_Cod` FROM `".self::AUDIT_DB."`.`tablas` WHERE `Tab_Nom` = '{$nom}' LIMIT 1");
+                $r = self::q($con, "SELECT `Tab_Cod` FROM `tablas` WHERE `Tab_Nom` = '{$nom}' LIMIT 1");
                 if ($r) {
                     $row = mysqli_fetch_assoc($r);
                     mysqli_free_result($r);
@@ -1041,7 +926,7 @@ class AuditQueue
         if ($tabCod <= 0) {
             return;
         }
-        $chk = self::q($con, "SELECT 1 AS ok FROM `".self::AUDIT_DB."`.`campos` WHERE `Tab_Cod`={$tabCod} LIMIT 1");
+        $chk = self::q($con, "SELECT 1 AS ok FROM `campos` WHERE `Tab_Cod`={$tabCod} LIMIT 1");
         if ($chk) {
             $row = mysqli_fetch_assoc($chk);
             mysqli_free_result($chk);
@@ -1051,7 +936,7 @@ class AuditQueue
         }
         $db = preg_replace('/[^a-zA-Z0-9_]/', '', (string)$datDis);
         if ($db === '') {
-            $db = aud_master_db();
+            $db = 'exa';
         }
         $tab = mysqli_real_escape_string($con, $table);
         $rs = self::q($con, "SELECT COLUMN_NAME, COLUMN_COMMENT FROM information_schema.COLUMNS
@@ -1070,7 +955,7 @@ class AuditQueue
             }
             $atrEsc = mysqli_real_escape_string($con, $atr);
             $desEsc = mysqli_real_escape_string($con, substr($des, 0, 250));
-            self::q($con, "INSERT INTO `".self::AUDIT_DB."`.`campos` (`Tab_Cod`,`Cam_Atr`,`Cam_Des`,`Cam_Ali`)
+            self::q($con, "INSERT INTO `campos` (`Tab_Cod`,`Cam_Atr`,`Cam_Des`,`Cam_Ali`)
                 VALUES ({$tabCod},'{$atrEsc}','{$desEsc}','{$desEsc}')");
         }
         mysqli_free_result($rs);

@@ -16,6 +16,7 @@ $obBD_con1 = new Class_Log_Datos_Vehiculos_Choferes;
 
 // Planta no requerida para este módulo general
 $Pla_Cod_Log = 0;
+$Ses_Emp_Cod = isset($_SESSION['Ses_Emp_Cod']) ? $_SESSION['Ses_Emp_Cod'] : (isset($Ses_Emp_Cod) ? $Ses_Emp_Cod : 0);
 
 // Obtener ciudades para modal de proveedor
 $rs_ciudad = $obBD_con1->getArrayConsulta(23, array(), $obBD_conexion);
@@ -31,11 +32,15 @@ $obBD_con1->utf8_change_param($rs_colores);
 $rs_titulos = $obBD_con1->getArrayConsulta(19, array(), $obBD_conexion);
 $obBD_con1->utf8_change_param($rs_titulos);
 
+$rs_titulos_maq = $obBD_con1->getArrayConsulta(33, array(), $obBD_conexion);
+$obBD_con1->utf8_change_param($rs_titulos_maq);
+
 /* ==================== AJAX HANDLERS ==================== */
 
 // Buscar persona por cédula para autocompletar
 if (isset($_GET['buscarPersonaPorCedulaAjax'])) {
     $cedula = isset($_GET['cedula']) ? trim($_GET['cedula']) : '';
+    $cho_cod = isset($_GET['cho_cod']) ? (int)$_GET['cho_cod'] : 0;
     $resp = array('exists' => false);
     if (!empty($cedula)) {
         // Quitar dígitos adicionales de RUC para la búsqueda en la tabla persona
@@ -51,14 +56,23 @@ if (isset($_GET['buscarPersonaPorCedulaAjax'])) {
             $resp['Prs_San'] = $row_per[0]['Prs_San'];
 
             // Buscar si ya es chofer para cargar datos de su licencia
-            $Prs_Cod = (int)$row_per[0]['Prs_Cod'];
-            $row_cho = $obBD_con1->getArrayConsulta(25, array($Prs_Cod), $obBD_conexion);
+            $row_cho = array();
+            if ($cho_cod > 0) {
+                $row_cho = $obBD_con1->getArrayConsulta(37, array($cho_cod), $obBD_conexion);
+            }
+            if (empty($row_cho)) {
+                $Prs_Cod = (int)$row_per[0]['Prs_Cod'];
+                $row_cho = $obBD_con1->getArrayConsulta(25, array($Prs_Cod, $Ses_Emp_Cod), $obBD_conexion);
+            }
             if (!empty($row_cho)) {
                 $obBD_con1->utf8_change_param($row_cho);
                 $resp['isChofer'] = true;
+                $resp['Cho_Cod'] = $row_cho[0]['Cho_Cod'];
                 $resp['Cho_Tli'] = $row_cho[0]['Cho_Tli'];
                 $resp['Cho_Cli'] = '';
-                if (!empty($row_cho[0]['Cho_Cli'])) {
+                if ($row_cho[0]['Cho_Tli'] === 'Np' || $row_cho[0]['Cho_Cli'] === '0000-00-00' || $row_cho[0]['Cho_Cli'] === '1900-01-01') {
+                    $resp['Cho_Cli'] = '00/00/0000';
+                } else if (!empty($row_cho[0]['Cho_Cli'])) {
                     $parts = explode('-', $row_cho[0]['Cho_Cli']);
                     if (count($parts) === 3) {
                         $resp['Cho_Cli'] = $parts[2] . '/' . $parts[1] . '/' . $parts[0];
@@ -85,6 +99,9 @@ if (isset($_GET['listTransportesAjax'])) {
 if (isset($_GET['listChoferesGridAjax'])) {
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 50;
+    if ($rows <= 0 || $rows >= 99999) {
+        $rows = 999999;
+    }
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $op_opciones = isset($_GET['op_opciones']) ? trim($_GET['op_opciones']) : 'd';
 
@@ -111,17 +128,22 @@ if (isset($_GET['listChoferesGridAjax'])) {
     exit;
 }
 
-// Listar Vehículos para el Grid (Ambiente 1)
+// Listar Vehículos y Maquinarias para el Grid (Ambiente 1)
 if (isset($_GET['listVehiculosGridAjax'])) {
     $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
     $rows = isset($_GET['rows']) ? (int)$_GET['rows'] : 50;
+    if ($rows <= 0 || $rows >= 99999) {
+        $rows = 999999;
+    }
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $op_opciones = isset($_GET['op_opciones']) ? trim($_GET['op_opciones']) : 'p';
+    $tipo_clasificacion = isset($_GET['tipo_clasificacion']) ? trim($_GET['tipo_clasificacion']) : '';
 
     $params = array(
         0 => $_SESSION['Ses_Emp_Cod'],
         'search' => $search,
-        'op_opciones' => $op_opciones
+        'op_opciones' => $op_opciones,
+        'tipo_clasificacion' => $tipo_clasificacion
     );
 
     $row_count = $obBD_con1->getRowConsulta(3, $params, $obBD_conexion);
@@ -138,6 +160,277 @@ if (isset($_GET['listVehiculosGridAjax'])) {
         $response['rows'] = array();
     }
     $obBD_con1->echoJson($response);
+    exit;
+}
+
+// Exportar a Excel - Operadores
+if (isset($_GET['exportarExcelChoferesAjax'])) {
+    @set_time_limit(300);
+    @ini_set('memory_limit', '512M');
+    while (ob_get_level() > 0) { @ob_end_clean(); }
+    ob_start();
+
+    $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+    $op_opciones = isset($_GET['op_opciones']) ? trim($_GET['op_opciones']) : 'd';
+
+    $params = array(
+        0 => $_SESSION['Ses_Emp_Cod'],
+        'search' => $search,
+        'op_opciones' => $op_opciones,
+        'all' => true
+    );
+
+    $rows = $obBD_con1->getArrayConsulta(2, $params, $obBD_conexion);
+    if (!empty($rows)) {
+        $obBD_con1->utf8_change_param($rows);
+    } else {
+        $rows = array();
+    }
+
+    if (isset($_GET['fileDownloadToken']) && !empty($_GET['fileDownloadToken'])) {
+        setcookie('fileDownloadToken', $_GET['fileDownloadToken'], 0, '/');
+    }
+
+    $filename = "reporte_operarios_" . date('Ymd_His') . ".xls";
+    header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
+    header("Content-Disposition: attachment; filename=\"$filename\"");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+
+    echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+    echo '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
+    echo '<style>
+            table { border-collapse: collapse; font-family: Calibri, Arial, sans-serif; }
+            th { background-color: #2C5D94; color: #ffffff; font-weight: bold; font-size: 11pt; text-align: center; border: 1px solid #1a3c63; padding: 6px 10px; }
+            td { border: 1px solid #cccccc; padding: 5px 8px; font-size: 10pt; vertical-align: middle; }
+            .num { text-align: center; font-weight: bold; background-color: #f2f2f2; width: 45px; }
+            .text-center { text-align: center; }
+            .text-left { text-align: left; }
+            .text-right { text-align: right; }
+            .str { mso-number-format: "\@"; }
+            .title { font-size: 14pt; font-weight: bold; color: #2C5D94; text-align: left; }
+            .subtitle { font-size: 10pt; color: #555555; text-align: left; }
+          </style></head><body>';
+
+    echo '<table>';
+    echo '<tr><td colspan="6" class="title">REPORTE DE OPERARIOS</td></tr>';
+    echo '<tr><td colspan="6" class="subtitle">Fecha de Emisión: ' . date('d/m/Y H:i:s') . (!empty($search) ? ' | Filtro aplicado: ' . htmlspecialchars($search) : '') . '</td></tr>';
+    echo '<tr><td colspan="6"></td></tr>';
+    echo '<tr>
+            <th>N°</th>
+            <th>Cédula</th>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Licencia</th>
+            <th>Caducidad</th>
+          </tr>';
+
+    $i = 1;
+    foreach ($rows as $row) {
+        $cedula = htmlspecialchars($row['Prs_Ced']);
+        $nombre = htmlspecialchars($row['nombre']);
+        $telefono = !empty($row['Cho_Tel']) ? htmlspecialchars($row['Cho_Tel']) : '-';
+
+        // Formato Licencia
+        $licencia = '-';
+        if (!empty($row['Cho_Tli'])) {
+            $tliUpper = strtoupper(trim($row['Cho_Tli']));
+            if ($tliUpper === 'NP' || $tliUpper === 'NO POSEE') {
+                $licencia = 'No Posee';
+            } else {
+                $licencia = 'Tipo: ' . trim($row['Cho_Tli']);
+            }
+        }
+
+        // Formato Caducidad
+        $caducidad = '-';
+        if (!empty($row['Cho_Cli']) && $row['Cho_Cli'] !== '0000-00-00' && $row['Cho_Cli'] !== '1900-01-01') {
+            $tliUpper = strtoupper(trim($row['Cho_Tli']));
+            if ($tliUpper !== 'NP' && $tliUpper !== 'NO POSEE') {
+                $cliClean = trim($row['Cho_Cli']);
+                $spacePos = strpos($cliClean, ' ');
+                if ($spacePos !== false) {
+                    $cliClean = substr($cliClean, 0, $spacePos);
+                }
+                $parts = explode('-', $cliClean);
+                if (count($parts) === 3) {
+                    $caducidad = $parts[2] . '/' . $parts[1] . '/' . $parts[0];
+                }
+            }
+        }
+
+        $bg = ($i % 2 === 0) ? ' style="background-color:#f9f9f9;"' : '';
+        echo "<tr$bg>";
+        echo "<td class=\"num\">$i</td>";
+        echo "<td class=\"text-center str\">$cedula</td>";
+        echo "<td class=\"text-left\">$nombre</td>";
+        echo "<td class=\"text-center str\">$telefono</td>";
+        echo "<td class=\"text-center\">$licencia</td>";
+        echo "<td class=\"text-center str\">$caducidad</td>";
+        echo "</tr>";
+        $i++;
+    }
+
+    if (empty($rows)) {
+        echo '<tr><td colspan="6" class="text-center" style="color: #999; padding: 15px;">No se encontraron registros de operarios.</td></tr>';
+    }
+
+    echo '</table>';
+    echo '</body></html>';
+    @ob_end_flush();
+    exit;
+}
+
+// Exportar a Excel - Vehículos y Maquinaria
+if (isset($_GET['exportarExcelVehiculosAjax'])) {
+    @set_time_limit(300);
+    @ini_set('memory_limit', '512M');
+    while (ob_get_level() > 0) { @ob_end_clean(); }
+    ob_start();
+
+    $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+    $op_opciones = isset($_GET['op_opciones']) ? trim($_GET['op_opciones']) : 'p';
+    $tipo_clasificacion = isset($_GET['tipo_clasificacion']) ? trim($_GET['tipo_clasificacion']) : '';
+
+    $params = array(
+        0 => $_SESSION['Ses_Emp_Cod'],
+        'search' => $search,
+        'op_opciones' => $op_opciones,
+        'tipo_clasificacion' => $tipo_clasificacion,
+        'all' => true
+    );
+
+    $rows = $obBD_con1->getArrayConsulta(3, $params, $obBD_conexion);
+    if (!empty($rows)) {
+        $obBD_con1->utf8_change_param($rows);
+    } else {
+        $rows = array();
+    }
+
+    if (isset($_GET['fileDownloadToken']) && !empty($_GET['fileDownloadToken'])) {
+        setcookie('fileDownloadToken', $_GET['fileDownloadToken'], 0, '/');
+    }
+
+    $filename = "reporte_maquinaria_vehiculos_" . date('Ymd_His') . ".xls";
+    header("Content-Type: application/vnd.ms-excel; charset=UTF-8");
+    header("Content-Disposition: attachment; filename=\"$filename\"");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+
+    echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+    echo '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">';
+    echo '<style>
+            table { border-collapse: collapse; font-family: Calibri, Arial, sans-serif; }
+            th { background-color: #2C5D94; color: #ffffff; font-weight: bold; font-size: 11pt; text-align: center; border: 1px solid #1a3c63; padding: 6px 10px; }
+            td { border: 1px solid #cccccc; padding: 5px 8px; font-size: 10pt; vertical-align: middle; }
+            .num { text-align: center; font-weight: bold; background-color: #f2f2f2; width: 45px; }
+            .text-center { text-align: center; }
+            .text-left { text-align: left; }
+            .text-right { text-align: right; }
+            .str { mso-number-format: "\@"; }
+            .currency { mso-number-format: "$ #,##0.00"; text-align: right; }
+            .title { font-size: 14pt; font-weight: bold; color: #2C5D94; text-align: left; }
+            .subtitle { font-size: 10pt; color: #555555; text-align: left; }
+          </style></head><body>';
+
+    $filtroTxt = '';
+    if (!empty($tipo_clasificacion)) {
+        $filtroTxt .= ' | Clasificación: ' . ($tipo_clasificacion === 'V' ? 'Vehículos' : 'Otros (Equipos)');
+    }
+    if (!empty($search)) {
+        $filtroTxt .= ' | Búsqueda: ' . htmlspecialchars($search);
+    }
+
+    echo '<table>';
+    echo '<tr><td colspan="9" class="title">REPORTE DE MAQUINARIA Y VEHÍCULOS</td></tr>';
+    echo '<tr><td colspan="9" class="subtitle">Fecha de Emisión: ' . date('d/m/Y H:i:s') . $filtroTxt . '</td></tr>';
+    echo '<tr><td colspan="9"></td></tr>';
+    echo '<tr>
+            <th>N°</th>
+            <th>Clasificación</th>
+            <th>Empresa / Proveedor</th>
+            <th>Placa / Serie</th>
+            <th>Marca</th>
+            <th>Color</th>
+            <th>Tipo</th>
+            <th>Descripción Adicional</th>
+            <th>Valor ($)</th>
+          </tr>';
+
+    $i = 1;
+    foreach ($rows as $row) {
+        $clasif = ($row['Clasificacion'] === 'V') ? 'Vehículo' : 'Otro (Equipo)';
+        $empresa = !empty($row['empresa_transporte']) ? htmlspecialchars($row['empresa_transporte']) : '-';
+        $placaSerie = htmlspecialchars($row['Ide_Pla_Ser']);
+        $marca = htmlspecialchars($row['Veh_Mar']);
+        $color = htmlspecialchars($row['Veh_Col']);
+
+        // Formato Tipo
+        $tipo = $row['Veh_Tit'];
+        if ($row['Clasificacion'] === 'V') {
+            if ($tipo === 'V') $tipo = 'Volqueta';
+            else if ($tipo === 'B') $tipo = 'Bus(eta)';
+            else if ($tipo === 'C') $tipo = 'Camioneta';
+            else if ($tipo === 'T') $tipo = 'Tráiler';
+            else if ($tipo === 'M') $tipo = 'Maquinaria';
+        }
+        $tipo = htmlspecialchars($tipo);
+
+        $descAdi = !empty($row['Veh_Adi']) ? htmlspecialchars($row['Veh_Adi']) : '-';
+
+        // Formato Valor
+        $valor = '-';
+        $valClass = 'text-center';
+        if ($row['Clasificacion'] === 'V' && $row['Veh_Val'] !== null && $row['Veh_Val'] !== '') {
+            $numVal = (float)$row['Veh_Val'];
+            $valor = number_format($numVal, 2, '.', ',');
+            $valClass = 'currency';
+        }
+
+        $bg = ($i % 2 === 0) ? ' style="background-color:#f9f9f9;"' : '';
+        echo "<tr$bg>";
+        echo "<td class=\"num\">$i</td>";
+        echo "<td class=\"text-center\">$clasif</td>";
+        echo "<td class=\"text-left\">$empresa</td>";
+        echo "<td class=\"text-center str\">$placaSerie</td>";
+        echo "<td class=\"text-left\">$marca</td>";
+        echo "<td class=\"text-center\">$color</td>";
+        echo "<td class=\"text-center\">$tipo</td>";
+        echo "<td class=\"text-left\">$descAdi</td>";
+        echo "<td class=\"$valClass\">$valor</td>";
+        echo "</tr>";
+        $i++;
+    }
+
+    if (empty($rows)) {
+        echo '<tr><td colspan="9" class="text-center" style="color: #999; padding: 15px;">No se encontraron registros de maquinaria o vehículos.</td></tr>';
+    }
+
+    echo '</table>';
+    echo '</body></html>';
+    @ob_end_flush();
+    exit;
+}
+
+// Buscar Maquinaria/Equipo por Serie (AJAX)
+if (isset($_POST['buscarMaquinariaPorSerieAjax'])) {
+    $serie = isset($_POST['serie']) ? trim($_POST['serie']) : '';
+    $resp = array('success' => false);
+
+    if (!empty($serie)) {
+        $maq = $obBD_con1->getArrayConsulta(30, array($serie, $_SESSION['Ses_Emp_Cod']), $obBD_conexion);
+        if (!empty($maq)) {
+            $obBD_con1->utf8_change_param($maq);
+            $resp['success'] = true;
+            $resp['Maq_Cod'] = $maq[0]['Maq_Cod'];
+            $resp['Maq_Ser'] = $maq[0]['Maq_Ser'];
+            $resp['Maq_Tip'] = $maq[0]['Maq_Tip'];
+            $resp['Maq_Mar'] = $maq[0]['Maq_Mar'];
+            $resp['Maq_Col'] = $maq[0]['Maq_Col'];
+            $resp['Maq_Adi'] = $maq[0]['Maq_Adi'];
+        }
+    }
+    $obBD_con1->echoJson($resp);
     exit;
 }
 
@@ -278,7 +571,6 @@ if (isset($_POST['buscarVehiculoPorPlacaAjax'])) {
                 $prv = $obBD_con1->getArrayConsulta(13, array($veh[0]['Prv_Cod']), $obBD_conexion);
                 if (!empty($prv)) {
                     $resp['Prv_Nom'] = trim($prv[0]['Prv_Nom']);
-                    $resp['Prs_Ced'] = isset($prv[0]['Prs_Ced']) ? trim($prv[0]['Prs_Ced']) : '';
                 }
             }
         }
@@ -293,6 +585,7 @@ if (isset($_POST['saveChoferAjax'])) {
     $resp = array('success' => false);
     $obBD_con1->inicio_transaccion($obBD_conexion);
     try {
+        $Cho_Cod_Post = isset($_POST['Cho_Cod']) ? (int)$_POST['Cho_Cod'] : 0;
         $Cho_Ced = isset($_POST['Cho_Ced']) ? trim($_POST['Cho_Ced']) : '';
         $Prs_Nom = isset($_POST['Prs_Nom']) ? trim($_POST['Prs_Nom']) : '';
         $Prs_Ape = isset($_POST['Prs_Ape']) ? trim($_POST['Prs_Ape']) : '';
@@ -301,14 +594,28 @@ if (isset($_POST['saveChoferAjax'])) {
         $Cho_Tel = isset($_POST['Cho_Tel']) ? trim($_POST['Cho_Tel']) : '';
         $Cho_Tsa = isset($_POST['Cho_Tsa']) ? trim($_POST['Cho_Tsa']) : '';
 
-        if (empty($Cho_Ced) || empty($Prs_Nom) || empty($Prs_Ape) || empty($Cho_Tli) || empty($Cho_Cli) || empty($Cho_Tel) || empty($Cho_Tsa)) {
+        if (empty($Cho_Ced) || empty($Prs_Nom) || empty($Prs_Ape) || empty($Cho_Tli) || empty($Cho_Tel) || empty($Cho_Tsa)) {
             throw new Exception('Todos los campos marcados con asterisco (*) son obligatorios.');
         }
 
-        // Formatear fecha para MySQL (si viene como dd/mm/aaaa)
-        if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $Cho_Cli)) {
-            $parts = explode('/', $Cho_Cli);
-            $Cho_Cli = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+        if ($Cho_Tli === 'Np') {
+            $Cho_Cli = '0000-00-00';
+        } else {
+            if (empty($Cho_Cli) || $Cho_Cli === '00/00/0000') {
+                throw new Exception('La fecha de caducidad de la licencia es obligatoria.');
+            }
+            // Validar formato estricto dd/mm/aaaa con 4 dígitos en el año
+            if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $Cho_Cli, $m)) {
+                $dia = (int)$m[1];
+                $mes = (int)$m[2];
+                $anio = (int)$m[3];
+                if (!checkdate($mes, $dia, $anio)) {
+                    throw new Exception('La fecha de caducidad de la licencia no es una fecha válida en el calendario.');
+                }
+                $Cho_Cli = sprintf('%04d-%02d-%02d', $anio, $mes, $dia);
+            } else {
+                throw new Exception('El año en la fecha de caducidad de la licencia debe tener exactamente 4 dígitos (dd/mm/aaaa).');
+            }
         }
 
         $prsCedBusq = strlen($Cho_Ced) === 13 ? substr($Cho_Ced, 0, 10) : $Cho_Ced;
@@ -325,21 +632,26 @@ if (isset($_POST['saveChoferAjax'])) {
             $obBD_con1->operacionobBD(5, array($Prs_Cod, $Prs_Nom, $Prs_Ape, $Cho_Tel, $Cho_Tsa), $obBD_conexion);
         }
 
-        // Buscar chofer
-        $chofer = $obBD_con1->getArrayConsulta(28, array($Prs_Cod, $Ses_Emp_Cod), $obBD_conexion);
-        if (!empty($chofer)) {
-            if ($chofer[0]['Cho_Tip'] === 'CM') {
-                throw new Exception('El operario ya se encuentra registrado con tipo CM y no puede ser gestionado aquí.');
-            }
-            $Cho_Cod = $chofer[0]['Cho_Cod'];
+        // Buscar o actualizar chofer
+        if ($Cho_Cod_Post > 0) {
+            $Cho_Cod = $Cho_Cod_Post;
             $obBD_con1->operacionobBD(7, array($Cho_Cod, $Cho_Tli, $Cho_Cli, $Cho_Tel, $Cho_Tsa), $obBD_conexion);
         } else {
-            $obBD_con1->operacionobBD(6, array($Prs_Cod, $Ses_Emp_Cod, $Cho_Tli, $Cho_Cli, $Cho_Tel, $Cho_Tsa), $obBD_conexion);
-            $Cho_Cod = $obBD_con1->insercionid($obBD_conexion);
+            $chofer = $obBD_con1->getArrayConsulta(28, array($Prs_Cod, $Ses_Emp_Cod), $obBD_conexion);
+            if (!empty($chofer)) {
+                if ($chofer[0]['Cho_Tip'] === 'CM') {
+                    throw new Exception('El operario ya se encuentra registrado con tipo CM y no puede ser gestionado aquí.');
+                }
+                $Cho_Cod = $chofer[0]['Cho_Cod'];
+                $obBD_con1->operacionobBD(7, array($Cho_Cod, $Cho_Tli, $Cho_Cli, $Cho_Tel, $Cho_Tsa), $obBD_conexion);
+            } else {
+                $obBD_con1->operacionobBD(6, array($Prs_Cod, $Ses_Emp_Cod, $Cho_Tli, $Cho_Cli, $Cho_Tel, $Cho_Tsa), $obBD_conexion);
+                $Cho_Cod = $obBD_con1->insercionid($obBD_conexion);
+            }
         }
 
         $resp['success'] = true;
-        $resp['message'] = 'Operador registrado exitosamente.';
+        $resp['message'] = 'Operador guardado exitosamente.';
     } catch (Exception $e) {
         $obBD_con1->rollBack_nomsn($obBD_conexion);
         $resp['message'] = $e->getMessage();
@@ -399,6 +711,88 @@ if (isset($_POST['saveVehiculoAjax'])) {
     $obBD_con1->echoJson($resp);
     exit;
 }
+
+// Guardar Maquinaria / Equipo (AJAX)
+if (isset($_POST['saveMaquinariaAjax'])) {
+    $resp = array('success' => false);
+    $obBD_con1->inicio_transaccion($obBD_conexion);
+    try {
+        $Maq_Ser = isset($_POST['Maq_Ser']) ? trim($_POST['Maq_Ser']) : '';
+        $Maq_Tip = isset($_POST['Maq_Tip']) ? trim($_POST['Maq_Tip']) : '';
+        $Maq_Mar = isset($_POST['Maq_Mar']) ? trim($_POST['Maq_Mar']) : '';
+        $Maq_Col = isset($_POST['Maq_Col']) ? trim($_POST['Maq_Col']) : '';
+        $Maq_Adi = isset($_POST['Maq_Adi']) ? trim($_POST['Maq_Adi']) : '';
+
+        if (empty($Maq_Ser) || empty($Maq_Tip) || empty($Maq_Mar) || empty($Maq_Col)) {
+            throw new Exception('Todos los campos marcados con asterisco (*) son obligatorios.');
+        }
+
+        // Buscar si ya existe maquinaria por serie
+        $maq_exist = $obBD_con1->getArrayConsulta(30, array($Maq_Ser, $Ses_Emp_Cod), $obBD_conexion);
+        if (!empty($maq_exist)) {
+            $Maq_Cod = $maq_exist[0]['Maq_Cod'];
+            $obBD_con1->operacionobBD(32, array($Maq_Cod, $Maq_Tip, $Maq_Mar, $Maq_Col, $Maq_Adi), $obBD_conexion);
+        } else {
+            $obBD_con1->operacionobBD(31, array($Ses_Emp_Cod, $Maq_Ser, $Maq_Tip, $Maq_Mar, $Maq_Col, $Maq_Adi), $obBD_conexion);
+            $Maq_Cod = $obBD_con1->insercionid($obBD_conexion);
+        }
+
+        $resp['success'] = true;
+        $resp['message'] = 'Maquinaria / Equipo registrado exitosamente.';
+    } catch (Exception $e) {
+        $obBD_con1->rollBack_nomsn($obBD_conexion);
+        $resp['message'] = $e->getMessage();
+        $obBD_con1->echoJson($resp);
+        exit;
+    }
+    $obBD_con1->fin_transaccion_nomsn($obBD_conexion);
+    $obBD_con1->echoJson($resp);
+    exit;
+}
+
+// Inactivar Chofer / Operario (AJAX)
+if (isset($_POST['inactivarChoferAjax'])) {
+    $Cho_Cod = isset($_POST['Cho_Cod']) ? (int)$_POST['Cho_Cod'] : 0;
+    $resp = array('success' => false);
+    if ($Cho_Cod > 0) {
+        $obBD_con1->operacionobBD(34, array($Cho_Cod, $Ses_Emp_Cod), $obBD_conexion);
+        $resp['success'] = true;
+        $resp['message'] = 'Operario inactivado exitosamente.';
+    } else {
+        $resp['message'] = 'Código de operario no válido.';
+    }
+    $obBD_con1->echoJson($resp);
+    exit;
+}
+
+// Inactivar Vehículo / Maquinaria (AJAX)
+if (isset($_POST['inactivarVehiculoAjax'])) {
+    $rowId = isset($_POST['rowId']) ? trim($_POST['rowId']) : '';
+    $clasif = isset($_POST['clasif']) ? trim($_POST['clasif']) : '';
+    $resp = array('success' => false);
+
+    if ($clasif === 'O' || strpos($rowId, 'M_') === 0) {
+        $maqCod = (int)str_replace('M_', '', $rowId);
+        if ($maqCod > 0) {
+            $obBD_con1->operacionobBD(36, array($maqCod, $Ses_Emp_Cod), $obBD_conexion);
+            $resp['success'] = true;
+            $resp['message'] = 'Maquinaria / Equipo inactivado exitosamente.';
+        } else {
+            $resp['message'] = 'Código de equipo no válido.';
+        }
+    } else {
+        $vehCod = (int)str_replace('V_', '', $rowId);
+        if ($vehCod > 0) {
+            $obBD_con1->operacionobBD(35, array($vehCod, $Ses_Emp_Cod), $obBD_conexion);
+            $resp['success'] = true;
+            $resp['message'] = 'Vehículo inactivado exitosamente.';
+        } else {
+            $resp['message'] = 'Código de vehículo no válido.';
+        }
+    }
+    $obBD_con1->echoJson($resp);
+    exit;
+}
 ?>
 <!DOCTYPE HTML>
 <HTML>
@@ -411,7 +805,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
     <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
     <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
     <script language="javascript" src="../../framework/plugins/cedulaRuc.js"></script>
-    <link rel="stylesheet" type="text/css" href="../RECURSOS/vehiculos_choferes.css" />
+    <link rel="stylesheet" type="text/css" href="../RECURSOS/vehiculos_choferes.css?v=6" />
 </HEAD>
 
 <BODY>
@@ -456,7 +850,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                 </div>
                                 <div class="form-inline">
                                     <label class="control-label" style="font-weight: bold; width: 70px;">Buscar:</label>
-                                    <input type="text" id="searchChofer" class="form-control input-sm" placeholder="Escriba aquí para buscar..." style="width: 250px;">
+                                    <input type="text" id="searchChofer" class="form-control input-sm" placeholder="Escriba aquí para buscar..." style="width: 250px;" onkeydown="if (event.keyCode === 13) { event.preventDefault(); reloadGridChoferes(); }">
                                     <button type="button" class="btn btn-sm btn-primary" id="btnBuscarChofer" onclick="reloadGridChoferes();"><i class="fa fa-search"></i> Buscar</button>
                                 </div>
                             </div>
@@ -464,23 +858,32 @@ if (isset($_POST['saveVehiculoAjax'])) {
                             <div id="pagerChoferes"></div>
                         </div>
 
-                        <!-- Grid Vehículos -->
+                        <!-- Grid Vehículos y Maquinarias -->
                         <div role="tabpanel" class="tab-pane" id="tabListVehiculos">
                             <div style="margin-bottom: 15px; background-color: #f9f9f9; padding: 10px; border-radius: 4px; border: 1px solid #eee;">
                                 <div class="form-inline" style="margin-bottom: 10px;">
                                     <label class="control-label" style="font-weight: bold; width: 70px;">Filtro:</label>
                                     <input type="hidden" id="opVehiculo" value="p">
-                                    <div class="btn-group" style="vertical-align: top;">
-                                        <button type="button" class="btn btn-default btn-sm active" onclick="document.getElementById('opVehiculo').value='p'; $(this).addClass('active').css({'color':'#e67e22','background-color':'#fff'}).siblings().removeClass('active').css({'color':'#000','background-color':'#e6e6e6'});" style="color: #e67e22; font-weight: bold; background-color: #fff;">Placa</button>
+                                    <div class="btn-group" style="vertical-align: top; margin-right: 25px;">
+                                        <button type="button" class="btn btn-default btn-sm active" id="btnFiltroPlaca" onclick="document.getElementById('opVehiculo').value='p'; $(this).addClass('active').css({'color':'#e67e22','background-color':'#fff'}).siblings().removeClass('active').css({'color':'#000','background-color':'#e6e6e6'}); $('#searchVehiculo').attr('placeholder', 'Buscar por placa o serie...');" style="color: #e67e22; font-weight: bold; background-color: #fff;">Placa / Serie</button>
+                                        <button type="button" class="btn btn-default btn-sm" id="btnFiltroMarca" onclick="document.getElementById('opVehiculo').value='m'; $(this).addClass('active').css({'color':'#e67e22','background-color':'#fff'}).siblings().removeClass('active').css({'color':'#000','background-color':'#e6e6e6'}); $('#searchVehiculo').attr('placeholder', 'Buscar por marca...');" style="color: #000; font-weight: bold; background-color: #e6e6e6;">Marca</button>
                                     </div>
+
+                                    <label class="control-label" style="font-weight: bold; margin-right: 5px;">Clasificación:</label>
+                                    <select id="tipoClasificacionGrid" class="form-control input-sm" onchange="cambiarFiltroClasificacion(this.value);" style="width: 160px; vertical-align: top;">
+                                        <option value="">Todos</option>
+                                        <option value="V">Vehículos</option>
+                                        <option value="O">Otros (Equipos)</option>
+                                    </select>
+
                                     <!-- Botón que lleva al Ambiente 2 de registro -->
                                     <button type="button" class="btn btn-sm btn-exa-success" style="float: right;" onclick="mostrarFormulario('vehiculo');">
-                                        <i class="glyphicon glyphicon-plus"></i> Registrar Nuevo Vehículo
+                                        <i class="glyphicon glyphicon-plus"></i> Registrar Maquinaria / Vehículo
                                     </button>
                                 </div>
                                 <div class="form-inline">
                                     <label class="control-label" style="font-weight: bold; width: 70px;">Buscar:</label>
-                                    <input type="text" id="searchVehiculo" class="form-control input-sm" placeholder="Buscar por placa..." style="width: 250px;">
+                                    <input type="text" id="searchVehiculo" class="form-control input-sm" placeholder="Buscar por placa o serie..." style="width: 250px;" onkeydown="if (event.keyCode === 13) { event.preventDefault(); reloadGridVehiculos(); }">
                                     <button type="button" class="btn btn-sm btn-primary" id="btnBuscarVehiculo" onclick="reloadGridVehiculos();"><i class="fa fa-search"></i> Buscar</button>
                                 </div>
                             </div>
@@ -500,6 +903,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
                     <!-- Formulario Chofer Individual -->
                     <div id="divFormTabChofer" style="display:none;">
                         <form id="formChofer" class="form-horizontal" onsubmit="return false;">
+                            <input type="hidden" id="Cho_Cod" name="Cho_Cod" value="" />
                             <fieldset class="exa-fieldset">
                                 <legend>Datos Personales del Operario</legend>
                                 <div class="row">
@@ -507,7 +911,12 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         <div class="form-group">
                                             <label class="col-sm-4 control-label label-sm">Cédula o RUC:<span class="text-danger">*</span></label>
                                             <div class="col-sm-8">
-                                                <input id="Cho_Ced" name="Cho_Ced" type="text" class="form-control" placeholder="Cédula o RUC" maxlength="13" onkeypress="return validar_numeric(event);" />
+                                                <div class="input-group">
+                                                    <input id="Cho_Ced" name="Cho_Ced" type="text" class="form-control" placeholder="Cédula o RUC" maxlength="13" onkeypress="return validar_numeric(event);" />
+                                                    <span class="input-group-addon exa-tooltip" id="iconChoferStatus" style="width: 40px; background-color: #eee; cursor: help;">
+                                                        <i class="glyphicon glyphicon-minus" style="color: #999;"></i>
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -543,7 +952,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         <div class="form-group">
                                             <label class="col-sm-4 control-label label-sm">Tipo de Licencia:<span class="text-danger">*</span></label>
                                             <div class="col-sm-8">
-                                                <select id="Cho_Tli" name="Cho_Tli" class="form-control">
+                                                <select id="Cho_Tli" name="Cho_Tli" class="form-control" onchange="evaluarTipoLicencia();">
                                                     <option value="">Seleccione...</option>
                                                     <option value="Np">NO POSEE</option>
                                                     <option value="A">TIPO A</option>
@@ -564,7 +973,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         <div class="form-group">
                                             <label class="col-sm-4 control-label label-sm">Caducidad Licencia:<span class="text-danger">*</span></label>
                                             <div class="col-sm-8">
-                                                <input id="Cho_Cli" name="Cho_Cli" type="text" class="form-control datepicker" placeholder="dd/mm/aaaa" />
+                                                <input id="Cho_Cli" name="Cho_Cli" type="text" class="form-control datepicker" placeholder="dd/mm/aaaa" maxlength="10" />
                                             </div>
                                         </div>
                                     </div>
@@ -591,7 +1000,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                 </div>
                             </fieldset>
                             <div class="button-center">
-                                <button type="button" class="btn btn-custom btn-exa-primary" onclick="guardarChofer();">
+                                <button type="button" class="btn btn-custom btn-exa-primary" id="btnGuardarChofer" onclick="guardarChofer();">
                                     <span class="glyphicon glyphicon-floppy-disk"></span> Guardar Operario
                                 </button>
                                 <button type="button" class="btn btn-custom btn-default" onclick="mostrarListado();">
@@ -601,12 +1010,29 @@ if (isset($_POST['saveVehiculoAjax'])) {
                         </form>
                     </div>
 
-                    <!-- Formulario Vehículo Individual -->
+                    <!-- Formulario Vehículo / Maquinaria Individual -->
                     <div id="divFormTabVehiculo" style="display:none;">
                         <form id="formVehiculo" class="form-horizontal" onsubmit="return false;">
                             <fieldset class="exa-fieldset">
-                                <legend>Datos Técnicos del Vehículo</legend>
+                                <legend id="legendVehiculo">Datos Técnicos del Vehículo</legend>
+                                
+                                <!-- Selector de Clasificación (Maquinaria Vehicular vs Otros) -->
                                 <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label label-sm">Clasificación:<span class="text-danger">*</span></label>
+                                            <div class="col-sm-6">
+                                                <select id="tipoClasificacionForm" name="tipoClasificacionForm" class="form-control" onchange="cambiarTipoClasificacionForm(this.value);" style="font-weight: bold; background-color: #fcfcfc;">
+                                                    <option value="V">Maquinaria (Vehículos)</option>
+                                                    <option value="O">Otros (Equipos)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Proveedor (Solo para Vehículos) -->
+                                <div class="row row-vehiculo-only">
                                     <div class="col-sm-12">
                                         <div class="form-group">
                                             <label class="col-sm-4 control-label label-sm">Proveedor (Cédula/RUC):<span class="text-danger">*</span></label>
@@ -623,7 +1049,9 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row">
+
+                                <!-- Placa (Solo para Vehículos) -->
+                                <div class="row row-vehiculo-only">
                                     <div class="col-sm-12">
                                         <div class="form-group">
                                             <label class="col-sm-4 control-label label-sm">Placa (Ej: ABC-1234):<span class="text-danger">*</span></label>
@@ -638,6 +1066,21 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Serie (Solo para Otros / Equipos) -->
+                                <div class="row row-otros-only" style="display:none;">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label label-sm">Serie:<span class="text-danger">*</span></label>
+                                            <div class="col-sm-6">
+                                                <input id="Maq_Ser" name="Maq_Ser" type="text" class="form-control" placeholder="Número de Serie / Código (Obligatorio)" maxlength="50" />
+                                                <input id="Maq_Cod" name="Maq_Cod" type="hidden" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Marca (Común) -->
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div class="form-group">
@@ -658,6 +1101,8 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Color (Común) -->
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div class="form-group">
@@ -679,13 +1124,15 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                     </div>
                                 </div>
 
+                                <!-- Tipo Vehículo / Tipo Maquinaria -->
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div class="form-group">
-                                            <label class="col-sm-4 control-label label-sm">Tipo Vehículo:<span class="text-danger">*</span></label>
+                                            <label id="lblTipoElemento" class="col-sm-4 control-label label-sm">Tipo Vehículo:<span class="text-danger">*</span></label>
                                             <div class="col-sm-6">
                                                 <div class="input-group">
-                                                    <select id="Veh_Tit" name="Veh_Tit" class="form-control">
+                                                    <!-- Select para Tipo Vehículo -->
+                                                    <select id="Veh_Tit" name="Veh_Tit" class="form-control row-vehiculo-only">
                                                         <option value="">Seleccione...</option>
                                                         <option value="B">BUS(ETA)</option>
                                                         <option value="C">CAMIONETA</option>
@@ -705,25 +1152,57 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                                         }
                                                         ?>
                                                     </select>
+
+                                                    <!-- Select para Tipo Maquinaria / Equipo (Otros) -->
+                                                    <select id="Maq_Tip" name="Maq_Tip" class="form-control row-otros-only" style="display:none;">
+                                                        <option value="">Seleccione...</option>
+                                                        <option value="GENERADOR">GENERADOR</option>
+                                                        <option value="BOMBA">BOMBA</option>
+                                                        <option value="COMPRESOR">COMPRESOR</option>
+                                                        <option value="EXCAVADORA">EXCAVADORA</option>
+                                                        <option value="RETROEXCAVADORA">RETROEXCAVADORA</option>
+                                                        <option value="CARGADOR FRONTAL">CARGADOR FRONTAL</option>
+                                                        <option value="TRITURADORA">TRITURADORA</option>
+                                                        <option value="RODILLO">RODILLO</option>
+                                                        <option value="TORRE DE ILUMINACION">TORRE DE ILUMINACIÓN</option>
+                                                        <?php
+                                                        $tipos_maq_fijos = array('GENERADOR', 'BOMBA', 'COMPRESOR', 'EXCAVADORA', 'RETROEXCAVADORA', 'CARGADOR FRONTAL', 'TRITURADORA', 'RODILLO', 'TORRE DE ILUMINACION');
+                                                        if (isset($rs_titulos_maq) && is_array($rs_titulos_maq)) {
+                                                            foreach ($rs_titulos_maq as $tm) {
+                                                                $t_val = strtoupper(trim($tm['Veh_Tit']));
+                                                                if (!in_array($t_val, $tipos_maq_fijos) && $t_val !== '') {
+                                                        ?>
+                                                                    <option value="<?php echo htmlspecialchars($t_val); ?>"><?php echo htmlspecialchars($t_val); ?></option>
+                                                        <?php
+                                                                }
+                                                            }
+                                                        }
+                                                        ?>
+                                                    </select>
+
                                                     <span class="input-group-btn">
-                                                        <button class="btn btn-default" type="button" onclick="abrirMiniModal('Veh_Tit', 'Tipo Vehículo');"><i class="fa fa-plus"></i></button>
+                                                        <button class="btn btn-default" type="button" onclick="abrirMiniModalTipoDinamico();"><i class="fa fa-plus"></i></button>
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Detalle Adicional -->
                                 <div class="row">
                                     <div class="col-sm-12">
                                         <div class="form-group">
-                                            <label class="col-sm-4 control-label label-sm">Detalle Adicional:</label>
+                                            <label class="col-sm-4 control-label label-sm">Descripcion Adicional:</label>
                                             <div class="col-sm-6">
                                                 <textarea id="Veh_Adi" name="Veh_Adi" class="form-control" rows="2" placeholder="Ingrese un detalle adicional..."></textarea>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row">
+
+                                <!-- Valor pactado por hora (Solo para Vehículos) -->
+                                <div class="row row-vehiculo-only">
                                     <div class="col-sm-12">
                                         <div class="form-group">
                                             <label class="col-sm-4 control-label label-sm">Valor pactado por hora:</label>
@@ -735,7 +1214,7 @@ if (isset($_POST['saveVehiculoAjax'])) {
                                 </div>
                             </fieldset>
                             <div class="button-center">
-                                <button type="button" class="btn btn-custom btn-exa-primary" onclick="guardarVehiculo();">
+                                <button type="button" class="btn btn-custom btn-exa-primary" id="btnGuardarVehiculo" onclick="guardarVehiculo();">
                                     <span class="glyphicon glyphicon-floppy-disk"></span> Guardar Vehículo
                                 </button>
                                 <button type="button" class="btn btn-custom btn-default" onclick="mostrarListado();">
@@ -893,7 +1372,13 @@ if (isset($_POST['saveVehiculoAjax'])) {
         </div>
     </div>
 
-    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=12"></script>
+    <iframe id="iframeDownloadExcel" style="display:none; width:0; height:0; border:0;"></iframe>
+    <script type="text/javascript" src="../VALIDACIONES/man_val_alt_vehiculos_choferes.js?v=15"></script>
+    <!-- Cierre de conexiones y liberacion de memoria -->
+    <?php
+        $obBD_con1->liberar();
+        $obBD_conexion->cerrar();
+    ?>
 </BODY>
 
 </HTML>

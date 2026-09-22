@@ -29,50 +29,83 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
                 }
             }
 
-            if (empty($Par_Sql['limits'])) {
-                $sql = "SELECT COUNT(DISTINCT chofer.Prs_Cod) as total 
+            if (empty($Par_Sql['limits']) && empty($Par_Sql['all'])) {
+                $sql = "SELECT COUNT(*) as total 
                         FROM chofer
                         INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
                         WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
                           AND chofer.Cho_Est = 'A' AND IFNULL(chofer.Cho_Tip, '') = 'OP' $search";
             } else {
+                $limitClause = !empty($Par_Sql['limits']) ? " " . $Par_Sql['limits'] : "";
                 $sql = "SELECT chofer.*, persona.Prs_Cod, persona.Prs_Nom, persona.Prs_Ape, persona.Prs_Ced,
                                CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as nombre
                         FROM chofer
                         INNER JOIN persona ON persona.Prs_Cod = chofer.Prs_Cod
                         WHERE chofer.Emp_Cod = '$Par_Sql[0]' 
                           AND chofer.Cho_Est = 'A' AND IFNULL(chofer.Cho_Tip, '') = 'OP' $search
-                        GROUP BY chofer.Prs_Cod
-                        ORDER BY persona.Prs_Ape ASC, persona.Prs_Nom ASC " . $Par_Sql['limits'];
+                        ORDER BY persona.Prs_Ape ASC, persona.Prs_Nom ASC $limitClause";
             }
             break;
 
         case 3:
-            // Listar Vehículos para el Grid (Ambiente 1) - Con conteo incorporado
+            // Listar Vehículos y Maquinarias/Equipos para el Grid (Ambiente 1) - Con conteo incorporado
             $search = "";
-            if (!empty($Par_Sql['search']) && !empty($Par_Sql['op_opciones'])) {
-                $searchTerm = addslashes($Par_Sql['search']);
-                if ($Par_Sql['op_opciones'] == 'p') {
-                    $search = " AND vehiculo.Veh_Pla LIKE '%$searchTerm%'";
+            $clasifFiltro = "";
+            if (!empty($Par_Sql['tipo_clasificacion'])) {
+                if ($Par_Sql['tipo_clasificacion'] == 'V') {
+                    $clasifFiltro = " AND u.Clasificacion = 'V'";
+                } else if ($Par_Sql['tipo_clasificacion'] == 'O') {
+                    $clasifFiltro = " AND u.Clasificacion = 'O'";
                 }
             }
 
-            if (empty($Par_Sql['limits'])) {
-                $sql = "SELECT COUNT(*) as total 
-                        FROM vehiculo
-                        WHERE vehiculo.Veh_Est = 'A' 
-                          AND vehiculo.Emp_Cod = '$Par_Sql[0]' 
-                          AND IFNULL(vehiculo.Veh_Tip, '') != 'VM' $search";
+            if (!empty($Par_Sql['search']) && !empty($Par_Sql['op_opciones'])) {
+                $searchTerm = addslashes($Par_Sql['search']);
+                if ($Par_Sql['op_opciones'] == 'p') {
+                    $search = " AND u.Ide_Pla_Ser LIKE '%$searchTerm%'";
+                } else if ($Par_Sql['op_opciones'] == 'm') {
+                    $search = " AND u.Veh_Mar LIKE '%$searchTerm%'";
+                }
+            }
+
+            $unionSubquery = "
+                SELECT CONCAT('V_', vehiculo.Veh_Cod) as Row_Id,
+                       vehiculo.Veh_Cod as Cod_Int,
+                       'V' as Clasificacion,
+                       vehiculo.Veh_Pla as Ide_Pla_Ser,
+                       vehiculo.Veh_Mar,
+                       vehiculo.Veh_Col,
+                       vehiculo.Veh_Tit,
+                       vehiculo.Veh_Val,
+                       CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as empresa_transporte,
+                       vehiculo.Veh_Adi
+                FROM vehiculo
+                LEFT JOIN proveedore ON proveedore.Prv_Cod = vehiculo.Prv_Cod
+                LEFT JOIN persona ON persona.Prs_Cod = proveedore.Prs_Cod
+                WHERE vehiculo.Veh_Est = 'A'
+                  AND vehiculo.Emp_Cod = '$Par_Sql[0]'
+                  AND IFNULL(vehiculo.Veh_Tip, '') != 'VM'
+                UNION ALL
+                SELECT CONCAT('M_', maquinaria_equipo.Maq_Cod) as Row_Id,
+                       maquinaria_equipo.Maq_Cod as Cod_Int,
+                       'O' as Clasificacion,
+                       maquinaria_equipo.Maq_Ser as Ide_Pla_Ser,
+                       maquinaria_equipo.Maq_Mar as Veh_Mar,
+                       maquinaria_equipo.Maq_Col as Veh_Col,
+                       maquinaria_equipo.Maq_Tip as Veh_Tit,
+                       NULL as Veh_Val,
+                       'PROPIO / PLANTA' as empresa_transporte,
+                       maquinaria_equipo.Maq_Adi as Veh_Adi
+                FROM maquinaria_equipo
+                WHERE maquinaria_equipo.Maq_Est = 'A'
+                  AND maquinaria_equipo.Emp_Cod = '$Par_Sql[0]'
+            ";
+
+            if (empty($Par_Sql['limits']) && empty($Par_Sql['all'])) {
+                $sql = "SELECT COUNT(*) as total FROM ($unionSubquery) u WHERE 1=1 $clasifFiltro $search";
             } else {
-                $sql = "SELECT vehiculo.Veh_Cod, vehiculo.Veh_Pla, vehiculo.Veh_Mar, vehiculo.Veh_Col, vehiculo.Veh_Cap, vehiculo.Veh_Tit, vehiculo.Prv_Cod, vehiculo.Veh_Val,
-                               CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as empresa_transporte
-                        FROM vehiculo
-                        LEFT JOIN proveedore ON proveedore.Prv_Cod = vehiculo.Prv_Cod
-                        LEFT JOIN persona ON persona.Prs_Cod = proveedore.Prs_Cod
-                        WHERE vehiculo.Veh_Est = 'A' 
-                          AND vehiculo.Emp_Cod = '$Par_Sql[0]' 
-                          AND IFNULL(vehiculo.Veh_Tip, '') != 'VM' $search
-                        ORDER BY vehiculo.Veh_Pla ASC " . $Par_Sql['limits'];
+                $limitClause = !empty($Par_Sql['limits']) ? " " . $Par_Sql['limits'] : "";
+                $sql = "SELECT u.* FROM ($unionSubquery) u WHERE 1=1 $clasifFiltro $search ORDER BY u.Ide_Pla_Ser ASC $limitClause";
             }
             break;
 
@@ -98,7 +131,7 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
         case 7:
             // UPDATE Chofer
             $sql = "UPDATE chofer 
-                    SET Cho_Tli = '$Par_Sql[1]', Cho_Cli = '$Par_Sql[2]', Cho_Tel = '$Par_Sql[3]', Cho_Tsa = '$Par_Sql[4]', Cho_Tip = 'OP'
+                    SET Cho_Tli = '$Par_Sql[1]', Cho_Cli = '$Par_Sql[2]', Cho_Tel = '$Par_Sql[3]', Cho_Tsa = '$Par_Sql[4]', Cho_Tip = 'OP', Cho_Est = 'A'
                     WHERE Cho_Cod = '$Par_Sql[0]'";
             break;
 
@@ -133,8 +166,8 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
             break;
 
         case 13:
-            // Buscar nombre y cédula de proveedor por ID
-            $sql = "SELECT persona.Prs_Ced, CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as Prv_Nom 
+            // Buscar nombre de proveedor por ID
+            $sql = "SELECT CONCAT(persona.Prs_Nom, ' ', persona.Prs_Ape) as Prv_Nom 
                     FROM proveedore 
                     INNER JOIN persona ON persona.Prs_Cod = proveedore.Prs_Cod 
                     WHERE proveedore.Prv_Cod = '$Par_Sql[0]' LIMIT 1";
@@ -210,7 +243,12 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
             $sql = "SELECT Prs_Cod, Prs_Nom, Prs_Ape, Prs_Tel, Prs_San FROM persona WHERE Prs_Ced = '$Par_Sql[0]' LIMIT 1";
             break;
         case 25:
-            $sql = "SELECT Cho_Tli, Cho_Cli FROM chofer WHERE Prs_Cod = '$Par_Sql[0]' LIMIT 1";
+            $empFiltro = !empty($Par_Sql[1]) ? " AND Emp_Cod = '$Par_Sql[1]'" : "";
+            $sql = "SELECT Cho_Cod, Cho_Tli, Cho_Cli 
+                    FROM chofer 
+                    WHERE Prs_Cod = '$Par_Sql[0]' $empFiltro 
+                      AND Cho_Est = 'A' AND IFNULL(Cho_Tip, '') = 'OP' 
+                    ORDER BY Cho_Cod DESC LIMIT 1";
             break;
         case 26:
             $sql = "SELECT Prs_Cod FROM persona WHERE Prs_Ced = '$Par_Sql[0]' LIMIT 1";
@@ -219,10 +257,61 @@ function sentencias_vehiculos_choferes($id, $Par_Sql)
             $sql = "SELECT Prv_Cod FROM proveedore WHERE Prs_Cod = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]' LIMIT 1";
             break;
         case 28:
-            $sql = "SELECT Cho_Cod, IFNULL(Cho_Tip, '') as Cho_Tip FROM chofer WHERE Prs_Cod = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]' LIMIT 1";
+            $sql = "SELECT Cho_Cod, IFNULL(Cho_Tip, '') as Cho_Tip 
+                    FROM chofer 
+                    WHERE Prs_Cod = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]' 
+                      AND Cho_Est = 'A' AND IFNULL(Cho_Tip, '') = 'OP' 
+                    ORDER BY Cho_Cod DESC LIMIT 1";
             break;
         case 29:
             $sql = "SELECT Veh_Cod, IFNULL(Veh_Tip, '') as Veh_Tip FROM vehiculo WHERE Veh_Pla = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]' AND Veh_Est = 'A' LIMIT 1";
+            break;
+
+        case 30:
+            // Buscar maquinaria/equipo por serie
+            $sql = "SELECT Maq_Cod, Maq_Ser, Maq_Tip, Maq_Mar, Maq_Col, Maq_Adi 
+                    FROM maquinaria_equipo 
+                    WHERE Maq_Ser = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]' AND Maq_Est = 'A' LIMIT 1";
+            break;
+
+        case 31:
+            // INSERT maquinaria_equipo
+            $sql = "INSERT INTO maquinaria_equipo (Emp_Cod, Maq_Ser, Maq_Tip, Maq_Mar, Maq_Col, Maq_Adi, Maq_Est)
+                    VALUES ('$Par_Sql[0]', '$Par_Sql[1]', '$Par_Sql[2]', '$Par_Sql[3]', '$Par_Sql[4]', '$Par_Sql[5]', 'A')";
+            break;
+
+        case 32:
+            // UPDATE maquinaria_equipo
+            $sql = "UPDATE maquinaria_equipo 
+                    SET Maq_Tip = '$Par_Sql[1]', Maq_Mar = '$Par_Sql[2]', Maq_Col = '$Par_Sql[3]', Maq_Adi = '$Par_Sql[4]'
+                    WHERE Maq_Cod = '$Par_Sql[0]'";
+            break;
+
+        case 33:
+            // Obtener tipos de maquinaria únicos
+            $sql = "SELECT DISTINCT Maq_Tip as Veh_Tit FROM maquinaria_equipo WHERE Maq_Tip IS NOT NULL AND Maq_Tip != '' ORDER BY Maq_Tip ASC";
+            break;
+
+        case 34:
+            // Inactivar Chofer
+            $sql = "UPDATE chofer SET Cho_Est = 'I' WHERE Cho_Cod = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]'";
+            break;
+
+        case 35:
+            // Inactivar Vehículo
+            $sql = "UPDATE vehiculo SET Veh_Est = 'I' WHERE Veh_Cod = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]'";
+            break;
+
+        case 36:
+            // Inactivar Maquinaria / Equipo
+            $sql = "UPDATE maquinaria_equipo SET Maq_Est = 'I' WHERE Maq_Cod = '$Par_Sql[0]' AND Emp_Cod = '$Par_Sql[1]'";
+            break;
+
+        case 37:
+            // Obtener datos del chofer por su Cho_Cod directo
+            $sql = "SELECT Cho_Cod, Cho_Tli, Cho_Cli, Cho_Tel, Cho_Tsa 
+                    FROM chofer 
+                    WHERE Cho_Cod = '$Par_Sql[0]' LIMIT 1";
             break;
     }
     return $sql;
