@@ -93,3 +93,11 @@ relavera/FRONT/620/
 # respaldos de base de datos locales
 db/*.gz
 
+# Suite de pruebas del modulo de auditoria (solo local)
+auditoria/TEST/
+auditoria/TEST/**
+
+# Probes / scripts de prueba locales (raiz)
+test/
+test/**
+

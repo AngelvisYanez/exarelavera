@@ -259,11 +259,11 @@ function aud_sim_casos()
 		),
 		array(
 			'id' => 'inventario',
-			'pcs_noms' => array('inventario_dispositivos', 'man_adm_usuarios', 'man_adm_notificacion'),
+			'pcs_noms' => array('inventario_dispositivos', 'dispositivos_usuario', 'man_adm_usuarios', 'man_adm_notificacion'),
 			'mod_like' => 'elavera',
 			'mod_re' => '/relavera|inventario|dispositivo/i',
 			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
-			'tabs' => array('inventario_dispositivos', 'usuario_inventario')
+			'tabs' => array('inventario_dispositivos', 'usuario_inventario', 'dispositivos_usuario')
 		),
 		array(
 			'id' => 'cobranzas',
@@ -1103,4 +1103,154 @@ function aud_html_banner_captura($estado)
 	}
 	$cls = !empty($estado['ok']) ? 'aud-captura-ok' : 'aud-captura-off';
 	return '<p class="aud-captura-banner '.$cls.'">'.aud_h($estado['message']).'</p>';
+}
+
+/**
+ * Fecha mas antigua con datos registrados en auditoria (aviso "datos desde").
+ * Se consulta una sola vez por empresa y se cachea en sesion.
+ * $obBD_con1 / $obBD_conexion son opcionales: si no llegan se usa la fecha
+ * de inicio del monitoreo (10-sep-2026).
+ */
+function aud_fecha_registro_inicio($empCod, $obBD_con1 = null, $obBD_conexion = null)
+{
+	try {
+		$sessOk = (function_exists('session_status') && session_status() === PHP_SESSION_ACTIVE);
+	} catch (\Exception $eSess) {
+		$sessOk = false;
+	} catch (\Throwable $eSess2) {
+		$sessOk = false;
+	}
+	if (!isset($sessOk)) {
+		$sessOk = false;
+	}
+	$emp = (int)$empCod;
+	$key = 'aud_min_fec_'.(int)$emp;
+	if ($sessOk && isset($_SESSION[$key]) && $_SESSION[$key] !== '') {
+		return (string)$_SESSION[$key];
+	}
+	$fecha = '2026-09-10';
+	if ($obBD_con1 && $obBD_conexion && method_exists($obBD_con1, 'getRowConsulta')) {
+		try {
+			$row = $obBD_con1->getRowConsulta(37, array($emp), $obBD_conexion);
+			if (is_array($row) && !empty($row['min_fec'])) {
+				$d = substr(trim((string)$row['min_fec']), 0, 10);
+				if ($d !== '' && $d !== '0000-00-00' && strtotime($d)) {
+					$fecha = $d;
+				}
+			}
+		} catch (\Exception $eSQL) {
+			// conservar la fecha por defecto
+		} catch (\Throwable $eSQL2) {
+			// conservar la fecha por defecto
+		}
+	}
+	if ($sessOk) {
+		$_SESSION[$key] = $fecha;
+	}
+	return $fecha;
+}
+
+/** Banner informativo: desde que fecha hay datos en auditoria. */
+function aud_html_banner_desde($fecha)
+{
+	$fecha = trim((string)$fecha);
+	if ($fecha === '' || $fecha === '0000-00-00') {
+		return '';
+	}
+	$ts = strtotime($fecha);
+	if (!$ts) {
+		return '';
+	}
+	$meses = array('enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre');
+	$legible = (int)date('j', $ts).' de '.$meses[(int)date('n', $ts) - 1].' de '.date('Y', $ts);
+	$dia = date('d/m/Y', $ts);
+	return '<p class="aud-aviso-desde"><span class="glyphicon glyphicon-info-sign"></span> La auditoria registra datos desde el <strong>'.$legible.'</strong> ('.$dia.'). No hay movimientos registrados con anterioridad a esa fecha.</p>';
+}
+
+/**
+ * Historial (timeline) de un registro: todos los movimientos del mismo
+ * tipo de registro e identificador, ordenados cronologicamente.
+ */
+function aud_html_historial($row, $obBD_con1 = null, $obBD_conexion = null)
+{
+	if (!$obBD_con1 || !$obBD_conexion || !method_exists($obBD_con1, 'getArrayConsulta')) {
+		return '<p class="aud-det-empty">Historial no disponible.</p>';
+	}
+	$tabCod = isset($row['Tab_Cod']) ? (int)$row['Tab_Cod'] : 0;
+	$emp = isset($row['Emp_Cod']) ? (int)$row['Emp_Cod'] : 0;
+	$actualCod = isset($row['Log_Cod']) ? (int)$row['Log_Cod'] : 0;
+	$int = trim((string)(isset($row['Log_Int']) ? $row['Log_Int'] : ''));
+	// El identificador base es lo que precede a " || OLD:..."
+	$base = trim(preg_replace('/\s*\|\|.*$/s', '', $int));
+	if ($base === '') {
+		return '<p class="aud-det-empty">Este movimiento no tiene un identificador de registro, por lo que no se puede armar su historial.</p>';
+	}
+	$hist = $obBD_con1->getArrayConsulta(36, array($tabCod, $emp, $base, 100), $obBD_conexion);
+	if (!is_array($hist) || count($hist) === 0) {
+		return '<p class="aud-det-empty">No se encontraron otros movimientos sobre este registro.</p>';
+	}
+	$html = '<ul class="aud-hist-list">';
+	foreach ($hist as $r) {
+		$eveIni = strtoupper(trim(isset($r['Eve_Ini']) ? $r['Eve_Ini'] : ''));
+		$eveDes = aud_h(isset($r['Eve_Des']) ? $r['Eve_Des'] : aud_verbo_evento($eveIni, ''));
+		$badgeClass = 'aud-det-badge';
+		if ($eveIni === 'I') {
+			$badgeClass .= ' aud-det-badge-i';
+		} elseif ($eveIni === 'U') {
+			$badgeClass .= ' aud-det-badge-u';
+		} elseif ($eveIni === 'D') {
+			$badgeClass .= ' aud-det-badge-d';
+		} elseif ($eveIni === 'F') {
+			$badgeClass .= ' aud-det-badge-f';
+		}
+		$fec = trim(isset($r['Log_Fec']) ? $r['Log_Fec'] : '');
+		$usuario = aud_nombre_usuario($r);
+		$usuario = ($usuario !== '' && $usuario !== 'Usuario no identificado') ? $usuario : '';
+		$paresDet = aud_pares_interpretados($r, null, null);
+		$resumen = aud_h(aud_resumen_detalle($r, $paresDet));
+		$esActual = ((int)$r['Log_Cod'] === $actualCod);
+		$html .= '<li class="aud-hist-item'.($esActual ? ' aud-hist-item-actual' : '').'">';
+		$html .= '<div class="aud-hist-top">';
+		$html .= '<span class="'.$badgeClass.'">'.($eveDes !== '' ? $eveDes : 'Actividad').'</span>';
+		$html .= '<span class="aud-hist-when">'.aud_h($fec).'</span>';
+		if ($esActual) {
+			$html .= '<span class="aud-hist-actual">Este movimiento</span>';
+		}
+		$html .= '</div>';
+		if ($usuario !== '') {
+			$html .= '<div class="aud-hist-usuario">Por '.aud_h($usuario).'</div>';
+		}
+		if ($resumen !== '') {
+			$html .= '<div class="aud-hist-resumen">'.$resumen.'</div>';
+		}
+		$logCodRow = (int)$r['Log_Cod'];
+		if ($logCodRow > 0) {
+			$html .= '<div class="aud-hist-ver"><a href="javascript:void(0);" data-logcod="'.$logCodRow.'" class="aud-hist-verlink">Ver este movimiento</a></div>';
+		}
+		$html .= '</li>';
+	}
+	$html .= '</ul>';
+	return $html;
+}
+
+/**
+ * Detalle con pestañas: "Movimiento" (contenido clasico + contenido extra)
+ * y "Historial de cambios" (linea de tiempo del registro).
+ */
+function aud_html_detalle_tabs($row, $pares, $obBD_con1 = null, $obBD_conexion = null, $extraMovHtml = '')
+{
+	$html = '<div class="aud-det-tabs">';
+	$html .= '<ul class="aud-det-tabnav">';
+	$html .= '<li class="aud-det-tabli active" data-tab="mov"><a href="javascript:void(0);">Movimiento</a></li>';
+	$html .= '<li class="aud-det-tabli" data-tab="hist"><a href="javascript:void(0);">Historial de cambios</a></li>';
+	$html .= '</ul>';
+	$html .= '<div class="aud-det-tabpane active" id="audDetTabMov">';
+	$html .= aud_html_detalle($row, $pares);
+	$html .= (string)$extraMovHtml;
+	$html .= '</div>';
+	$html .= '<div class="aud-det-tabpane" id="audDetTabHist" style="display:none;">';
+	$html .= aud_html_historial($row, $obBD_con1, $obBD_conexion);
+	$html .= '</div></div>';
+	$html .= '<script type="text/javascript">(function(){var $w=window.jQuery;if(!$w){return;}$w("#detalleContenido").off("click.audDet").on("click.audDet",".aud-det-tabnav .aud-det-tabli a",function(e){e.preventDefault();var $li=$w(this).closest(".aud-det-tabli");var t=$li.attr("data-tab")||"mov";var $dlg=$w("#detalleContenido");$dlg.find(".aud-det-tabli").removeClass("active");$li.addClass("active");$dlg.find(".aud-det-tabpane").hide();$dlg.find(".aud-det-tabpane").removeClass("active");var $pane=$dlg.find("#audDetTab"+((t==="hist")?"Hist":"Mov"));$pane.show().addClass("active");try{$w("#detalleDialog").dialog("option","position",{my:"center",at:"center",of:window});}catch(e2){}});$w("#detalleContenido").off("click.audHist").on("click.audHist",".aud-hist-verlink",function(e){e.preventDefault();var c=parseInt($w(this).attr("data-logcod"),10);if(c>0&&typeof window.audVerDetalle==="function"){window.audVerDetalle(c);}});})();</script>';
+	return $html;
 }

@@ -584,6 +584,42 @@ class AuditQueue
                 VALUES({$usu},{$pcsCod},{$tabCod},'{$fec}',{$eveCod},'{$camEsc}','{$valEsc}','{$intEsc}')";
             self::q($con, $sql);
         }
+        if ($ok) {
+            self::notificarSiCorresponde($con, $emp, $evento, $pcsCod, $usu);
+        }
+    }
+
+    /**
+     * Dispara la notificacion por correo (reglas cfg_notificaciones) tras
+     * persistir un log de Actualizar/Eliminar/Insertar. Nunca debe romper
+     * la captura: cualquier fallo se silencia por completo.
+     */
+    private static function notificarSiCorresponde($con, $emp, $evento, $pcsCod, $usu)
+    {
+        try {
+            $eveIni = isset($evento['eve']) ? strtoupper((string)$evento['eve']) : '';
+            if ($eveIni !== 'U' && $eveIni !== 'D') {
+                return;
+            }
+            $logCod = (int)mysqli_insert_id($con);
+            if ($logCod <= 0) {
+                return;
+            }
+            $notifFile = dirname(__FILE__) . '/aud_log_notificaciones.php';
+            if (!function_exists('aud_notif_procesar_evento')) {
+                if (!file_exists($notifFile)) {
+                    return;
+                }
+                require_once $notifFile;
+            }
+            if (function_exists('aud_notif_procesar_evento')) {
+                $datDis = isset($evento['dat_dis']) ? $evento['dat_dis'] : '';
+                $tabla = isset($evento['table']) ? $evento['table'] : '';
+                aud_notif_procesar_evento($con, $emp, $datDis, $eveIni, $pcsCod, $usu, $tabla, $logCod);
+            }
+        } catch (Exception $e) {
+        } catch (Throwable $e2) {
+        }
     }
 
     private static function connectAuditoria($batch)

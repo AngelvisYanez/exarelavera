@@ -40,11 +40,28 @@ function sentencias_actividad_sesion($tipo, $Par_Sql = array())
 			$sesUbi  = isset($Par_Sql[6]) ? addslashes($Par_Sql[6]) : '';
 			$sesNav  = isset($Par_Sql[7]) ? addslashes($Par_Sql[7]) : '';
 			$sesTok  = isset($Par_Sql[8]) ? addslashes($Par_Sql[8]) : '';
+			$sesDev  = isset($Par_Sql[9]) ? addslashes(trim($Par_Sql[9])) : '';
+			$sesMac  = isset($Par_Sql[10]) ? addslashes(trim($Par_Sql[10])) : '';
+			$sesOau  = isset($Par_Sql[11]) ? addslashes(trim($Par_Sql[11])) : '';
+			$sesFp   = isset($Par_Sql[12]) ? addslashes(trim($Par_Sql[12])) : '';
+
+			// Si el esquema no tiene las columnas OAuth (produccion sin privilegios
+			// DDL para crearlas), el INSERT debe omitirlas para no fallar con 1054.
+			$tieneOauth = isset($GLOBALS['AUD_SES_OAUTH_SCHEMA']) ? (bool)$GLOBALS['AUD_SES_OAUTH_SCHEMA'] : true;
+			$colsOauth = $tieneOauth ? ", `Ses_Dev_Cod`, `Ses_Mac`, `Ses_OAuth_Tok`" : "";
+			$valsOauth = $tieneOauth ? ", '{$sesDev}', '{$sesMac}', '{$sesOau}'" : "";
+
+			// Ses_Fingerprint: respaldo de auditoria (huella del navegador) solo
+			// cuando la MAC real no fue detectable. Flag independiente del anterior
+			// para no depender de que ambas columnas se hayan podido crear a la vez.
+			$tieneFp = isset($GLOBALS['AUD_SES_FP_SCHEMA']) ? (bool)$GLOBALS['AUD_SES_FP_SCHEMA'] : true;
+			$colFp = $tieneFp ? ", `Ses_Fingerprint`" : "";
+			$valFp = $tieneFp ? ", '{$sesFp}'" : "";
 
 			return "INSERT INTO `auditoria`.`sesion` 
-				(`Ses_Cod`, `Usu_Cod`, `Ses_Int`, `Emp_Cod`, `Suc_Cod`, `Ses_Ip`, `Ses_Ubi`, `Ses_Nav`, `Ses_Ult_Act`, `Ses_Min_Uso`, `Ses_Est`, `Ses_Token`) 
+				(`Ses_Cod`, `Usu_Cod`, `Ses_Int`, `Emp_Cod`, `Suc_Cod`, `Ses_Ip`, `Ses_Ubi`, `Ses_Nav`, `Ses_Ult_Act`, `Ses_Min_Uso`, `Ses_Est`, `Ses_Token`{$colsOauth}{$colFp}) 
 				VALUES 
-				({$sesCod}, {$usuCod}, '{$sesInt}', {$empCod}, {$sucCod}, '{$sesIp}', '{$sesUbi}', '{$sesNav}', '{$sesInt}', 0, 'A', '{$sesTok}')";
+				({$sesCod}, {$usuCod}, '{$sesInt}', {$empCod}, {$sucCod}, '{$sesIp}', '{$sesUbi}', '{$sesNav}', '{$sesInt}', 0, 'A', '{$sesTok}'{$valsOauth}{$valFp})";
 
 		/**
 		 * Case 4: Heartbeat ping - Actualiza ultima actividad y minutos de uso
@@ -126,6 +143,19 @@ function sentencias_actividad_sesion($tipo, $Par_Sql = array())
 			$desde   = isset($Par_Sql[4]) ? addslashes(trim($Par_Sql[4])) : '';
 			$hasta   = isset($Par_Sql[5]) ? addslashes(trim($Par_Sql[5])) : '';
 
+			// Columnas OAuth solo si existen en el esquema (evita ERROR 1054 en
+			// produccion cuando el usuario de la BD no puede ejecutar el ALTER).
+			$tieneOauth = isset($GLOBALS['AUD_SES_OAUTH_SCHEMA']) ? (bool)$GLOBALS['AUD_SES_OAUTH_SCHEMA'] : true;
+			$camposOauth = $tieneOauth
+				? "				IFNULL(s.`Ses_Dev_Cod`, '') AS `Ses_Dev_Cod`,\n				IFNULL(s.`Ses_Mac`, '') AS `Ses_Mac`,\n				IFNULL(s.`Ses_OAuth_Tok`, '') AS `Ses_OAuth_Tok`,\n"
+				: "";
+			// Ses_Fingerprint: respaldo de auditoria (huella del navegador) cuando
+			// la MAC no fue detectable (acceso remoto/VPN/Internet fuera de la LAN).
+			$tieneFp = isset($GLOBALS['AUD_SES_FP_SCHEMA']) ? (bool)$GLOBALS['AUD_SES_FP_SCHEMA'] : true;
+			$camposOauth .= $tieneFp
+				? "				IFNULL(s.`Ses_Fingerprint`, '') AS `Ses_Fingerprint`,\n"
+				: "";
+
 			$where = "WHERE 1=1";
 			if ($empCod > 0) {
 				$where .= " AND (sx.`Emp_Cod` = {$empCod} OR sx.`Emp_Cod` IS NULL OR sx.`Emp_Cod` = 0)";
@@ -138,11 +168,11 @@ function sentencias_actividad_sesion($tipo, $Par_Sql = array())
 				$where .= " AND DATE(sx.`Ses_Int`) <= '{$hasta}'";
 			}
 			if ($estado === 'en_linea') {
-				$where .= " AND sx.`Ses_Est` = 'A' AND sx.`Ses_Ult_Act` >= DATE_SUB(NOW(), INTERVAL 3 MINUTE)";
+				$where .= " AND sx.`Ses_Est` = 'A' AND TIMESTAMPDIFF(MINUTE, IFNULL(sx.`Ses_Ult_Act`, sx.`Ses_Int`), NOW()) < 5";
 			} elseif ($estado === 'ausente') {
-				$where .= " AND sx.`Ses_Est` = 'A' AND sx.`Ses_Ult_Act` < DATE_SUB(NOW(), INTERVAL 3 MINUTE) AND sx.`Ses_Ult_Act` >= DATE_SUB(NOW(), INTERVAL 15 MINUTE)";
+				$where .= " AND sx.`Ses_Est` = 'A' AND TIMESTAMPDIFF(MINUTE, IFNULL(sx.`Ses_Ult_Act`, sx.`Ses_Int`), NOW()) BETWEEN 5 AND 14";
 			} elseif ($estado === 'inactiva') {
-				$where .= " AND (sx.`Ses_Est` = 'I' OR (sx.`Ses_Est` = 'A' AND sx.`Ses_Ult_Act` < DATE_SUB(NOW(), INTERVAL 15 MINUTE)))";
+				$where .= " AND (sx.`Ses_Est` = 'I' OR (sx.`Ses_Est` = 'A' AND TIMESTAMPDIFF(MINUTE, IFNULL(sx.`Ses_Ult_Act`, sx.`Ses_Int`), NOW()) >= 15))";
 			} elseif ($estado === 'cerrada') {
 				$where .= " AND sx.`Ses_Est` = 'C'";
 			} elseif ($estado === 'forzada') {
@@ -162,7 +192,7 @@ if ($rolCod > 0) {
 				IFNULL(s.`Ses_Ip`, '') AS `Ses_Ip`,
 				IFNULL(s.`Ses_Ubi`, 'No determinada') AS `Ses_Ubi`,
 				IFNULL(s.`Ses_Nav`, 'Desconocido') AS `Ses_Nav`,
-				IFNULL(s.`Ses_Est`, 'A') AS `Ses_Est`,
+				{$camposOauth}				IFNULL(s.`Ses_Est`, 'A') AS `Ses_Est`,
 				IFNULL(s.`Ses_Min_Uso`, TIMESTAMPDIFF(MINUTE, s.`Ses_Int`, IFNULL(s.`Ses_Out`, NOW()))) AS `Ses_Min_Uso`,
 				s.`Emp_Cod`,
 				s.`Suc_Cod`,
@@ -204,8 +234,8 @@ if ($rolCod > 0) {
 			$filtroEmp = ($empCod > 0) ? "AND (`Emp_Cod` = {$empCod} OR `Emp_Cod` IS NULL OR `Emp_Cod` = 0)" : "";
 
 			return "SELECT 
-					COUNT(CASE WHEN `Ses_Est` = 'A' AND `Ses_Ult_Act` >= DATE_SUB(NOW(), INTERVAL 3 MINUTE) THEN 1 END) AS `En_Linea`,
-					COUNT(CASE WHEN `Ses_Est` = 'A' AND `Ses_Ult_Act` < DATE_SUB(NOW(), INTERVAL 3 MINUTE) AND `Ses_Ult_Act` >= DATE_SUB(NOW(), INTERVAL 15 MINUTE) THEN 1 END) AS `Ausentes`,
+					COUNT(CASE WHEN `Ses_Est` = 'A' AND TIMESTAMPDIFF(MINUTE, IFNULL(`Ses_Ult_Act`, `Ses_Int`), NOW()) < 5 THEN 1 END) AS `En_Linea`,
+					COUNT(CASE WHEN `Ses_Est` = 'A' AND TIMESTAMPDIFF(MINUTE, IFNULL(`Ses_Ult_Act`, `Ses_Int`), NOW()) BETWEEN 5 AND 14 THEN 1 END) AS `Ausentes`,
 					COUNT(CASE WHEN DATE(`Ses_Int`) = CURDATE() THEN 1 END) AS `Sesiones_Hoy`,
 					COUNT(CASE WHEN `Ses_Est` = 'F' AND DATE(`Ses_Out`) = CURDATE() THEN 1 END) AS `Expulsados_Hoy`,
 					IFNULL(ROUND(AVG(CASE WHEN DATE(`Ses_Int`) = CURDATE() THEN GREATEST(1, `Ses_Min_Uso`) END), 1), 0) AS `Promedio_Min_Uso`
@@ -257,6 +287,49 @@ if ($rolCod > 0) {
 				WHERE `Ses_Est` = 'A'
 				{$filtroEmp}
 				GROUP BY `Usu_Cod`";
+
+		/**
+		 * Case 14: Estadistica de sesiones por usuario en el periodo [desde, hasta].
+		 * Agrupa por usuario: iniciadas, cerradas, por inactividad, forzadas,
+		 * promedio de minutos de uso, total de minutos y ultima actividad.
+		 * (0 emp, 1 desde YYYY-MM-DD, 2 hasta YYYY-MM-DD, 3 limite)
+		 */
+		case 14:
+			$empCod = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$desde = isset($Par_Sql[1]) ? addslashes(trim((string)$Par_Sql[1])) : '';
+			$hasta = isset($Par_Sql[2]) ? addslashes(trim((string)$Par_Sql[2])) : '';
+			$lim = isset($Par_Sql[3]) ? max(1, (int)$Par_Sql[3]) : 200;
+			if ($lim > 500) {
+				$lim = 500;
+			}
+			$filtroEmp = ($empCod > 0) ? "AND (s.`Emp_Cod` = {$empCod} OR s.`Emp_Cod` IS NULL OR s.`Emp_Cod` = 0)" : "";
+			$rango = '';
+			if ($desde !== '' && $hasta !== '') {
+				$rango = "AND DATE(s.`Ses_Int`) BETWEEN '{$desde}' AND '{$hasta}'";
+			} elseif ($desde !== '') {
+				$rango = "AND DATE(s.`Ses_Int`) >= '{$desde}'";
+			} elseif ($hasta !== '') {
+				$rango = "AND DATE(s.`Ses_Int`) <= '{$hasta}'";
+			}
+			return "SELECT
+					s.`Usu_Cod`,
+					IFNULL(u.`Usu_Ced`, CONCAT('Usuario #', s.`Usu_Cod`)) AS `Usu_Nom`,
+					IFNULL(p.`Prs_Nom`, '') AS `Prs_Nom`,
+					IFNULL(p.`Prs_Ape`, '') AS `Prs_Ape`,
+					COUNT(*) AS `Iniciadas`,
+					SUM(CASE WHEN s.`Ses_Est` = 'C' THEN 1 ELSE 0 END) AS `Cerradas`,
+					SUM(CASE WHEN s.`Ses_Est` = 'I' THEN 1 ELSE 0 END) AS `Por_Inactividad`,
+					SUM(CASE WHEN s.`Ses_Est` = 'F' THEN 1 ELSE 0 END) AS `Forzadas`,
+					IFNULL(ROUND(AVG(GREATEST(1, s.`Ses_Min_Uso`)), 1), 0) AS `Promedio_Min`,
+					IFNULL(SUM(GREATEST(1, s.`Ses_Min_Uso`)), 0) AS `Total_Min`,
+					MAX(IFNULL(s.`Ses_Ult_Act`, s.`Ses_Int`)) AS `Ultima_Actividad`
+				FROM `auditoria`.`sesion` s
+				LEFT JOIN {$masterDb}.`usuarios` u ON s.`Usu_Cod` = u.`Usu_Cod`
+				LEFT JOIN {$masterDb}.`persona` p ON u.`Prs_Cod` = p.`Prs_Cod`
+				WHERE 1=1 {$filtroEmp} {$rango}
+				GROUP BY s.`Usu_Cod`, u.`Usu_Ced`, p.`Prs_Nom`, p.`Prs_Ape`
+				ORDER BY `Iniciadas` DESC, `Total_Min` DESC
+				LIMIT {$lim}";
 
 		default:
 			return "";

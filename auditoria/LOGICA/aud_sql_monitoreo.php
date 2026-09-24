@@ -538,6 +538,40 @@ function sentencias($id,$Par_Sql){
 			)";
 			return $sql;
 		break;
+
+		/**
+		 * Historial de un registro: todos los movimientos del mismo tipo de tab
+		 * (Tab_Cod) e identificador (Log_Int) dentro de la misma empresa.
+		 * El identificador se compara con LIKE por prefijo para tolerar el
+		 * sufijo " || OLD:..." que agrega el evento Actualizar.
+		 * 0 tab, 1 emp, 2 identificador (base), 3 limite
+		 */
+		case 36:
+			$tab = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$emp = isset($Par_Sql[1]) ? (int)$Par_Sql[1] : 0;
+			$ident = isset($Par_Sql[2]) ? trim((string)$Par_Sql[2]) : '';
+			$lim = isset($Par_Sql[3]) ? max(1, (int)$Par_Sql[3]) : 100;
+			if ($lim > 500) {
+				$lim = 500;
+			}
+			$identEsc = str_replace(array('\\', '%', '_'), array('\\\\', '\\%', '\\_'), addslashes($ident));
+			$empF = $emp > 0 ? " AND `logs`.`Emp_Cod`={$emp}" : '';
+			if ($tab <= 0 || $ident === '') {
+				return "SELECT `logs`.`Log_Cod` FROM `auditoria`.`logs` WHERE 1=0";
+			}
+			return aud_logs_select()."
+			WHERE `logs`.`Tab_Cod` = {$tab}
+			  AND `logs`.`Log_Int` LIKE '{$identEsc}%' {$empF}
+			ORDER BY `logs`.`Log_Fec` ASC, `logs`.`Log_Cod` ASC
+			LIMIT {$lim}";
+		break;
+
+		/** Fecha mas antigua con datos de auditoria (para el aviso "desde cuando hay datos") */
+		case 37:
+			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$empF = $emp > 0 ? " WHERE `Emp_Cod`={$emp}" : '';
+			return "SELECT MIN(`Log_Fec`) AS `min_fec` FROM `auditoria`.`logs`{$empF}";
+		break;
 	}
 }
 

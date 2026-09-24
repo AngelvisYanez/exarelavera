@@ -335,7 +335,13 @@ class Class_Log_Datos_Aud extends MysqlDatos{
 			$emp = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
 			$suc = isset($_SESSION['Ses_Suc_Cod']) ? (int)$_SESSION['Ses_Suc_Cod'] : 0;
 			$con = (is_object($obBD_conexion) && !empty($obBD_conexion->conexion)) ? $obBD_conexion->conexion : null;
-			$Ses_Cod = aud_ses_registrar_inicio($Ses_Usu_Cod, $emp, $suc, $con);
+			$devCod = isset($_SESSION['Ses_Dev_Cod']) ? (string)$_SESSION['Ses_Dev_Cod'] : '';
+			$mac = isset($_SESSION['Ses_Mac']) ? (string)$_SESSION['Ses_Mac'] : '';
+			$oauthTok = isset($_SESSION['Ses_OAuth_Tok']) ? (string)$_SESSION['Ses_OAuth_Tok'] : '';
+			// Huella digital del navegador: respaldo de auditoria solo cuando la
+			// MAC real no fue detectable (acceso remoto/VPN/Internet fuera de la LAN).
+			$fingerprint = isset($_SESSION['Ses_Fingerprint']) ? (string)$_SESSION['Ses_Fingerprint'] : '';
+			$Ses_Cod = aud_ses_registrar_inicio($Ses_Usu_Cod, $emp, $suc, $con, $devCod, $mac, $oauthTok, $fingerprint);
 			if ($Ses_Cod > 0) {
 				$this->registrarLogSesion($obBD_conexion, $Ses_Usu_Cod, 'I', 'Ses_Cod', (string)$Ses_Cod, 'Ses_Cod='.$Ses_Cod);
 			}

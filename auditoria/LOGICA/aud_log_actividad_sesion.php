@@ -85,6 +85,10 @@ if (!function_exists('aud_ses_asegurar_esquema')) {
 			`Ses_Min_Uso` int(11) NOT NULL DEFAULT 0,
 			`Ses_Est` char(1) NOT NULL DEFAULT 'A',
 			`Ses_Token` varchar(64) DEFAULT NULL,
+			`Ses_Dev_Cod` varchar(64) DEFAULT NULL,
+			`Ses_Mac` varchar(17) DEFAULT NULL,
+			`Ses_OAuth_Tok` varchar(64) DEFAULT NULL,
+			`Ses_Fingerprint` varchar(40) DEFAULT NULL,
 			PRIMARY KEY (`Ses_Cod`),
 			KEY `Usu_Cod` (`Usu_Cod`),
 			KEY `idx_ses_est_act` (`Ses_Est`, `Ses_Ult_Act`),
@@ -133,11 +137,49 @@ if (!function_exists('aud_ses_asegurar_esquema')) {
 		if (empty($columnasActuales['ses_token'])) {
 			$alters[] = "ADD COLUMN `Ses_Token` VARCHAR(64) DEFAULT NULL AFTER `Ses_Est`";
 		}
+		if (empty($columnasActuales['ses_dev_cod'])) {
+			$alters[] = "ADD COLUMN `Ses_Dev_Cod` VARCHAR(64) DEFAULT NULL AFTER `Ses_Token`";
+		}
+		if (empty($columnasActuales['ses_mac'])) {
+			$alters[] = "ADD COLUMN `Ses_Mac` VARCHAR(17) DEFAULT NULL AFTER `Ses_Dev_Cod`";
+		}
+		if (empty($columnasActuales['ses_oauth_tok'])) {
+			$alters[] = "ADD COLUMN `Ses_OAuth_Tok` VARCHAR(64) DEFAULT NULL AFTER `Ses_Mac`";
+		}
+		if (empty($columnasActuales['ses_fingerprint'])) {
+			$alters[] = "ADD COLUMN `Ses_Fingerprint` VARCHAR(40) DEFAULT NULL AFTER `Ses_OAuth_Tok`";
+		}
 
 		if (!empty($alters)) {
 			$sqlAlter = "ALTER TABLE `auditoria`.`sesion` " . implode(', ', $alters);
 			@mysqli_query($con, $sqlAlter);
 		}
+
+		// Esquema real tras el ALTER (puede fallar si el usuario de la BD no
+		// tiene privilegios DDL, p.ej. user_relavera en produccion). Exponer el
+		// flag global para que sentencias_actividad_sesion() omita las columnas
+		// OAuth (Ses_Dev_Cod/Ses_Mac/Ses_OAuth_Tok) cuando no existan, evitando
+		// el ERROR 1054 que dejaba vacio el monitor de actividad de usuarios.
+		$tieneOauth = false;
+		$rCols = @mysqli_query($con, "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = 'auditoria' AND `TABLE_NAME` = 'sesion' AND `COLUMN_NAME` IN ('Ses_Dev_Cod', 'Ses_Mac', 'Ses_OAuth_Tok')");
+		if ($rCols) {
+			$nOauth = mysqli_num_rows($rCols);
+			mysqli_free_result($rCols);
+			$tieneOauth = ($nOauth === 3);
+		}
+		$GLOBALS['AUD_SES_OAUTH_SCHEMA'] = $tieneOauth;
+
+		// Flag independiente para Ses_Fingerprint (huella digital de respaldo
+		// cuando la MAC no es detectable). Se separa del flag OAuth anterior
+		// para no afectar el comportamiento ya validado de Ses_Mac/Ses_Dev_Cod
+		// en bases donde el ALTER de esta columna nueva aun no se ha aplicado.
+		$tieneFp = false;
+		$rColsFp = @mysqli_query($con, "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = 'auditoria' AND `TABLE_NAME` = 'sesion' AND `COLUMN_NAME` = 'Ses_Fingerprint'");
+		if ($rColsFp) {
+			$tieneFp = (mysqli_num_rows($rColsFp) === 1);
+			mysqli_free_result($rColsFp);
+		}
+		$GLOBALS['AUD_SES_FP_SCHEMA'] = $tieneFp;
 
 		// Asegurar indices clave de forma idempotente
 		$indicesActuales = array();
@@ -348,10 +390,16 @@ if (!function_exists('aud_ses_detectar_ubicacion')) {
  * @param int $empCod
  * @param int $sucCod
  * @param mysqli|null $con
+ * @param string $devCod  Identificador del dispositivo (Ses_Dev_Cod).
+ * @param string $mac     Direccion MAC del equipo (Ses_Mac).
+ * @param string $oauthTok Hash SHA-256 del token OAuth (Ses_OAuth_Tok).
+ * @param string $fingerprint Huella digital del navegador (Ses_Fingerprint),
+ *               respaldo de auditoria solo cuando $mac viene vacio (acceso
+ *               remoto/VPN/Internet fuera de la LAN del servidor).
  * @return int Ses_Cod generado
  */
 if (!function_exists('aud_ses_registrar_inicio')) {
-	function aud_ses_registrar_inicio($usuCod, $empCod = 0, $sucCod = 0, $con = null)
+	function aud_ses_registrar_inicio($usuCod, $empCod = 0, $sucCod = 0, $con = null, $devCod = '', $mac = '', $oauthTok = '', $fingerprint = '')
 	{
 		$closeOnExit = false;
 		if (!$con) {
@@ -396,7 +444,11 @@ if (!function_exists('aud_ses_registrar_inicio')) {
 				$ip,
 				$ubi,
 				$nav,
-				$token
+				$token,
+				$devCod,
+				$mac,
+				$oauthTok,
+				$fingerprint
 			));
 
 			if (@mysqli_query($con, $sqlIns)) {
@@ -550,6 +602,65 @@ if (!function_exists('aud_ses_cerrar_forzada')) {
 }
 
 /**
+ * Revoca el token OAuth asociado a una sesion (expulsion forzada).
+ *
+ * La sesion guarda el hash SHA-256 del access token en Ses_OAuth_Tok. Se busca
+ * dicho hash en dispositivos_usuario de la base distribuida y se invalidan el
+ * access y el refresh token: el navegador expulsado no podra volver a ingresar
+ * con esas cookies.
+ *
+ * @param int $sesCod
+ * @return bool
+ */
+if (!function_exists('aud_ses_revocar_oauth_sesion')) {
+	function aud_ses_revocar_oauth_sesion($sesCod)
+	{
+		$sesCod = (int)$sesCod;
+		if ($sesCod <= 0) {
+			return false;
+		}
+
+		$dbSes = new Class_Log_Conexion_Actividad();
+		$conSes = $dbSes->conexion;
+		if (!$conSes) {
+			return false;
+		}
+
+		$hash = '';
+		$r = @mysqli_query($conSes, "SELECT `Ses_OAuth_Tok` FROM `auditoria`.`sesion` WHERE `Ses_Cod` = {$sesCod} LIMIT 1");
+		if ($r) {
+			$fila = mysqli_fetch_assoc($r);
+			mysqli_free_result($r);
+			if ($fila && !empty($fila['Ses_OAuth_Tok'])) {
+				$hash = trim((string)$fila['Ses_OAuth_Tok']);
+			}
+		}
+		mysqli_close($conSes);
+
+		if ($hash === '') {
+			return true; // Sesion sin vinculo OAuth: nada que revocar.
+		}
+
+		require_once dirname(__FILE__) . '/../../Librerias/OAuth/OAuthServer.php';
+		if (!class_exists('ExaOAuth')) {
+			return false;
+		}
+
+		$dbDis = new Class_Log_Conexion_Actividad();
+		$conDis = $dbDis->conexion;
+		if (!$conDis) {
+			return false;
+		}
+
+		ExaOAuth::asegurar_esquema($conDis);
+		$ok = ExaOAuth::revocarPorHash($conDis, $hash);
+		mysqli_close($conDis);
+
+		return $ok;
+	}
+}
+
+/**
  * Valida que una sesion pueda ser finalizada forzosamente por el Administrador.
  *
  * Evita: procesos sobre sesiones inexistentes, auto-desconexion del propio
@@ -671,7 +782,7 @@ function aud_ses_listar_actividad($empCod = 0, $estado = '', $rolCod = 0, $limit
 					$badgeClase = 'badge-warning';
 					$badgeTexto = 'Inactiva (Timeout)';
 					$semaforo = 'inactiva';
-				} elseif ($estRaw === 'A' && $minDesdeAct > 3) {
+				} elseif ($estRaw === 'A' && $minDesdeAct >= 5) {
 					$badgeClase = 'badge-info';
 					$badgeTexto = 'Ausente';
 					$semaforo = 'ausente';
@@ -775,11 +886,133 @@ function aud_ses_listar_actividad($empCod = 0, $estado = '', $rolCod = 0, $limit
 	}
 }
 
+/**
+ * Estadistica de sesiones por usuario (KPIs iniciadas/cerradas en el periodo).
+ *
+ * @param int $empCod
+ * @param string $desde Fecha inicial YYYY-MM-DD (opcional)
+ * @param string $hasta Fecha final YYYY-MM-DD (opcional)
+ * @param mysqli|null $con
+ * @return array
+ */
+if (!function_exists('aud_ses_estadistica_por_usuario')) {
+function aud_ses_estadistica_por_usuario($empCod = 0, $desde = '', $hasta = '', $con = null)
+{
+	$out = array(
+		'filas' => array(),
+		'totales' => array(
+			'iniciadas' => 0,
+			'cerradas' => 0,
+			'por_inactividad' => 0,
+			'forzadas' => 0,
+			'minutos' => 0,
+			'promedio_min' => 0,
+			'usuarios' => 0
+		)
+	);
+	$closeOnExit = false;
+	if (!$con) {
+		$dbConn = new Class_Log_Conexion_Actividad();
+		$con = $dbConn->conexion;
+		$closeOnExit = true;
+	}
+	if (!$con) {
+		return $out;
+	}
+	aud_ses_asegurar_esquema($con);
+
+	$sql = sentencias_actividad_sesion(14, array($empCod, $desde, $hasta, 200));
+	$r = @mysqli_query($con, $sql);
+	if ($r) {
+		while ($row = mysqli_fetch_assoc($r)) {
+			$nombre = trim(
+				(isset($row['Prs_Nom']) ? $row['Prs_Nom'] : '') . ' ' .
+				(isset($row['Prs_Ape']) ? $row['Prs_Ape'] : '')
+			);
+			if ($nombre === '') {
+				$nombre = isset($row['Usu_Nom']) ? (string)$row['Usu_Nom'] : ('Usuario #'.(int)$row['Usu_Cod']);
+			}
+			$row['Usuario_Completo'] = $nombre;
+			$row['TiempoFormateado'] = aud_ses_tiempo_formateado((int)(isset($row['Total_Min']) ? $row['Total_Min'] : 0));
+			$out['totales']['iniciadas'] += (int)(isset($row['Iniciadas']) ? $row['Iniciadas'] : 0);
+			$out['totales']['cerradas'] += (int)(isset($row['Cerradas']) ? $row['Cerradas'] : 0);
+			$out['totales']['por_inactividad'] += (int)(isset($row['Por_Inactividad']) ? $row['Por_Inactividad'] : 0);
+			$out['totales']['forzadas'] += (int)(isset($row['Forzadas']) ? $row['Forzadas'] : 0);
+			$out['totales']['minutos'] += (int)(isset($row['Total_Min']) ? $row['Total_Min'] : 0);
+			$out['filas'][] = $row;
+		}
+		mysqli_free_result($r);
+	}
+	$out['totales']['usuarios'] = count($out['filas']);
+	if ($out['totales']['iniciadas'] > 0) {
+		$out['totales']['promedio_min'] = round($out['totales']['minutos'] / $out['totales']['iniciadas'], 1);
+	}
+	if ($closeOnExit) {
+		@mysqli_close($con);
+	}
+	return $out;
+}
+}
+
+/** Formatea minutos como "Xh Ym" (reutilizado por KPIs y estadisticas). */
+if (!function_exists('aud_ses_tiempo_formateado')) {
+function aud_ses_tiempo_formateado($minutos)
+{
+	$minutos = (int)$minutos;
+	$horas = floor($minutos / 60);
+	$mins = $minutos % 60;
+	return ($horas > 0 ? "{$horas}h " : '') . "{$mins}m";
+}
+}
+
+if (!function_exists('aud_ses_to_utf8_deep')) {
+	/**
+	 * Normaliza latin1/ISO-8859-1 de la BD a UTF-8 para json_encode.
+	 */
+	function aud_ses_to_utf8_deep($data)
+	{
+		if (is_string($data)) {
+			if ($data === '') {
+				return $data;
+			}
+			if (function_exists('mb_check_encoding') && @mb_check_encoding($data, 'UTF-8')) {
+				return $data;
+			}
+			if (function_exists('mb_convert_encoding')) {
+				return @mb_convert_encoding($data, 'UTF-8', 'ISO-8859-1');
+			}
+			return function_exists('utf8_encode') ? @utf8_encode($data) : $data;
+		}
+		if (is_array($data)) {
+			$clean = array();
+			foreach ($data as $k => $v) {
+				$ck = is_string($k) ? aud_ses_to_utf8_deep($k) : $k;
+				$clean[$ck] = aud_ses_to_utf8_deep($v);
+			}
+			return $clean;
+		}
+		return $data;
+	}
+}
+
+if (!function_exists('aud_ses_json_out')) {
+	function aud_ses_json_out($data)
+	{
+		@ini_set('display_errors', '0');
+		$clean = aud_ses_to_utf8_deep($data);
+		$json = json_encode($clean);
+		echo ($json !== false) ? $json : '{"success":false,"error":"No se pudo serializar la respuesta"}';
+	}
+}
+
 // -------------------------------------------------------------
 // Endpoint AJAX si es invocado directamente mediante POST/GET
 // -------------------------------------------------------------
 if (basename(isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : '') === 'aud_log_actividad_sesion.php') {
 	header('Content-Type: application/json; charset=utf-8');
+
+	require_once dirname(__FILE__) . '/aud_log_acceso_directorio.php';
+	aud_acceso_directorio_gate(isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0);
 
 	$action = isset($_REQUEST['action']) ? trim($_REQUEST['action']) : '';
 
@@ -788,12 +1021,12 @@ if (basename(isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 
 		$usuCod = isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : (isset($_REQUEST['usu_cod']) ? (int)$_REQUEST['usu_cod'] : 0);
 
 		if ($sesCod <= 0 || $usuCod <= 0) {
-			echo json_encode(array('success' => false, 'error' => 'Sesion no activa'));
+			aud_ses_json_out(array('success' => false, 'error' => 'Sesion no activa'));
 			exit;
 		}
 
 		$res = aud_ses_heartbeat_ping($sesCod, $usuCod);
-		echo json_encode($res);
+		aud_ses_json_out($res);
 		exit;
 	}
 
@@ -801,7 +1034,7 @@ if (basename(isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 
 		// Cierre por inactividad desactivado en produccion (AUDIT_IDLE_LOGOUT).
 		// NO se destruye la sesion PHP: evita expulsiones involuntarias.
 		if (!aud_ses_idle_logout_activo()) {
-			echo json_encode(array('success' => false, 'error' => 'Cierre por inactividad desactivado'));
+			aud_ses_json_out(array('success' => false, 'error' => 'Cierre por inactividad desactivado'));
 			exit;
 		}
 
@@ -825,13 +1058,13 @@ if (basename(isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 
 		$obBD_con2 = class_exists('Class_Log_Conexion_CfgMon') ? new Class_Log_Conexion_CfgMon() : null;
 		$esAdmin = $obBD_con1 && $obBD_con2 ? aud_cfg_es_admin_sistemas($obBD_con1, $obBD_con2, $usuCod) : false;
 		if (!$esAdmin) {
-			echo json_encode(array('success' => false, 'error' => 'Permiso denegado. Solo el Administrador de Sistemas puede forzar cierres de sesion.'));
+			aud_ses_json_out(array('success' => false, 'error' => 'Permiso denegado. Solo el Administrador de Sistemas puede forzar cierres de sesion.'));
 			exit;
 		}
 
 		$sesTarget = isset($_POST['ses_cod']) ? (int)$_POST['ses_cod'] : 0;
 		if ($sesTarget <= 0) {
-			echo json_encode(array('success' => false, 'error' => 'Codigo de sesion invalido'));
+			aud_ses_json_out(array('success' => false, 'error' => 'Codigo de sesion invalido'));
 			exit;
 		}
 
@@ -840,12 +1073,13 @@ if (basename(isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 
 
 		$validacion = aud_ses_validar_cierre_forzado($sesTarget, $empSesion, $sesionActual, null);
 		if (!$validacion['success']) {
-			echo json_encode(array('success' => false, 'error' => $validacion['error']));
+			aud_ses_json_out(array('success' => false, 'error' => $validacion['error']));
 			exit;
 		}
 
 		$ok = aud_ses_cerrar_forzada($sesTarget);
-		echo json_encode(array('success' => $ok));
+		$okRev = aud_ses_revocar_oauth_sesion($sesTarget);
+		aud_ses_json_out(array('success' => $ok, 'oauth_revocado' => $okRev));
 		exit;
 	}
 
@@ -865,7 +1099,7 @@ if (basename(isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 
 		$hasta  = isset($_GET['to']) ? trim($_GET['to']) : (isset($_GET['hasta']) ? trim($_GET['hasta']) : '');
 
 		$datos = aud_ses_listar_actividad($empCod, $estado, $rolCod, 100, null, $desde, $hasta, $usuCod);
-		echo json_encode(array(
+		aud_ses_json_out(array(
 			'success' => true,
 			'data' => array(
 				'sesiones' => isset($datos['items']) ? $datos['items'] : array(),
@@ -886,10 +1120,19 @@ if (basename(isset($_SERVER['SCRIPT_FILENAME']) ? $_SERVER['SCRIPT_FILENAME'] : 
 		$usuObservador = isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
 
 		$datos = aud_ses_listar_actividad($empCod, $estado, $rolCod, 100, null, $desde, $hasta, $usuObservador);
-		echo json_encode(array('success' => true, 'data' => $datos));
+		aud_ses_json_out(array('success' => true, 'data' => $datos));
 		exit;
 	}
 
-	echo json_encode(array('success' => false, 'error' => 'Accion no reconocida'));
+	if ($action === 'estadistica_usuarios') {
+		$empCod = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
+		$desde = isset($_REQUEST['from']) ? trim($_REQUEST['from']) : (isset($_REQUEST['desde']) ? trim($_REQUEST['desde']) : '');
+		$hasta = isset($_REQUEST['to']) ? trim($_REQUEST['to']) : (isset($_REQUEST['hasta']) ? trim($_REQUEST['hasta']) : '');
+		$stats = aud_ses_estadistica_por_usuario($empCod, $desde, $hasta);
+		aud_ses_json_out(array('success' => true, 'data' => $stats));
+		exit;
+	}
+
+	aud_ses_json_out(array('success' => false, 'error' => 'Accion no reconocida'));
 	exit;
 }

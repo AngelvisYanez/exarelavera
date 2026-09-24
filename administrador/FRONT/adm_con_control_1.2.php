@@ -49,8 +49,13 @@ if ($total_rs_control !=0)
 {
     /**
      * Validar acceso por dispositivo
+     * device_fp: huella digital calculada en el navegador (exaDeviceFingerprint()
+     * en index.php), usada solo como respaldo de auditoria cuando la MAC real
+     * no es detectable por ARP (acceso remoto/VPN/Internet fuera de la LAN).
      */
-    $res_dispositivo = $obBD_con1->validarDispositivo($row_rs_control['Usu_Cod'], $obBD_conexion);
+    require_once('../LOGICA/seguridad_oauth.php');
+    $deviceFp = oauth_leer_fingerprint();
+    $res_dispositivo = $obBD_con1->validarDispositivo($row_rs_control['Usu_Cod'], $obBD_conexion, $deviceFp);
     if (!$res_dispositivo['success']) {
         if (isset($_POST['ajax_check'])) {
             echo json_encode(array('success' => false, 'message' => $res_dispositivo['message'], 'error_type' => 'device'));
@@ -58,6 +63,26 @@ if ($total_rs_control !=0)
         }
         header("Location: ../../index.php?errordispositivo=si");
         exit();
+    }
+
+    /**
+     * Datos OAuth del dispositivo para la auditoria de actividad de usuarios
+     * (Ses_Dev_Cod, Ses_Mac y hash Ses_OAuth_Tok se guardan en auditoria.sesion).
+     * Ses_Mac prioriza la MAC detectada del equipo cliente (mac_cliente).
+     */
+    if (isset($res_dispositivo['oauth'])) {
+        $oauthMac = isset($res_dispositivo['oauth']['mac_cliente']) && $res_dispositivo['oauth']['mac_cliente'] !== ''
+            ? $res_dispositivo['oauth']['mac_cliente']
+            : (isset($res_dispositivo['oauth']['mac']) ? (string)$res_dispositivo['oauth']['mac'] : '');
+        $_SESSION['Ses_Dev_Cod'] = isset($res_dispositivo['oauth']['dev_cod']) ? $res_dispositivo['oauth']['dev_cod'] : '';
+        $_SESSION['Ses_Mac'] = $oauthMac;
+        // Huella digital del navegador (respaldo de auditoria solo cuando la MAC
+        // real quedo vacia, es decir, acceso remoto/VPN/Internet fuera de la LAN).
+        $_SESSION['Ses_Fingerprint'] = ($oauthMac === '' && isset($res_dispositivo['oauth']['fingerprint']))
+            ? (string)$res_dispositivo['oauth']['fingerprint']
+            : '';
+        $_SESSION['Ses_InvDis_Cod'] = isset($res_dispositivo['oauth']['inv_dis_cod']) ? (int)$res_dispositivo['oauth']['inv_dis_cod'] : 0;
+        $_SESSION['Ses_OAuth_Tok'] = isset($res_dispositivo['oauth']['token_hash']) ? $res_dispositivo['oauth']['token_hash'] : '';
     }
 
 	/**

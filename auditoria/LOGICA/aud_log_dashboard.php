@@ -403,7 +403,7 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 			mysqli_close($con);
 		}
 
-		return array(
+		return aud_dash_to_utf8_deep(array(
 			'empresa_nombre' => $empNombre,
 			'periodo_a_label' => substr($pA_ini, 0, 10) . ' al ' . substr($pA_fin, 0, 10),
 			'periodo_b_label' => substr($pB_ini, 0, 10) . ' al ' . substr($pB_fin, 0, 10),
@@ -420,7 +420,7 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 			'usuarios_comparativa' => $usuariosComp,
 			'usuarios_top_b' => $dataB['usuarios'],
 			'observaciones' => $observaciones
-		);
+		));
 	}
 }
 
@@ -509,6 +509,9 @@ if (isset($_REQUEST['action'])) {
 
 	$audEmpCod = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
 	$audUsuCod = isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
+
+	require_once dirname(__FILE__) . '/aud_log_acceso_directorio.php';
+	aud_acceso_directorio_gate($audEmpCod);
 
 	// Capturar parametros insensible a mayusculas/minusculas
 	$pa_ini = isset($_REQUEST['pa_ini']) ? $_REQUEST['pa_ini'] : (isset($_REQUEST['pA_ini']) ? $_REQUEST['pA_ini'] : '');

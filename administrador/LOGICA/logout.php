@@ -1,30 +1,41 @@
 <?php 
 /* 
 Alias:	-
-Descripción: Cerrar la sesión del sistema y registrar cierre en auditoría
-Fecha de actualización:	2026-09-05
+Descripciï¿½n: Cerrar la sesiï¿½n del sistema y registrar cierre en auditorï¿½a
+Fecha de actualizaciï¿½n:	2026-09-05
 */
 
-session_start();
+if (session_id() === '') session_start();
+
+/* Asegurar la clase DebugBar (stub) cuando se invoca sin el bootstrap del sistema */
+if (!class_exists('DebugBar', false)) {
+	require_once dirname(__FILE__) . '/../../Librerias/config.php/debugbar.php';
+}
 
 $sesCod = !empty($_SESSION['Ses_Ses_Cod']) ? (int)$_SESSION['Ses_Ses_Cod'] : 0;
 $usuCod = !empty($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
 
 if ($sesCod > 0 && $usuCod > 0) {
 	try {
-		require_once dirname(__FILE__) . '/../../auditoria/LOGICA/aud_log_auditoria.php';
+		$archAud = dirname(__FILE__) . '/../../auditoria/LOGICA/aud_log_auditoria.php';
+		if (is_file($archAud) && !class_exists('Class_Log_Datos_Aud')) {
+			require_once $archAud;
+		}
 		if (class_exists('Class_Log_Datos_Aud')) {
 			$objAud = new Class_Log_Datos_Aud();
 			$objAud->GuardarCierreSesion($sesCod, date('Y-m-d H:i:s'), $usuCod);
 		}
+	} catch (Exception $e) {
+		// No bloquear el logout en caso de error de BD (PHP 5.6+)
 	} catch (Throwable $e) {
-		// No bloquear el logout en caso de error de BD
+		// No bloquear el logout en caso de error fatal (PHP 7+)
 	}
 }
 
-session_unset();
-session_destroy();
+@session_unset();
+@session_destroy();
 
 $motivo = isset($_GET['motivo']) ? '?motivo=' . urlencode($_GET['motivo']) : '';
 header('Location: ../../index.php' . $motivo);
+exit;
 ?>

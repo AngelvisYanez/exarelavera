@@ -63,6 +63,74 @@ $(function () {
 		return y + '-' + m + '-' + day;
 	}
 
+	function calcularRangoPreset(preset) {
+		var hoy = new Date();
+		var y = hoy.getFullYear(), m = hoy.getMonth(), d = hoy.getDate();
+		var dDesde, dHasta;
+		switch (preset) {
+			case 'hoy':
+				dDesde = new Date(y, m, d);
+				dHasta = new Date(y, m, d);
+				break;
+			case 'ayer':
+				dDesde = new Date(y, m, d - 1);
+				dHasta = new Date(y, m, d - 1);
+				break;
+			case '1semana':
+				dDesde = new Date(y, m, d - 7);
+				dHasta = new Date(y, m, d);
+				break;
+			case '1mes':
+				dDesde = new Date(y, m, d - 30);
+				dHasta = new Date(y, m, d);
+				break;
+			case '3meses':
+				dDesde = new Date(y, m, d - 90);
+				dHasta = new Date(y, m, d);
+				break;
+			default:
+				return null;
+		}
+		return { from: fmtYmd(dDesde), to: fmtYmd(dHasta) };
+	}
+
+	function sincronizarPresetActivo(vFrom, vTo) {
+		var presets = ['ayer', 'hoy', '1semana', '1mes', '3meses'];
+		var coincidencia = null;
+		var i, r;
+		for (i = 0; i < presets.length; i++) {
+			r = calcularRangoPreset(presets[i]);
+			if (r && r.from === vFrom && r.to === vTo) {
+				coincidencia = presets[i];
+				break;
+			}
+		}
+		$('#audMonPeriodoPresets .aud-btn-preset').removeClass('active');
+		if (coincidencia) {
+			$('#audMonPeriodoPresets .aud-btn-preset[data-preset="' + coincidencia + '"]').addClass('active');
+		}
+	}
+
+	function aplicarRangoPreset(preset, autoBuscar) {
+		var r = calcularRangoPreset(preset);
+		if (!r) {
+			return;
+		}
+		$('#from').val(r.from);
+		$('#to').val(r.to);
+		try {
+			$('#from').datepicker('setDate', r.from);
+			$('#to').datepicker('setDate', r.to);
+			$('#to').datepicker('option', 'minDate', r.from);
+			$('#from').datepicker('option', 'maxDate', r.to);
+		} catch (eSet) {}
+		sincronizarPresetActivo(r.from, r.to);
+		actualizarHint();
+		if (autoBuscar) {
+			buscar();
+		}
+	}
+
 	function actualizarHint() {
 		var from = $('#from').val() || '';
 		var to = $('#to').val() || '';
@@ -185,6 +253,7 @@ $(function () {
 			return;
 		}
 		actualizarHint();
+		cargarResumen();
 		$grid.jqGrid('setGridParam', {
 			datatype: 'json',
 			postData: filtrosPost(),
@@ -192,17 +261,65 @@ $(function () {
 		}).trigger('reloadGrid');
 	}
 
+	/* ---- Resumen automatizado del filtro actual (misma consulta que el PDF) ---- */
+	function cargarResumen() {
+		var $wrap = $('#audResumenWrap');
+		var $body = $('#audResumenContenido');
+		if (!$wrap.length || !$body.length) {
+			return;
+		}
+		var data = filtrosPost();
+		data.resumenMonitoreoAjax = 1;
+		$.getJSON(window.location.pathname, data, function (resp) {
+			var r = resp && resp.resumen;
+			if (!r) {
+				$wrap.hide();
+				return;
+			}
+			var cards = '';
+			function card(num, lbl, cls, tip) {
+				return '<div class="aud-resumen-card ' + (cls || '') + '" title="' + (tip || lbl) + '">' +
+					'<span class="aud-rc-num">' + num + '</span><span class="aud-rc-lbl">' + lbl + '</span></div>';
+			}
+			var pe = r.por_evento || {};
+			cards += card(r.total || 0, 'Actividades', 'aud-rc-total', 'Actividades registradas en el periodo');
+			cards += card(pe.I || 0, 'Insertados', 'aud-rc-i', 'Registros insertados');
+			cards += card(pe.U || 0, 'Actualizados', 'aud-rc-u', 'Registros actualizados');
+			cards += card(pe.D || 0, 'Eliminados', 'aud-rc-d', 'Registros eliminados o anulados');
+			cards += card(pe.F || 0, 'Otras', 'aud-rc-f', 'Otras actividades (no I/U/D)');
+			cards += card(r.usuarios_distintos || 0, 'Usuarios', '', 'Usuarios distintos con actividad');
+			var lists = '<div class="aud-resumen-cols">';
+			lists += '<div class="aud-resumen-col"><strong>Top modulos</strong><ul>';
+			if (r.top_modulos) {
+				$.each(r.top_modulos, function (k, v) { lists += '<li>' + $.trim(k) + ' (' + v + ')</li>'; });
+			} else if (r.total > 0) {
+				lists += '<li class="text-muted">Sin modulo</li>';
+			}
+			lists += '</ul></div><div class="aud-resumen-col"><strong>Top usuarios</strong><ul>';
+			if (r.top_usuarios) {
+				$.each(r.top_usuarios, function (k, v) { lists += '<li>' + $.trim(k) + ' (' + v + ')</li>'; });
+			} else if (r.total > 0) {
+				lists += '<li class="text-muted">-</li>';
+			}
+			lists += '</ul></div><div class="aud-resumen-col"><strong>Top procesos</strong><ul>';
+			if (r.top_procesos) {
+				$.each(r.top_procesos, function (k, v) { lists += '<li>' + $.trim(k) + ' (' + v + ')</li>'; });
+			} else if (r.total > 0) {
+				lists += '<li class="text-muted">-</li>';
+			}
+			lists += '</ul></div></div>';
+			var obs = '<p class="aud-resumen-obs">' +
+				((r.observaciones && r.observaciones.length) ? r.observaciones.join(' ') : 'Sin observaciones.') +
+				'</p>';
+			$body.html('<div class="aud-resumen-cards">' + cards + '</div>' + lists + obs);
+			$wrap.show();
+		}).fail(function () {
+			$wrap.hide();
+		});
+	}
+
 	function limpiarFiltros() {
-		var hoy = new Date();
-		var desde = new Date(hoy.getTime() - (30 * 24 * 3600 * 1000));
-		var vFrom = fmtYmd(desde);
-		var vTo = fmtYmd(hoy);
-		$('#from').val(vFrom);
-		$('#to').val(vTo);
-		try {
-			$('#to').datepicker('option', 'minDate', vFrom);
-			$('#from').datepicker('option', 'maxDate', vTo);
-		} catch (eClr) {}
+		aplicarRangoPreset('1mes', false);
 		$('#org').val('0');
 		$('#dir').val('0');
 		$('#eve').val('0');
@@ -218,6 +335,9 @@ $(function () {
 		cargarDirectorios(0, function () {
 			cargarProcesos(0, 0, function () {
 				$('#pcs').val('0');
+				if (typeof audFiltrosBadgeActualizar === 'function') {
+					audFiltrosBadgeActualizar();
+				}
 				buscar();
 			});
 		});
@@ -369,8 +489,18 @@ $(function () {
 			e.stopPropagation();
 			$to.focus().datepicker('show');
 		});
+
+		sincronizarPresetActivo($from.val(), $to.val());
+		$from.add($to).off('change.audPreset').on('change.audPreset', function () {
+			sincronizarPresetActivo($from.val(), $to.val());
+		});
 	}
 	initCalendarios();
+
+	$('#audMonPeriodoPresets').off('click.audMonPreset', '.aud-btn-preset').on('click.audMonPreset', '.aud-btn-preset', function (e) {
+		e.preventDefault();
+		aplicarRangoPreset($(this).attr('data-preset'), true);
+	});
 
 	/* ---- Chosen buscador para usuario ---- */
 	function initChosen() {
@@ -584,6 +714,17 @@ $(function () {
 		limpiarFiltros();
 	});
 
+	$('#btnToggleResumen').on('click', function () {
+		var $btn = $(this);
+		var $body = $('#audResumenContenido');
+		var ocultar = $body.is(':visible');
+		$body.toggle();
+		$btn.text(ocultar ? 'Mostrar' : 'Ocultar');
+		if (typeof exaUiFitJqGrid === 'function') {
+			exaUiFitJqGrid('#gridMonitoreo', '#lista .exa-ui-grid-host');
+		}
+	});
+
 	$('#frmFiltros').on('keydown', 'input, select', function (e) {
 		if (e.keyCode === 13) {
 			e.preventDefault();
@@ -620,6 +761,50 @@ $(function () {
 	$('#suc').on('change', function () {
 		cargarUsuarios($(this).val() || 0, actualizarHint);
 	});
+
+	/* ---- Filtros avanzados colapsables (Sucursal/Modulo/Directorio/Proceso/Planta/Evento) ---- */
+	function audFiltrosBadgeActualizar() {
+		var campos = ['#suc', '#org', '#dir', '#pcs', '#eve', '#filPlanta'];
+		var n = 0;
+		$.each(campos, function (i, sel) {
+			var $el = $(sel);
+			if (!$el.length) {
+				return;
+			}
+			if (sel === '#filPlanta' && !$('#audFilPlantaWrap').is(':visible')) {
+				return;
+			}
+			var v = $el.val();
+			if (v && String(v) !== '0') {
+				n++;
+			}
+		});
+		var $b = $('#filtrosBadge');
+		if (n > 0) {
+			$b.text(n).show();
+		} else {
+			$b.hide();
+		}
+	}
+
+	$('#btnFiltrosToggle').on('click', function () {
+		$('#audFiltrosRow').slideToggle(150);
+	});
+
+	$('#suc, #org, #dir, #pcs, #eve, #filPlanta').on('change', function () {
+		audFiltrosBadgeActualizar();
+	});
+
+	/* Si la pagina se sirvio con filtros avanzados ya aplicados (enlace
+	   compartido o recarga), se muestra la fila expandida desde el inicio */
+	if (($('#suc').val() && $('#suc').val() !== '0') ||
+		($('#org').val() && $('#org').val() !== '0') ||
+		($('#dir').val() && $('#dir').val() !== '0') ||
+		($('#pcs').val() && $('#pcs').val() !== '0') ||
+		($('#eve').val() && $('#eve').val() !== '0')) {
+		$('#audFiltrosRow').show();
+	}
+	audFiltrosBadgeActualizar();
 
 	function exportOpts() {
 		return {
@@ -675,6 +860,7 @@ $(function () {
 
 	actualizarHint();
 	actualizarPlantaSelect();
+	cargarResumen();
 	setTimeout(function () {
 		if (typeof exaUiAfterViewChange === 'function') {
 			exaUiAfterViewChange('.exa-ui-panel');

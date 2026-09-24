@@ -15,6 +15,9 @@ $audEmpCod = isset($Ses_Emp_Cod) ? (int)$Ses_Emp_Cod : 0;
 $audUsuCod = isset($Ses_Usu_Cod) ? (int)$Ses_Usu_Cod : 0;
 $audSucCod = isset($Ses_Suc_Cod) ? (int)$Ses_Suc_Cod : 0;
 
+require_once('../LOGICA/aud_log_acceso_directorio.php');
+aud_acceso_directorio_gate($audEmpCod);
+
 /** JSON seguro (latin1 DB -> utf8) sin contaminar la respuesta AJAX */
 if (!function_exists('aud_json_out')) {
 	function aud_to_utf8_deep(&$input) {
@@ -58,8 +61,122 @@ if (isset($_POST['ajax']) && (string)$_POST['ajax'] === '1') {
 		exit();
 	}
 	$pares = aud_pares_interpretados($rowLog, $obBD_con1, $obBD_conexion);
-	echo aud_html_detalle($rowLog, $pares);
-	echo barra_estado(count($pares));
+	echo aud_html_detalle_tabs($rowLog, $pares, $obBD_con1, $obBD_conexion, barra_estado(count($pares)));
+	$obBD_con1->liberar();
+	$obBD_conexion->cerrar();
+	exit();
+}
+
+/** Resumen automatizado del filtro actual (misma consulta que el informe PDF). */
+if (isset($_REQUEST['resumenMonitoreoAjax'])) {
+	@ini_set('display_errors', '0');
+	@header('Content-Type: application/json; charset=utf-8');
+	$fil_from = isset($_REQUEST['from']) ? trim($_REQUEST['from']) : '';
+	$fil_to = isset($_REQUEST['to']) ? trim($_REQUEST['to']) : '';
+	$fil_eve = isset($_REQUEST['eve']) ? (int)$_REQUEST['eve'] : 0;
+	$fil_org = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
+	$fil_dir = isset($_REQUEST['dir']) ? (int)$_REQUEST['dir'] : 0;
+	$fil_pcs = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
+	$fil_usu = aud_usu_list(isset($_REQUEST['usu']) ? $_REQUEST['usu'] : 0);
+	$fil_suc = isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0;
+	$fil_pla = isset($_REQUEST['pla']) ? (int)$_REQUEST['pla'] : 0;
+	if ($fil_from === '' && $fil_to === '') {
+		$fil_to = date('Y-m-d');
+		$fil_from = date('Y-m-d', strtotime('-30 days'));
+	}
+	$filtros = array($audEmpCod, $fil_from, $fil_to, $fil_eve, $fil_org, $fil_pcs, 0, $fil_usu, 5000, 0, $fil_suc, $fil_dir, $fil_pla);
+	$Arr_Res = $obBD_con1->getArrayConsulta(31, $filtros, $obBD_conexion);
+	if (!is_array($Arr_Res)) {
+		$Arr_Res = array();
+	}
+	$total = count($Arr_Res);
+	$porEvento = array('I' => 0, 'U' => 0, 'D' => 0, 'F' => 0);
+	$usuDistintos = array();
+	$topModulos = array();
+	$topUsuarios = array();
+	$topProcesos = array();
+	$iniFec = '';
+	$finFec = '';
+	foreach ($Arr_Res as $r) {
+		$ini = strtoupper(trim(isset($r['Eve_Ini']) ? $r['Eve_Ini'] : ''));
+		if (isset($porEvento[$ini])) {
+			$porEvento[$ini]++;
+		}
+		$uc = isset($r['Usu_Cod']) ? (int)$r['Usu_Cod'] : 0;
+		if ($uc > 0) {
+			$usuDistintos[$uc] = aud_nombre_usuario($r);
+		}
+		$mod = aud_nombre_modulo($r);
+		if ($mod === '') {
+			$mod = 'Sin modulo';
+		}
+		if (!isset($topModulos[$mod])) {
+			$topModulos[$mod] = 0;
+		}
+		$topModulos[$mod]++;
+		$usuN = aud_nombre_usuario($r);
+		if ($usuN === 'Usuario no identificado' || $usuN === '') {
+			$usuN = 'Usuario '.$uc;
+		}
+		if (!isset($topUsuarios[$usuN])) {
+			$topUsuarios[$usuN] = 0;
+		}
+		$topUsuarios[$usuN]++;
+		$pcsN = aud_nombre_proceso($r);
+		if ($pcsN === '' || $pcsN === 'Proceso no registrado') {
+			$pcsN = 'Proceso no registrado';
+		}
+		if (!isset($topProcesos[$pcsN])) {
+			$topProcesos[$pcsN] = 0;
+		}
+		$topProcesos[$pcsN]++;
+		$fec = trim(isset($r['Log_Fec']) ? $r['Log_Fec'] : '');
+		if ($fec !== '') {
+			if ($iniFec === '' || $fec < $iniFec) {
+				$iniFec = $fec;
+			}
+			if ($finFec === '' || $fec > $finFec) {
+				$finFec = $fec;
+			}
+		}
+	}
+	arsort($topModulos);
+	arsort($topUsuarios);
+	arsort($topProcesos);
+	$topModulos = array_slice($topModulos, 0, 5, true);
+	$topUsuarios = array_slice($topUsuarios, 0, 5, true);
+	$topProcesos = array_slice($topProcesos, 0, 5, true);
+	$obs = array();
+	if ($total === 0) {
+		$obs[] = 'Sin datos para el filtro seleccionado.';
+	} else {
+		$obs[] = 'Total de actividades: '.number_format($total, 0, ',', '.').' en el periodo del '.$fil_from.' al '.$fil_to.'.';
+		$obs[] = 'Usuarios distintos con actividad: '.count($usuDistintos).'.';
+		if (!empty($porEvento['I'])) {
+			$obs[] = 'Registros insertados: '.number_format($porEvento['I'], 0, ',', '.').'.';
+		}
+		if (!empty($porEvento['U'])) {
+			$obs[] = 'Registros actualizados: '.number_format($porEvento['U'], 0, ',', '.').'.';
+		}
+		if (!empty($porEvento['D'])) {
+			$obs[] = 'Registros eliminados o anulados: '.number_format($porEvento['D'], 0, ',', '.').'.';
+		}
+		if (!empty($porEvento['F'])) {
+			$obs[] = 'Otras actividades (no I/U/D): '.number_format($porEvento['F'], 0, ',', '.').'.';
+		}
+	}
+	$resumen = array(
+		'total' => $total,
+		'por_evento' => $porEvento,
+		'usuarios_distintos' => count($usuDistintos),
+		'inicio' => $iniFec,
+		'fin' => $finFec,
+		'top_modulos' => $topModulos,
+		'top_usuarios' => $topUsuarios,
+		'top_procesos' => $topProcesos,
+		'observaciones' => $obs
+	);
+	echo aud_json_out(array('success' => true, 'resumen' => $resumen));
 	$obBD_con1->liberar();
 	$obBD_conexion->cerrar();
 	exit();
@@ -587,6 +704,7 @@ if (isset($_POST['simular']) && $_POST['simular'] == '1') {
 		array('personal', 'Personal Relavera', 'Personal'),
 		array('inventario_dispositivos', 'Inventario de dispositivos Relavera', 'Inventario de dispositivos'),
 		array('usuario_inventario', 'Usuarios de inventario Relavera', 'Usuarios de inventario'),
+		array('dispositivos_usuario', 'Vinculos navegador-dispositivo (MAC) Relavera', 'Vinculos de dispositivo'),
 		array('ccpp_cobrar', 'Cuentas por cobrar Relavera', 'Cuentas por cobrar'),
 		array('det_ccpp_c', 'Detalle de cuentas por cobrar Relavera', 'Detalle de cuentas por cobrar'),
 		array('pago_venta', 'Pagos de venta Relavera', 'Pagos de venta'),
@@ -759,7 +877,7 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 	<?php require_once("../../mascaras/model3/estilos/estilos.php"); ?>
 	<link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
 	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
-	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260915_v1" />
+	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260923_v14" />
 </head>
 <body>
 <div class="panel panel-default panel-main exa-ui-panel exa-ui-fill-page">
@@ -769,26 +887,49 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 	<div class="panel-body exa-body">
 		<div id="lista" class="row exa-ui-page-view">
 			<div class="col-xs-12">
+				<div class="aud-page-hero">
+					<div class="aud-page-hero-icon"><span class="glyphicon glyphicon-eye-open"></span></div>
+					<div class="aud-page-hero-text">
+						<h4>Historial de actividades</h4>
+						<p class="aud-page-hero-sub">
+							Consulte, filtre y exporte los eventos de inserci&oacute;n, actualizaci&oacute;n y eliminaci&oacute;n
+							registrados seg&uacute;n la configuraci&oacute;n de monitoreo.
+						</p>
+					</div>
+					<div class="aud-page-hero-tags">
+						<span class="aud-page-hero-tag"><span class="glyphicon glyphicon-filter"></span> Filtros</span>
+						<span class="aud-page-hero-tag"><span class="glyphicon glyphicon-download-alt"></span> Exportar</span>
+					</div>
+				</div>
 				<?php echo aud_html_banner_captura($audEstado); ?>
-				<fieldset class="exa-fieldset aud-search-fieldset">
-					<legend class="Titulos2">Buscar por</legend>
-					<form id="frmFiltros" class="form-horizontal normal exa-ui-busqueda-filtros" onsubmit="return false;">
-						<div class="aud-search-row">
-							<div class="aud-search-cell aud-search-cell-date">
-								<label for="from">Desde</label>
-								<div class="input-group input-group-xs">
-									<input name="from" type="text" id="from" class="form-control input-xs" value="<?php echo aud_h($fil_from); ?>" maxlength="10" placeholder="aaaa-mm-dd" autocomplete="off" />
-									<span class="input-group-addon" id="btnFromCal" title="Abrir calendario"><span class="glyphicon glyphicon-calendar"></span></span>
+				<?php echo aud_html_banner_desde(aud_fecha_registro_inicio($audEmpCod, $obBD_con1, $obBD_conexion)); ?>
+				<div class="aud-toolbar-card">
+					<form id="frmFiltros" class="exa-ui-busqueda-filtros" onsubmit="return false;">
+						<div class="aud-toolbar">
+							<div class="aud-toolbar-left">
+								<div class="aud-toolbar-dates">
+									<span class="aud-toolbar-label"><span class="glyphicon glyphicon-calendar"></span> Periodo</span>
+									<div class="btn-group btn-group-xs aud-period-presets" id="audMonPeriodoPresets" role="group" aria-label="Rangos rapidos">
+										<button type="button" class="btn aud-btn-preset" data-preset="ayer">Ayer</button>
+										<button type="button" class="btn aud-btn-preset" data-preset="hoy">Hoy</button>
+										<button type="button" class="btn aud-btn-preset" data-preset="1semana">1 Semana</button>
+										<button type="button" class="btn aud-btn-preset active" data-preset="1mes">1 Mes</button>
+										<button type="button" class="btn aud-btn-preset" data-preset="3meses">3 Meses</button>
+									</div>
+									<div class="aud-toolbar-range">
+										<div class="input-group input-group-xs">
+											<span class="input-group-addon">Desde</span>
+											<input name="from" type="text" id="from" class="form-control input-xs" value="<?php echo aud_h($fil_from); ?>" maxlength="10" placeholder="aaaa-mm-dd" autocomplete="off" />
+											<span class="input-group-addon" id="btnFromCal" title="Abrir calendario"><span class="glyphicon glyphicon-calendar"></span></span>
+										</div>
+										<div class="input-group input-group-xs">
+											<span class="input-group-addon">Hasta</span>
+											<input name="to" type="text" id="to" class="form-control input-xs" value="<?php echo aud_h($fil_to); ?>" maxlength="10" placeholder="aaaa-mm-dd" autocomplete="off" />
+											<span class="input-group-addon" id="btnToCal" title="Abrir calendario"><span class="glyphicon glyphicon-calendar"></span></span>
+										</div>
+									</div>
 								</div>
-							</div>
-							<div class="aud-search-cell aud-search-cell-date">
-								<label for="to">Hasta</label>
-								<div class="input-group input-group-xs">
-									<input name="to" type="text" id="to" class="form-control input-xs" value="<?php echo aud_h($fil_to); ?>" maxlength="10" placeholder="aaaa-mm-dd" autocomplete="off" />
-									<span class="input-group-addon" id="btnToCal" title="Abrir calendario"><span class="glyphicon glyphicon-calendar"></span></span>
-								</div>
-							</div>
-							<div class="aud-search-cell aud-search-cell-usu">
+								<div class="aud-search-cell aud-search-cell-usu">
 								<label for="usu">Usuario</label>
 								<select name="usu" id="usu" class="form-control input-xs" title="Filtrar por usuario">
 									<option value="0">Todos</option>
@@ -806,7 +947,62 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 									<option value="<?php echo aud_h($usus); ?>"<?php echo $fil_usu === $usus ? ' selected="selected"':''; ?>><?php echo aud_h($un); ?></option>
 									<?php } ?>
 								</select>
+								</div>
 							</div>
+							<div class="aud-toolbar-right">
+								<button type="button" id="btnBuscar" class="btn btn-success btn-sm" title="Aplicar filtros">
+									<span class="glyphicon glyphicon-search"></span> Buscar
+								</button>
+								<button type="button" id="btnLimpiar" class="btn btn-default btn-sm" title="Restablecer filtros (ultimos 30 dias / 1 Mes)">
+									<span class="glyphicon glyphicon-refresh"></span> Limpiar
+								</button>
+								<button type="button" id="btnFiltrosToggle" class="btn btn-default btn-sm" title="Mostrar u ocultar filtros por sucursal, modulo, directorio, proceso, planta y evento">
+									<span class="glyphicon glyphicon-filter"></span> Filtros <span class="badge aud-filtros-badge" id="filtrosBadge" style="display:none;">0</span>
+								</button>
+								<div class="aud-col-wrap" id="aud-col-wrap">
+									<button type="button" id="aud-col-btn" class="btn btn-default btn-sm" title="Columnas visibles">
+										<span class="glyphicon glyphicon-th-list"></span> Columnas
+									</button>
+									<div id="aud-col-panel" class="aud-col-panel">
+										<strong>Columnas visibles</strong>
+										<label><input type="checkbox" class="aud-col-toggle" data-col="Log_Cod" checked="checked" /> Id</label>
+										<label><input type="checkbox" class="aud-col-toggle" data-col="Fecha" checked="checked" /> Fecha</label>
+										<label><input type="checkbox" class="aud-col-toggle" data-col="Hora" checked="checked" /> Hora</label>
+										<label><input type="checkbox" class="aud-col-toggle" data-col="Empresa" checked="checked" /> Empresa</label>
+										<?php if ($hasSucursales) { ?>
+										<label><input type="checkbox" class="aud-col-toggle" data-col="Sucursal" checked="checked" /> Sucursal</label>
+										<?php } ?>
+										<label><input type="checkbox" class="aud-col-toggle" data-col="Usuario" checked="checked" /> Usuario</label>
+										<label><input type="checkbox" class="aud-col-toggle" data-col="Modulo" checked="checked" /> Modulo</label>
+										<label><input type="checkbox" class="aud-col-toggle" data-col="Directorio" checked="checked" /> Directorio</label>
+										<label><input type="checkbox" class="aud-col-toggle" data-col="Proceso" checked="checked" /> Proceso</label>
+										<label><input type="checkbox" class="aud-col-toggle" data-col="Actividad" checked="checked" /> Actividad</label>
+										<label><input type="checkbox" class="aud-col-toggle" data-col="Detalle" checked="checked" /> Detalle</label>
+									</div>
+								</div>
+								<div class="dropdown" style="display:inline-block;">
+									<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Acciones">
+										<span class="glyphicon glyphicon-cog"></span> Acciones <span class="caret"></span>
+									</button>
+									<ul class="dropdown-menu dropdown-menu-right aud-acciones-menu">
+										<li><a href="javascript:void(0);" id="btnExportPdf"><i class="fa fa-file-pdf-o text-danger"></i> Exportar PDF</a></li>
+										<li><a href="javascript:void(0);" id="btnExportExcel"><span class="glyphicon glyphicon-download-alt text-success"></span> Exportar Excel</a></li>
+										<li class="divider"></li>
+										<li>
+											<form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" onsubmit="return audConfirmarDemoForm(this, event);">
+												<input type="hidden" name="simular" value="1" />
+												<button type="submit" class="aud-acciones-menu-btn" title="Inserta actividad de demostracion (solo pruebas)">
+													<span class="glyphicon glyphicon-plus text-muted"></span> Simular actividad
+												</button>
+											</form>
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+
+						<div class="aud-toolbar aud-toolbar-filtros" id="audFiltrosRow" style="display:none;">
+							<div class="aud-toolbar-left aud-filtros-grid">
 							<?php if ($hasSucursales) { ?>
 							<div class="aud-search-cell aud-search-cell-suc">
 								<label for="suc">Sucursal</label>
@@ -836,26 +1032,26 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 									<?php } ?>
 								</select>
 							</div>
-						<div class="aud-search-cell aud-search-cell-pcs">
-							<label for="pcs">Proceso</label>
-							<select name="pcs" id="pcs" class="form-control input-xs" title="Filtrar por proceso">
-								<option value="0">Todos</option>
-								<?php foreach ($Arr_Procesos as $p) {
-									$pl = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : ('Proceso '.$p['Pcs_Cod']));
-								?>
-								<option value="<?php echo (int)$p['Pcs_Cod']; ?>"<?php echo $fil_pcs==(int)$p['Pcs_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl); ?></option>
-								<?php } ?>
-							</select>
-						</div>
-						<div class="aud-search-cell aud-search-cell-pla" id="audFilPlantaWrap" style="display:none;">
-							<label for="filPlanta">Planta</label>
-							<select name="pla" id="filPlanta" class="form-control input-xs" title="Filtrar por planta del proceso">
-								<option value="0">Todas</option>
-								<?php foreach ($Arr_PlantasFiltro as $pl2) { ?>
-								<option value="<?php echo (int)$pl2['Pla_Cod']; ?>"<?php echo $fil_pla==(int)$pl2['Pla_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl2['Pla_Nom']); ?></option>
-								<?php } ?>
-							</select>
-						</div>
+							<div class="aud-search-cell aud-search-cell-pcs">
+								<label for="pcs">Proceso</label>
+								<select name="pcs" id="pcs" class="form-control input-xs" title="Filtrar por proceso">
+									<option value="0">Todos</option>
+									<?php foreach ($Arr_Procesos as $p) {
+										$pl = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : ('Proceso '.$p['Pcs_Cod']));
+									?>
+									<option value="<?php echo (int)$p['Pcs_Cod']; ?>"<?php echo $fil_pcs==(int)$p['Pcs_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl); ?></option>
+									<?php } ?>
+								</select>
+							</div>
+							<div class="aud-search-cell aud-search-cell-pla" id="audFilPlantaWrap" style="display:none;">
+								<label for="filPlanta">Planta</label>
+								<select name="pla" id="filPlanta" class="form-control input-xs" title="Filtrar por planta del proceso">
+									<option value="0">Todas</option>
+									<?php foreach ($Arr_PlantasFiltro as $pl2) { ?>
+									<option value="<?php echo (int)$pl2['Pla_Cod']; ?>"<?php echo $fil_pla==(int)$pl2['Pla_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl2['Pla_Nom']); ?></option>
+									<?php } ?>
+								</select>
+							</div>
 							<div class="aud-search-cell aud-search-cell-eve">
 								<label for="eve">Evento</label>
 								<select name="eve" id="eve" class="form-control input-xs" title="Filtrar por tipo de evento">
@@ -865,61 +1061,23 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 									<?php } ?>
 								</select>
 							</div>
-							<div class="aud-search-cell aud-search-cell-actions">
-								<label>&nbsp;</label>
-								<div class="aud-search-actions">
-									<button type="button" id="btnBuscar" class="btn btn-success btn-xs" title="Aplicar filtros">
-										<span class="glyphicon glyphicon-search"></span> Buscar
-									</button>
-									<button type="button" id="btnLimpiar" class="btn btn-default btn-xs" title="Restablecer filtros (ultimos 30 dias)">
-										<span class="glyphicon glyphicon-refresh"></span> Limpiar
-									</button>
-								</div>
 							</div>
 						</div>
 						<p class="aud-search-hint" id="audSearchHint">Periodo por defecto: <strong>ultimos 30 dias</strong>. Cambie filtros y pulse Buscar.</p>
 					</form>
-				</fieldset>
-
-				<div class="aud-toolbar-actions clearfix">
-					<form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" style="display:inline;" onsubmit="return audConfirmarDemoForm(this, event);">
-						<input type="hidden" name="simular" value="1" />
-						<button type="submit" class="btn btn-default btn-xs" title="Inserta actividad de demostracion (solo pruebas)">
-							<span class="glyphicon glyphicon-plus"></span> Simular actividad
-						</button>
-					</form>
-					<div class="aud-toolbar-right">
-						<button type="button" id="btnExportExcel" class="btn btn-success btn-xs" title="Exportar a Excel">
-							<span class="glyphicon glyphicon-download-alt"></span> Excel
-						</button>
-						<button type="button" id="btnExportPdf" class="btn btn-default btn-xs" title="Generar reporte formal PDF">
-							<i class="fa fa-file-pdf-o text-danger"></i> Exportar PDF
-						</button>
-						<div class="aud-col-wrap" id="aud-col-wrap">
-							<button type="button" id="aud-col-btn" class="btn btn-default btn-xs" title="Columnas visibles">
-								<span class="glyphicon glyphicon-th-list"></span> Columnas
-							</button>
-							<div id="aud-col-panel" class="aud-col-panel">
-								<strong>Columnas visibles</strong>
-								<label><input type="checkbox" class="aud-col-toggle" data-col="Log_Cod" checked="checked" /> Id</label>
-								<label><input type="checkbox" class="aud-col-toggle" data-col="Fecha" checked="checked" /> Fecha</label>
-								<label><input type="checkbox" class="aud-col-toggle" data-col="Hora" checked="checked" /> Hora</label>
-								<label><input type="checkbox" class="aud-col-toggle" data-col="Empresa" checked="checked" /> Empresa</label>
-								<?php if ($hasSucursales) { ?>
-								<label><input type="checkbox" class="aud-col-toggle" data-col="Sucursal" checked="checked" /> Sucursal</label>
-								<?php } ?>
-								<label><input type="checkbox" class="aud-col-toggle" data-col="Usuario" checked="checked" /> Usuario</label>
-								<label><input type="checkbox" class="aud-col-toggle" data-col="Modulo" checked="checked" /> Modulo</label>
-								<label><input type="checkbox" class="aud-col-toggle" data-col="Directorio" checked="checked" /> Directorio</label>
-								<label><input type="checkbox" class="aud-col-toggle" data-col="Proceso" checked="checked" /> Proceso</label>
-								<label><input type="checkbox" class="aud-col-toggle" data-col="Actividad" checked="checked" /> Actividad</label>
-								<label><input type="checkbox" class="aud-col-toggle" data-col="Detalle" checked="checked" /> Detalle</label>
-							</div>
-						</div>
-					</div>
 				</div>
 
-				<div class="exa-ui-grid-host">
+				<div class="aud-resumen-wrap" id="audResumenWrap" style="display:none;">
+				<div class="aud-resumen-head">
+					<span class="glyphicon glyphicon-stats"></span> <strong>Resumen de la busqueda</strong>
+					<button type="button" id="btnToggleResumen" class="btn btn-link btn-xs" title="Mostrar u ocultar el resumen">
+						Ocultar
+					</button>
+				</div>
+				<div id="audResumenContenido" class="aud-resumen-body"></div>
+			</div>
+
+			<div class="exa-ui-grid-host">
 					<table id="gridMonitoreo"></table>
 					<div id="gridMonitoreoPager"></div>
 				</div>
@@ -937,7 +1095,7 @@ var AUD_HAS_SUCURSALES = <?php echo $hasSucursales ? 'true' : 'false'; ?>;
 </script>
 <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
 <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-<script type="text/javascript" src="../VALIDACIONES/aud_par_monitoreo.js?v=20260915_v7"></script>
+<script type="text/javascript" src="../VALIDACIONES/aud_par_monitoreo.js?v=20260923_v9"></script>
 </body>
 </html>
 <?php

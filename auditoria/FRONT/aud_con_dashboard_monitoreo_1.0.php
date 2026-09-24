@@ -16,13 +16,66 @@ if (session_id() === '' && !headers_sent()) {
 	@session_start();
 }
 
+require_once dirname(__FILE__) . '/../../administrador/LOGICA/seguridad.php';
+
 $audEmpCod = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
 $audEmpNom = isset($_SESSION['Ses_Emp_Nom']) ? $_SESSION['Ses_Emp_Nom'] : 'Empresa Principal';
 $audUsuCod = isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
 
+require_once dirname(__FILE__) . '/../LOGICA/aud_log_acceso_directorio.php';
+aud_acceso_directorio_gate($audEmpCod);
+
+// Aviso "datos desde": se consulta el MIN(Log_Fec) una sola vez por empresa (cache en sesion)
+require_once dirname(__FILE__) . '/../LOGICA/aud_log_interpretar.php';
+if (!class_exists('Class_Log_Datos_CfgMon')) {
+	$audCfgFile = dirname(__FILE__) . '/../LOGICA/aud_log_config_monitoreo.php';
+	if (file_exists($audCfgFile)) {
+		require_once $audCfgFile;
+	}
+}
+$audSesDatDis = isset($_SESSION['Ses_Dat_Dis']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']) : '';
+$audDesdeFechaHtml = '';
+if (class_exists('Class_Log_Datos_CfgMon')) {
+	$obBD_desde1 = new Class_Log_Datos_CfgMon();
+	$obBD_desdeCon = new Class_Log_Conexion_CfgMon($audSesDatDis !== '' ? $audSesDatDis : null);
+	$audDesdeFechaHtml = aud_html_banner_desde(aud_fecha_registro_inicio($audEmpCod, $obBD_desde1, $obBD_desdeCon));
+	$obBD_desde1->liberar();
+	$obBD_desdeCon->cerrar();
+} else {
+	$audDesdeFechaHtml = aud_html_banner_desde(aud_fecha_registro_inicio($audEmpCod));
+}
+
 // Rango por defecto: ultimos 30 dias
 $defaultIni = date('Y-m-d 00:00:00', strtotime('-30 days'));
 $defaultFin = date('Y-m-d 23:59:59');
+
+// Combos del filtro estandarizado (mismos catalogos y case numbers que Monitoreo)
+// para que el Panel Estadistico soporte el mismo filtro de evento/modulo/directorio/
+// proceso/usuario/sucursal/planta.
+require_once dirname(__FILE__) . '/../LOGICA/aud_log_monitoreo.php';
+$audObBD_conexionMon = new Class_Log_Conexion($audSesDatDis !== '' ? $audSesDatDis : null);
+$audObBD_con1Mon = new Class_Log_Datos();
+$Arr_Modulos = $audObBD_con1Mon->getArrayConsulta(25, array($audEmpCod), $audObBD_conexionMon);
+$Arr_Directorios = $audObBD_con1Mon->getArrayConsulta(30, array($audEmpCod, 0), $audObBD_conexionMon);
+$Arr_Procesos = $audObBD_con1Mon->getArrayConsulta(26, array($audEmpCod, 0, 0), $audObBD_conexionMon);
+$Arr_Usuarios = $audObBD_con1Mon->getArrayConsulta(27, array($audEmpCod, 0), $audObBD_conexionMon);
+$Arr_Sucursales = $audObBD_con1Mon->getArrayConsulta(28, array($audEmpCod), $audObBD_conexionMon);
+$Arr_Eventos = $audObBD_con1Mon->getArrayConsulta(17, '', $audObBD_conexionMon);
+$Arr_PlantasFiltro = $audObBD_con1Mon->getArrayConsulta(33, array(), $audObBD_conexionMon);
+$rowSucCountMon = $audObBD_con1Mon->getRowConsulta(29, array($audEmpCod), $audObBD_conexionMon);
+$hasSucursalesMon = (!empty($rowSucCountMon['count']) && (int)$rowSucCountMon['count'] > 1);
+if (!is_array($Arr_Modulos)) $Arr_Modulos = array();
+if (!is_array($Arr_Directorios)) $Arr_Directorios = array();
+if (!is_array($Arr_Procesos)) $Arr_Procesos = array();
+if (!is_array($Arr_Usuarios)) $Arr_Usuarios = array();
+if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
+if (!is_array($Arr_Eventos)) $Arr_Eventos = array();
+if (!is_array($Arr_PlantasFiltro)) $Arr_PlantasFiltro = array();
+$audObBD_con1Mon->liberar();
+$audObBD_conexionMon->cerrar();
+if (!function_exists('aud_h')) {
+	function aud_h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -35,6 +88,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
 	<?php require_once("../../mascaras/model3/estilos/estilos.php"); ?>
 	<script type="text/javascript" src="../../framework/jquery/apexcharts/apexcharts.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260923_v15" />
 
 	<style>
 		.panel-heading.exa-header, .exa-header {
@@ -64,6 +118,11 @@ $defaultFin = date('Y-m-d 23:59:59');
 			border-color: #254463 #dbe3ec #fff;
 			color: #254463;
 		}
+		@media (max-width: 480px) {
+			.aud-dash-tabs .nav-tabs { display: flex; }
+			.aud-dash-tabs .nav-tabs > li { float: none; flex: 1 1 0%; }
+			.aud-dash-tabs .nav-tabs > li > a { padding: 8px 4px; text-align: center; font-size: 11px; }
+		}
 
 		.period-control-card {
 			background: #ffffff;
@@ -75,12 +134,12 @@ $defaultFin = date('Y-m-d 23:59:59');
 		}
 		.preset-btn { font-size: 11px; }
 
-		/* Barra de herramientas compartida: filtros juntos + Acciones a la derecha */
+		/* Barra de herramientas: rango en una sola linea */
 		.aud-toolbar {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			flex-wrap: wrap;
+			flex-wrap: nowrap;
 			gap: 10px;
 			padding: 10px 14px;
 		}
@@ -88,30 +147,45 @@ $defaultFin = date('Y-m-d 23:59:59');
 			flex: 1 1 auto;
 			min-width: 0;
 			display: flex;
-			flex-direction: column;
+			flex-direction: row;
+			align-items: center;
+			flex-wrap: nowrap;
 			gap: 8px;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			scrollbar-width: thin;
 		}
 		.aud-toolbar-presets {
-			display: flex;
+			display: inline-flex;
 			align-items: center;
-			flex-wrap: wrap;
-			gap: 8px;
+			flex-wrap: nowrap;
+			gap: 6px;
+			flex-shrink: 0;
 		}
 		.aud-toolbar-label {
 			font-weight: 700;
-			font-size: 12px;
-			color: #334155;
+			font-size: 11px;
+			letter-spacing: 0.03em;
+			text-transform: uppercase;
+			color: #5b6f88;
+			white-space: nowrap;
+			flex-shrink: 0;
 		}
 		.aud-toolbar-dates {
-			display: flex;
+			display: inline-flex;
 			align-items: center;
-			flex-wrap: wrap;
+			flex-wrap: nowrap;
 			gap: 6px;
+			flex-shrink: 0;
 		}
 		.aud-toolbar-dates .input-group { width: auto; }
-		.aud-toolbar-dates .input-group .form-control { width: 112px; }
+		.aud-toolbar-dates .input-group .form-control { width: 100px; }
 		.aud-toolbar-right {
 			flex: 0 0 auto;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			flex-shrink: 0;
 		}
 		.aud-acciones-menu {
 			min-width: 210px;
@@ -126,8 +200,25 @@ $defaultFin = date('Y-m-d 23:59:59');
 			margin-right: 4px;
 		}
 		@media (max-width: 767px) {
-			.aud-toolbar-right { width: 100%; }
-			.aud-toolbar-right .dropdown { float: right; }
+			.aud-toolbar {
+				flex-wrap: wrap;
+			}
+			.aud-toolbar-right {
+				width: 100%;
+				justify-content: flex-end;
+			}
+			.aud-toolbar-right .dropdown { float: none; }
+		}
+		@media (max-width: 480px) {
+			.aud-toolbar-dates .input-group .form-control { width: 86px; }
+			.aud-toolbar-presets #monPeriodoPresets .btn { padding: 3px 6px; }
+		}
+
+		/* Fila de filtros avanzados usa .aud-filtros-grid del CSS compartido */
+		.aud-toolbar-filtros {
+			border-top: 1px solid #e2e8f0;
+			padding-top: 10px;
+			margin-top: 8px;
 		}
 
 		.kpi-mon-card {
@@ -141,6 +232,17 @@ $defaultFin = date('Y-m-d 23:59:59');
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
+			transition: box-shadow 0.15s ease, transform 0.15s ease;
+		}
+		.kpi-mon-card:hover {
+			box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+			transform: translateY(-1px);
+		}
+		.btn, .preset-btn, .dropdown-toggle {
+			transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, transform 0.05s ease;
+		}
+		.btn:active, .preset-btn:active {
+			transform: translateY(1px);
 		}
 		.kpi-mon-card.green { border-top-color: #10b981; }
 		.kpi-mon-card.amber { border-top-color: #f59e0b; }
@@ -165,6 +267,9 @@ $defaultFin = date('Y-m-d 23:59:59');
 			box-sizing: border-box;
 			padding: 0 6px;
 			min-width: 150px;
+		}
+		@media (max-width: 480px) {
+			.dash-kpi-card, .dash-kpi-placeholder { flex: 1 1 100%; min-width: 100%; }
 		}
 		.dash-kpi-card .kpi-mon-card {
 			cursor: move;
@@ -222,6 +327,10 @@ $defaultFin = date('Y-m-d 23:59:59');
 			box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 			overflow: hidden;
 			height: 100%;
+			transition: box-shadow 0.15s ease;
+		}
+		.dash-widget-inner:hover {
+			box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 		}
 		.dash-widget-head {
 			display: flex;
@@ -260,8 +369,14 @@ $defaultFin = date('Y-m-d 23:59:59');
 			cursor: pointer; color: #10b981; font-size: 12px;
 		}
 		.dash-widget-head .dash-actions .dash-show:hover { color: #065f46; }
-		.dash-widget-body { padding: 10px 12px; }
+		.dash-widget-body { padding: 10px 12px; overflow-x: auto; }
 		.dash-widget-body .chart-empty { color: #94a3b8; font-size: 12px; text-align: center; padding: 28px 10px; }
+		.dash-widget-body table { min-width: 100%; }
+		@media (max-width: 480px) {
+			.dash-widget-head { flex-wrap: wrap; row-gap: 6px; }
+			.dash-widget-head .dash-title { flex: 1 1 100%; }
+			.dash-widget-body table { min-width: 420px; }
+		}
 
 		.dash-widget-placeholder {
 			box-sizing: border-box;
@@ -353,8 +468,25 @@ $defaultFin = date('Y-m-d 23:59:59');
 
 	<div class="panel-body exa-body" style="padding: 10px 14px;">
 
+		<div class="aud-page-hero">
+			<div class="aud-page-hero-icon"><i class="fa fa-bar-chart"></i></div>
+			<div class="aud-page-hero-text">
+				<h4>Panel estad&iacute;stico</h4>
+				<p class="aud-page-hero-sub">
+					Resumen ejecutivo del periodo con gr&aacute;ficos, tops y el mismo filtro que Monitoreo.
+					Exporte PDF o env&iacute;e por correo y WhatsApp.
+				</p>
+			</div>
+			<div class="aud-page-hero-tags">
+				<span class="aud-page-hero-tag"><i class="fa fa-line-chart"></i> Inicio</span>
+				<span class="aud-page-hero-tag"><i class="fa fa-exchange"></i> Comparativo</span>
+			</div>
+		</div>
+
+		<?php echo $audDesdeFechaHtml; ?>
+
 		<!-- Pestañas -->
-		<div class="aud-dash-tabs">
+		<div class="aud-dash-tabs aud-ui-tabs">
 			<ul class="nav nav-tabs" id="audDashTabs">
 				<li class="active">
 					<a href="#tabInicio" data-toggle="tab"><i class="fa fa-line-chart"></i> Inicio</a>
@@ -373,37 +505,38 @@ $defaultFin = date('Y-m-d 23:59:59');
 						<div class="aud-toolbar">
 
 							<div class="aud-toolbar-left">
-								<div class="aud-toolbar-presets">
-									<span class="aud-toolbar-label">
-										<i class="fa fa-calendar-check-o text-primary"></i> Rango de fechas:
-									</span>
-									<span id="monPresetCustomBadge" class="label label-info" style="display:none; font-size:10px; padding: 2px 6px;">Personalizado</span>
-									<div class="btn-group btn-group-xs" id="monPeriodoPresets">
-										<button type="button" class="btn btn-default preset-btn" data-preset="hoy">Hoy</button>
-										<button type="button" class="btn btn-default preset-btn" data-preset="ayer">Ayer</button>
-										<button type="button" class="btn btn-default preset-btn" data-preset="1semana">1 Semana</button>
-										<button type="button" class="btn btn-primary preset-btn active" data-preset="1mes">1 Mes</button>
-										<button type="button" class="btn btn-default preset-btn" data-preset="3meses">3 Meses</button>
-									</div>
+								<span class="aud-toolbar-label">
+									<i class="fa fa-calendar-check-o text-primary"></i> Rango de fechas
+								</span>
+								<div class="btn-group btn-group-xs aud-period-presets" id="monPeriodoPresets">
+									<button type="button" class="btn aud-btn-preset" data-preset="ayer">Ayer</button>
+									<button type="button" class="btn aud-btn-preset" data-preset="hoy">Hoy</button>
+									<button type="button" class="btn aud-btn-preset" data-preset="1semana">1 Semana</button>
+									<button type="button" class="btn aud-btn-preset active" data-preset="1mes">1 Mes</button>
+									<button type="button" class="btn aud-btn-preset" data-preset="3meses">3 Meses</button>
 								</div>
-
+								<span id="monPresetCustomBadge" class="label label-info" style="display:none; font-size:10px; padding: 2px 6px;">Personalizado</span>
 								<div class="aud-toolbar-dates">
-									<div class="input-group input-group-sm">
-										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Desde</span>
-										<input type="text" id="mon_ini" class="form-control text-center" value="<?php echo substr($defaultIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#mon_ini').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
-									</div>
-									<span class="text-muted" style="font-size:12px;">&ndash;</span>
-									<div class="input-group input-group-sm">
-										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Hasta</span>
-										<input type="text" id="mon_fin" class="form-control text-center" value="<?php echo substr($defaultFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#mon_fin').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+									<div class="aud-toolbar-range">
+										<div class="input-group input-group-sm">
+											<span class="input-group-addon">Desde</span>
+											<input type="text" id="mon_ini" class="form-control text-center" value="<?php echo substr($defaultIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+											<span class="input-group-addon" style="cursor:pointer;" onclick="$('#mon_ini').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+										</div>
+										<div class="input-group input-group-sm">
+											<span class="input-group-addon">Hasta</span>
+											<input type="text" id="mon_fin" class="form-control text-center" value="<?php echo substr($defaultFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+											<span class="input-group-addon" style="cursor:pointer;" onclick="$('#mon_fin').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+										</div>
 									</div>
 									<span id="monRangoLabel" class="label label-default" style="font-size:11px; background:#475569;"></span>
 								</div>
 							</div>
 
 							<div class="aud-toolbar-right">
+								<button type="button" class="btn btn-default btn-sm" id="btnMonFiltrosToggle" title="Mostrar/ocultar filtros avanzados (mismos filtros que Monitoreo)">
+									<i class="fa fa-filter"></i> Filtros <span class="badge" id="monFiltrosBadge" style="display:none;">0</span>
+								</button>
 								<div class="dropdown">
 									<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Acciones">
 										<i class="fa fa-sliders"></i> Acciones <span class="caret"></span>
@@ -417,6 +550,88 @@ $defaultFin = date('Y-m-d 23:59:59');
 										<li><a href="javascript:void(0);" id="btnModalCorreoMon" title="Enviar reporte por correo"><i class="fa fa-envelope-o text-info"></i> Enviar Correo</a></li>
 										<li><a href="javascript:void(0);" id="btnModalWhatsAppMon" title="Compartir informe por WhatsApp"><i class="fa fa-whatsapp text-success"></i> WhatsApp</a></li>
 									</ul>
+								</div>
+							</div>
+						</div>
+
+						<div class="aud-toolbar aud-toolbar-filtros" id="monFiltrosRow" style="display:none;">
+							<div class="aud-toolbar-left aud-filtros-grid">
+								<?php if ($hasSucursalesMon) { ?>
+								<div class="aud-search-cell aud-search-cell-suc">
+									<label for="mon_suc">Sucursal</label>
+									<select id="mon_suc" class="form-control input-sm">
+										<option value="0">Todas</option>
+										<?php foreach ($Arr_Sucursales as $s) { ?>
+										<option value="<?php echo (int)$s['Suc_Cod']; ?>"><?php echo aud_h($s['Suc_Des']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<?php } ?>
+								<div class="aud-search-cell aud-search-cell-mod">
+									<label for="mon_org">Modulo</label>
+									<select id="mon_org" class="form-control input-sm">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Modulos as $m) { ?>
+										<option value="<?php echo (int)$m['Org_Cod']; ?>"><?php echo aud_h($m['Org_Des']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-dir">
+									<label for="mon_dir">Directorio</label>
+									<select id="mon_dir" class="form-control input-sm">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Directorios as $d) { ?>
+										<option value="<?php echo (int)$d['Org_Cod']; ?>"><?php echo aud_h($d['Org_Des']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-pcs">
+									<label for="mon_pcs">Proceso</label>
+									<select id="mon_pcs" class="form-control input-sm">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Procesos as $p) {
+											$pl = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : ('Proceso '.$p['Pcs_Cod']));
+										?>
+										<option value="<?php echo (int)$p['Pcs_Cod']; ?>"><?php echo aud_h($pl); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-pla" id="monFilPlantaWrap" style="display:none;">
+									<label for="mon_pla">Planta</label>
+									<select id="mon_pla" class="form-control input-sm">
+										<option value="0">Todas</option>
+										<?php foreach ($Arr_PlantasFiltro as $pl2) { ?>
+										<option value="<?php echo (int)$pl2['Pla_Cod']; ?>"><?php echo aud_h($pl2['Pla_Nom']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-usu">
+									<label for="mon_usu">Usuario</label>
+									<select id="mon_usu" class="form-control input-sm">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Usuarios as $u) {
+											$un = trim(isset($u['Usu_Nom']) ? $u['Usu_Nom'] : '');
+											if ($un === '') { $un = 'Usuario '.(int)$u['Usu_Cod']; }
+											$usus = (isset($u['Usu_Cods']) && $u['Usu_Cods'] !== '') ? $u['Usu_Cods'] : (string)(int)$u['Usu_Cod'];
+										?>
+										<option value="<?php echo aud_h($usus); ?>"><?php echo aud_h($un); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-eve">
+									<label for="mon_eve">Evento</label>
+									<select id="mon_eve" class="form-control input-sm">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Eventos as $ev) { ?>
+										<option value="<?php echo (int)$ev['Eve_Cod']; ?>"><?php echo aud_h($ev['Eve_Des']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-limpiar">
+									<label>&nbsp;</label>
+									<button type="button" id="btnMonFiltrosLimpiar" class="btn btn-default btn-sm btn-block" title="Quitar todos los filtros">
+										<i class="fa fa-eraser"></i> Limpiar
+									</button>
 								</div>
 							</div>
 						</div>
@@ -704,15 +919,15 @@ $defaultFin = date('Y-m-d 23:59:59');
 
 	function audMonSincronizarPreset() {
 		var ini = $('#mon_ini').val(), fin = $('#mon_fin').val();
-		var presets = ['hoy', 'ayer', '1semana', '1mes', '3meses'];
+		var presets = ['ayer', 'hoy', '1semana', '1mes', '3meses'];
 		var coincide = null;
 		for (var i = 0; i < presets.length; i++) {
 			var r = audMonCalcularRango(presets[i]);
 			if (r && r.ini === ini && r.fin === fin) { coincide = presets[i]; break; }
 		}
-		$('#monPeriodoPresets .preset-btn').removeClass('btn-primary active').addClass('btn-default');
+		$('#monPeriodoPresets .aud-btn-preset').removeClass('active');
 		if (coincide) {
-			$('#monPeriodoPresets .preset-btn[data-preset="' + coincide + '"]').removeClass('btn-default').addClass('btn-primary active');
+			$('#monPeriodoPresets .aud-btn-preset[data-preset="' + coincide + '"]').addClass('active');
 			$('#monPresetCustomBadge').hide();
 		} else {
 			$('#monPresetCustomBadge').show();
@@ -929,7 +1144,9 @@ $defaultFin = date('Y-m-d 23:59:59');
 		if ($ic.length) {
 			var cls = $ic.attr('class') || '';
 			var partes = cls.split(' ');
-			for (var i = partes.length - 1; i >= 0; i--) { if (partes[i] && partes[i] !== 'fa') { ico = partes[i]; break; } }
+			for (var i = partes.length - 1; i >= 0; i--) {
+				if (partes[i] && partes[i] !== 'fa') { ico = partes[i].replace(/^fa-/, ''); break; }
+			}
 		}
 		return '<div class="aud-sbox' + (oculto ? ' aud-sbox-off' : '') + '" data-id="' + ordenId + '">'
 			+ '<i class="fa ' + (oculto ? 'fa-eye-slash' : 'fa-eye') + ' kbox-eye" title="Clic para mostrar/ocultar"></i>'
@@ -1265,14 +1482,100 @@ $defaultFin = date('Y-m-d 23:59:59');
 		audMonRenderTabla('tablaTopPlantas', topP.map(function (p) { return [p.planta, p.usuarios, p.insert, p.update, p.delete, p.total]; }), 7);
 	}
 
+	// ---------- Filtros avanzados (mismos filtros que Monitoreo) ----------
+	function audMonFiltrosActuales() {
+		return {
+			eve: $('#mon_eve').length ? $('#mon_eve').val() : 0,
+			org: $('#mon_org').length ? $('#mon_org').val() : 0,
+			dir: $('#mon_dir').length ? $('#mon_dir').val() : 0,
+			pcs: $('#mon_pcs').length ? $('#mon_pcs').val() : 0,
+			usu: $('#mon_usu').length ? $('#mon_usu').val() : 0,
+			suc: $('#mon_suc').length ? $('#mon_suc').val() : 0,
+			pla: $('#mon_pla').length ? $('#mon_pla').val() : 0
+		};
+	}
+
+	function audMonFiltrosActualizarBadge() {
+		var f = audMonFiltrosActuales();
+		var n = 0;
+		$.each(f, function (k, v) { if (v && String(v) !== '0') n++; });
+		var $b = $('#monFiltrosBadge');
+		if (n > 0) { $b.text(n).show(); } else { $b.hide(); }
+	}
+
+	$('#btnMonFiltrosToggle').on('click', function () {
+		$('#monFiltrosRow').slideToggle(150);
+	});
+
+	function audMonCargarDirectorios(org, dirSel) {
+		$.getJSON('../LOGICA/aud_log_dashboard_monitoreo.php', { directoriosAjax: 1, org: org || 0 }, function (resp) {
+			var $sel = $('#mon_dir');
+			var html = '<option value="0">Todos</option>';
+			$.each((resp && resp.rows) || [], function (i, d) {
+				html += '<option value="' + d.Org_Cod + '">' + $('<div>').text(d.Org_Des).html() + '</option>';
+			});
+			$sel.html(html);
+			if (dirSel) $sel.val(dirSel);
+		});
+	}
+
+	function audMonCargarProcesos(dir, org, pcsSel) {
+		$.getJSON('../LOGICA/aud_log_dashboard_monitoreo.php', { procesosAjax: 1, dir: dir || 0, org: org || 0 }, function (resp) {
+			var $sel = $('#mon_pcs');
+			var html = '<option value="0">Todos</option>';
+			$.each((resp && resp.rows) || [], function (i, p) {
+				var nom = p.Pcs_Lin || p.Pcs_Nom || ('Proceso ' + p.Pcs_Cod);
+				html += '<option value="' + p.Pcs_Cod + '">' + $('<div>').text(nom).html() + '</option>';
+			});
+			$sel.html(html);
+			if (pcsSel) $sel.val(pcsSel);
+			audMonVerificarPlanta();
+		});
+	}
+
+	function audMonVerificarPlanta() {
+		var pcs = $('#mon_pcs').val();
+		if (!pcs || pcs === '0') {
+			$('#monFilPlantaWrap').hide();
+			return;
+		}
+		$.getJSON('../LOGICA/aud_log_dashboard_monitoreo.php', { plantaProcesoAjax: 1, pcs: pcs }, function (resp) {
+			$('#monFilPlantaWrap').toggle(!!(resp && resp.tienePlanta));
+		});
+	}
+
+	$('#mon_org').on('change', function () {
+		audMonCargarDirectorios($(this).val());
+		audMonCargarProcesos(0, $(this).val());
+	});
+	$('#mon_dir').on('change', function () {
+		audMonCargarProcesos($(this).val(), $('#mon_org').val());
+	});
+	$('#mon_pcs').on('change', function () {
+		audMonVerificarPlanta();
+	});
+	$('#mon_eve, #mon_dir, #mon_pcs, #mon_usu, #mon_suc, #mon_pla, #mon_org').on('change', function () {
+		audMonFiltrosActualizarBadge();
+		audMonCargar();
+	});
+
+	$('#btnMonFiltrosLimpiar').on('click', function () {
+		$('#mon_eve, #mon_org, #mon_usu, #mon_suc, #mon_pla').val('0');
+		audMonCargarDirectorios(0);
+		audMonCargarProcesos(0, 0);
+		audMonFiltrosActualizarBadge();
+		audMonCargar();
+	});
+
 	function audMonCargar() {
 		var ini = $('#mon_ini').val(), fin = $('#mon_fin').val();
 		$('#monRangoLabel').text('Rango seleccionado: ' + ini + ' al ' + fin);
-		$.getJSON('../LOGICA/aud_log_dashboard_monitoreo.php', {
+		var params = $.extend({
 			action: 'consultar',
 			ini: ini + ' 00:00:00',
 			fin: fin + ' 23:59:59'
-		}).done(function (res) {
+		}, audMonFiltrosActuales());
+		$.getJSON('../LOGICA/aud_log_dashboard_monitoreo.php', params).done(function (res) {
 			if (res && res.success) {
 				audMonDestruirGraficos();
 				audMonRender(res);
@@ -1285,7 +1588,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 	}
 
 	// Presets
-	$('#monPeriodoPresets').on('click', '.preset-btn', function () {
+	$('#monPeriodoPresets').on('click', '.aud-btn-preset', function () {
 		var preset = $(this).data('preset');
 		var r = audMonCalcularRango(preset);
 		if (!r) return;
@@ -1378,7 +1681,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 		var ini = $('#mon_ini').val(), fin = $('#mon_fin').val();
 		if (!ini) { ini = audMonFmt(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 29)); }
 		if (!fin) { fin = audMonFmt(new Date()); }
-		return { ini: ini + ' 00:00:00', fin: fin + ' 23:59:59' };
+		return $.extend({ ini: ini + ' 00:00:00', fin: fin + ' 23:59:59' }, audMonFiltrosActuales());
 	}
 
 	function audMonModalGenericoAbrir(id) {
@@ -1418,8 +1721,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 	// Descargar PDF del periodo
 	$('#btnDescargarPdfMon').on('click', function () {
 		var f = audMonFechaParams();
-		var url = '../LOGICA/aud_log_dashboard_monitoreo.php?action=exportar_pdf&ini=' + encodeURIComponent(f.ini) +
-			'&fin=' + encodeURIComponent(f.fin);
+		var url = '../LOGICA/aud_log_dashboard_monitoreo.php?action=exportar_pdf&' + $.param(f);
 		window.open(url, '_blank');
 	});
 
@@ -1445,14 +1747,12 @@ $defaultFin = date('Y-m-d 23:59:59');
 			url: '../LOGICA/aud_log_dashboard_monitoreo.php',
 			type: 'POST',
 			dataType: 'json',
-			data: {
+			data: $.extend({
 				action: 'enviar_correo',
 				correo: correo,
 				nombre: $('#mailNombreMon').val().trim(),
-				asunto: $('#mailAsuntoMon').val().trim(),
-				ini: f.ini,
-				fin: f.fin
-			},
+				asunto: $('#mailAsuntoMon').val().trim()
+			}, f),
 			success: function (res) {
 				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar Documento');
 				if (res && res.success) {
@@ -1492,12 +1792,10 @@ $defaultFin = date('Y-m-d 23:59:59');
 			url: '../LOGICA/aud_log_dashboard_monitoreo.php',
 			type: 'POST',
 			dataType: 'json',
-			data: {
+			data: $.extend({
 				action: 'enviar_whatsapp',
-				telefono: tel,
-				ini: f.ini,
-				fin: f.fin
-			},
+				telefono: tel
+			}, f),
 			success: function (res) {
 				$btn.prop('disabled', false).html(botonHtml);
 				if (res && res.url_whatsapp) {
