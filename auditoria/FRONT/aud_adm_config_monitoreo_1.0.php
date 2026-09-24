@@ -192,8 +192,16 @@ if (!function_exists('aud_cfg_requerir_admin_ajax')) {
 if (isset($_REQUEST['getAccesoEstadoAjax'])) {
 	@ini_set('display_errors', '0');
 	@header('Content-Type: application/json; charset=utf-8');
-	$estado = aud_acc_estado($obBD_conexion->conexion, $audEmpCod);
+	$conAcc = aud_acc_connect();
+	if (!$conAcc) {
+		$conAcc = $obBD_conexion->conexion;
+	}
+	aud_acc_ensure_schema($conAcc);
+	$estado = aud_acc_estado($conAcc, $audEmpCod);
 	aud_cfg_json(array('success' => true, 'configurada' => !empty($estado['configurada']), 'fecha' => $estado['fecha']));
+	if ($conAcc && $conAcc !== $obBD_conexion->conexion) {
+		@mysqli_close($conAcc);
+	}
 	$obBD_con1->liberar();
 	$obBD_conexion->cerrar();
 	exit();
@@ -205,7 +213,14 @@ if (isset($_REQUEST['setAccesoClaveAjax'])) {
 	@header('Content-Type: application/json; charset=utf-8');
 	if (aud_cfg_requerir_admin_ajax($obBD_con1, $obBD_conexion, $audUsuCod)) {
 		$claveNueva = isset($_POST['clave']) ? (string)$_POST['clave'] : '';
-		aud_cfg_json(aud_acc_set_clave($obBD_conexion->conexion, $audEmpCod, $audUsuCod, $claveNueva));
+		$conAcc = aud_acc_connect();
+		if (!$conAcc) {
+			$conAcc = $obBD_conexion->conexion;
+		}
+		aud_cfg_json(aud_acc_set_clave($conAcc, $audEmpCod, $audUsuCod, $claveNueva));
+		if ($conAcc && $conAcc !== $obBD_conexion->conexion) {
+			@mysqli_close($conAcc);
+		}
 	}
 	$obBD_con1->liberar();
 	$obBD_conexion->cerrar();
@@ -217,7 +232,14 @@ if (isset($_REQUEST['desactivarAccesoClaveAjax'])) {
 	@ini_set('display_errors', '0');
 	@header('Content-Type: application/json; charset=utf-8');
 	if (aud_cfg_requerir_admin_ajax($obBD_con1, $obBD_conexion, $audUsuCod)) {
-		aud_cfg_json(aud_acc_desactivar($obBD_conexion->conexion, $audEmpCod));
+		$conAcc = aud_acc_connect();
+		if (!$conAcc) {
+			$conAcc = $obBD_conexion->conexion;
+		}
+		aud_cfg_json(aud_acc_desactivar($conAcc, $audEmpCod));
+		if ($conAcc && $conAcc !== $obBD_conexion->conexion) {
+			@mysqli_close($conAcc);
+		}
 	}
 	$obBD_con1->liberar();
 	$obBD_conexion->cerrar();
@@ -722,7 +744,7 @@ $audEsAdmin = !empty($rowCfgAdmin['is_admin']);
 <?php } ?>
 
 <script type="text/javascript">window.audEsAdminSistemas = <?php echo $audEsAdmin ? 'true' : 'false'; ?>;</script>
-<script type="text/javascript" src="../VALIDACIONES/aud_par_config_monitoreo.js?v=20260923_v12"></script>
+<script type="text/javascript" src="../VALIDACIONES/aud_par_config_monitoreo.js?v=20260923_v13"></script>
 </body>
 </html>
 <?php

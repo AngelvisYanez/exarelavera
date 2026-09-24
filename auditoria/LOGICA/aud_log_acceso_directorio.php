@@ -20,6 +20,69 @@
 
 require_once dirname(__FILE__) . '/../../DATA/libs/Env.php';
 
+if (!function_exists('aud_acc_password_hash')) {
+	/**
+	 * Compatibilidad PHP 5.3.7+ / 5.4 (password_hash solo existe desde 5.5).
+	 * Usa bcrypt ($2y$) nativo via crypt() cuando no hay password_hash.
+	 */
+	function aud_acc_password_hash($password)
+	{
+		$password = (string)$password;
+		if (function_exists('password_hash')) {
+			return password_hash($password, PASSWORD_DEFAULT);
+		}
+		if (!defined('CRYPT_BLOWFISH') || !CRYPT_BLOWFISH) {
+			return false;
+		}
+		$bytes = '';
+		if (function_exists('openssl_random_pseudo_bytes')) {
+			$bytes = openssl_random_pseudo_bytes(16);
+		}
+		if ($bytes === '' || $bytes === false) {
+			for ($i = 0; $i < 16; $i++) {
+				$bytes .= chr(mt_rand(0, 255));
+			}
+		}
+		$salt = substr(strtr(base64_encode($bytes), '+', '.'), 0, 22);
+		$hash = crypt($password, '$2y$10$' . $salt);
+		if (!is_string($hash) || strlen($hash) < 60) {
+			return false;
+		}
+		return $hash;
+	}
+}
+
+if (!function_exists('aud_acc_password_verify')) {
+	function aud_acc_password_verify($password, $hash)
+	{
+		$password = (string)$password;
+		$hash = (string)$hash;
+		if ($hash === '') {
+			return false;
+		}
+		if (function_exists('password_verify')) {
+			return password_verify($password, $hash);
+		}
+		$check = crypt($password, $hash);
+		if (!is_string($check) || $check === '') {
+			return false;
+		}
+		// Comparacion en tiempo constante (aprox.) para PHP < 5.6
+		if (function_exists('hash_equals')) {
+			return hash_equals($hash, $check);
+		}
+		$res = 0;
+		$len = strlen($hash);
+		if ($len !== strlen($check)) {
+			return false;
+		}
+		for ($i = 0; $i < $len; $i++) {
+			$res |= ord($hash[$i]) ^ ord($check[$i]);
+		}
+		return $res === 0;
+	}
+}
+
 if (!function_exists('aud_acc_connect')) {
 	function aud_acc_connect()
 	{
@@ -98,14 +161,26 @@ if (!function_exists('aud_acc_set_clave')) {
 			return array('success' => false, 'message' => 'La clave debe tener al menos 4 caracteres.');
 		}
 		aud_acc_ensure_schema($con);
-		$hash = password_hash($claveNueva, PASSWORD_DEFAULT);
+		$hash = aud_acc_password_hash($claveNueva);
+		if ($hash === false || $hash === null || $hash === '') {
+			return array('success' => false, 'message' => 'No se pudo generar el hash de la clave (verifique soporte bcrypt en el servidor).');
+		}
 		$hashEsc = mysqli_real_escape_string($con, $hash);
 		$fec = date('Y-m-d H:i:s');
 		$usuSesion = (int)$usuSesion;
-		$ok = @mysqli_query($con, "INSERT INTO `auditoria`.`cfg_acceso` (`Emp_Cod`,`Acc_Clave_Hash`,`Acc_Est`,`Acc_Fec`,`Usu_Cod`)
+		$sql = "INSERT INTO `auditoria`.`cfg_acceso` (`Emp_Cod`,`Acc_Clave_Hash`,`Acc_Est`,`Acc_Fec`,`Usu_Cod`)
 			VALUES ({$emp},'{$hashEsc}','A','{$fec}',{$usuSesion})
-			ON DUPLICATE KEY UPDATE `Acc_Clave_Hash`='{$hashEsc}', `Acc_Est`='A', `Acc_Fec`='{$fec}', `Usu_Cod`={$usuSesion}");
-		return array('success' => (bool)$ok, 'message' => $ok ? 'Clave de acceso al directorio de auditoria guardada.' : 'No se pudo guardar la clave.');
+			ON DUPLICATE KEY UPDATE `Acc_Clave_Hash`='{$hashEsc}', `Acc_Est`='A', `Acc_Fec`='{$fec}', `Usu_Cod`={$usuSesion}";
+		$ok = @mysqli_query($con, $sql);
+		if (!$ok) {
+			$err = function_exists('mysqli_error') ? mysqli_error($con) : '';
+			$msg = 'No se pudo guardar la clave.';
+			if ($err !== '') {
+				$msg .= ' ' . $err;
+			}
+			return array('success' => false, 'message' => $msg);
+		}
+		return array('success' => true, 'message' => 'Clave de acceso al directorio de auditoria guardada.');
 	}
 }
 
@@ -137,7 +212,7 @@ if (!function_exists('aud_acc_verificar')) {
 		if (!$row || empty($row['Acc_Clave_Hash'])) {
 			return false;
 		}
-		return password_verify((string)$claveIngresada, (string)$row['Acc_Clave_Hash']);
+		return aud_acc_password_verify((string)$claveIngresada, (string)$row['Acc_Clave_Hash']);
 	}
 }
 

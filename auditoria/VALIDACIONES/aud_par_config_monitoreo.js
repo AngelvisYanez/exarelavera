@@ -745,8 +745,21 @@
 					cargarAccesoEstado();
 				}
 			},
-			error: function () {
-				$st.text('Error al guardar la clave.').css('color', '#c62828');
+			error: function (xhr) {
+				var msg = 'Error al guardar la clave.';
+				if (xhr && xhr.responseText) {
+					try {
+						var parsed = $.parseJSON(xhr.responseText);
+						if (parsed && parsed.message) {
+							msg = parsed.message;
+						}
+					} catch (eParse) {
+						if (xhr.status) {
+							msg += ' (HTTP ' + xhr.status + ')';
+						}
+					}
+				}
+				$st.text(msg).css('color', '#c62828');
 			},
 			complete: function () { $btn.prop('disabled', false); }
 		});
