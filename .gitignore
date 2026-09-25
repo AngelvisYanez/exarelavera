@@ -9,6 +9,9 @@
 *.pdf
 .env
 
+# Rama auditoria: scripts SQL y documentos locales no van al repo
+/db/
+/docs/
 
 cgi-bin/*
 cgi-bin/*.*
