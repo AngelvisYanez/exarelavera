@@ -2,6 +2,8 @@ ErrorDocument 404     /administrador/FRONT/not_found.html
 ErrorDocument 403     /administrador/FRONT/forbidden.html
 ErrorDocument 500     /administrador/FRONT/fatalerror.html
 
+# ERP: salida HTML en UTF-8 (conexion mysqli utf8 convierte desde tablas latin1).
+AddDefaultCharset UTF-8
 
 <FilesMatch "^\.env(\.example)?$">
     Require all denied

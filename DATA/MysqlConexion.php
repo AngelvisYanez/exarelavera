@@ -113,7 +113,9 @@ class MysqlConexion
         /* Conectamos al servidor */
         @$this->conexion = mysqli_connect($this->Servidor, $this->Usuario, $this->Clave, $this->BaseDatos ?: null, $this->Puerto);
         if ($this->conexion) {
-            @mysqli_set_charset($this->conexion, "latin1");
+            /* Tablas historicas en latin1; charset utf8 hace que MySQL entregue UTF-8 al PHP
+             * y coincida con meta/Content-Type utf-8 de las pantallas (evita Administraci�n). */
+            @mysqli_set_charset($this->conexion, "utf8");
         }
         if (!$this->conexion) {
             $this->Error = "Ha fallado la conexión. " . mysqli_connect_error();

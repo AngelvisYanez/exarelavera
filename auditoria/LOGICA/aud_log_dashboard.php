@@ -97,7 +97,8 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 				'modulos' => array(),
 				'horarios' => array_fill(0, 24, 0),
 				'sesiones' => array('total' => 0, 'usuarios_unicos' => 0, 'promedio_min' => 0, 'timeout' => 0, 'forzadas' => 0),
-				'usuarios' => array()
+				'usuarios' => array(),
+				'plantas' => array()
 			);
 
 			if (!$con) return $res;
@@ -155,6 +156,14 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 					'Total_Modificaciones' => (int)$f['Total_Modificaciones'],
 					'Total_Eliminaciones' => (int)$f['Total_Eliminaciones']
 				);
+			}
+
+			// Top Plantas
+			$sqlPla = sentencias_dashboard(7, array($empCod, $fIni, $fFin));
+			$qPla = mysqli_query($con, $sqlPla);
+			while ($qPla && $r = mysqli_fetch_assoc($qPla)) {
+				$plaNom = !empty($r['Planta']) ? $r['Planta'] : ('Planta #' . (isset($r['Pla_Cod']) ? $r['Pla_Cod'] : '?'));
+				$res['plantas'][$plaNom] = (int)$r['Total'];
 			}
 
 			return $res;
@@ -222,9 +231,12 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 			$armarKpi('modificaciones', 'Actualizaciones (Actualizar)', 'fa-pencil', 'warning', $dataA['eventos']['U'], $dataB['eventos']['U'], true),
 			$armarKpi('eliminaciones', 'Eliminaciones (Eliminar)', 'fa-trash', 'danger', $dataA['eventos']['D'], $dataB['eventos']['D'], false),
 			$armarKpi('sesiones_totales', 'Sesiones Iniciadas', 'fa-users', 'info', $dataA['sesiones']['total'], $dataB['sesiones']['total'], true),
+			$armarKpi('usuarios_unicos', 'Usuarios Únicos', 'fa-user', 'purple', $dataA['sesiones']['usuarios_unicos'], $dataB['sesiones']['usuarios_unicos'], true),
 			$armarKpi('promedio_min_uso', 'Promedio Minutos de Uso', 'fa-clock-o', 'purple', $dataA['sesiones']['promedio_min'], $dataB['sesiones']['promedio_min'], true),
 			$armarKpi('cierres_inactividad', 'Cierres por Inactividad', 'fa-hourglass-end', 'orange', $dataA['sesiones']['timeout'], $dataB['sesiones']['timeout'], false),
-			$armarKpi('cierres_forzados', 'Cierres Forzados Admin', 'fa-ban', 'dark', $dataA['sesiones']['forzadas'], $dataB['sesiones']['forzadas'], false)
+			$armarKpi('cierres_forzados', 'Cierres Forzados Admin', 'fa-ban', 'dark', $dataA['sesiones']['forzadas'], $dataB['sesiones']['forzadas'], false),
+			$armarKpi('modulos_activos', 'Módulos Activos', 'fa-cubes', 'info', count($dataA['modulos']), count($dataB['modulos']), true),
+			$armarKpi('plantas_activas', 'Plantas Activas', 'fa-industry', 'warning', count($dataA['plantas']), count($dataB['plantas']), true)
 		);
 
 		// 2. Modulos Comparativa
@@ -348,6 +360,49 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 			'serie_b' => $sUsuB
 		);
 
+		// 7b. Comparativa de Plantas
+		$todosPlantas = array_unique(array_merge(array_keys($dataA['plantas']), array_keys($dataB['plantas'])));
+		$plantasComparativa = array();
+		foreach ($todosPlantas as $pla) {
+			$totA = isset($dataA['plantas'][$pla]) ? $dataA['plantas'][$pla] : 0;
+			$totB = isset($dataB['plantas'][$pla]) ? $dataB['plantas'][$pla] : 0;
+			$plantasComparativa[] = array_merge(
+				array('planta' => $pla, 'total_a' => $totA, 'total_b' => $totB, 'pct_cambio' => $calcPct($totA, $totB)),
+				$detalleRitmo($totA, $totB)
+			);
+		}
+		usort($plantasComparativa, function ($x, $y) {
+			return max($y['total_a'], $y['total_b']) - max($x['total_a'], $x['total_b']);
+		});
+
+		// 7c. Variacion % por modulo (top) para grafico dedicado
+		$variacionModulos = array();
+		foreach (array_slice($modulosComparativa, 0, 10) as $m) {
+			$variacionModulos[] = array(
+				'modulo' => $m['modulo'],
+				'pct' => ($m['pct_cambio'] === null) ? 0 : (float)$m['pct_cambio'],
+				'total_a' => (int)$m['total_a'],
+				'total_b' => (int)$m['total_b']
+			);
+		}
+
+		// 7d. Mix de operaciones A/B para donas
+		$mixOperaciones = array(
+			'labels' => array('Ingresar', 'Actualizar', 'Eliminar', 'Otros'),
+			'serie_a' => array(
+				(int)$dataA['eventos']['I'],
+				(int)$dataA['eventos']['U'],
+				(int)$dataA['eventos']['D'],
+				(int)$dataA['eventos']['otros']
+			),
+			'serie_b' => array(
+				(int)$dataB['eventos']['I'],
+				(int)$dataB['eventos']['U'],
+				(int)$dataB['eventos']['D'],
+				(int)$dataB['eventos']['otros']
+			)
+		);
+
 		// 8. Generacion de Observaciones Automatizadas
 		$observaciones = array();
 
@@ -419,6 +474,9 @@ if (!function_exists('aud_dash_calcular_comparativa')) {
 			'sesiones_comparativa' => $sesionesComp,
 			'usuarios_comparativa' => $usuariosComp,
 			'usuarios_top_b' => $dataB['usuarios'],
+			'plantas_comparativa' => $plantasComparativa,
+			'variacion_modulos' => $variacionModulos,
+			'mix_operaciones' => $mixOperaciones,
 			'observaciones' => $observaciones
 		));
 	}
@@ -535,6 +593,9 @@ if (isset($_REQUEST['action'])) {
 		case 'exportar_pdf':
 			require_once dirname(__FILE__) . '/aud_rep_comparativa_pdf.php';
 			$datos = aud_dash_calcular_comparativa($audEmpCod, $pa_ini, $pa_fin, $pb_ini, $pb_fin);
+			$datos['usuario_emisor'] = (isset($_SESSION['Ses_Usu_Nom']) && trim($_SESSION['Ses_Usu_Nom']) !== '')
+				? trim($_SESSION['Ses_Usu_Nom'])
+				: 'Auditor del Sistema';
 			aud_generar_reporte_comparativo_pdf($datos, 'I');
 			exit();
 
@@ -551,7 +612,10 @@ if (isset($_REQUEST['action'])) {
 
 			require_once dirname(__FILE__) . '/aud_rep_comparativa_pdf.php';
 			$datos = aud_dash_calcular_comparativa($audEmpCod, $pa_ini, $pa_fin, $pb_ini, $pb_fin);
-			
+			$datos['usuario_emisor'] = (isset($_SESSION['Ses_Usu_Nom']) && trim($_SESSION['Ses_Usu_Nom']) !== '')
+				? trim($_SESSION['Ses_Usu_Nom'])
+				: 'Auditor del Sistema';
+
 			// Generar PDF en memoria ('S')
 			$pdfContenido = aud_generar_reporte_comparativo_pdf($datos, 'S');
 

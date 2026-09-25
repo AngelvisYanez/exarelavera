@@ -38,7 +38,7 @@ $_SESSION['Ses_Sys_Nom']='EXA - Software Contable';
 	<head>		
 		<title><?Php echo $Ses_Sys_Nom; ?></title>
                 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-		<meta charset="iso8859-1" />
+		<meta charset="iso-8859-1" />
 		
 		<meta name="description" content="overview &amp; stats" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />

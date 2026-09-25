@@ -10,6 +10,16 @@ require_once(__DIR__.'/../../Librerias/config.php/register_globals.php');
 require_once($APP_REAL_PATH.'/administrador/LOGICA/logica.php');
 require_once($APP_REAL_PATH.'/Librerias/procedimientos/almacenados_standar.php');
 
+/* ERP: BD latin1 + conexion utf8 (MySQL convierte). Pantallas en UTF-8. */
+@date_default_timezone_set('America/Guayaquil');
+@ini_set('default_charset', 'UTF-8');
+if (function_exists('mb_internal_encoding')) {
+	@mb_internal_encoding('UTF-8');
+}
+if (!headers_sent()) {
+	@header('Content-Type: text/html; charset=utf-8');
+}
+
 //session_start();
 $URI_SETER=(isset($REQUEST_URI)?$REQUEST_URI:(isset($HTTP_SERVER_VARS['REQUEST_URI'])?$HTTP_SERVER_VARS['REQUEST_URI']:''));
 $URL = explode( "/", $URI_SETER);

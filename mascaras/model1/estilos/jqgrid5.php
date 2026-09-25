@@ -6,7 +6,7 @@ Fecha de Creacion:	2015-07-01
 Desarrollador:	Erik Niebla
 */
 ?>
-<meta charset="iso-8859-1" />
+<meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- <link rel="shortcut icon" type="image/x-icon" href="../../mascaras/model1/img/logo/exa-ico-2.png" /> logo anterior -->
@@ -51,3 +51,23 @@ Desarrollador:	Erik Niebla
     <script>document.write('<div id="loader"></div>');</script>
     <script>$(document).ready(function(){jQuery("#loader").fadeOut("slow");});</script>
     <!-- <script src="/framework/php/ventanasSocket/socketExaVentanas.js"></script> -->
+    <?php if (!empty($_SESSION['Ses_Usu_Cod'])) { ?>
+    <script type="text/javascript">
+    (function () {
+        if (window.AUD_IDLE_META && window.AUD_IDLE_META.endpoint) { return; }
+        var origin = window.location.origin || (window.location.protocol + '//' + window.location.host);
+        var path = window.location.pathname || '';
+        var m = path.match(/^(.*)\/(administrador|auditoria|relavera|facturacion|tesoreria|mascaras)\//i);
+        var appRoot = origin + (m && m[1] ? m[1] : '');
+        window.AUD_IDLE_META = {
+            ses_cod: <?php echo isset($_SESSION['Ses_Ses_Cod']) ? (int)$_SESSION['Ses_Ses_Cod'] : 0; ?>,
+            usu_cod: <?php echo isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0; ?>,
+            app_root: appRoot,
+            login_url: appRoot + '/index.php',
+            endpoint: appRoot + '/auditoria/LOGICA/aud_log_actividad_sesion.php'
+        };
+    })();
+    </script>
+    <link rel="stylesheet" type="text/css" href="../../auditoria/RECURSOS/aud_idle_ui.css?v=20260925_hb90" />
+    <script src="../../auditoria/VALIDACIONES/aud_idle_tracker.js?v=20260925_hb90"></script>
+    <?php } ?>

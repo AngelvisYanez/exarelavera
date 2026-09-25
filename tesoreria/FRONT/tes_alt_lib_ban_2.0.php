@@ -17,6 +17,22 @@ $obBD_con1 =  new Class_Log_Datos_Che;
 $hoy = date("Y-m-d");
 $mes = date("m");
 
+/* Config empresa: módulo presupuesto (Cof_Mpe) */
+$configs = array('Cof_Mpe' => 'N');
+$empCfg = (int)$Ses_Emp_Cod;
+if (!empty($obBD_conexion->conexion) && $empCfg > 0) {
+    $rsCfg = @$obBD_conexion->conexion->query("SELECT Cof_Mpe FROM confi_fact WHERE Emp_Cod = $empCfg LIMIT 1");
+    if ($rsCfg && ($rowCfg = $rsCfg->fetch_assoc()) && isset($rowCfg['Cof_Mpe'])) {
+        $configs['Cof_Mpe'] = $rowCfg['Cof_Mpe'];
+    }
+}
+$verPre = (isset($configs['Cof_Mpe']) && $configs['Cof_Mpe'] === 'S');
+if ($verPre) {
+    require_once('../../facturacion/COMPONENTES/fac_presupuesto_asiento.inc.php');
+}
+/* AJAX búsqueda de rubros (sale si viene presupuestoRubrosAjax / presupuestoSolicitudesAjax) */
+require_once('../../facturacion/COMPONENTES/fac_presupuesto_rubros_ajax.inc.php');
+
 //if(isset($saveBene)){      
 //        $responce['id']='';
 //        $obBD_con1->inicio_transaccion($obBD_conexion->conexion);
@@ -82,10 +98,64 @@ if(isset($save)){
         $obBD_con1->grabarv_registros(sentencias_che(356,$obBD_con1->parametros($Pec_Cod.'*'.$Codigo.'*'.$Com_Num.'*'.$Com_Fec.'*'.$Com_Con.'*'.$Tia_Cod.'*'.$Com_Val.'*'.$Com_Obs.'*'.(isset($Com_Tipo)?$Com_Tipo:'').'*'.$campo.'*'.$Num_Doc2.'*LB')),$obBD_conexion->conexion); // originalmente estaba '*"LB"'
         $ultimo = $obBD_con1->insercionid ($obBD_conexion->conexion);
         $ultimo2=0;
+        /* Rubro presupuesto: solo Egresos/Diario y si Cof_Mpe=S */
+        $usaPpa = $verPre && ($op === 'E' || $op === 'D');
+        $pdpGeneral = 0;
+        $ppaGeneral = 0;
+        if ($usaPpa) {
+            if (isset($Pdp_Cod) && (int)$Pdp_Cod > 0) {
+                $pdpGeneral = (int)$Pdp_Cod;
+            } elseif (!empty($_POST['Pdp_Cod'])) {
+                $pdpGeneral = (int)$_POST['Pdp_Cod'];
+            } elseif (!empty($_REQUEST['Pdp_Cod'])) {
+                $pdpGeneral = (int)$_REQUEST['Pdp_Cod'];
+            }
+            if (isset($Ppa_Cod) && (int)$Ppa_Cod > 0) {
+                $ppaGeneral = (int)$Ppa_Cod;
+            } elseif (!empty($_POST['Ppa_Cod'])) {
+                $ppaGeneral = (int)$_POST['Ppa_Cod'];
+            } elseif (!empty($_REQUEST['Ppa_Cod'])) {
+                $ppaGeneral = (int)$_REQUEST['Ppa_Cod'];
+            }
+        }
+        $ctxPpa = array(
+            'Emp_Cod' => isset($Ses_Emp_Cod) ? (int)$Ses_Emp_Cod : 0,
+            'Suc_Cod' => isset($Ses_Suc_Cod) ? $Ses_Suc_Cod : null,
+            'Usu_Cod' => isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : (isset($Ses_Usu_Cod) ? (int)$Ses_Usu_Cod : 0),
+            'Cop_Cod' => $ultimo,
+            'Cop_Fec' => $Com_Fec,
+            'Cop_Num' => isset($Com_Num) ? $Com_Num : '',
+            'Pej_Fase' => 'E'
+        );
+        $vinculadosPpa = 0;
         /* Recorre el arreglo de los datos de las cuentas seleccionadas */
         foreach ($save as $row){                    
             $obBD_con1->grabarv_registros(sentencias_che(357,$obBD_con1->parametros($ultimo.'*'.$row['Det_Tip'].'*'.($row['Det_Tip']=='D'?$row['Debe']:$row['Haber']).'*'.$row['Pld_Des'].'*'.$row['Glosa'].'*'.$row['Pld_Cod'])),$obBD_conexion->conexion);
-            if($row['Pld_Cod']==$Pld_Cod){ $ultimo2 = $obBD_con1->insercionid ($obBD_conexion->conexion); }
+            $asiCod = (int)$obBD_con1->insercionid ($obBD_conexion->conexion);
+            if($row['Pld_Cod']==$Pld_Cod){ $ultimo2 = $asiCod; }
+            /* Vincula asientos de contrapartida (no la cuenta banco) al rubro */
+            if ($usaPpa && $asiCod > 0 && (int)$row['Pld_Cod'] !== (int)$Pld_Cod && ($pdpGeneral > 0 || $ppaGeneral > 0)
+                && function_exists('fac_ppa_vincular_asiento_item')) {
+                $montoAsi = ($row['Det_Tip']=='D' ? $row['Debe'] : $row['Haber']);
+                $ctxPpa['monto'] = is_numeric($montoAsi) ? (float)$montoAsi : 0;
+                if (fac_ppa_vincular_asiento_item($obBD_conexion->conexion, array(), $pdpGeneral, $asiCod, $ppaGeneral, $ctxPpa)) {
+                    $vinculadosPpa++;
+                }
+            }
+        }
+        /* Si no hubo contrapartida vinculada, enlaza todos los asientos del comprobante */
+        if ($usaPpa && $vinculadosPpa === 0 && ($pdpGeneral > 0 || $ppaGeneral > 0)
+            && function_exists('fac_ppa_vincular_asiento_item') && !empty($obBD_conexion->conexion)) {
+            $ComTmp = (int)$ultimo;
+            $qAsi = @$obBD_conexion->conexion->query("SELECT Asi_Cod, Asi_Val FROM asientos WHERE Com_Cod = $ComTmp");
+            if ($qAsi) {
+                while ($aRow = $qAsi->fetch_assoc()) {
+                    $ctxPpa['monto'] = isset($aRow['Asi_Val']) ? (float)$aRow['Asi_Val'] : 0;
+                    if (fac_ppa_vincular_asiento_item($obBD_conexion->conexion, array(), $pdpGeneral, (int)$aRow['Asi_Cod'], $ppaGeneral, $ctxPpa)) {
+                        $vinculadosPpa++;
+                    }
+                }
+            }
         }
         if ($op=="E"){
             if(isset($Num_Doc)&&$Num_Doc!=''&&$Num_Doc!='0'&&$Num_Doc!=0){
@@ -133,13 +203,63 @@ if(isset($save)){
             
             <div>
                 <div class="row">  
-                    <div class="col-sm-12 form-horizontal normal">
-                        <fieldset class="exa-fieldset">
-                            <legend class="Titulos2">Periodo/Banco</legend>
-                            <div class="form-group">
-                                <label class="col-xs-1 control-label label-xs required">Seleccione Periodo:</label> 
-                                <div class="col-xs-2">
-                                    <select name="perio_cont" id="perio_cont" onchange="setPeriodo()"  class="form-control input-sm">
+                    <div class="col-sm-12">
+                        <fieldset class="exa-fieldset" id="libBanCabecera">
+                            <legend class="Titulos2" id="libBanLegend">Periodo / Banco</legend>
+                            <style>
+                                #libBanCabecera .lib-ban-grid {
+                                    display: flex;
+                                    flex-wrap: wrap;
+                                    gap: 12px 18px;
+                                    align-items: flex-start;
+                                    padding: 4px 6px 8px;
+                                }
+                                #libBanCabecera .lib-ban-cell {
+                                    display: flex;
+                                    flex-direction: column;
+                                    gap: 4px;
+                                    min-width: 0;
+                                }
+                                #libBanCabecera .lib-ban-cell > label {
+                                    margin: 0;
+                                    padding: 0;
+                                    font-size: 11px;
+                                    font-weight: 600;
+                                    color: #5a6f7d;
+                                    line-height: 1.2;
+                                    text-align: left;
+                                }
+                                #libBanCabecera .lib-ban-cell > label .req {
+                                    color: #3c8c4a;
+                                    margin-left: 2px;
+                                }
+                                #libBanCabecera .lib-ban-periodo { flex: 0 0 130px; max-width: 140px; }
+                                #libBanCabecera .lib-ban-banco { flex: 0 1 340px; max-width: 380px; min-width: 220px; }
+                                #libBanCabecera .lib-ban-rubro { flex: 1 1 300px; min-width: 260px; max-width: 480px; }
+                                #libBanCabecera .lib-ban-rubro.is-off { display: none !important; }
+                                #libBanCabecera .lib-ban-cell .form-control,
+                                #libBanCabecera .lib-ban-cell .input-group { width: 100%; }
+                                #libBanCabecera .lib-ban-ruta {
+                                    display: block;
+                                    margin-top: 3px;
+                                    font-size: 10px;
+                                    color: #8ba0ae;
+                                    line-height: 1.25;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                }
+                                #libBanCabecera .lib-ban-ruta:empty { display: none; }
+                                #libBanCabecera .lib-ban-addon-ppa {
+                                    background: #f4effa;
+                                    color: #5f4588;
+                                    border-color: #e4dcf0;
+                                }
+                            </style>
+                            <div class="lib-ban-grid">
+                                <div class="lib-ban-cell lib-ban-periodo">
+                                    <label for="perio_cont">Periodo<span class="req">*</span></label>
+                                    <select name="perio_cont" id="perio_cont" onchange="setPeriodo()" class="form-control input-sm">
                                         <option value="">Seleccione...</option>
 <?php $row_rs_periodos = $obBD_con1->getArrayConsulta(214/*339*/, $Ses_Emp_Cod, $obBD_conexion);
   if (count($row_rs_periodos) > 0){ $periodo = current($row_rs_periodos);
@@ -147,20 +267,33 @@ if(isset($save)){
           echo "<option value='$row[Pec_Cod]' data--pec_-cod='$row[Pec_Cod]' data--pla_-cod='$row[Pla_Cod]' data--pec_-fei='$row[Pec_Fei]' data--pec_-fef='$row[Pec_Fef]'  data-periodo='$row[Periodo]'>$row[Periodo]</option>";
       }    
   } ?>
-                                    </select>   
+                                    </select>
                                 </div>
-                                <label class="col-xs-1 control-label label-xs required">Seleccione Banco:</label> 
-                                <div class="col-xs-4">
-                                    <select name="bancos" id="bancos" onchange="setBanco()"  class="form-control input-sm readOnly perio_cont" disabled="">
+                                <div class="lib-ban-cell lib-ban-banco">
+                                    <label for="bancos">Banco<span class="req">*</span></label>
+                                    <select name="bancos" id="bancos" onchange="setBanco()" class="form-control input-sm readOnly perio_cont" disabled="">
                                         <option value="">Seleccione...</option>
-                                    </select>  
-                                </div> 
-                            </div>    
+                                    </select>
+                                </div>
+                                <?php include '../COMPONENTES/tes_presupuesto_rubro_ui.inc.php'; ?>
+                            </div>
                         </fieldset>
                     </div>
                 </div>   
                 <script>   
                     var gridComp, valor=0, numChe=0, glosa="", tipo="Ingresos", dataFromRow=[];
+                    var verPre = <?php echo $verPre ? 'true' : 'false'; ?>;
+                    function syncRubroPresupuestoUI(){
+                        if (!verPre) return;
+                        var show = (tipo === 'Egresos' || tipo === 'Diario');
+                        var $rubro = $('#ppaLibBanInline');
+                        if (!$rubro.length) return;
+                        $rubro.toggleClass('is-off', !show);
+                        $('#libBanLegend').text(show ? 'Periodo / Banco / Presupuesto' : 'Periodo / Banco');
+                        if (!show && typeof limpiarCamposPresupuesto === 'function') {
+                            limpiarCamposPresupuesto();
+                        }
+                    }
                     function setPeriodo(){
                         $('#cuenDialog').getDialogGrid().clearGrid();
                         var perio_cont=getPeriodo();                      
@@ -394,7 +527,7 @@ if(isset($save)){
                             </div>   
                         </div>    
                     </div>     
-                </div> 
+                </div>
                 
                 <div class="row">   
                     <div class="col-sm-12">
@@ -492,6 +625,7 @@ if(isset($save)){
                             $('#formIngreso').setData(dat_reset);
                             $('#formComp').setData(dat_reset);
                             $('#formDiario').setData(dat_reset);
+                            if (typeof limpiarCamposPresupuesto === 'function') limpiarCamposPresupuesto();
                             $('#es_cheque').prop("checked",false).trigger('change');
                             setChequeNum();
                             valor=0;glosa="";
@@ -530,22 +664,35 @@ if(isset($save)){
                                 return resetForm();
                             });
                         }
+                        function dataPpaForm(){
+                            if (!$('#ppaForm').length || $('#ppaLibBanInline').hasClass('is-off')) {
+                                return {};
+                            }
+                            return {
+                                Pdp_Cod: $('#Pdp_Cod').val() || '',
+                                Ppa_Cod: $('#Ppa_Cod').val() || '',
+                                Ppa_Cla: $('#Ppa_Cla').val() || '',
+                                Ppa_Des: $('#Ppa_Des').val() || '',
+                                Ppa_Label: $('#Ppa_Label').val() || '',
+                                Ppa_Ruta: $('#Ppa_Ruta').val() || ''
+                            };
+                        }
                         function validaIngreso(){                            
                             if($('#cod_cli').val()===''){ $.alert("Seleccione El Cliente"); return; } 
                             var batch = validaGrid("#Com_Val_Ingre"); if(batch===false) return; 
-                            var data=$.extend($('#formIngreso').serializeObject(),{op:'I', save:batch}, $('#periodoForm').serializeObject() ); 
+                            var data=$.extend($('#formIngreso').serializeObject(),{op:'I', save:batch}, $('#periodoForm').serializeObject(), dataPpaForm() ); 
                             $.createDialogConfirm('?st&aacute; seguro que desea guardar los datos?',data,saveComprobante);
                         }
                         function validaEgreso(){   
                             if($('#cod_pvr').val()===''){ $.alert("Seleccione El Proveedor"); return; }
                             var batch = validaGrid("#Com_Val_Egre"); if(batch===false) return;
-                            var data=$.extend($('#formComp').serializeObject(),{op:'E', save:batch}, $('#periodoForm').serializeObject() );
+                            var data=$.extend($('#formComp').serializeObject(),{op:'E', save:batch}, $('#periodoForm').serializeObject(), dataPpaForm() );
                             $.createDialogConfirm('?st&aacute; seguro que desea guardar los datos?',data,saveComprobante);
                         }
                         function validaDiario(){
                             if($('#cod_pvr2').val()===''){ $.alert("Seleccione El Proveedor"); return; } 
                             var batch = validaGrid("#Com_Val_Diario"); if(batch===false) return; 
-                            var data=$.extend($('#formDiario').serializeObject(),{op:'D', save:batch}, $('#periodoForm').serializeObject() );                            
+                            var data=$.extend($('#formDiario').serializeObject(),{op:'D', save:batch}, $('#periodoForm').serializeObject(), dataPpaForm() );                            
                             $.createDialogConfirm('?st&aacute; seguro que desea guardar los datos?',data,saveComprobante);
                         }
                     </script>
@@ -581,9 +728,11 @@ if(isset($save)){
         $( "#tabs" ).tabs({activate: function(event ,ui){
             tipo=ui.newTab[0].getElementsByTagName("a")[0].innerHTML;           
             $(ui.newTab[0].getElementsByTagName("a")[0].hash).find('div.row:first-child').effect("highlight",{},500);
+            syncRubroPresupuestoUI();
             resetForm();  
         }});
-        $(document).ready(function() {  
+        $(document).ready(function() {
+            syncRubroPresupuestoUI();
 //            $.createDialog('#addBenef',150,550,null,null,'plus');
             $.createDialog('#successDialog',150,550,null,null,'ok');
             // DIALOG BUSCAR CUENTAS

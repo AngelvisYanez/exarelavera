@@ -12,6 +12,18 @@ if (isset($APP_REAL_PATH)) {
 if (file_exists(dirname(__FILE__) . "/../auditoria/LOGICA/aud_log_queue.php")) {
     require_once(dirname(__FILE__) . "/../auditoria/LOGICA/aud_log_queue.php");
 }
+if (!class_exists('DebugBar')) {
+    $debugBarPath = dirname(__FILE__) . "/../Librerias/config.php/debugbar.php";
+    if (file_exists($debugBarPath)) {
+        require_once($debugBarPath);
+    }
+}
+if (!class_exists('DebugBar')) {
+    class DebugBar { public static function __callStatic($name, $arguments) { if($name == 'measure' && isset($arguments[1]) && is_callable($arguments[1])) $arguments[1](); return null; } }
+}
+if (!class_exists('ChromePhp')) {
+    class ChromePhp extends DebugBar {}
+}
 class MysqlDatos
 {
     /* @var bool */
@@ -294,7 +306,7 @@ class MysqlDatos
      * @param string/array $param
      * @return array
      */
-    function parametros($param, $encoding = 'latin1')
+    function parametros($param, $encoding = 'utf8')
     {
         if (!is_object($param)) {
             $Par_Sql = is_array($param) ? $param : explode('*', $param);

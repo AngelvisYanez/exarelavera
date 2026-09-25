@@ -1,14 +1,23 @@
-<?php
+﻿<?php
 
 /*
-Descripción: P�gina de inicio del sistema inform�tico EXA
-Fecha de creaci�n:	2016-12-28
+DescripciÃ³n: Pï¿½gina de inicio del sistema informï¿½tico EXA
+Fecha de creaciï¿½n:	2016-12-28
 Desarrollador:	Erik Niebla
  */
 require_once('../../Librerias/procedimientos/almacenados_standar.php');
 require_once('../../Librerias/config.php/register_globals.php');
 require_once('../LOGICA/logica.php');
 //require_once('../LOGICA/adm_log_login.php');
+
+/* Acentos del menu (Org_Des): conexion utf8 + HTML utf-8 */
+@ini_set('default_charset', 'UTF-8');
+if (function_exists('mb_internal_encoding')) {
+    @mb_internal_encoding('UTF-8');
+}
+if (!headers_sent() && !isset($keepAlive) && !isset($heartBeatChat) && !isset($getReportsExa) && !isset($historyChat)) {
+    @header('Content-Type: text/html; charset=utf-8');
+}
 
 if (isset($keepAlive)) {
     if(class_exists('\DebugBar'))DebugBar::setDebugBar(null);
@@ -90,7 +99,7 @@ if (isset($loginAjax)) {
         $_SESSION['Ses_Emp_Log'] = $row_rs_control['Emp_Log'];
         /* Variables del Perfil del usuario */
         $_SESSION['Ses_Lis_Per'] = $lperf;
-        $_SESSION['Ses_Per_Des'] = $Per_Des; //Descripción del perfil
+        $_SESSION['Ses_Per_Des'] = $Per_Des; //DescripciÃ³n del perfil
         /* Variable para la base de datos del sistema local */
         $_SESSION['Ses_Dat_Dis'] = $row_data['Dat_Dis']; //Base de datos distribuida local
         $_SESSION['Ses_Dat_Aut'] = $row_data['Dat_Aut']; //Base de datos auditoria
@@ -223,7 +232,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
         <?php echo $Ses_Sys_Nom; ?>
     </title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta charset="iso8859-1" />
+    <meta charset="utf-8" />
     <meta name="description" content="overview &amp; stats" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
     <!-- <link rel="shortcut icon" type="image/x-icon" href="../../mascaras/model1/img/logo/exa-ico-2.png" /> Anterior Logo-->
@@ -611,7 +620,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                     <img id="logo-exa-img" style="height:28px; display: inline; margin-left: -10px; margin-right: 10px; cursor:pointer;" src="../../skins/img/newlogo.png" onclick="activarTab('contenido');" data-tooltip="tooltip" data-placement="right" title="EXA - Software Contable" />
                     <!-- PREPARAR BLOQUE DE CODIGO PARA CAMBIO DE LOGO EN BASE AL TEMA -->
                     <!-- <script>
-                        // Cambia el logo según la opción seleccionada (skin-3 = #D0D0D0)
+                        // Cambia el logo segÃºn la opciÃ³n seleccionada (skin-3 = #D0D0D0)
                         document.addEventListener('DOMContentLoaded', function () {
                             var picker = document.getElementById('skin-colorpicker');
                             var logo = document.getElementById('logo-exa-img');
@@ -625,12 +634,12 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                                 var isSkin3 = (picker.value === "#D0D0D0" || skin === 'skin-3');
                                 logo.src = isSkin3 ? '../../skins/img/newlogo.png' : '../../skins/img/newlogo_white.png';
 
-                                // Cambia el color de los iconos en la barra de navegación
+                                // Cambia el color de los iconos en la barra de navegaciÃ³n
                                 document.querySelectorAll('.ace-nav > li > a > .ace-icon').forEach(function(icon) {
                                     icon.style.color = isSkin3 ? '' : '#fff';
                                 });
 
-                                // Cambia el color del texto de #Empr y #Sucur según el skin
+                                // Cambia el color del texto de #Empr y #Sucur segÃºn el skin
                                 if (empr) empr.style.color = isSkin3 ? '#000' : '#fff';
                                 if (sucur) sucur.style.color = isSkin3 ? '#000' : '#fff';
                                 if (icono) icono.style.color = isSkin3 ? '#e3e3e3' : '#fff';
@@ -731,7 +740,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                                     <div style="padding:0 10px;margin:0; border-bottom:1px solid;display:flex;align-items: center;">
                                         <span> <i style="font-size: 18px;" class="ace-icon fa fa-bell" aria-hidden="true"></i> </span>
                                         <span style="margin-left: 15px;">
-                                            <h6 style="text-decoration: none;color:#585858;margin-bottom:0"><?= utf8_encode($row['Tic_Tem']); ?></h6>
+                                            <h6 style="text-decoration: none;color:#585858;margin-bottom:0"><?= htmlspecialchars($row['Tic_Tem'], ENT_QUOTES, 'UTF-8'); ?></h6>
                                             <span> <?php echo $row['Tic_Fec_Cre'] ?></span>
                                         </span>
                                     </div>
@@ -750,7 +759,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                                     <div style="padding:0 10px;margin:0; border-bottom:1px solid;display:flex;align-items: center;">
                                         <span> <i style="font-size: 18px;" class="ace-icon fa fa-bell" aria-hidden="true"></i> </span>
                                         <span style="margin-left: 15px;">
-                                            <h6 style="text-decoration: none;color:#585858;margin-bottom:0"><?php echo "Documento de " . utf8_encode($row['Tipo']) . " #" . utf8_encode($row['Doc_Num']); ?></h6>
+                                            <h6 style="text-decoration: none;color:#585858;margin-bottom:0"><?php echo "Documento de " . htmlspecialchars($row['Tipo'], ENT_QUOTES, 'UTF-8') . " #" . htmlspecialchars($row['Doc_Num'], ENT_QUOTES, 'UTF-8'); ?></h6>
                                             <span> <?php echo $row['Doc_Fec'] ?></span>
                                         </span>
                                     </div>
@@ -770,7 +779,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                         .red-social.r4 a {
                             box-sizing: border-box;
                         }
-                        /* 📱 SOLO ENTRE 767 y 822 */
+                        /* ðŸ“± SOLO ENTRE 767 y 822 */
                         @media (min-width: 424px) and (max-width: 1096px) {
                             #support,
                             #SRI,
@@ -984,7 +993,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                         document.getElementById('contenido').addEventListener('load', function () {
                             try {
                                 const iframe = document.getElementById('contenido');
-                                // Delegación para todos los clicks en el body del iframe
+                                // DelegaciÃ³n para todos los clicks en el body del iframe
                                 iframe.contentWindow.document.body.addEventListener('click', function (e) {
                                     let el = e.target;
                                     // Busca hacia arriba hasta encontrar un <a> o <button> con data-url o href
@@ -992,7 +1001,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                                         if (el.tagName === 'A' && el.hasAttribute('data-url')) {
                                             e.preventDefault();
                                             const url = el.getAttribute('data-url');
-                                            const titulo = el.textContent.trim() || 'Sin título';
+                                            const titulo = el.textContent.trim() || 'Sin tÃ­tulo';
                                             window.parent.abrirFormularioEnTab(titulo, url);
                                             break;
                                         }
@@ -1000,14 +1009,14 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                                             // Si es un enlace normal, lo abrimos en tab
                                             e.preventDefault();
                                             const url = el.getAttribute('href');
-                                            const titulo = el.textContent.trim() || 'Sin título';
+                                            const titulo = el.textContent.trim() || 'Sin tÃ­tulo';
                                             window.parent.abrirFormularioEnTab(titulo, url);
                                             break;
                                         }
                                         if (el.tagName === 'BUTTON' && el.hasAttribute('data-url')) {
                                             e.preventDefault();
                                             const url = el.getAttribute('data-url');
-                                            const titulo = el.textContent.trim() || 'Sin título';
+                                            const titulo = el.textContent.trim() || 'Sin tÃ­tulo';
                                             window.parent.abrirFormularioEnTab(titulo, url);
                                             break;
                                         }
@@ -1176,7 +1185,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                 <!-- CUERPO -->
                 <div class="modal-body">
                     <form id="loginChange" autocomplete="off">
-                        <!-- Campo oculto Cédula -->
+                        <!-- Campo oculto CÃ©dula -->
                         <input type="hidden" id="Usu_Ced" name="user_name" value="<?php echo $Ses_Usu_Ced; ?>" />
                         <!-- Campo oculto Sucursal -->
                         <input type="hidden" id="Suc_Cod" name="Suc_Cod" value="<?php echo $Ses_Suc_Cod; ?>" />
@@ -1188,7 +1197,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                                 <div class="section-label-brand">
                                     <i class="bi bi-person"></i> Usuario actual
                                 </div>
-                                <!-- 2. Avatar + Nombre + Cédula -->
+                                <!-- 2. Avatar + Nombre + CÃ©dula -->
                                 <div class="user-profile-box">
                                     <div class="user-avatar">
                                         <i class="bi bi-person"></i>
@@ -1230,18 +1239,18 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
                                         if ($isCurrent) {
                                             continue; // Excluir la empresa actualmente logueada
                                         }
-                                        echo '<option value="' . $row_rs_empresas['Emp_Cod'] . '" data-suc_cod="' . $row_rs_empresas['Suc_Cod'] . '">' . htmlspecialchars($row_rs_empresas['Emp_Cor']) . ' (' . utf8_encode($row_rs_empresas['Suc_Des']) . ')</option>';
+                                        echo '<option value="' . $row_rs_empresas['Emp_Cod'] . '" data-suc_cod="' . $row_rs_empresas['Suc_Cod'] . '">' . htmlspecialchars($row_rs_empresas['Emp_Cor'], ENT_QUOTES, 'UTF-8') . ' (' . htmlspecialchars($row_rs_empresas['Suc_Des'], ENT_QUOTES, 'UTF-8') . ')</option>';
                                     } ?>
                                 </select>
 
-                                <!-- 4. form-label Contraseña -->
+                                <!-- 4. form-label ContraseÃ±a -->
                                 <div class="field-label mb-1 mt-3" style="margin-top: 14px;">
                                     <i class="bi bi-lock"></i> Contrase&ntilde;a
                                 </div>
-                                <!-- 5. input-group contraseña + ojo toggle -->
+                                <!-- 5. input-group contraseÃ±a + ojo toggle -->
                                 <div class="password-group">
-                                    <input id="Usu_Pas" name="encryptor" class="form-control" type="password" placeholder="••••••••" required="true" autofocus="true" onkeypress="if (event.keyCode===13){loginAjax();return false;}">
-                                    <button type="button" class="btn-toggle-pwd" id="toggle_password_btn" title="Mostrar/ocultar contraseña">
+                                    <input id="Usu_Pas" name="encryptor" class="form-control" type="password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required="true" autofocus="true" onkeypress="if (event.keyCode===13){loginAjax();return false;}">
+                                    <button type="button" class="btn-toggle-pwd" id="toggle_password_btn" title="Mostrar/ocultar contraseÃ±a">
                                         <i class="bi bi-eye" id="toggle_password_icon"></i>
                                     </button>
                                 </div>
@@ -1526,9 +1535,9 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
             }
             });
 
-            // Solución para el bug de select2 en modales Bootstrap: NO forzar el foco en el input de búsqueda
+            // SoluciÃ³n para el bug de select2 en modales Bootstrap: NO forzar el foco en el input de bÃºsqueda
             $('#myModal').on('shown.bs.modal', function () {
-            // Ya no se abre automáticamente el select2
+            // Ya no se abre automÃ¡ticamente el select2
             // Si quieres abrirlo manualmente, puedes hacerlo con $('#Emp_Cod').select2('open');
             });
 
@@ -1599,7 +1608,24 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
     <script src="../../skins/js/ace/ace.settings.js"></script>
     <script src="../../skins/js/ace/ace.settings-skin.js"></script>
     <script language="javascript" src="../../Librerias/validaciones/validacion.js"></script>
-    <script src="../../auditoria/VALIDACIONES/aud_idle_tracker.js"></script>
+    <script type="text/javascript">
+    (function () {
+        var origin = window.location.origin || (window.location.protocol + '//' + window.location.host);
+        var path = window.location.pathname || '';
+        var m = path.match(/^(.*)\/administrador\//i);
+        var appRoot = origin + (m && m[1] ? m[1] : '');
+        window.AUD_IDLE_META = {
+            ses_cod: <?php echo isset($_SESSION['Ses_Ses_Cod']) ? (int)$_SESSION['Ses_Ses_Cod'] : 0; ?>,
+            usu_cod: <?php echo isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0; ?>,
+            app_root: appRoot,
+            login_url: appRoot + '/index.php',
+            endpoint: appRoot + '/auditoria/LOGICA/aud_log_actividad_sesion.php'
+        };
+    })();
+    </script>
+    <link rel="stylesheet" type="text/css" href="../../Librerias/tailwind/dist/tailwind.min.css?v=20260924_m4e" />
+    <link rel="stylesheet" type="text/css" href="../../auditoria/RECURSOS/aud_idle_ui.css?v=20260925_hb90" />
+    <script src="../../auditoria/VALIDACIONES/aud_idle_tracker.js?v=20260925_hb90"></script>
     <!-- <script src="../../framework/php/ventanasSocket/socketExaVentanas.js"></script> -->
     <?php //var_dump($rs_sucursales); 
     ?>
@@ -1617,7 +1643,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
         $.get(url, function(response) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(response, 'text/html');
-            const pageTitle = doc.querySelector('title')?.textContent || 'Sin título';
+            const pageTitle = doc.querySelector('title')?.textContent || 'Sin tÃ­tulo';
             abrirFormularioEnTab(pageTitle, url);
         });
     });
@@ -1671,7 +1697,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
     $(function () {
         $("#tabs").sortable({
             axis: "x",
-            items: "> li:not(:first-child)", // No permite mover la primera pestaña
+            items: "> li:not(:first-child)", // No permite mover la primera pestaÃ±a
             tolerance: "pointer",
             start: function (event, ui) {
                 // Evita que el tab de Home sea arrastrado
@@ -1682,21 +1708,21 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
         });
     });
 
-    // Evita que se agreguen pestañas antes de la de inicio
+    // Evita que se agreguen pestaÃ±as antes de la de inicio
     function abrirFormularioEnTab(titulo, url) {
         const tabId = 'tab_' + btoa(url).replace(/=/g, '');
         if (document.getElementById(tabId)) {
             activarTab(tabId);
             return;
         }
-        // Crear la pestaña
+        // Crear la pestaÃ±a
         const li = document.createElement('li');
         li.className = 'nav-item';
         li.innerHTML = `<a style="border-radius: 3px !important;margin: 0 1px;padding: 1px 3px;background:#f8f8f8;border:1px solid #8db2e3;font-size:11px" class="nav-link d-flex align-items-center justify-content-between active" href="#" 
         onclick="activarTab('${tabId}')"> <i class="glyphicon glyphicon-modal-window"></i>   <span style="color:#585858;">
         </i>  ${titulo}</span> <i class="fa fa-times ms-2 text-primary" onclick="cerrarTab('${tabId}'); 
         event.stopPropagation();" style="cursor:pointer;font-size: 10px; border:0px solid; padding: 2px; border-radius: 3px;  color:#999999; background: #f8f8f8;"></i></a>`;
-        // Insertar después de la última pestaña (al final)
+        // Insertar despuÃ©s de la Ãºltima pestaÃ±a (al final)
         document.getElementById('tabs').appendChild(li);
 
         // Crear el iframe
@@ -1733,15 +1759,15 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
 
     function cerrarTab(tabId) {
         document.getElementById(tabId)?.remove();
-        // Buscar el <li> correspondiente a la pestaña y eliminarlo
+        // Buscar el <li> correspondiente a la pestaÃ±a y eliminarlo
         const tabLi = [...document.querySelectorAll('#tabs li')].find(li => li.innerHTML.includes(tabId));
         if (tabLi) tabLi.remove();
-        // Activar la última pestaña (siempre dejando la de inicio como primera)
+        // Activar la Ãºltima pestaÃ±a (siempre dejando la de inicio como primera)
         const iframes = document.querySelectorAll('#iframes iframe');
         if (iframes.length) {
             activarTab(iframes[iframes.length - 1].id);
         } else {
-            activarTab('contenido'); // Si no hay más, activa la de inicio
+            activarTab('contenido'); // Si no hay mÃ¡s, activa la de inicio
         }
         ajustarAlturaIframes();
     }
@@ -1754,7 +1780,7 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
         const tabs = document.getElementById('tabs');
         let tabsHeight = tabs ? tabs.offsetHeight : 0;
         let windowHeight = window.innerHeight;
-        // Ajusta según el layout de tu sistema, aquí restamos 55px por el navbar y paddings
+        // Ajusta segÃºn el layout de tu sistema, aquÃ­ restamos 55px por el navbar y paddings
         let disponible = windowHeight - tabsHeight - 55;
         if (disponible < 300) disponible = 300;
         document.querySelectorAll('#iframes iframe').forEach(iframe => {
@@ -1768,14 +1794,14 @@ if (isset($_SESSION['Ses_Usu_Cod'])) {
     window.addEventListener('resize', ajustarAlturaIframes);
     document.addEventListener('DOMContentLoaded', ajustarAlturaIframes);
 
-    // Manejo de clicks en enlaces del menú para abrir en pestaña
+    // Manejo de clicks en enlaces del menÃº para abrir en pestaÃ±a
     $(document).on('click', '.menu-link', function(e) {
         e.preventDefault();
         const url = $(this).data('url') || $(this).attr('href');
         $.get(url, function(response) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(response, 'text/html');
-            const pageTitle = doc.querySelector('title')?.textContent || 'Sin título';
+            const pageTitle = doc.querySelector('title')?.textContent || 'Sin tÃ­tulo';
             abrirFormularioEnTab(pageTitle, url);
         });
     });

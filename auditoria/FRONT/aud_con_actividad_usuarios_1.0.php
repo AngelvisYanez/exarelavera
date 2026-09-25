@@ -35,6 +35,10 @@ $esAdminSistemas = aud_cfg_es_admin_sistemas($obBD_con1, $obBD_conexion, $audUsu
 // Roles para el combo filtro
 $roles = $obBD_con1->getArrayConsulta(9, array($audEmpCod), $obBD_conexion);
 if (!is_array($roles)) $roles = array();
+
+// Usuarios de la empresa para filtro de estadisticas (predeterminado: todos)
+$usuariosEst = $obBD_con1->getArrayConsulta(10, array($audEmpCod), $obBD_conexion);
+if (!is_array($usuariosEst)) $usuariosEst = array();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -46,25 +50,25 @@ if (!is_array($roles)) $roles = array();
 
 	<!-- Estilos Oficiales ExaContable ERP -->
 	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
-	<?php require_once("../../mascaras/model3/estilos/estilos.php"); ?>
+	<?php require_once("../../mascaras/model4/estilos/estilos.php"); ?>
 	<script type="text/javascript" src="../../framework/jquery/apexcharts/apexcharts.min.js"></script>
-	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260923_v14" />
+	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260924_desk19c" />
 
 	<style>
 		/* Estilos armonizados con el tema visual de ExaContable */
 		.aud-kpi-grid {
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-			gap: 12px;
-			margin-bottom: 14px;
+			grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+			gap: 8px;
+			margin-bottom: 10px;
 		}
 
-		/* Cuadricula principal: tabla de sesiones + barra lateral */
+		/* Cuadricula principal: tabla de sesiones a ancho completo */
 		.aud-main-grid {
 			display: grid;
-			grid-template-columns: minmax(0, 1fr) 300px;
+			grid-template-columns: minmax(0, 1fr);
 			grid-template-rows: minmax(0, 1fr);
-			gap: 14px;
+			gap: var(--aud-gap, 10px);
 			flex: 1 1 auto;
 			min-height: 0;
 			width: 100%;
@@ -72,7 +76,7 @@ if (!is_array($roles)) $roles = array();
 		@media (max-width: 991px) {
 			.aud-main-grid {
 				grid-template-columns: minmax(0, 1fr);
-				grid-template-rows: auto auto;
+				grid-template-rows: auto;
 			}
 		}
 		.aud-main-grid .aud-panel {
@@ -135,37 +139,31 @@ if (!is_array($roles)) $roles = array();
 			text-align: left;
 		}
 		.aud-side-col {
-			display: flex;
-			flex-direction: column;
-			gap: 14px;
-			min-width: 0;
-		}
-		.aud-side-col .aud-panel {
-			margin-bottom: 0;
+			display: none !important;
 		}
 		.aud-kpi-card {
 			background: #ffffff;
-			border-radius: 4px;
-			padding: 12px 16px;
-			box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+			border-radius: 8px;
+			padding: 6px 10px;
+			box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 			border: 1px solid #d0dbe5;
 			display: flex;
 			align-items: center;
-			gap: 14px;
-			transition: box-shadow 0.15s ease, transform 0.15s ease;
+			gap: 8px;
+			transition: box-shadow 0.15s ease;
 		}
 		.aud-kpi-card:hover {
-			box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
-			transform: translateY(-1px);
+			box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+			transform: none;
 		}
 		.aud-kpi-icon {
-			width: 42px;
-			height: 42px;
-			border-radius: 4px;
+			width: 26px;
+			height: 26px;
+			border-radius: 6px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			font-size: 18px;
+			font-size: 11px;
 			flex-shrink: 0;
 		}
 		.aud-kpi-icon.green { background: #dcfce7; color: #15803d; }
@@ -244,21 +242,21 @@ if (!is_array($roles)) $roles = array();
 		}
 
 		.aud-kpi-val {
-			font-size: 20px;
+			font-size: 15px;
 			font-weight: 800;
 			color: #0f172a;
 			line-height: 1.1;
 		}
 		.aud-kpi-lbl {
-			font-size: 11px;
-			font-weight: 600;
+			font-size: 9px;
+			font-weight: 700;
 			color: #64748b;
 			text-transform: uppercase;
-			letter-spacing: 0.4px;
-			margin-top: 2px;
+			letter-spacing: 0.3px;
+			margin-top: 0;
 		}
 
-		/* Enlaces clicables IP / MAC / huella â†’ modal de detalle */
+		/* Enlaces clicables IP / MAC / huella ? modal de detalle */
 		.aud-ses-link {
 			color: #1d4ed8;
 			cursor: pointer;
@@ -277,54 +275,81 @@ if (!is_array($roles)) $roles = array();
 			font-size: 11px;
 			opacity: 0.85;
 		}
-		.aud-ses-detail-dl {
+		.aud-ses-detail-grid {
 			margin: 0;
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 8px;
 		}
-		.aud-ses-detail-dl dt {
+		.aud-ses-detail-pair {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+			background: #F8FAFC;
+			border: 1px solid #E2E8F0;
+			border-radius: 8px;
+			padding: 9px 11px;
+		}
+		.aud-ses-detail-pair-wide {
+			grid-column: 1 / -1;
+		}
+		.aud-ses-detail-label {
 			font-size: 10px;
 			font-weight: 700;
 			text-transform: uppercase;
 			letter-spacing: 0.04em;
 			color: #64748b;
-			margin: 10px 0 2px;
+			margin: 0 0 4px;
 		}
-		.aud-ses-detail-dl dt:first-child { margin-top: 0; }
-		.aud-ses-detail-dl dd {
-			margin: 0;
+		.aud-ses-detail-value {
 			font-size: 13px;
 			color: #0f172a;
 			word-break: break-all;
 			font-family: Consolas, "Courier New", monospace;
 			line-height: 1.4;
+			font-weight: 600;
 		}
-		.aud-ses-detail-dl dd.aud-ses-detail-plain {
+		.aud-ses-detail-value.aud-ses-detail-plain {
 			font-family: inherit;
-			font-size: 13px;
+			font-weight: 500;
 		}
 		.aud-ses-detail-hint {
 			margin: 12px 0 0;
 			font-size: 11px;
-			color: #64748b;
+			color: #92400E;
 			line-height: 1.4;
+			padding: 10px 12px;
+			background: #FFFBEB;
+			border: 1px solid #FDE68A;
+			border-radius: 10px;
 		}
 		.aud-ses-detail-user {
 			display: flex;
 			align-items: center;
 			gap: 10px;
-			padding: 10px 12px;
-			margin: 0 0 12px;
-			background: #f8fafc;
-			border: 1px solid #e2e8f0;
-			border-radius: 4px;
+			padding: 12px 14px;
+			margin: 0 0 14px;
+			background: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 60%);
+			border: 1px solid #DBEAFE;
+			border-radius: 12px;
+		}
+		.aud-ses-detail-user .user-avatar-badge {
+			background: linear-gradient(135deg, #1E3A5F, #2563EB) !important;
+			border-radius: 10px !important;
+			box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 		}
 		.aud-ses-detail-user strong {
 			display: block;
-			color: #0f172a;
-			font-size: 13px;
+			font-size: 14px;
+			color: #0F172A;
 		}
 		.aud-ses-detail-user span {
-			font-size: 11px;
-			color: #64748b;
+			display: block;
+			font-size: 12px;
+			color: #64748B;
+		}
+		@media (max-width: 520px) {
+			.aud-ses-detail-grid { grid-template-columns: 1fr; }
 		}
 
 		/* Panel de sesiones */
@@ -411,66 +436,83 @@ if (!is_array($roles)) $roles = array();
 			display: inline-flex;
 			align-items: stretch;
 			flex-shrink: 0;
+			height: 30px;
 		}
 		.aud-date-input-wrap .aud-date-addon {
 			display: inline-flex;
 			align-items: center;
-			padding: 0 6px;
-			font-size: 11px;
-			font-weight: 600;
+			justify-content: center;
+			padding: 0 8px;
+			font-size: 10px;
+			font-weight: 700;
+			text-transform: uppercase;
 			color: #5b6f88;
 			background: #f1f5f9;
 			border: 1px solid #cbd5e1;
 			border-right: none;
 			white-space: nowrap;
+			height: 30px;
+			line-height: 1;
+			box-sizing: border-box;
 		}
 		.aud-date-input-wrap input {
 			width: 105px;
-			font-size: 11px;
-			padding: 3px 22px 3px 8px;
-			height: 26px;
+			font-size: 12px;
+			padding: 0 28px 0 8px;
+			height: 30px;
+			line-height: 28px;
 			border-radius: 0;
 			border: 1px solid #cbd5e1;
 			background: #ffffff;
 			cursor: pointer;
 			text-align: center;
+			box-sizing: border-box;
 		}
 		.aud-date-group > .aud-date-input-wrap:first-child .aud-date-addon {
-			border-radius: 3px 0 0 3px;
+			border-radius: 8px 0 0 8px;
 		}
 		.aud-date-group > .aud-date-input-wrap:last-child {
 			margin-left: -1px;
 		}
 		.aud-date-group > .aud-date-input-wrap:last-child input {
-			border-radius: 0 3px 3px 0;
+			border-radius: 0 8px 8px 0;
 		}
 		.aud-date-input-wrap .cal-icon {
 			position: absolute;
-			right: 6px;
-			top: 6px;
-			font-size: 11px;
-			color: #94a3b8;
-			pointer-events: none;
+			right: 8px;
+			top: 50%;
+			transform: translateY(-50%);
+			font-size: 12px;
+			color: #2563EB;
+			pointer-events: auto;
+			cursor: pointer;
+			line-height: 1;
+			margin: 0;
+			z-index: 2;
 		}
 		.aud-panel-head-filters {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+			display: flex;
+			flex-direction: row;
+			flex-wrap: nowrap;
 			gap: 8px;
-			align-items: end;
+			align-items: center;
 			min-width: 0;
-			flex: 1 1 320px;
+			flex: 1 1 auto;
+			overflow: visible;
+		}
+		.aud-panel-head-filters > * {
+			flex-shrink: 0;
 		}
 		.aud-panel-head-filters .form-control {
-			font-size: 11px;
-			width: 100%;
-			min-width: 0;
-		}
-		@media (max-width: 600px) {
-			.aud-panel-head-filters { width: 100%; flex: 1 1 100%; }
+			font-size: 12px;
+			width: auto;
+			min-width: 130px;
+			max-width: 180px;
+			height: 30px;
 		}
 		@media (max-width: 480px) {
 			.aud-period-strip { gap: 6px; }
-			.aud-date-input-wrap input { width: 88px; }
+			.aud-date-input-wrap input { width: 84px; }
 			#audActTabs { display: flex; }
 			#audActTabs > li { float: none; flex: 1 1 0%; }
 			#audActTabs > li > a { padding: 8px 4px; text-align: center; font-size: 11px; }
@@ -677,17 +719,17 @@ if (!is_array($roles)) $roles = array();
 			min-height: 0;
 		}
 		.aud-act-page .aud-page-hero {
-			margin-bottom: 12px;
-			padding: 10px 14px;
+			margin-bottom: var(--aud-space-3, 10px);
+			padding: var(--aud-hero-pad, 10px 14px);
 		}
 		.aud-act-page .aud-page-hero-icon {
-			width: 38px;
-			height: 38px;
-			font-size: 15px;
+			width: 34px;
+			height: 34px;
+			font-size: 14px;
 			border-radius: 8px;
 		}
 		.aud-act-page .aud-page-hero-text h4 {
-			font-size: 14px;
+			font-size: var(--aud-fs-lg, 14px);
 		}
 		.aud-act-page .aud-ui-tabs {
 			display: flex;
@@ -727,6 +769,81 @@ if (!is_array($roles)) $roles = array();
 			flex: 1 1 auto;
 			min-width: 0;
 		}
+
+		/* Estadisticas por usuario: toolbar + widgets */
+		#tabEstSesUsu .aud-est-toolbar {
+			display: flex; align-items: center; justify-content: space-between;
+			flex-wrap: nowrap; gap: 8px; padding: 8px 12px;
+			background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; margin-bottom: 10px;
+			overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+		}
+		#tabEstSesUsu .aud-est-toolbar-left {
+			display: flex; align-items: center; flex-wrap: nowrap; gap: 8px;
+			overflow-x: auto; min-width: 0; flex: 1 1 auto; scrollbar-width: thin;
+		}
+		#tabEstSesUsu .aud-est-toolbar-left > * { flex-shrink: 0; }
+		#tabEstSesUsu #estFiltroUsu {
+			height: 28px; padding: 2px 8px; font-size: 12px;
+			max-width: 220px; min-width: 140px;
+			border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; color: #334155;
+		}
+		#estWidgetGrid { display: block; margin: 0 -6px; overflow: hidden; }
+		#estWidgetGrid:after { content:''; display:table; clear:both; }
+		#tabEstSesUsu .dash-widget { float:left; box-sizing:border-box; padding:0 6px 12px; }
+		#tabEstSesUsu .dash-widget.w-full { width:100%; }
+		#tabEstSesUsu .dash-widget.w-12 { width:50%; }
+		@media (max-width:767px){ #tabEstSesUsu .dash-widget.w-12 { width:100%; } }
+		#tabEstSesUsu .dash-widget-inner {
+			background:#fff; border:1px solid #e2e8f0; border-radius:6px;
+			box-shadow:0 1px 2px rgba(15,23,42,.05); overflow:hidden; height:100%;
+		}
+		#tabEstSesUsu .dash-widget-head {
+			display:flex; align-items:center; justify-content:space-between;
+			padding:8px 12px; background:#f8fafc; border-bottom:1px solid #eef2f7;
+			border-top:3px solid #2563eb; cursor:move; user-select:none;
+		}
+		#tabEstSesUsu .dash-widget-head.ac-green { border-top-color:#10b981; }
+		#tabEstSesUsu .dash-widget-head.ac-amber { border-top-color:#f59e0b; }
+		#tabEstSesUsu .dash-widget-head.ac-red { border-top-color:#ef4444; }
+		#tabEstSesUsu .dash-widget-head.ac-purple { border-top-color:#8b5cf6; }
+		#tabEstSesUsu .dash-widget-head.ac-teal { border-top-color:#06b6d4; }
+		#tabEstSesUsu .dash-title { font-size:12px; font-weight:700; color:#334155; margin:0; }
+		#tabEstSesUsu .dash-actions { display:flex; align-items:center; gap:10px; }
+		#tabEstSesUsu .dash-actions .dash-hint { color:#cbd5e1; cursor:grab; }
+		#tabEstSesUsu .dash-actions .dash-hide, #tabEstSesUsu .dash-actions .dash-size { color:#94a3b8; cursor:pointer; font-size:12px; }
+		#tabEstSesUsu .dash-actions .dash-hide:hover { color:#ef4444; }
+		#tabEstSesUsu .dash-actions .dash-size:hover { color:#2563eb; }
+		#tabEstSesUsu .dash-widget-body { padding:10px 12px; }
+		#tabEstSesUsu .dash-widget-placeholder {
+			float:left; box-sizing:border-box; background:#eef2f7; border:1px dashed #94a3b8;
+			border-radius:6px; min-height:90px; margin-bottom:12px; padding:0 6px; visibility:visible!important;
+		}
+		#tabEstSesUsu .dash-widget-placeholder.w-12 { width:50%; }
+		#tabEstSesUsu .dash-widget-placeholder.w-full { width:100%; }
+		#estKpiGrid { display:block; overflow:hidden; margin:0 -6px 10px; }
+		#estKpiGrid:after { content:''; display:table; clear:both; }
+		.est-kpi-card { float:left; box-sizing:border-box; width:16.666%; min-width:120px; padding:0 4px 6px; }
+		@media (max-width:991px){ .est-kpi-card { width:33.333%; } }
+		@media (max-width:767px){ .est-kpi-card { width:50%; } }
+		.est-kpi-placeholder { float:left; width:16.666%; min-width:140px; min-height:74px; margin-bottom:10px; padding:0 6px; background:#eef2f7; border:1px dashed #94a3b8; border-radius:4px; }
+		#estKpisSorter, #estWidgetsSorter { display:block; overflow:hidden; min-height:40px; }
+		#estKpisSorter:after, #estWidgetsSorter:after { content:''; display:table; clear:both; }
+		#modalWidgetsEst .aud-sbox {
+			float:left; display:flex; align-items:center; gap:7px; box-sizing:border-box;
+			width:calc(50% - 6px); margin:0 6px 6px 0; min-width:160px; padding:8px 10px;
+			background:#fff; border:1px solid #dbe3ee; border-radius:5px; cursor:move; font-size:12px;
+		}
+		#modalWidgetsEst .aud-sbox-off { opacity:.5; border-style:dashed; background:#f8fafc; }
+		#modalWidgetsEst .aud-sbox-placeholder {
+			float:left; width:calc(50% - 6px); margin:0 6px 6px 0; min-width:160px; min-height:38px;
+			border:1px dashed #94a3b8; border-radius:5px; background:#eef2f7; visibility:visible!important;
+		}
+		#modalWidgetsEst .kbox-eye { cursor:pointer; color:#94a3b8; }
+		#modalWidgetsEst .aud-sbox-off .kbox-eye { color:#ef4444; }
+		#modalWidgetsEst .kbox-txt { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+		#modalWidgetsEst .modal-body { max-height:62vh; overflow-y:auto; }
+		.aud-modal-ayuda { font-size:11px; color:#64748b; margin-bottom:8px; }
+		.aud-modal-sec { font-size:12px; font-weight:700; color:#334155; margin:4px 0 6px; text-transform:uppercase; }
 	</style>
 </head>
 <body>
@@ -737,17 +854,17 @@ if (!is_array($roles)) $roles = array();
 			<h3 class="panel-title">
 				<i class="fa fa-users"></i> Actividad de usuarios y sesiones
 			</h3>
-			<div class="aud-header-actions">
-				<span id="audLiveIndicator" class="label label-success" style="padding: 4px 8px; font-size: 11px;">
+			<div class="aud-header-actions m4-toolbar">
+				<span id="audLiveIndicator" class="m4-badge m4-badge-success" style="padding: 4px 8px; font-size: 11px;">
 					<i class="fa fa-circle" style="animation: blink 1.5s infinite;"></i> En Vivo
 				</span>
-				<button type="button" id="btnRecargarActividad" class="btn btn-sm btn-primary" style="font-weight: 600;">
+				<button type="button" id="btnRecargarActividad" class="btn btn-sm btn-primary m4-btn m4-btn-primary" style="font-weight: 600;">
 					<i class="fa fa-refresh"></i> Actualizar
 				</button>
-				<select id="audAutoRefresh" class="form-control input-sm" style="width: 140px; display: inline-block;">
-					<option value="15000">Auto: cada 15s</option>
-					<option value="30000" selected>Auto: cada 30s</option>
-					<option value="60000">Auto: cada 1 min</option>
+				<select id="audAutoRefresh" class="form-control input-sm m4-input" style="width: 140px; display: inline-block;">
+					<option value="30000">Auto: cada 30s</option>
+					<option value="60000" selected>Auto: cada 1 min</option>
+					<option value="120000">Auto: cada 2 min</option>
 					<option value="0">Desactivado</option>
 				</select>
 			</div>
@@ -756,48 +873,48 @@ if (!is_array($roles)) $roles = array();
 
 	<div class="panel-body exa-body">
 
-		<div class="aud-page-hero">
-			<div class="aud-page-hero-icon"><i class="fa fa-bolt"></i></div>
-			<div class="aud-page-hero-text">
-				<h4>Sesiones en tiempo real</h4>
-				<p class="aud-page-hero-sub">
+		<div class="aud-page-hero m4-hero">
+			<div class="aud-page-hero-icon m4-hero-icon"><i class="fa fa-bolt"></i></div>
+			<div class="aud-page-hero-text m4-hero-text">
+				<h4 class="m4-hero-title">Sesiones en tiempo real</h4>
+				<p class="aud-page-hero-sub m4-hero-sub">
 					Supervise qui&eacute;n est&aacute; conectado, detecte accesos m&uacute;ltiples y consulte
 					estad&iacute;sticas de uso por usuario.
 				</p>
 			</div>
-			<div class="aud-page-hero-tags">
-				<span class="aud-page-hero-tag"><i class="fa fa-circle"></i> En vivo</span>
-				<span class="aud-page-hero-tag"><i class="fa fa-ban"></i> Cierre forzado</span>
+			<div class="aud-page-hero-tags m4-hero-tags">
+				<span class="aud-page-hero-tag m4-hero-tag"><i class="fa fa-circle"></i> En vivo</span>
+				<span class="aud-page-hero-tag m4-hero-tag"><i class="fa fa-ban"></i> Cierre forzado</span>
 			</div>
 		</div>
 
-		<div class="aud-kpi-grid">
-			<div class="aud-kpi-card" style="border-left-color: #15803d;">
-				<div class="aud-kpi-icon green"><i class="fa fa-plug"></i></div>
+		<div class="aud-kpi-grid m4-kpi-grid">
+			<div class="aud-kpi-card m4-kpi" style="border-left-color: #15803d;">
+				<div class="aud-kpi-icon m4-kpi-icon green"><i class="fa fa-plug"></i></div>
 				<div>
-					<div class="aud-kpi-val text-success" id="kpiEnLinea">0</div>
-					<div class="aud-kpi-lbl">Usuarios En L&iacute;nea</div>
+					<div class="aud-kpi-val m4-kpi-value text-success" id="kpiEnLinea">0</div>
+					<div class="aud-kpi-lbl m4-kpi-label">Usuarios En L&iacute;nea</div>
 				</div>
 			</div>
-			<div class="aud-kpi-card" style="border-left-color: #a16207;">
-				<div class="aud-kpi-icon yellow"><i class="fa fa-clock-o"></i></div>
+			<div class="aud-kpi-card m4-kpi" style="border-left-color: #a16207;">
+				<div class="aud-kpi-icon m4-kpi-icon yellow"><i class="fa fa-clock-o"></i></div>
 				<div>
-					<div class="aud-kpi-val text-warning" id="kpiAusentes">0</div>
-					<div class="aud-kpi-lbl">Usuarios Ausentes</div>
+					<div class="aud-kpi-val m4-kpi-value text-warning" id="kpiAusentes">0</div>
+					<div class="aud-kpi-lbl m4-kpi-label">Usuarios Ausentes</div>
 				</div>
 			</div>
-			<div class="aud-kpi-card" style="border-left-color: #4338ca;">
-				<div class="aud-kpi-icon blue"><i class="fa fa-sign-in"></i></div>
+			<div class="aud-kpi-card m4-kpi" style="border-left-color: #4338ca;">
+				<div class="aud-kpi-icon m4-kpi-icon blue"><i class="fa fa-sign-in"></i></div>
 				<div>
-					<div class="aud-kpi-val text-primary" id="kpiSesionesHoy">0</div>
-					<div class="aud-kpi-lbl">Sesiones Hoy</div>
+					<div class="aud-kpi-val m4-kpi-value text-primary" id="kpiSesionesHoy">0</div>
+					<div class="aud-kpi-lbl m4-kpi-label">Sesiones Hoy</div>
 				</div>
 			</div>
-			<div class="aud-kpi-card" style="border-left-color: #7e22ce;">
-				<div class="aud-kpi-icon purple"><i class="fa fa-hourglass-start"></i></div>
+			<div class="aud-kpi-card m4-kpi" style="border-left-color: #7e22ce;">
+				<div class="aud-kpi-icon m4-kpi-icon purple"><i class="fa fa-hourglass-start"></i></div>
 				<div>
-					<div class="aud-kpi-val text-info" id="kpiPromedioUso">0 min</div>
-					<div class="aud-kpi-lbl">Tiempo Promedio Uso</div>
+					<div class="aud-kpi-val m4-kpi-value text-info" id="kpiPromedioUso">0 min</div>
+					<div class="aud-kpi-lbl m4-kpi-label">Tiempo Promedio Uso</div>
 				</div>
 			</div>
 		</div>
@@ -805,12 +922,12 @@ if (!is_array($roles)) $roles = array();
 		<?php echo aud_html_banner_desde(aud_fecha_registro_inicio($audEmpCod, $obBD_con1, $obBD_conexion)); ?>
 
 		<div class="aud-ui-tabs">
-			<ul class="nav nav-tabs" id="audActTabs" role="tablist">
+			<ul class="nav nav-tabs m4-tabs" id="audActTabs" role="tablist">
 				<li class="active" role="presentation">
-					<a href="#tabActividadVivo" data-toggle="tab" role="tab"><i class="fa fa-bolt"></i> Actividad en Vivo</a>
+					<a href="#tabActividadVivo" data-toggle="tab" role="tab" class="m4-tab is-active"><i class="fa fa-bolt"></i> Actividad en Vivo</a>
 				</li>
 				<li role="presentation">
-					<a href="#tabEstSesUsu" data-toggle="tab" role="tab"><i class="fa fa-bar-chart"></i> Estad&iacute;sticas por Usuario</a>
+					<a href="#tabEstSesUsu" data-toggle="tab" role="tab" class="m4-tab"><i class="fa fa-bar-chart"></i> Estad&iacute;sticas por Usuario</a>
 				</li>
 			</ul>
 
@@ -818,17 +935,17 @@ if (!is_array($roles)) $roles = array();
 				<div class="tab-pane active" id="tabActividadVivo" role="tabpanel">
 
 		<div class="aud-main-grid">
-			<div class="aud-panel aud-panel-flex">
-					<div class="aud-period-strip">
+			<div class="aud-panel aud-panel-flex m4-card">
+					<div class="aud-period-strip m4-toolbar">
 						<span class="aud-toolbar-label">
 							<i class="fa fa-calendar text-primary"></i> Per&iacute;odo
 						</span>
 						<div class="btn-group btn-group-xs aud-period-presets" id="audActPeriodoPresets" role="group">
-							<button type="button" class="btn aud-btn-preset" data-preset="ayer">Ayer</button>
-							<button type="button" class="btn aud-btn-preset" data-preset="hoy">Hoy</button>
-							<button type="button" class="btn aud-btn-preset" data-preset="1semana">1 Semana</button>
-							<button type="button" class="btn aud-btn-preset active" data-preset="1mes">1 Mes</button>
-							<button type="button" class="btn aud-btn-preset" data-preset="3meses">3 Meses</button>
+							<button type="button" class="btn aud-btn-preset" data-preset="ayer" title="Ayer">Ayer</button>
+							<button type="button" class="btn aud-btn-preset" data-preset="hoy" title="Hoy">Hoy</button>
+							<button type="button" class="btn aud-btn-preset" data-preset="1semana" title="1 Semana">1 Semana</button>
+							<button type="button" class="btn aud-btn-preset active" data-preset="1mes" title="1 Mes">1 Mes</button>
+							<button type="button" class="btn aud-btn-preset" data-preset="3meses" title="3 Meses">3 Meses</button>
 						</div>
 						<span id="audActCustomBadge" class="label label-info" style="display: none; font-size: 10px; padding: 3px 6px;">
 							<i class="fa fa-calendar"></i> Personalizado
@@ -847,25 +964,25 @@ if (!is_array($roles)) $roles = array();
 						</div>
 					</div>
 
-					<div id="audAlertasTiempoReal" class="alert alert-warning" style="display: none; margin: 0; border-radius: 0; border-left: 4px solid #d97706; font-size: 12px; padding: 8px 14px;">
+					<div id="audAlertasTiempoReal" class="alert alert-warning m4-alert m4-alert-warn" style="display: none; margin: 0; border-radius: 0; border-left: 4px solid #d97706; font-size: 12px; padding: 8px 14px;">
 						<i class="fa fa-exclamation-triangle"></i> <strong>Detectado acceso m&uacute;ltiple:</strong>
 						<span id="audAlertasTiempoRealTxt"></span>
 					</div>
 
-					<div class="aud-panel-head">
-						<h4 class="aud-panel-title">
+					<div class="aud-panel-head m4-card-head">
+						<h4 class="aud-panel-title m4-card-title">
 							<i class="fa fa-list text-muted"></i> Sesiones Registradas
-							<span id="conteoRegistros" class="badge" style="background:#e2e8f0; color:#475569;">0</span>
+							<span id="conteoRegistros" class="badge m4-badge m4-badge-info" style="background:#e2e8f0; color:#475569;">0</span>
 						</h4>
-						<div class="aud-panel-head-filters">
-							<select id="filtroEstado" class="form-control input-sm">
+						<div class="aud-panel-head-filters m4-toolbar">
+							<select id="filtroEstado" class="form-control input-sm m4-input">
 								<option value="">Todos los Estados</option>
 								<option value="en_linea">En L&iacute;nea (&lt; 5 min)</option>
 								<option value="ausente">Ausentes (5 - 15 min)</option>
 								<option value="inactivo">Cerradas / Inactivas</option>
 							</select>
 							<?php if (!empty($roles)) { ?>
-							<select id="filtroRol" class="form-control input-sm">
+							<select id="filtroRol" class="form-control input-sm m4-input">
 								<option value="">Todos los Roles</option>
 								<?php foreach ($roles as $r) { ?>
 									<?php $_rolCod = isset($r['Per_Cod']) ? $r['Per_Cod'] : (isset($r['Perfiles_Id']) ? $r['Perfiles_Id'] : 0); ?>
@@ -874,27 +991,27 @@ if (!is_array($roles)) $roles = array();
 								<?php } ?>
 							</select>
 							<?php } ?>
-							<input type="text" id="filtroTexto" class="form-control input-sm" placeholder="Filtrar por usuario, IP..." />
+							<input type="text" id="filtroTexto" class="form-control input-sm m4-input" placeholder="Filtrar por usuario, IP..." />
 						</div>
 					</div>
 
-					<div class="table-responsive aud-table-wrap" style="margin-bottom: 0;">
-					<table class="table table-sesiones">
+					<div class="table-responsive aud-table-wrap m4-table-scroll" style="margin-bottom: 0;">
+					<table class="table table-sesiones aud-ses-table">
 							<thead>
 								<tr>
-									<th>Usuario</th>
-									<th>Rol / Perfil</th>
-									<th>Direcci&oacute;n IP / Ubicaci&oacute;n</th>
-									<th>Navegador / SO</th>
-									<th>Dispositivo / MAC
+									<th class="col-usu">Usuario</th>
+									<th class="col-rol">Rol / Perfil</th>
+									<th class="col-ip">IP / Ubicaci&oacute;n</th>
+									<th class="col-nav">Navegador / SO</th>
+									<th class="col-disp">Dispositivo / MAC
 										<i class="fa fa-info-circle text-muted" style="cursor: help;" title="La MAC solo se detecta cuando el usuario ingresa desde la misma red local (LAN) del servidor (limitacion tecnica de ARP, protocolo de capa 2 que no atraviesa routers). En accesos remotos, por VPN o por Internet se muestra en su lugar una huella digital del navegador (icono de huella) como identificador de respaldo del equipo."></i>
 									</th>
-									<th>&Uacute;ltima Actividad</th>
-									<th>Tiempo de Uso</th>
-									<th>Estado</th>
-									<th>Sesiones Activas</th>
+									<th class="col-act">&Uacute;ltima actividad</th>
+									<th class="col-tiempo">Tiempo</th>
+									<th class="col-estado">Estado</th>
+									<th class="col-ses">Sesiones</th>
 									<?php if ($esAdminSistemas) { ?>
-									<th style="text-align: right;">Acci&oacute;n</th>
+									<th class="col-accion" style="text-align: right;">Acci&oacute;n</th>
 									<?php } ?>
 								</tr>
 							</thead>
@@ -940,115 +1057,141 @@ if (!is_array($roles)) $roles = array();
 					</div>
 				</div>
 
-			<!-- Panel Lateral: Top Usuarios -->
-			<div class="aud-side-col">
-				<div class="aud-panel">
-					<div class="aud-panel-head">
-						<h4 class="aud-panel-title">
-							<i class="fa fa-trophy text-warning"></i> Mayor Tiempo de Uso
-						</h4>
-					</div>
-					<div style="padding: 14px;" id="boxTopUsuarios">
-						<p class="text-muted text-center" style="font-size: 12px;">Cargando estad&iacute;sticas...</p>
-					</div>
-				</div>
-
-				<div class="aud-panel aud-info-card">
-					<div class="aud-info-card-head">
-						<span><i class="fa fa-shield"></i> Seguridad &amp; Inactividad</span>
-						<?php if ($esAdminSistemas) { ?>
-						<span class="label label-info aud-info-card-badge"><i class="fa fa-key"></i> Admin</span>
-						<?php } ?>
-					</div>
-					<ul class="aud-info-card-list">
-						<li><i class="fa fa-check-circle"></i> El cierre autom&aacute;tico por inactividad est&aacute; <strong>desactivado</strong>; nadie es expulsado por estar inactivo.</li>
-						<li><i class="fa fa-fingerprint"></i> Sin MAC (fuera de la LAN) se usa la huella del navegador como respaldo del equipo <span class="glyphicon glyphicon-info-sign" style="font-size:10px;" title="La MAC solo se detecta dentro de la misma red local del servidor (protocolo ARP). En accesos remotos, VPN o Internet se completa con la huella digital del navegador."></span>.</li>
-					</ul>
-				</div>
-			</div>
 		</div>
 
 				</div><!-- /#tabActividadVivo -->
 
 				<div class="tab-pane" id="tabEstSesUsu" role="tabpanel">
-			<!-- Estadisticas de Sesiones por Usuario (periodo: filtros Desde/Hasta de la pestaÃ±a Actividad en Vivo) -->
-			<div class="aud-panel" style="margin-top: 0;">
-				<div class="aud-panel-head">
-					<h4 class="aud-panel-title">
-						<i class="fa fa-bar-chart text-primary"></i> Estad&iacute;sticas de Sesiones por Usuario
-						<span class="text-muted" style="font-size: 11px; font-weight: 400;">
-							&nbsp;&middot;&nbsp;Periodo: <span id="totEstSesUsu">--</span>
-						</span>
-					</h4>
-				</div>
-				<div style="padding: 12px 16px;" id="boxEstSesUsu">
-					<p class="text-muted text-center" style="font-size: 12px; margin: 0;">
-						<i class="fa fa-spinner fa-spin"></i> Cargando estad&iacute;sticas...
-					</p>
-				</div>
-			</div>
 
-			<!-- Rankings graficos (mismo estilo del Panel Estadistico) -->
-			<div class="row" id="rowEstUsuCharts" style="display: none;">
-				<div class="col-xs-12 col-md-6">
-					<div class="aud-panel">
-						<div class="aud-panel-head">
-							<h4 class="aud-panel-title"><i class="fa fa-clock-o text-primary"></i> Tiempo Conectado por Usuario</h4>
-						</div>
-						<div class="aud-chart-panel-body"><div id="chartTiempoUsu" style="min-height: 260px;"></div></div>
+			<div class="aud-est-toolbar period-control-card m4-filters m4-toolbar">
+				<div class="aud-est-toolbar-left aud-toolbar-left">
+					<span class="aud-toolbar-label"><i class="fa fa-calendar-check-o text-primary"></i> Periodo</span>
+					<span id="estCustomBadge" class="label label-info" style="display:none;font-size:10px;padding:2px 6px;">Personalizado</span>
+					<div class="btn-group btn-group-xs aud-period-presets" id="estPeriodoPresets">
+						<button type="button" class="btn aud-btn-preset" data-preset="ayer" title="Ayer">Ayer</button>
+						<button type="button" class="btn aud-btn-preset" data-preset="hoy" title="Hoy">Hoy</button>
+						<button type="button" class="btn aud-btn-preset" data-preset="1semana" title="1 Semana">1 Semana</button>
+						<button type="button" class="btn aud-btn-preset active" data-preset="1mes" title="1 Mes">1 Mes</button>
+						<button type="button" class="btn aud-btn-preset" data-preset="3meses" title="3 Meses">3 Meses</button>
 					</div>
-				</div>
-				<div class="col-xs-12 col-md-6">
-					<div class="aud-panel">
-						<div class="aud-panel-head">
-							<h4 class="aud-panel-title"><i class="fa fa-sign-in text-primary"></i> Sesiones por Usuario (Top 10)</h4>
+					<div class="aud-toolbar-range aud-date-group">
+						<div class="aud-date-input-wrap">
+							<span class="aud-date-addon">Desde</span>
+							<input type="text" id="estFrom" class="form-control" placeholder="aaaa-mm-dd" autocomplete="off" />
+							<i class="fa fa-calendar cal-icon" id="btnEstFromCal" title="Calendario Desde"></i>
 						</div>
-						<div class="aud-chart-panel-body"><div id="chartSesionesUsu" style="min-height: 260px;"></div></div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Comparar dos usuarios entre si -->
-			<div class="aud-panel" id="panelCompararUsu" style="display: none;">
-				<div class="aud-panel-head">
-					<h4 class="aud-panel-title"><i class="fa fa-exchange text-primary"></i> Comparar Usuarios</h4>
-				</div>
-				<div class="aud-chart-panel-body">
-					<div class="aud-compare-row">
-						<div class="aud-compare-box a">
-							<label><i class="fa fa-user"></i> Usuario A</label>
-							<select id="cmpUsuA" class="form-control input-sm">
-								<option value="">Seleccione...</option>
-							</select>
-						</div>
-						<span class="aud-compare-vs"><i class="fa fa-exchange"></i> VS</span>
-						<div class="aud-compare-box b">
-							<label><i class="fa fa-user"></i> Usuario B</label>
-							<select id="cmpUsuB" class="form-control input-sm">
-								<option value="">Seleccione...</option>
-							</select>
+						<div class="aud-date-input-wrap">
+							<span class="aud-date-addon">Hasta</span>
+							<input type="text" id="estTo" class="form-control" placeholder="aaaa-mm-dd" autocomplete="off" />
+							<i class="fa fa-calendar cal-icon" id="btnEstToCal" title="Calendario Hasta"></i>
 						</div>
 					</div>
-					<p class="text-muted text-center" id="cmpHint" style="font-size: 12px; margin: 12px 0 0;">
-						Seleccione dos usuarios para comparar sus m&eacute;tricas del periodo.
-					</p>
-					<div id="cmpResultado" style="display: none;">
-						<div class="aud-cmp-kpi-grid" id="cmpKpiGrid"></div>
-						<div id="chartComparativoUsu" style="min-height: 260px; margin-top: 14px;"></div>
+					<select id="estFiltroUsu" class="form-control input-sm" title="Filtrar estadisticas por usuario">
+						<option value="">Todos los usuarios</option>
+						<?php foreach ($usuariosEst as $uEst) {
+							$_uCod = isset($uEst['Usu_Cod']) ? (int)$uEst['Usu_Cod'] : 0;
+							if ($_uCod <= 0) continue;
+							$_uNom = isset($uEst['Usu_Nom']) ? trim((string)$uEst['Usu_Nom']) : ('Usuario #' . $_uCod);
+							if ($_uNom === '') $_uNom = 'Usuario #' . $_uCod;
+						?>
+						<option value="<?php echo $_uCod; ?>"><?php echo htmlspecialchars($_uNom); ?></option>
+						<?php } ?>
+					</select>
+				</div>
+				<div class="aud-toolbar-right" style="flex-shrink:0;">
+					<div class="dropdown">
+						<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown">
+							<i class="fa fa-sliders"></i> Acciones <span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu dropdown-menu-right aud-acciones-menu">
+							<li><a href="javascript:void(0);" id="btnRecargarEst"><i class="fa fa-refresh"></i> Actualizar Datos</a></li>
+							<li><a href="javascript:void(0);" id="btnCfgWidgetsEst"><i class="fa fa-th-large"></i> Personalizar</a></li>
+							<li><a href="javascript:void(0);" id="btnResetWidgetsEst"><i class="fa fa-undo"></i> Restablecer widgets</a></li>
+							<li class="divider"></li>
+							<li><a href="javascript:void(0);" id="btnExportCsvEst"><i class="fa fa-file-excel-o text-success"></i> Exportar CSV</a></li>
+							<li><a href="javascript:void(0);" id="btnExportPdfEst"><i class="fa fa-file-pdf-o text-danger"></i> Exportar PDF</a></li>
+						</ul>
 					</div>
 				</div>
 			</div>
 
-			<!-- Detalle tabular por usuario -->
-			<div class="aud-panel">
-				<div class="aud-panel-head">
-					<h4 class="aud-panel-title"><i class="fa fa-table text-primary"></i> Detalle por Usuario</h4>
+			<div id="estKpiGrid">
+				<div class="est-kpi-card" data-kpi="iniciadas"><div class="aud-kpi-card" style="border-left-color:#4338ca;"><div class="aud-kpi-icon blue"><i class="fa fa-sign-in"></i></div><div><div class="aud-kpi-val text-primary" id="kpiEstIniciadas">0</div><div class="aud-kpi-lbl">Sesiones iniciadas</div></div></div></div>
+				<div class="est-kpi-card" data-kpi="cerradas"><div class="aud-kpi-card" style="border-left-color:#15803d;"><div class="aud-kpi-icon green"><i class="fa fa-sign-out"></i></div><div><div class="aud-kpi-val text-success" id="kpiEstCerradas">0</div><div class="aud-kpi-lbl">Cerradas</div></div></div></div>
+				<div class="est-kpi-card" data-kpi="inactividad"><div class="aud-kpi-card" style="border-left-color:#a16207;"><div class="aud-kpi-icon yellow"><i class="fa fa-clock-o"></i></div><div><div class="aud-kpi-val text-warning" id="kpiEstInact">0</div><div class="aud-kpi-lbl">Por inactividad</div></div></div></div>
+				<div class="est-kpi-card" data-kpi="forzadas"><div class="aud-kpi-card" style="border-left-color:#dc2626;"><div class="aud-kpi-icon red"><i class="fa fa-ban"></i></div><div><div class="aud-kpi-val text-danger" id="kpiEstForzadas">0</div><div class="aud-kpi-lbl">Forzadas</div></div></div></div>
+				<div class="est-kpi-card" data-kpi="promedio"><div class="aud-kpi-card" style="border-left-color:#7e22ce;"><div class="aud-kpi-icon purple"><i class="fa fa-hourglass-half"></i></div><div><div class="aud-kpi-val text-info" id="kpiEstProm">0</div><div class="aud-kpi-lbl">Min. promedio</div></div></div></div>
+				<div class="est-kpi-card" data-kpi="usuarios"><div class="aud-kpi-card" style="border-left-color:#334155;"><div class="aud-kpi-icon gray"><i class="fa fa-users"></i></div><div><div class="aud-kpi-val" id="kpiEstUsuarios">0</div><div class="aud-kpi-lbl">Usuarios</div></div></div></div>
+				<div class="est-kpi-card" data-kpi="minutos" style="display:none;"><div class="aud-kpi-card" style="border-left-color:#0284c7;"><div class="aud-kpi-icon blue"><i class="fa fa-database"></i></div><div><div class="aud-kpi-val" id="kpiEstMinutos">0</div><div class="aud-kpi-lbl">Minutos totales</div></div></div></div>
+			</div>
+			<div style="font-size:11px;color:#64748b;margin:0 0 10px;clear:both;">Periodo: <strong id="totEstSesUsu">--</strong></div>
+
+			<div id="estWidgetGrid">
+				<div class="dash-widget w-12" data-widget="tiempo">
+					<div class="dash-widget-inner">
+						<div class="dash-widget-head"><h5 class="dash-title"><i class="fa fa-clock-o"></i> Tiempo conectado por usuario</h5>
+							<div class="dash-actions"><i class="fa fa-arrows dash-hint"></i><i class="fa fa-expand dash-size"></i><i class="fa fa-eye-slash dash-hide"></i></div></div>
+						<div class="dash-widget-body"><div id="chartTiempoUsu" style="min-height:260px;"></div></div>
+					</div>
 				</div>
-				<div class="aud-chart-panel-body" id="boxDetalleUsuarios">
-					<p class="text-muted text-center" style="font-size: 12px; margin: 0;">Sin datos todav&iacute;a.</p>
+				<div class="dash-widget w-12" data-widget="sesiones">
+					<div class="dash-widget-inner">
+						<div class="dash-widget-head ac-green"><h5 class="dash-title"><i class="fa fa-sign-in"></i> Sesiones por usuario (Top 10)</h5>
+							<div class="dash-actions"><i class="fa fa-arrows dash-hint"></i><i class="fa fa-expand dash-size"></i><i class="fa fa-eye-slash dash-hide"></i></div></div>
+						<div class="dash-widget-body"><div id="chartSesionesUsu" style="min-height:260px;"></div></div>
+					</div>
+				</div>
+				<div class="dash-widget w-12" data-widget="mixCierres">
+					<div class="dash-widget-inner">
+						<div class="dash-widget-head ac-amber"><h5 class="dash-title"><i class="fa fa-pie-chart"></i> Mix de cierres de sesion</h5>
+							<div class="dash-actions"><i class="fa fa-arrows dash-hint"></i><i class="fa fa-expand dash-size"></i><i class="fa fa-eye-slash dash-hide"></i></div></div>
+						<div class="dash-widget-body"><div id="chartMixCierres" style="min-height:260px;"></div></div>
+					</div>
+				</div>
+				<div class="dash-widget w-12" data-widget="promedio">
+					<div class="dash-widget-inner">
+						<div class="dash-widget-head ac-purple"><h5 class="dash-title"><i class="fa fa-tachometer"></i> Promedio de uso (min) Top 10</h5>
+							<div class="dash-actions"><i class="fa fa-arrows dash-hint"></i><i class="fa fa-expand dash-size"></i><i class="fa fa-eye-slash dash-hide"></i></div></div>
+						<div class="dash-widget-body"><div id="chartPromedioUsu" style="min-height:260px;"></div></div>
+					</div>
+				</div>
+				<div class="dash-widget w-full" data-widget="tendencia">
+					<div class="dash-widget-inner">
+						<div class="dash-widget-head ac-teal"><h5 class="dash-title"><i class="fa fa-area-chart"></i> Tendencia diaria de sesiones</h5>
+							<div class="dash-actions"><i class="fa fa-arrows dash-hint"></i><i class="fa fa-compress dash-size"></i><i class="fa fa-eye-slash dash-hide"></i></div></div>
+						<div class="dash-widget-body"><div id="chartTendenciaEst" style="min-height:280px;"></div></div>
+					</div>
+				</div>
+				<div class="dash-widget w-full" data-widget="comparar">
+					<div class="dash-widget-inner">
+						<div class="dash-widget-head"><h5 class="dash-title"><i class="fa fa-exchange"></i> Comparar usuarios</h5>
+							<div class="dash-actions"><i class="fa fa-arrows dash-hint"></i><i class="fa fa-compress dash-size"></i><i class="fa fa-eye-slash dash-hide"></i></div></div>
+						<div class="dash-widget-body">
+							<div class="aud-compare-row">
+								<div class="aud-compare-box a"><label><i class="fa fa-user"></i> Usuario A</label><select id="cmpUsuA" class="form-control input-sm"><option value="">Seleccione...</option></select></div>
+								<span class="aud-compare-vs"><i class="fa fa-exchange"></i> VS</span>
+								<div class="aud-compare-box b"><label><i class="fa fa-user"></i> Usuario B</label><select id="cmpUsuB" class="form-control input-sm"><option value="">Seleccione...</option></select></div>
+							</div>
+							<p class="text-muted text-center" id="cmpHint" style="font-size:12px;margin:12px 0 0;">Seleccione dos usuarios para comparar sus metricas del periodo.</p>
+							<div id="cmpResultado" style="display:none;">
+								<div class="aud-cmp-kpi-grid" id="cmpKpiGrid"></div>
+								<div id="chartComparativoUsu" style="min-height:260px;margin-top:14px;"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="dash-widget w-full" data-widget="detalle">
+					<div class="dash-widget-inner">
+						<div class="dash-widget-head"><h5 class="dash-title"><i class="fa fa-table"></i> Detalle por usuario</h5>
+							<div class="dash-actions"><i class="fa fa-arrows dash-hint"></i><i class="fa fa-compress dash-size"></i><i class="fa fa-eye-slash dash-hide"></i></div></div>
+						<div class="dash-widget-body" id="boxDetalleUsuarios"><p class="text-muted text-center" style="font-size:12px;margin:0;">Sin datos todavia.</p></div>
+					</div>
 				</div>
 			</div>
+			<div id="estWidgetOcultos" style="display:none;"></div>
+
 				</div><!-- /#tabEstSesUsu -->
+
 
 			</div><!-- /.tab-content -->
 		</div><!-- /.aud-ui-tabs -->
@@ -1057,26 +1200,26 @@ if (!is_array($roles)) $roles = array();
 </div>
 
 <!-- Modal Confirmar Cierre Forzado -->
-<div id="modalConfirmarExpulsion" class="modal fade" tabindex="-1" role="dialog">
-	<div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
-		<div class="modal-content" style="border-radius: 4px; overflow: hidden; border: 1px solid #cbd5e1;">
-			<div class="modal-header" style="background: #ef4444; color: #ffffff; padding: 12px 16px;">
-				<h4 class="modal-title" style="margin: 0; font-weight: 700; font-size: 14px;">
+<div id="modalConfirmarExpulsion" class="modal fade m4-modal" tabindex="-1" role="dialog">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header m4-modal-header m4-modal-header--danger">
+				<h4 class="modal-title m4-modal-title">
 					<i class="fa fa-exclamation-triangle"></i> Forzar Cierre de Sesi&oacute;n
 				</h4>
 			</div>
-			<div class="modal-body" style="padding: 16px;">
-				<p style="font-size: 13px; color: #1e293b; margin-bottom: 8px;">
-					&iquest;Est&aacute; seguro de que desea desconectar inmediatamente al usuario <strong id="kickUsuNom"></strong>?
+			<div class="modal-body m4-modal-body">
+				<p style="font-size: 14px; color: #1e293b; margin-bottom: 8px; font-weight: 600;">
+					&iquest;Desconectar inmediatamente a <strong id="kickUsuNom"></strong>?
 				</p>
-				<p style="font-size: 11px; color: #64748b; margin: 0;">
-					El usuario ser&aacute; deslogueado de forma inmediata en su pr&oacute;ximo intento o en su siguiente latido de actividad.
+				<p class="m4-alert m4-alert-warn" style="margin: 0; text-align: left;">
+					El usuario ser&aacute; deslogueado en su pr&oacute;ximo latido de actividad.
 				</p>
 				<input type="hidden" id="kickSesCod" value="0" />
 			</div>
-			<div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 10px 16px;">
-				<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cancelar</button>
-				<button type="button" id="btnEjecutarExpulsion" class="btn btn-danger btn-sm" style="font-weight: 600;">
+			<div class="modal-footer m4-modal-footer">
+				<button type="button" class="btn btn-default btn-sm m4-btn m4-btn-ghost" data-dismiss="modal">Cancelar</button>
+				<button type="button" id="btnEjecutarExpulsion" class="btn btn-danger btn-sm m4-btn m4-btn-danger">
 					<i class="fa fa-ban"></i> Desconectar Usuario
 				</button>
 			</div>
@@ -1085,25 +1228,30 @@ if (!is_array($roles)) $roles = array();
 </div>
 
 <!-- Modal detalle IP / MAC / dispositivo -->
-<div id="modalDetalleConexion" class="modal fade" tabindex="-1" role="dialog">
-	<div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
-		<div class="modal-content" style="border-radius: 4px; overflow: hidden; border: 1px solid #cbd5e1;">
-			<div class="modal-header" style="background: #1e3a5f; color: #ffffff; padding: 12px 16px;">
-				<button type="button" class="close" data-dismiss="modal" aria-label="Cerrar" style="color:#fff;opacity:0.85;"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title" id="modalDetalleConexionTitulo" style="margin: 0; font-weight: 700; font-size: 14px;">
+<div id="modalDetalleConexion" class="modal fade m4-modal" tabindex="-1" role="dialog">
+	<div class="modal-dialog modal-dialog-centered" style="max-width:min(640px,94vw);">
+		<div class="modal-content">
+			<div class="modal-header m4-modal-header m4-modal-header--navy">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title m4-modal-title" id="modalDetalleConexionTitulo">
 					<i class="fa fa-info-circle"></i> Detalle de conexi&oacute;n
 				</h4>
 			</div>
-			<div class="modal-body" style="padding: 16px;" id="modalDetalleConexionBody">
+			<div class="modal-body m4-modal-body" id="modalDetalleConexionBody">
 				<!-- Contenido inyectado por JS -->
 			</div>
-			<div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 10px 16px;">
-				<button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Cerrar</button>
+			<div class="modal-footer m4-modal-footer">
+				<button type="button" class="btn btn-default btn-sm m4-btn m4-btn-ghost" data-dismiss="modal">Cerrar</button>
 			</div>
 		</div>
 	</div>
 </div>
 
+<script type="text/javascript">
+	window.audEstEmp = <?php echo (int)$audEmpCod; ?>;
+	window.audEstUsu = <?php echo (int)$audUsuCod; ?>;
+</script>
+<script type="text/javascript" src="../VALIDACIONES/aud_par_actividad_est_widgets.js?v=20260924_v1"></script>
 <script>
 (function (window, $) {
 	'use strict';
@@ -1155,43 +1303,42 @@ if (!is_array($roles)) $roles = array();
 
 		var html = '';
 		html += '<div class="aud-ses-detail-user">';
-		html += '  <div class="user-avatar-badge" style="width:36px;height:36px;font-size:14px;">' + escHtml((it.Prs_Nom && it.Prs_Nom.length) ? it.Prs_Nom.charAt(0).toUpperCase() : 'U') + '</div>';
+		html += '  <div class="user-avatar-badge" style="width:40px;height:40px;font-size:15px;">' + escHtml((it.Prs_Nom && it.Prs_Nom.length) ? it.Prs_Nom.charAt(0).toUpperCase() : 'U') + '</div>';
 		html += '  <div><strong>' + escHtml(it.NombreCompleto || 'Usuario') + '</strong>';
 		html += '  <span>' + escHtml(it.Usu_Nom || '') + (it.Perfiles_Desc ? ' &middot; ' + escHtml(it.Perfiles_Desc) : '') + '</span></div>';
 		html += '</div>';
 
-		html += '<dl class="aud-ses-detail-dl">';
-		html += '<dt><i class="fa fa-globe"></i> Direcci&oacute;n IP</dt>';
-		html += '<dd>' + escHtml(ip || 'Desconocida') + '</dd>';
-		html += '<dt><i class="fa fa-map-marker"></i> Ubicaci&oacute;n</dt>';
-		html += '<dd class="aud-ses-detail-plain">' + escHtml(ubi || 'No determinada') + '</dd>';
-		html += '<dt><i class="fa fa-laptop"></i> Navegador / SO</dt>';
-		html += '<dd class="aud-ses-detail-plain">' + escHtml(nav || 'Desconocido') + '</dd>';
-		html += '<dt><i class="fa fa-hdd-o"></i> Direcci&oacute;n MAC</dt>';
-		if (mac) {
-			html += '<dd>' + escHtml(mac) + '</dd>';
-		} else {
-			html += '<dd class="aud-ses-detail-plain text-muted">No detectada (t&iacute;pico en acceso remoto, VPN o Internet fuera de la LAN)</dd>';
+		function detailPair(icon, label, valueHtml, wide, plain) {
+			return '<div class="aud-ses-detail-pair' + (wide ? ' aud-ses-detail-pair-wide' : '') + '">'
+				+ '<span class="aud-ses-detail-label"><i class="fa ' + icon + '"></i> ' + label + '</span>'
+				+ '<span class="aud-ses-detail-value' + (plain ? ' aud-ses-detail-plain' : '') + '">' + valueHtml + '</span>'
+				+ '</div>';
 		}
-		html += '<dt><i class="fa fa-fingerprint"></i> Huella digital del navegador</dt>';
-		if (fp) {
-			html += '<dd>' + escHtml(fp) + '</dd>';
+
+		html += '<div class="aud-ses-detail-grid">';
+		html += detailPair('fa-globe', 'Direcci&oacute;n IP', escHtml(ip || 'Desconocida'), false, false);
+		html += detailPair('fa-map-marker', 'Ubicaci&oacute;n', escHtml(ubi || 'No determinada'), false, true);
+		html += detailPair('fa-laptop', 'Navegador / SO', escHtml(nav || 'Desconocido'), true, true);
+		if (mac) {
+			html += detailPair('fa-hdd-o', 'Direcci&oacute;n MAC', escHtml(mac), false, false);
 		} else {
-			html += '<dd class="aud-ses-detail-plain text-muted">No registrada</dd>';
+			html += detailPair('fa-hdd-o', 'Direcci&oacute;n MAC', 'No detectada (t&iacute;pico en acceso remoto, VPN o Internet fuera de la LAN)', true, true);
+		}
+		if (fp) {
+			html += detailPair('fa-fingerprint', 'Huella digital del navegador', escHtml(fp), true, false);
+		} else {
+			html += detailPair('fa-fingerprint', 'Huella digital del navegador', 'No registrada', false, true);
 		}
 		if (dev) {
-			html += '<dt><i class="fa fa-mobile"></i> C&oacute;digo de dispositivo</dt>';
-			html += '<dd>' + escHtml(dev) + '</dd>';
+			html += detailPair('fa-mobile', 'C&oacute;digo de dispositivo', escHtml(dev), false, false);
 		}
-		html += '<dt><i class="fa fa-shield"></i> Token OAuth</dt>';
-		html += '<dd class="aud-ses-detail-plain">' + (oauth
+		html += detailPair('fa-shield', 'Token OAuth', (oauth
 			? '<span class="text-success"><i class="fa fa-check-circle"></i> Activo</span>'
-			: '<span class="text-muted">Sin token OAuth</span>') + '</dd>';
+			: '<span class="text-muted">Sin token OAuth</span>'), false, true);
 		if (it.Emp_Nom || it.Suc_Nom) {
-			html += '<dt><i class="fa fa-building"></i> Empresa / Sucursal</dt>';
-			html += '<dd class="aud-ses-detail-plain">' + escHtml([it.Emp_Nom, it.Suc_Nom].filter(Boolean).join(' Â· ') || 'â€”') + '</dd>';
+			html += detailPair('fa-building', 'Empresa / Sucursal', escHtml([it.Emp_Nom, it.Suc_Nom].filter(Boolean).join(' · ') || '—'), true, true);
 		}
-		html += '</dl>';
+		html += '</div>';
 
 		if (foco === 'dispositivo' && !mac && fp) {
 			html += '<p class="aud-ses-detail-hint"><i class="fa fa-info-circle"></i> La MAC solo se obtiene en la misma red local del servidor (ARP). Fuera de la LAN se usa la huella del navegador como identificador de respaldo.</p>';
@@ -1403,77 +1550,148 @@ if (!is_array($roles)) $roles = array();
 		});
 	}
 
-	/* ---- Estadisticas de sesiones por usuario (periodo) ---- */
+	/* ---- Estadisticas de sesiones por usuario (periodo propio) ---- */
+	var estSerieDiariaCache = null;
+
+	function estFmt(d) {
+		var m = '' + (d.getMonth() + 1), dia = '' + d.getDate(), y = d.getFullYear();
+		if (m.length < 2) m = '0' + m;
+		if (dia.length < 2) dia = '0' + dia;
+		return [y, m, dia].join('-');
+	}
+
+	function estCalcularRango(preset) {
+		var hoy = new Date();
+		var vFin = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+		var vIni = new Date(vFin.getFullYear(), vFin.getMonth(), vFin.getDate());
+		if (preset === 'ayer') {
+			vIni = new Date(vIni.getFullYear(), vIni.getMonth(), vIni.getDate() - 1);
+			vFin = vIni;
+		} else if (preset === 'hoy') {
+			/* same day */
+		} else if (preset === '1semana') {
+			vIni = new Date(vIni.getFullYear(), vIni.getMonth(), vIni.getDate() - 6);
+		} else if (preset === '1mes') {
+			vIni = new Date(vIni.getFullYear(), vIni.getMonth(), vIni.getDate() - 29);
+		} else if (preset === '3meses') {
+			vIni = new Date(vIni.getFullYear(), vIni.getMonth(), vIni.getDate() - 89);
+		} else {
+			return null;
+		}
+		return { ini: estFmt(vIni), fin: estFmt(vFin) };
+	}
+
+	function estSincronizarPreset() {
+		var fFrom = $('#estFrom').val() || '';
+		var fTo = $('#estTo').val() || '';
+		var presets = ['ayer', 'hoy', '1semana', '1mes', '3meses'];
+		var hit = null;
+		for (var i = 0; i < presets.length; i++) {
+			var r = estCalcularRango(presets[i]);
+			if (r && r.ini === fFrom && r.fin === fTo) { hit = presets[i]; break; }
+		}
+		$('#estPeriodoPresets .aud-btn-preset').removeClass('active');
+		if (hit) {
+			$('#estPeriodoPresets .aud-btn-preset[data-preset="' + hit + '"]').addClass('active');
+			$('#estCustomBadge').hide();
+		} else {
+			$('#estCustomBadge').show();
+		}
+	}
+
+	function estInitCalendarios() {
+		if (!$.fn.datepicker) return;
+		var opts = { dateFormat: 'yy-mm-dd', changeMonth: true, changeYear: true };
+		$('#estFrom').datepicker($.extend({}, opts, {
+			onClose: function (d) { if (d) { try { $('#estTo').datepicker('option', 'minDate', d); } catch (e) {} } },
+			onSelect: function () { estSincronizarPreset(); cargarEstadisticaUsuarios(); }
+		}));
+		$('#estTo').datepicker($.extend({}, opts, {
+			onClose: function (d) { if (d) { try { $('#estFrom').datepicker('option', 'maxDate', d); } catch (e) {} } },
+			onSelect: function () { estSincronizarPreset(); cargarEstadisticaUsuarios(); }
+		}));
+		$('#btnEstFromCal').on('click', function () { $('#estFrom').focus().datepicker('show'); });
+		$('#btnEstToCal').on('click', function () { $('#estTo').focus().datepicker('show'); });
+	}
+
+	function estAsegurarFechas() {
+		if (!$('#estFrom').val()) {
+			var seedFrom = $('#fromAct').val();
+			var seedTo = $('#toAct').val();
+			if (seedFrom && seedTo) {
+				$('#estFrom').val(seedFrom);
+				$('#estTo').val(seedTo);
+			} else {
+				var r = estCalcularRango('1mes');
+				if (r) { $('#estFrom').val(r.ini); $('#estTo').val(r.fin); }
+			}
+		}
+		estSincronizarPreset();
+	}
+
 	function cargarEstadisticaUsuarios() {
-		var $box = $('#boxEstSesUsu');
-		if (!$box.length) {
-			return;
-		}
-		var fFrom = $('#fromAct').val() || '';
-		var fTo = $('#toAct').val() || '';
+		estAsegurarFechas();
+		var fFrom = $('#estFrom').val() || '';
+		var fTo = $('#estTo').val() || '';
+		var fUsu = parseInt($('#estFiltroUsu').val(), 10) || 0;
 		var periodoTxt = '--';
-		if (fFrom && fTo && fFrom === fTo) {
-			periodoTxt = fFrom;
-		} else if (fFrom && fTo) {
-			periodoTxt = fFrom + ' a ' + fTo;
-		} else if (fFrom) {
-			periodoTxt = 'desde ' + fFrom;
-		} else if (fTo) {
-			periodoTxt = 'hasta ' + fTo;
+		if (fFrom && fTo && fFrom === fTo) periodoTxt = fFrom;
+		else if (fFrom && fTo) periodoTxt = fFrom + ' a ' + fTo;
+		else if (fFrom) periodoTxt = 'desde ' + fFrom;
+		else if (fTo) periodoTxt = 'hasta ' + fTo;
+		var usuTxt = '';
+		if (fUsu > 0) {
+			usuTxt = ' · ' + ($('#estFiltroUsu option:selected').text() || ('Usuario #' + fUsu));
+		} else {
+			usuTxt = ' · Todos los usuarios';
 		}
-		$('#totEstSesUsu').text(periodoTxt);
-		$box.html('<p class="text-muted text-center" style="font-size: 12px; margin: 0;"><i class="fa fa-spinner fa-spin"></i> Cargando estad&iacute;sticas...</p>');
-		$('#rowEstUsuCharts, #panelCompararUsu').hide();
+		$('#totEstSesUsu').text(periodoTxt + usuTxt);
+
 		$.getJSON('../LOGICA/aud_log_actividad_sesion.php', {
 			action: 'estadistica_usuarios',
 			from: fFrom,
-			to: fTo
+			to: fTo,
+			usu: fUsu > 0 ? fUsu : ''
 		}, function (res) {
 			if (!res || !res.success) {
-				$box.html('<p class="text-muted text-center" style="font-size: 12px; margin: 0;">Sin datos disponibles.</p>');
 				estUsuFilasCache = [];
+				estSerieDiariaCache = null;
+				actualizarKpisEst({});
 				renderTablaDetalleUsuarios([]);
+				renderRankingUsuarios([]);
+				renderMixYPromedio([]);
+				renderTendenciaEst(null);
 				return;
 			}
 			var d = res.data || {};
 			var t = d.totales || {};
 			var filas = d.filas || [];
 			estUsuFilasCache = filas;
-			if (filas.length === 0) {
-				$box.html('<p class="text-muted text-center" style="font-size: 12px; margin: 0;">No hay sesiones en el periodo seleccionado.</p>');
-				renderTablaDetalleUsuarios([]);
-				return;
-			}
-			var cards = '';
-			cards += '<div class="aud-kpi-card" style="border-left: 3px solid #4338ca; min-width: 120px;">' +
-				'<div class="aud-kpi-icon blue"><i class="fa fa-sign-in"></i></div>' +
-				'<div><div class="aud-kpi-val text-primary">' + (t.iniciadas || 0) + '</div><div class="aud-kpi-lbl">Sesiones iniciadas</div></div></div>';
-			cards += '<div class="aud-kpi-card" style="border-left: 3px solid #15803d; min-width: 120px;">' +
-				'<div class="aud-kpi-icon green"><i class="fa fa-sign-out"></i></div>' +
-				'<div><div class="aud-kpi-val text-success">' + (t.cerradas || 0) + '</div><div class="aud-kpi-lbl">Cerradas</div></div></div>';
-			cards += '<div class="aud-kpi-card" style="border-left: 3px solid #a16207; min-width: 120px;">' +
-				'<div class="aud-kpi-icon yellow"><i class="fa fa-clock-o"></i></div>' +
-				'<div><div class="aud-kpi-val text-warning">' + (t.por_inactividad || 0) + '</div><div class="aud-kpi-lbl">Por inactividad</div></div></div>';
-			cards += '<div class="aud-kpi-card" style="border-left: 3px solid #dc2626; min-width: 120px;">' +
-				'<div class="aud-kpi-icon red"><i class="fa fa-ban"></i></div>' +
-				'<div><div class="aud-kpi-val text-danger">' + (t.forzadas || 0) + '</div><div class="aud-kpi-lbl">Forzadas</div></div></div>';
-			cards += '<div class="aud-kpi-card" style="border-left: 3px solid #7e22ce; min-width: 120px;">' +
-				'<div class="aud-kpi-icon purple"><i class="fa fa-hourglass-half"></i></div>' +
-				'<div><div class="aud-kpi-val text-info">' + (Math.round(t.promedio_min * 10) / 10 || 0) + '</div><div class="aud-kpi-lbl">Min. promedio</div></div></div>';
-			cards += '<div class="aud-kpi-card" style="border-left: 3px solid #334155; min-width: 120px;">' +
-				'<div class="aud-kpi-icon gray"><i class="fa fa-users"></i></div>' +
-				'<div><div class="aud-kpi-val">' + (t.usuarios || 0) + '</div><div class="aud-kpi-lbl">Usuarios</div></div></div>';
-			$box.html('<div class="aud-kpi-grid" style="flex-wrap: wrap;">' + cards + '</div>');
-
+			estSerieDiariaCache = d.serie_diaria || null;
+			actualizarKpisEst(t);
+			if (window.audEstApplyKpiVisibility) window.audEstApplyKpiVisibility();
 			renderRankingUsuarios(filas);
+			renderMixYPromedio(filas, t);
+			renderTendenciaEst(estSerieDiariaCache);
 			poblarSelectsComparar(filas);
 			renderTablaDetalleUsuarios(filas);
-			$('#rowEstUsuCharts, #panelCompararUsu').show();
+			if (typeof window.audEstResizeCharts === 'function') window.audEstResizeCharts();
 		}).fail(function () {
-			$box.html('<p class="text-muted text-center" style="font-size: 12px; margin: 0;">No se pudo cargar la estad&iacute;stica.</p>');
 			estUsuFilasCache = [];
+			actualizarKpisEst({});
 			renderTablaDetalleUsuarios([]);
 		});
+	}
+
+	function actualizarKpisEst(t) {
+		t = t || {};
+		$('#kpiEstIniciadas').text(t.iniciadas || 0);
+		$('#kpiEstCerradas').text(t.cerradas || 0);
+		$('#kpiEstInact').text(t.por_inactividad || 0);
+		$('#kpiEstForzadas').text(t.forzadas || 0);
+		$('#kpiEstProm').text(Math.round((t.promedio_min || 0) * 10) / 10);
+		$('#kpiEstUsuarios').text(t.usuarios || 0);
+		$('#kpiEstMinutos').text(t.minutos || 0);
 	}
 
 	/* ---- Graficos de ranking (tiempo conectado / sesiones) por usuario ---- */
@@ -1533,6 +1751,75 @@ if (!is_array($roles)) $roles = array();
 			dataLabels: { enabled: false }
 		});
 	}
+
+	function renderMixYPromedio(filas, totales) {
+		totales = totales || {};
+		var cerr = parseInt(totales.cerradas, 10) || 0;
+		var ina = parseInt(totales.por_inactividad, 10) || 0;
+		var forz = parseInt(totales.forzadas, 10) || 0;
+		var abiertas = Math.max(0, (parseInt(totales.iniciadas, 10) || 0) - cerr - ina - forz);
+		if (!filas || !filas.length) {
+			estUsuChart('chartMixCierres', { series: [0], labels: ['Sin datos'], chart: { type: 'donut', height: 260 }, colors: ['#cbd5e1'], legend: { show: false } });
+			estUsuChart('chartPromedioUsu', { series: [{ data: [] }], chart: { type: 'bar', height: 260 }, xaxis: { categories: [] } });
+			return;
+		}
+		estUsuChart('chartMixCierres', {
+			series: [cerr, ina, forz, abiertas],
+			labels: ['Cerradas normales', 'Por inactividad', 'Forzadas', 'Abiertas / otras'],
+			chart: { type: 'donut', height: 260, toolbar: { show: false } },
+			colors: ['#15803d', '#a16207', '#dc2626', '#64748b'],
+			legend: { position: 'bottom', fontSize: '11px' },
+			plotOptions: { pie: { donut: { size: '55%' } } }
+		});
+
+		var topP = filas.slice().sort(function (a, b) {
+			return (parseFloat(b.Promedio_Min) || 0) - (parseFloat(a.Promedio_Min) || 0);
+		}).slice(0, 10);
+		estUsuChart('chartPromedioUsu', {
+			chart: { type: 'bar', toolbar: { show: false }, height: 260 },
+			series: [{ name: 'Min. promedio', data: topP.map(function (r) { return Math.round((parseFloat(r.Promedio_Min) || 0) * 10) / 10; }) }],
+			xaxis: { categories: topP.map(estUsuNombreCorto), labels: { style: { fontSize: '10px' } } },
+			plotOptions: { bar: { horizontal: true, barHeight: '60%' } },
+			colors: ['#8b5cf6'],
+			dataLabels: { enabled: false }
+		});
+	}
+
+	function renderTendenciaEst(serie) {
+		serie = serie || {};
+		var cats = serie.categorias || [];
+		if (!cats.length) {
+			$('#chartTendenciaEst').html('<div class="text-muted text-center" style="padding:40px 10px;font-size:12px;">No hay datos diarios en el periodo.</div>');
+			if (estUsuCharts.chartTendenciaEst) {
+				try { estUsuCharts.chartTendenciaEst.destroy(); } catch (e) {}
+				delete estUsuCharts.chartTendenciaEst;
+			}
+			return;
+		}
+		estUsuChart('chartTendenciaEst', {
+			chart: { type: 'area', height: 280, toolbar: { show: false }, zoom: { enabled: false } },
+			series: [
+				{ name: 'Iniciadas', data: serie.iniciadas || [] },
+				{ name: 'Cerradas', data: serie.cerradas || [] },
+				{ name: 'Inactividad', data: serie.por_inactividad || [] },
+				{ name: 'Forzadas', data: serie.forzadas || [] }
+			],
+			xaxis: { categories: cats, labels: { rotate: -45, style: { fontSize: '9px' } } },
+			colors: ['#2563eb', '#15803d', '#a16207', '#dc2626'],
+			dataLabels: { enabled: false },
+			stroke: { curve: 'smooth', width: 2 },
+			fill: { type: 'gradient', gradient: { opacityFrom: 0.35, opacityTo: 0.05 } },
+			legend: { position: 'top', fontSize: '11px' }
+		});
+	}
+
+	window.audEstResizeCharts = function () {
+		for (var id in estUsuCharts) {
+			if (estUsuCharts[id] && typeof estUsuCharts[id].resize === 'function') {
+				try { estUsuCharts[id].resize(); } catch (e) {}
+			}
+		}
+	};
 
 	/* ---- Comparar dos usuarios entre si ---- */
 	function poblarSelectsComparar(filas) {
@@ -1720,59 +2007,59 @@ if (!is_array($roles)) $roles = array();
 			var navOs = (it.Ses_Nav || 'Desconocido');
 			var dispHtml;
 			if (it.Ses_Mac) {
-				dispHtml = '  <td style="white-space: nowrap;"><a href="javascript:void(0);" class="aud-ses-link" title="Ver detalle completo de dispositivo / MAC" onclick="mostrarDetalleConexion(' + it.Ses_Cod + ', \'dispositivo\')">'
+				dispHtml = '  <td class="col-disp"><a href="javascript:void(0);" class="aud-ses-link" title="Ver detalle completo de dispositivo / MAC" onclick="mostrarDetalleConexion(' + it.Ses_Cod + ', \'dispositivo\')">'
 					+ '<i class="fa fa-hdd-o"></i>' + escHtml(it.Ses_Mac) + '</a>';
 			} else if (it.Ses_Fingerprint) {
-				dispHtml = '  <td style="white-space: nowrap;"><a href="javascript:void(0);" class="aud-ses-link" title="Ver huella digital completa del navegador" onclick="mostrarDetalleConexion(' + it.Ses_Cod + ', \'dispositivo\')">'
+				dispHtml = '  <td class="col-disp"><a href="javascript:void(0);" class="aud-ses-link" title="Ver huella digital completa del navegador" onclick="mostrarDetalleConexion(' + it.Ses_Cod + ', \'dispositivo\')">'
 					+ '<i class="fa fa-fingerprint"></i> ' + escHtml(String(it.Ses_Fingerprint).substring(0, 12)) + '&hellip;</a>';
 			} else if (it.Ses_Dev_Cod) {
-				dispHtml = '  <td style="white-space: nowrap;"><a href="javascript:void(0);" class="aud-ses-link" title="Ver detalle completo del dispositivo" onclick="mostrarDetalleConexion(' + it.Ses_Cod + ', \'dispositivo\')">'
+				dispHtml = '  <td class="col-disp"><a href="javascript:void(0);" class="aud-ses-link" title="Ver detalle completo del dispositivo" onclick="mostrarDetalleConexion(' + it.Ses_Cod + ', \'dispositivo\')">'
 					+ '<i class="fa fa-mobile"></i>' + escHtml(it.Ses_Dev_Cod) + '</a>';
 			} else {
-				dispHtml = '  <td style="white-space: nowrap;"><small style="color: #475569;">&mdash;</small>';
+				dispHtml = '  <td class="col-disp"><span class="aud-ses-muted">&mdash;</span>';
 			}
 			if (it.Ses_OAuth_Tok) {
-				dispHtml += '<br><span class="text-success" style="font-size: 10px;"><i class="fa fa-shield"></i> Token OAuth activo</span>';
+				dispHtml += '<br><span class="aud-ses-oauth"><i class="fa fa-shield"></i> OAuth</span>';
 			}
 			dispHtml += '</td>';
 
 			html += '<tr>';
-			html += '  <td>';
-			html += '    <div style="display: flex; align-items: center; gap: 10px;">';
+			html += '  <td class="col-usu">';
+			html += '    <div class="aud-ses-user">';
 			html += '      <div class="user-avatar-badge">' + inicial + '<span class="status-dot ' + semaforo + '"></span></div>';
-			html += '      <div style="min-width: 0;">';
-			html += '        <strong style="color: #0f172a;">' + it.NombreCompleto + '</strong>';
-			html += '        <div style="font-size: 11px; color: #64748b;">' + (it.Usu_Nom || '') + '</div>';
+			html += '      <div class="aud-ses-user-txt">';
+			html += '        <strong class="aud-ses-name">' + escHtml(it.NombreCompleto || '') + '</strong>';
+			html += '        <span class="aud-ses-login">' + escHtml(it.Usu_Nom || '') + '</span>';
 			html += '      </div>';
 			html += '    </div>';
 			html += '  </td>';
-			html += '  <td><span style="font-size: 12px; color: #334155;">' + (it.Perfiles_Desc || 'Sin perfil') + '</span></td>';
-			html += '  <td>' + ipUbi + '</td>';
-			html += '  <td><small style="color: #475569;">' + navOs + '</small></td>';
+			html += '  <td class="col-rol"><span class="aud-ses-rol">' + escHtml(it.Perfiles_Desc || 'Sin perfil') + '</span></td>';
+			html += '  <td class="col-ip">' + ipUbi + '</td>';
+			html += '  <td class="col-nav"><span class="aud-ses-nav">' + escHtml(navOs) + '</span></td>';
 			html += dispHtml;
-			html += '  <td><strong style="color: #334155;">' + relativo + '</strong><br><small class="text-muted">' + horaActividad + '</small></td>';
-			html += '  <td><span class="badge" style="background: #e0e7ff; color: #3730a3; font-weight: 700;">' + (it.TiempoFormateado || '0m') + '</span></td>';
-			html += '  <td><span class="badge-custom ' + badgeClase + '"><i class="fa fa-circle" style="font-size: 8px;"></i> ' + it.BadgeTexto + '</span></td>';
-			html += '  <td style="text-align: center; white-space: nowrap;">';
+			html += '  <td class="col-act"><strong class="aud-ses-rel">' + relativo + '</strong><span class="aud-ses-hora">' + horaActividad + '</span></td>';
+			html += '  <td class="col-tiempo"><span class="badge m4-badge m4-badge-info aud-ses-tiempo">' + escHtml(it.TiempoFormateado || '0m') + '</span></td>';
+			html += '  <td class="col-estado"><span class="badge-custom m4-status ' + badgeClase + '"><i class="fa fa-circle"></i> ' + escHtml(it.BadgeTexto || '') + '</span></td>';
+			html += '  <td class="col-ses">';
 			if (sesAct > 1) {
-				html += '    <span class="badge-custom ausente" title="Este usuario mantiene ' + sesAct + ' sesiones activas simult&aacute;neas en tiempo real (posible credencial compartida)."><i class="fa fa-exclamation-triangle"></i> ' + sesAct + ' activas</span>';
+				html += '    <span class="badge-custom m4-status ausente" title="Este usuario mantiene ' + sesAct + ' sesiones activas simult&aacute;neas en tiempo real (posible credencial compartida)."><i class="fa fa-exclamation-triangle"></i> ' + sesAct + '</span>';
 			} else if (esMia) {
-				html += '    <span class="badge-custom en_linea" title="Esta es la sesi&oacute;n que usted est&aacute; usando ahora."><i class="fa fa-user"></i> Tu sesi&oacute;n</span>';
+				html += '    <span class="badge-custom m4-status en_linea" title="Esta es la sesi&oacute;n que usted est&aacute; usando ahora."><i class="fa fa-user"></i> T&uacute;</span>';
 			} else if (sesAct === 1) {
-				html += '    <span class="badge-custom inactivo" title="Sesiones activas en este momento."><i class="fa fa-check-circle"></i> 1</span>';
+				html += '    <span class="badge-custom m4-status inactivo" title="Sesiones activas en este momento."><i class="fa fa-check-circle"></i> 1</span>';
 			} else {
-				html += '    <span class="text-muted" style="font-size: 11px;">&mdash;</span>';
+				html += '    <span class="aud-ses-muted">&mdash;</span>';
 			}
 			html += '  </td>';
 
 			if (esAdmin) {
-				html += '  <td style="text-align: right; white-space: nowrap;">';
+				html += '  <td class="col-accion">';
 				if (esMia) {
 					html += '    <span class="text-muted muted-icon" title="No puede desconectar su propia sesi&oacute;n desde el monitor."><i class="fa fa-lock"></i></span>';
 				} else if (semaforo === 'en_linea' || semaforo === 'ausente') {
 					html += '    <button type="button" class="btn-kick btn-kick-icon" title="Desconectar a ' + (it.NombreCompleto || '').replace(/"/g, '&quot;') + '" onclick="confirmarExpulsion(' + it.Ses_Cod + ', \'' + (it.NombreCompleto || '').replace(/'/g, "\\'") + '\')"><i class="fa fa-ban"></i></button>';
 				} else {
-					html += '    <span class="text-muted">&mdash;</span>';
+					html += '    <span class="aud-ses-muted">&mdash;</span>';
 				}
 				html += '  </td>';
 			}
@@ -1815,6 +2102,9 @@ if (!is_array($roles)) $roles = array();
 	}
 
 	function renderizarTopUsuarios(top) {
+		if (!$('#boxTopUsuarios').length) {
+			return;
+		}
 		if (!top || top.length === 0) {
 			$('#boxTopUsuarios').html('<p class="text-muted text-center" style="font-size: 12px;">Sin registros en el per\u00edodo.</p>');
 			return;
@@ -1914,6 +2204,42 @@ if (!is_array($roles)) $roles = array();
 
 	$('#btnRecargarActividad').on('click', cargarDatosActividad);
 
+	// Estadisticas: periodo + export + personalizar
+	$('#estPeriodoPresets').on('click', '.aud-btn-preset', function () {
+		var preset = $(this).data('preset');
+		var r = estCalcularRango(preset);
+		if (!r) return;
+		$('#estFrom').val(r.ini);
+		$('#estTo').val(r.fin);
+		estSincronizarPreset();
+		cargarEstadisticaUsuarios();
+	});
+	$('#estFiltroUsu').on('change', function () {
+		cargarEstadisticaUsuarios();
+	});
+	$('#btnRecargarEst').on('click', function () { cargarEstadisticaUsuarios(); });
+	$(document).on('click', '.aud-acciones-menu a', function () {
+		var $dd = $(this).closest('.dropdown');
+		$dd.removeClass('open');
+		$dd.find('.dropdown-toggle').attr('aria-expanded', 'false');
+	});
+	$('#btnExportCsvEst').on('click', function () {
+		estAsegurarFechas();
+		var usu = parseInt($('#estFiltroUsu').val(), 10) || 0;
+		var url = '../LOGICA/aud_log_actividad_sesion.php?action=exportar_estadistica_csv&from=' +
+			encodeURIComponent($('#estFrom').val() || '') + '&to=' + encodeURIComponent($('#estTo').val() || '') +
+			(usu > 0 ? ('&usu=' + usu) : '');
+		window.open(url, '_blank');
+	});
+	$('#btnExportPdfEst').on('click', function () {
+		estAsegurarFechas();
+		var usu = parseInt($('#estFiltroUsu').val(), 10) || 0;
+		var url = '../LOGICA/aud_log_actividad_sesion.php?action=exportar_estadistica_pdf&from=' +
+			encodeURIComponent($('#estFrom').val() || '') + '&to=' + encodeURIComponent($('#estTo').val() || '') +
+			(usu > 0 ? ('&usu=' + usu) : '');
+		window.open(url, '_blank');
+	});
+
 	// Manejo de autorefresco
 	function configurarAutoRefresh() {
 		if (timerAutoRefresh) clearInterval(timerAutoRefresh);
@@ -1927,13 +2253,11 @@ if (!is_array($roles)) $roles = array();
 	// Los graficos ApexCharts se inicializan aunque la pestana este oculta
 	// (display:none), por lo que deben re-dimensionarse cuando se muestran.
 	$('#audActTabs a[href="#tabEstSesUsu"]').on('shown.bs.tab', function () {
+		estAsegurarFechas();
+		cargarEstadisticaUsuarios();
 		setTimeout(function () {
-			for (var k in estUsuCharts) {
-				if (estUsuCharts[k] && typeof estUsuCharts[k].resize === 'function') {
-					try { estUsuCharts[k].resize(); } catch (e) {}
-				}
-			}
-		}, 30);
+			if (typeof window.audEstResizeCharts === 'function') window.audEstResizeCharts();
+		}, 40);
 	});
 
 	$(document).ready(function () {
@@ -1943,6 +2267,14 @@ if (!is_array($roles)) $roles = array();
 			$('#toAct').val(initR.to);
 		}
 		initCalendariosActividad();
+		estInitCalendarios();
+		var er = estCalcularRango('1mes');
+		if (er) {
+			$('#estFrom').val(er.ini);
+			$('#estTo').val(er.fin);
+		}
+		estSincronizarPreset();
+		if (typeof window.audEstWidgetsReady === 'function') window.audEstWidgetsReady();
 		cargarDatosActividad();
 		configurarAutoRefresh();
 	});

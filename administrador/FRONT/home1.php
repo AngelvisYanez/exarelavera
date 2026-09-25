@@ -98,7 +98,7 @@ $rs_sucursales = $obBD_con1->getArrayConsulta(214, $Ses_Emp_Cod.'*'.$Ses_Usu_Ced
 	<head>		
 		<title><?Php echo $Ses_Sys_Nom; ?></title>
                 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-		<meta charset="iso8859-1" />
+		<meta charset="utf-8" />
 		
 		<meta name="description" content="overview &amp; stats" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />

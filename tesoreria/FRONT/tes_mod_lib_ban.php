@@ -17,6 +17,21 @@ $obBD_con1 = new Class_Log_Datos_Che;
 $hoy = date("Y-m-d");
 $mes = date("m");
 
+/* Config empresa: módulo presupuesto (Cof_Mpe) */
+$configs = array('Cof_Mpe' => 'N');
+$empCfg = (int)$Ses_Emp_Cod;
+if (!empty($obBD_conexion->conexion) && $empCfg > 0) {
+    $rsCfg = @$obBD_conexion->conexion->query("SELECT Cof_Mpe FROM confi_fact WHERE Emp_Cod = $empCfg LIMIT 1");
+    if ($rsCfg && ($rowCfg = $rsCfg->fetch_assoc()) && isset($rowCfg['Cof_Mpe'])) {
+        $configs['Cof_Mpe'] = $rowCfg['Cof_Mpe'];
+    }
+}
+$verPre = (isset($configs['Cof_Mpe']) && $configs['Cof_Mpe'] === 'S');
+if ($verPre) {
+    require_once('../../facturacion/COMPONENTES/fac_presupuesto_asiento.inc.php');
+}
+require_once('../../facturacion/COMPONENTES/fac_presupuesto_rubros_ajax.inc.php');
+
 if(isset($searchCheque)){
     $obBD_con1->debug(true);
 	try {
@@ -123,7 +138,75 @@ if (isset($getAsientos)) {
     $data = $_GET;
     try {
         $asientos = $obBD_con1->getArrayConsulta(400, $data, $obBD_conexion, true);
-        $resp = array('success' => true, 'asientos' => $asientos);
+        $resp = array('success' => true, 'asientos' => $asientos, 'presupuesto' => null);
+        /* Rubro vinculado al comprobante (si Cof_Mpe=S) */
+        if ($verPre && !empty($data['Com_Cod']) && !empty($obBD_conexion->conexion)) {
+            $comCod = (int)$data['Com_Cod'];
+            $mysqli = $obBD_conexion->conexion;
+            $tblDet = '';
+            if (function_exists('fac_ppa_tabla_detalle_nombre')) {
+                $tblDet = fac_ppa_tabla_detalle_nombre($mysqli);
+            } else {
+                $chkDet = @$mysqli->query("SHOW TABLES LIKE 'pre_proyecto_detalles'");
+                if ($chkDet && $chkDet->num_rows > 0) {
+                    $tblDet = 'pre_proyecto_detalles';
+                } else {
+                    $chkDet2 = @$mysqli->query("SHOW TABLES LIKE 'pre_proyecto_detalle'");
+                    if ($chkDet2 && $chkDet2->num_rows > 0) {
+                        $tblDet = 'pre_proyecto_detalle';
+                    }
+                }
+            }
+            $rubro = null;
+            if ($tblDet !== '' && function_exists('fac_ppa_asiento_tabla_ok') && fac_ppa_asiento_tabla_ok($mysqli)) {
+                $qRub = @$mysqli->query(
+                    "SELECT pda.Pdp_Cod, d.Ppa_Cod, d.Pdp_Rubro, p.Ppa_Cla, p.Ppa_Des
+                     FROM asientos a
+                     INNER JOIN pre_proyecto_detalle_asiento pda ON pda.Asi_Cod = a.Asi_Cod
+                     INNER JOIN `$tblDet` d ON d.Pdp_Cod = pda.Pdp_Cod
+                     LEFT JOIN pre_partidas p ON p.Ppa_Cod = d.Ppa_Cod
+                     WHERE a.Com_Cod = $comCod
+                     LIMIT 1"
+                );
+                if ($qRub && ($rowRub = $qRub->fetch_assoc())) {
+                    $cla = trim((string)$rowRub['Ppa_Cla']);
+                    $des = trim((string)(!empty($rowRub['Pdp_Rubro']) ? $rowRub['Pdp_Rubro'] : $rowRub['Ppa_Des']));
+                    $rubro = array(
+                        'Pdp_Cod' => (int)$rowRub['Pdp_Cod'],
+                        'Ppa_Cod' => (int)$rowRub['Ppa_Cod'],
+                        'Ppa_Cla' => $cla,
+                        'Ppa_Des' => trim((string)$rowRub['Ppa_Des']),
+                        'Pdp_Rubro' => $des,
+                        'Ppa_Label' => ($cla !== '' ? ($cla . ' - ') : '') . $des,
+                        'Ppa_Ruta' => ''
+                    );
+                }
+            }
+            if ($rubro === null && function_exists('fac_ppa_ejecucion_tabla_ok') && fac_ppa_ejecucion_tabla_ok($mysqli)) {
+                $qGen = @$mysqli->query(
+                    "SELECT pe.Ppa_Cod, p.Ppa_Cla, p.Ppa_Des
+                     FROM asientos a
+                     INNER JOIN pre_ejecucion pe ON pe.Asi_Cod = a.Asi_Cod
+                     LEFT JOIN pre_partidas p ON p.Ppa_Cod = pe.Ppa_Cod
+                     WHERE a.Com_Cod = $comCod
+                     LIMIT 1"
+                );
+                if ($qGen && ($rowGen = $qGen->fetch_assoc())) {
+                    $cla = trim((string)$rowGen['Ppa_Cla']);
+                    $des = trim((string)$rowGen['Ppa_Des']);
+                    $rubro = array(
+                        'Pdp_Cod' => 0,
+                        'Ppa_Cod' => (int)$rowGen['Ppa_Cod'],
+                        'Ppa_Cla' => $cla,
+                        'Ppa_Des' => $des,
+                        'Pdp_Rubro' => $des,
+                        'Ppa_Label' => ($cla !== '' ? ($cla . ' - ') : '') . $des,
+                        'Ppa_Ruta' => ''
+                    );
+                }
+            }
+            $resp['presupuesto'] = $rubro;
+        }
     } catch (Exception $exc) {
         $resp = array('success' => false, 'message' => $exc->getTraceAsString());
     }
@@ -187,8 +270,45 @@ if (isset($save)) {
             $comprobante['Com_Num']=$Com_Num;
             /*UPDATE COMPROBANTE*/
             $obBD_conIns->operacionobBD(401,$comprobante,$obBD_conexionIns);
+            /* Quitar vínculos presupuesto antes de borrar asientos */
+            if ($verPre && function_exists('fac_ppa_desvincular_asientos_comprobante')) {
+                fac_ppa_desvincular_asientos_comprobante($obBD_conexionIns->conexion, (int)$Com_Cod);
+            }
             /*DELETE ASIENTOS*/
             $obBD_conIns->operacionobBD(402,$comprobante,$obBD_conexionIns);
+
+            /* Rubro presupuesto: solo Egresos/Diario y si Cof_Mpe=S */
+            $usaPpa = $verPre && ($op === 'E' || $op === 'D');
+            $pdpGeneral = 0;
+            $ppaGeneral = 0;
+            if ($usaPpa) {
+                if (isset($Pdp_Cod) && (int)$Pdp_Cod > 0) {
+                    $pdpGeneral = (int)$Pdp_Cod;
+                } elseif (!empty($_POST['Pdp_Cod'])) {
+                    $pdpGeneral = (int)$_POST['Pdp_Cod'];
+                } elseif (!empty($_REQUEST['Pdp_Cod'])) {
+                    $pdpGeneral = (int)$_REQUEST['Pdp_Cod'];
+                }
+                if (isset($Ppa_Cod) && (int)$Ppa_Cod > 0) {
+                    $ppaGeneral = (int)$Ppa_Cod;
+                } elseif (!empty($_POST['Ppa_Cod'])) {
+                    $ppaGeneral = (int)$_POST['Ppa_Cod'];
+                } elseif (!empty($_REQUEST['Ppa_Cod'])) {
+                    $ppaGeneral = (int)$_REQUEST['Ppa_Cod'];
+                }
+            }
+            $ctxPpa = array(
+                'Emp_Cod' => isset($Ses_Emp_Cod) ? (int)$Ses_Emp_Cod : 0,
+                'Suc_Cod' => isset($Ses_Suc_Cod) ? $Ses_Suc_Cod : null,
+                'Usu_Cod' => isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : (isset($Ses_Usu_Cod) ? (int)$Ses_Usu_Cod : 0),
+                'Cop_Cod' => (int)$Com_Cod,
+                'Cop_Fec' => isset($comprobante['Com_Fec']) ? $comprobante['Com_Fec'] : date('Y-m-d'),
+                'Cop_Num' => isset($Com_Num) ? $Com_Num : '',
+                'Pej_Fase' => 'E'
+            );
+            $pldBanco = isset($Pld_Cod) ? (int)$Pld_Cod : 0;
+            $vinculadosPpa = 0;
+            $mysqliIns = !empty($obBD_conexionIns->conexion) ? $obBD_conexionIns->conexion : $obBD_conexionIns;
 
             foreach ($save as $asiento){
                 /*INSERT ASIENTOS*/
@@ -196,18 +316,40 @@ if (isset($save)) {
                 $asiento['Com_Cod']=$Com_Cod;
                 $asiento['Asi_Con']=$comprobante['Com_Con'];
                 $obBD_conIns->operacionobBD(24,$asiento,$obBD_conexionIns);
+                $asiCod = (int)$obBD_conIns->insercionid($obBD_conexionIns);
                 if(isset($cheques)){
                     foreach ($cheques as $cheque){
                         if($cheque['Index']===$asiento['Che_Ind']){
                             $cheque['Prv_Cod']=$comprobante['Prv_Cod'];
                             $cheque['Che_Cod']=1;
                             /*INSERT CHEQUE*/
-                            $cheque['Asi_Cod'] = $obBD_conIns->insercionid($obBD_conexionIns);
+                            $cheque['Asi_Cod'] = $asiCod;
                             $obBD_conIns->operacionobBD(403,$cheque,$obBD_conexionIns);
                         }
                     }
                 }
-                
+                /* Vincula asientos de contrapartida (no la cuenta banco) al rubro */
+                if ($usaPpa && $asiCod > 0 && (int)$asiento['Pld_Cod'] !== $pldBanco && ($pdpGeneral > 0 || $ppaGeneral > 0)
+                    && function_exists('fac_ppa_vincular_asiento_item')) {
+                    $ctxPpa['monto'] = is_numeric($asiento['Asi_Val']) ? (float)$asiento['Asi_Val'] : 0;
+                    if (fac_ppa_vincular_asiento_item($mysqliIns, array(), $pdpGeneral, $asiCod, $ppaGeneral, $ctxPpa)) {
+                        $vinculadosPpa++;
+                    }
+                }
+            }
+            /* Si no hubo contrapartida vinculada, enlaza todos los asientos del comprobante */
+            if ($usaPpa && $vinculadosPpa === 0 && ($pdpGeneral > 0 || $ppaGeneral > 0)
+                && function_exists('fac_ppa_vincular_asiento_item') && $mysqliIns) {
+                $ComTmp = (int)$Com_Cod;
+                $qAsi = @$mysqliIns->query("SELECT Asi_Cod, Asi_Val FROM asientos WHERE Com_Cod = $ComTmp");
+                if ($qAsi) {
+                    while ($aRow = $qAsi->fetch_assoc()) {
+                        $ctxPpa['monto'] = isset($aRow['Asi_Val']) ? (float)$aRow['Asi_Val'] : 0;
+                        if (fac_ppa_vincular_asiento_item($mysqliIns, array(), $pdpGeneral, (int)$aRow['Asi_Cod'], $ppaGeneral, $ctxPpa)) {
+                            $vinculadosPpa++;
+                        }
+                    }
+                }
             }
             /* Finaliza la transaccion */
             $obBD_conIns->fin_transaccion_nomsn($obBD_conexionIns);
@@ -242,7 +384,7 @@ if (isset($save)) {
         <?Php require_once("../../mascaras/model1/estilos/jqgrid5.php") ?>  
         <style>#tabs.ui-widget-content{background:none !important;} .ui-tabs-panel{padding-bottom: 0 !important;}.ui-tabs-nav{padding-top: 0 !important;}
         </style>
-        <script type="text/ecmascript" src="../VALIDACIONES/tes_val_lib_ban.js?a=22">
+        <script type="text/ecmascript" src="../VALIDACIONES/tes_val_lib_ban.js?a=24">
         </script>
         
         <style>
@@ -260,52 +402,83 @@ if (isset($save)) {
             <div class="panel-body ui-widget-content ui-corner-bottom exa-body">
                 <div id="documentoSearch">
                     <div class="row">
-                        <form name="searchComprobantes" id="searchComprobantes" class="form-horizontal normal" action="javascript:$('#searchGrid').Search($.extend($('#searchComprobantes').getData(),{'searchDocument':true}));">
-                            <div class="col-sm-12 ">
-                                <input type="text" id='Order_By' name ='Order_By' class="hidden"/>
-                                <fieldset class="exa-fieldset">
+                        <form name="searchComprobantes" id="searchComprobantes" class="normal" action="javascript:$('#searchGrid').Search($.extend($('#searchComprobantes').getData(),{'searchDocument':true}));">
+                            <div class="col-sm-12">
+                                <input type="text" id="Order_By" name="Order_By" class="hidden"/>
+                                <fieldset class="exa-fieldset" id="libBanFiltros">
                                     <legend class="Titulos2">Filtros</legend>
-                                    <div class="col-sm-10">   
-                                        <div class="form-group">
-                                            <label class="col-sm-1 control-label label-sm">Periodo:</label>
-                                            <div class="col-sm-4">
-                                                <select class="form-control input-sm" id="Pec_Cod" name="Pec_Cod"  required="">
-                                                    <option value=0>----</option>
-                                                </select>
-                                            </div>
-                                            <label class="col-sm-1 control-label label-sm">Banco:</label>
-                                            <div class="col-sm-5">
-                                                <select id="Pld_Cod" name="Pld_Cod" class="form-control input-sm" ></select>
-                                            </div>
+                                    <style>
+                                        #libBanFiltros .lib-fil-grid {
+                                            display: flex;
+                                            flex-wrap: wrap;
+                                            gap: 10px 14px;
+                                            align-items: flex-end;
+                                            padding: 4px 6px 8px;
+                                        }
+                                        #libBanFiltros .lib-fil-cell {
+                                            display: flex;
+                                            flex-direction: column;
+                                            gap: 4px;
+                                            min-width: 0;
+                                        }
+                                        #libBanFiltros .lib-fil-cell > label {
+                                            margin: 0;
+                                            padding: 0;
+                                            font-size: 11px;
+                                            font-weight: 600;
+                                            color: #5a6f7d;
+                                            line-height: 1.2;
+                                        }
+                                        #libBanFiltros .lib-fil-periodo { flex: 0 0 130px; max-width: 150px; }
+                                        #libBanFiltros .lib-fil-tipo { flex: 0 0 140px; max-width: 160px; }
+                                        #libBanFiltros .lib-fil-banco { flex: 1 1 280px; min-width: 220px; max-width: 420px; }
+                                        #libBanFiltros .lib-fil-fecha { flex: 0 0 118px; max-width: 130px; }
+                                        #libBanFiltros .lib-fil-accion { flex: 0 0 auto; padding-bottom: 0; }
+                                        #libBanFiltros .lib-fil-cell .form-control { width: 100%; }
+                                        #libBanFiltros .lib-fil-cell .chosen-container { width: 100% !important; }
+                                        #libBanFiltros .lib-fil-accion .btn {
+                                            height: 30px;
+                                            padding: 4px 14px;
+                                            white-space: nowrap;
+                                        }
+                                    </style>
+                                    <div class="lib-fil-grid">
+                                        <div class="lib-fil-cell lib-fil-periodo">
+                                            <label for="Pec_Cod">Periodo</label>
+                                            <select class="form-control input-sm" id="Pec_Cod" name="Pec_Cod" required="">
+                                                <option value="0">----</option>
+                                            </select>
                                         </div>
-
-                                        <div class="form-group">
-                                            <label class="col-sm-1 control-label label-sm">Comprobante:</label>
-                                            <div class="col-sm-4">
-                                                <select  class="chzn-select form-control input-xs" id="TipBus" data-placeholder="Comprobante de..."  name="Com_Tip" required="">
-                                                    <option value=0><< TODOS >></option>
-                                                    <option value=I>Ingreso</option>
-                                                    <option value=E>Egreso</option>
-                                                    <option value=D>Diario</option>
-                                                </select>
-                                            </div>
-                                            <div id="rango_fechas">
-                                                <label class="col-sm-1 control-label label-sm">Desde:</label>
-                                                <div class="col-sm-2">
-                                                    <input name="txt_fec_ini" type="text" id="txt_fec_ini" size="10" class="form-control input-sm datepicker" style="text-align: center;"/>
-                                                </div>
-                                                <label class="col-sm-1 control-label label-sm">Hasta:</label>
-                                                <div class="col-sm-2">
-                                                    <input name="txt_fec_fin" type="text" id="txt_fec_fin" size="10" class="form-control input-sm datepicker" style="text-align: center;"/>
-                                                </div>
-                                            </div>
+                                        <div class="lib-fil-cell lib-fil-banco">
+                                            <label for="Pld_Cod">Banco</label>
+                                            <select id="Pld_Cod" name="Pld_Cod" class="form-control input-sm"></select>
                                         </div>
-                                    </div>
-                                    <div class="align-middle col-sm-2">
-                                        <button type="button" onclick="this.form.submit()" class="btn btn-success btn-sm align-middle" title="Buscar Documento"  tabindex="-1" style="vertical-align: middle"><span class="glyphicon glyphicon-search align-middle"></span> <span>Buscar</span></button>
+                                        <div class="lib-fil-cell lib-fil-tipo">
+                                            <label for="TipBus">Comprobante</label>
+                                            <select class="form-control input-sm" id="TipBus" name="Com_Tip" required="">
+                                                <option value="0">&lt;&lt; TODOS &gt;&gt;</option>
+                                                <option value="I">Ingreso</option>
+                                                <option value="E">Egreso</option>
+                                                <option value="D">Diario</option>
+                                            </select>
+                                        </div>
+                                        <div class="lib-fil-cell lib-fil-fecha">
+                                            <label for="txt_fec_ini">Desde</label>
+                                            <input name="txt_fec_ini" type="text" id="txt_fec_ini" size="10" class="form-control input-sm datepicker" style="text-align:center;" />
+                                        </div>
+                                        <div class="lib-fil-cell lib-fil-fecha">
+                                            <label for="txt_fec_fin">Hasta</label>
+                                            <input name="txt_fec_fin" type="text" id="txt_fec_fin" size="10" class="form-control input-sm datepicker" style="text-align:center;" />
+                                        </div>
+                                        <div class="lib-fil-cell lib-fil-accion">
+                                            <label>&nbsp;</label>
+                                            <button type="submit" class="btn btn-success btn-sm" title="Buscar Documento" tabindex="-1">
+                                                <span class="glyphicon glyphicon-search"></span> Buscar
+                                            </button>
+                                        </div>
                                     </div>
                                 </fieldset>
-                            </div>   
+                            </div>
                         </form>
                         <div class="col-xs-12" style="min-height: 360px;">
                             <table id="searchGrid" name="searchGrid"></table>
@@ -318,28 +491,91 @@ if (isset($save)) {
                 </div>
                 <div id="documentoMain" style="visibility: hidden;">
                     <div class="row">  
-                        <div class="col-sm-12 form-horizontal normal">
-                            <fieldset class="exa-fieldset">
-                                <legend class="Titulos2">Periodo/Banco</legend>
-                                <div class="form-group">
-                                    <label class="col-xs-1 control-label label-xs required">Seleccione Periodo:</label> 
-                                    <div class="col-xs-2">
+                        <div class="col-sm-12">
+                            <fieldset class="exa-fieldset" id="libBanCabecera">
+                                <legend class="Titulos2" id="libBanLegend">Periodo / Banco</legend>
+                                <style>
+                                    #libBanCabecera .lib-ban-grid {
+                                        display: flex;
+                                        flex-wrap: wrap;
+                                        gap: 12px 18px;
+                                        align-items: flex-start;
+                                        padding: 4px 6px 8px;
+                                    }
+                                    #libBanCabecera .lib-ban-cell {
+                                        display: flex;
+                                        flex-direction: column;
+                                        gap: 4px;
+                                        min-width: 0;
+                                    }
+                                    #libBanCabecera .lib-ban-cell > label {
+                                        margin: 0;
+                                        padding: 0;
+                                        font-size: 11px;
+                                        font-weight: 600;
+                                        color: #5a6f7d;
+                                        line-height: 1.2;
+                                        text-align: left;
+                                    }
+                                    #libBanCabecera .lib-ban-cell > label .req {
+                                        color: #3c8c4a;
+                                        margin-left: 2px;
+                                    }
+                                    #libBanCabecera .lib-ban-periodo { flex: 0 0 130px; max-width: 140px; }
+                                    #libBanCabecera .lib-ban-banco { flex: 0 1 340px; max-width: 380px; min-width: 220px; }
+                                    #libBanCabecera .lib-ban-rubro { flex: 1 1 300px; min-width: 260px; max-width: 480px; }
+                                    #libBanCabecera .lib-ban-rubro.is-off { display: none !important; }
+                                    #libBanCabecera .lib-ban-cell .form-control,
+                                    #libBanCabecera .lib-ban-cell .input-group { width: 100%; }
+                                    #libBanCabecera .lib-ban-ruta {
+                                        display: block;
+                                        margin-top: 3px;
+                                        font-size: 10px;
+                                        color: #8ba0ae;
+                                        line-height: 1.25;
+                                        white-space: nowrap;
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                    }
+                                    #libBanCabecera .lib-ban-ruta:empty { display: none; }
+                                    #libBanCabecera .lib-ban-addon-ppa {
+                                        background: #f4effa;
+                                        color: #5f4588;
+                                        border-color: #e4dcf0;
+                                    }
+                                </style>
+                                <div class="lib-ban-grid">
+                                    <div class="lib-ban-cell lib-ban-periodo">
+                                        <label for="perio_cont">Periodo<span class="req">*</span></label>
                                         <select name="perio_cont" id="perio_cont" onchange="setPeriodo()" class="form-control input-sm">
                                             <option value="">Seleccione...</option>
-                                        </select>   
+                                        </select>
                                     </div>
-                                    <label class="col-xs-1 control-label label-xs required">Seleccione Banco:</label> 
-                                    <div class="col-xs-4">
-                                        <select name="bancos" id="bancos" onchange="setBanco()"  class="form-control input-sm readOnly perio_cont" disabled="">
+                                    <div class="lib-ban-cell lib-ban-banco">
+                                        <label for="bancos">Banco<span class="req">*</span></label>
+                                        <select name="bancos" id="bancos" onchange="setBanco()" class="form-control input-sm readOnly perio_cont" disabled="">
                                             <option value="">Seleccione...</option>
-                                        </select>  
-                                    </div> 
-                                </div>    
+                                        </select>
+                                    </div>
+                                    <?php include '../COMPONENTES/tes_presupuesto_rubro_ui.inc.php'; ?>
+                                </div>
                             </fieldset>
                         </div>
                     </div>   
                     <script>
                         var gridComp, valor = 0, numChe = 0, glosa = "", tipo = "Ingresos", dataFromRow = [];
+                        var verPre = <?php echo $verPre ? 'true' : 'false'; ?>;
+                        function syncRubroPresupuestoUI(){
+                            if (!verPre) return;
+                            var show = (tipo === 'Egresos' || tipo === 'Diario');
+                            var $rubro = $('#ppaLibBanInline');
+                            if (!$rubro.length) return;
+                            $rubro.toggleClass('is-off', !show);
+                            $('#libBanLegend').text(show ? 'Periodo / Banco / Presupuesto' : 'Periodo / Banco');
+                            if (!show && typeof limpiarCamposPresupuesto === 'function') {
+                                limpiarCamposPresupuesto();
+                            }
+                        }
                         function setPeriodo(banco = 0) {
                             $('#cuenDialog').getDialogGrid().clearGrid();
                             var perio_cont = getPeriodo();
@@ -697,6 +933,7 @@ if (isset($save)) {
                                 $('#formIngreso').setData(dat_reset);
                                 $('#formComp').setData(dat_reset);
                                 $('#formDiario').setData(dat_reset);
+                                if (typeof limpiarCamposPresupuesto === 'function') limpiarCamposPresupuesto();
                                 $('#es_cheque').prop("checked", true).trigger('change');
                                 setChequeNum();
                                 valor = 0;
@@ -759,6 +996,19 @@ if (isset($save)) {
                                     return resetForm();
                                 });
                             }
+                            function dataPpaForm(){
+                                if (!$('#ppaForm').length || $('#ppaLibBanInline').hasClass('is-off')) {
+                                    return {};
+                                }
+                                return {
+                                    Pdp_Cod: $('#Pdp_Cod').val() || '',
+                                    Ppa_Cod: $('#Ppa_Cod').val() || '',
+                                    Ppa_Cla: $('#Ppa_Cla').val() || '',
+                                    Ppa_Des: $('#Ppa_Des').val() || '',
+                                    Ppa_Label: $('#Ppa_Label').val() || '',
+                                    Ppa_Ruta: $('#Ppa_Ruta').val() || ''
+                                };
+                            }
                             function validaIngreso() {
                                 if ($('#cod_cli').val() === '') {
                                     $.alert("Seleccione El Cliente");
@@ -778,7 +1028,7 @@ if (isset($save)) {
                                 var batch = validaGrid("#Com_Val_Egre");
                                 if (batch === false)
                                     return;
-                                var data = $.extend({comprobante:$('#formComp').getData()}, {op: 'E', save: batch, cheques: $("#chequesGrid").getGridBatch()}, $('#periodoForm').serializeObject());
+                                var data = $.extend({comprobante:$('#formComp').getData()}, {op: 'E', save: batch, cheques: $("#chequesGrid").getGridBatch()}, $('#periodoForm').serializeObject(), dataPpaForm());
                                 $.createDialogConfirm('¿Est&aacute; seguro que desea guardar los datos?', data, saveComprobante);
                             }
                             function validaDiario() {
@@ -789,7 +1039,7 @@ if (isset($save)) {
                                 var batch = validaGrid("#Com_Val_Diario");
                                 if (batch === false)
                                     return;
-                                var data = $.extend({comprobante:$('#formDiario').serializeObject()}, {op: 'D', save: batch}, $('#periodoForm').serializeObject());
+                                var data = $.extend({comprobante:$('#formDiario').serializeObject()}, {op: 'D', save: batch}, $('#periodoForm').serializeObject(), dataPpaForm());
                                 $.createDialogConfirm('¿Est&aacute; seguro que desea guardar los datos?', data, saveComprobante);
                             }
                         </script>
@@ -830,17 +1080,6 @@ if (isset($save)) {
                             <div class="Titulos2"><hr><b>NOTA:</b> Los campos marcados con un asterisco (  <span class="required"></span>) son campos obligatorios.</div>
                         </form>
                     </div>
-
-
-
-
-
-
-
-
-
-
-
                 </div>
             </div>
         </div>
@@ -886,9 +1125,11 @@ if (isset($save)) {
             $("#tabs").tabs({activate: function (event, ui) {
                     tipo = ui.newTab[0].getElementsByTagName("a")[0].innerHTML;
                     $(ui.newTab[0].getElementsByTagName("a")[0].hash).find('div.row:first-child').effect("highlight", {}, 500);
+                    syncRubroPresupuestoUI();
                     resetForm();
                 }});
             $(document).ready(function () {
+                syncRubroPresupuestoUI();
                 //            $.createDialog('#addBenef',150,550,null,null,'plus');
                 $.createDialog('#successDialog', 150, 550, null, null, 'ok');
                 // DIALOG BUSCAR CUENTAS

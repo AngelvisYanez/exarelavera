@@ -152,7 +152,7 @@ if(isset($loginAjax)){
 <!-- Mirrored from wbpreview.com/previews/WB0164888/ by HTTrack Website Copier/3.x [XR&CO'2010], Tue, 23 Oct 2012 00:38:24 GMT -->
 <head>
 	<title><?Php echo $Ses_Sys_Nom; ?></title>	
-	<meta charset="iso-8859-1" />
+	<meta charset="utf-8" />
 	<meta name="description" content="">
 	<meta name="author" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">

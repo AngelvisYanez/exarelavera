@@ -25,11 +25,15 @@ if (!function_exists('aud_json_out')) {
 			if ($input === '') {
 				return;
 			}
+			if (function_exists('aud_to_utf8')) {
+				$input = aud_to_utf8($input);
+				return;
+			}
 			if (function_exists('mb_check_encoding') && @mb_check_encoding($input, 'UTF-8')) {
 				return;
 			}
 			if (function_exists('mb_convert_encoding')) {
-				$input = @mb_convert_encoding($input, 'UTF-8', 'ISO-8859-1');
+				$input = @mb_convert_encoding($input, 'UTF-8', 'ISO-8859-1,Windows-1252,UTF-8');
 			} elseif (function_exists('utf8_encode')) {
 				$input = @utf8_encode($input);
 			}
@@ -45,6 +49,9 @@ if (!function_exists('aud_json_out')) {
 		@ini_set('display_errors', '0');
 		aud_to_utf8_deep($data);
 		$json = json_encode($data);
+		if ($json === false && defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
+			$json = json_encode($data, JSON_INVALID_UTF8_SUBSTITUTE);
+		}
 		echo ($json !== false) ? $json : '{"page":1,"total":1,"records":0,"rows":[]}';
 	}
 }
@@ -52,6 +59,7 @@ if (!function_exists('aud_json_out')) {
 /** Detalle modal HTML */
 if (isset($_POST['ajax']) && (string)$_POST['ajax'] === '1') {
 	@ini_set('display_errors', '0');
+	@header('Content-Type: text/html; charset=utf-8');
 	$logCod = isset($_POST['logCodigo']) ? (int)$_POST['logCodigo'] : 0;
 	$rowLog = $logCod > 0 ? $obBD_con1->getRowConsulta(20, array($logCod, $audEmpCod), $obBD_conexion) : array();
 	if (empty($rowLog) || empty($rowLog['Log_Cod'])) {
@@ -60,8 +68,9 @@ if (isset($_POST['ajax']) && (string)$_POST['ajax'] === '1') {
 		$obBD_conexion->cerrar();
 		exit();
 	}
+	/* No forzar UTF-8 aqui: aud_h emite latin1 alineado al ERP */
 	$pares = aud_pares_interpretados($rowLog, $obBD_con1, $obBD_conexion);
-	echo aud_html_detalle_tabs($rowLog, $pares, $obBD_con1, $obBD_conexion, barra_estado(count($pares)));
+	echo aud_html_detalle_tabs($rowLog, $pares, $obBD_con1, $obBD_conexion);
 	$obBD_con1->liberar();
 	$obBD_conexion->cerrar();
 	exit();
@@ -285,7 +294,13 @@ if (isset($_REQUEST['listDirectoriosAjax'])) {
 	}
 	$out = array();
 	foreach ($Arr_Dir as $d) {
-		$out[] = array('Org_Cod' => (int)$d['Org_Cod'], 'Org_Des' => isset($d['Org_Des']) ? $d['Org_Des'] : ('Directorio '.$d['Org_Cod']));
+		$des = function_exists('aud_filtro_label')
+			? aud_filtro_label(isset($d['Org_Des']) ? $d['Org_Des'] : '', 'Directorio '.(int)$d['Org_Cod'])
+			: (isset($d['Org_Des']) ? $d['Org_Des'] : ('Directorio '.$d['Org_Cod']));
+		if ($des === '') {
+			$des = 'Directorio '.(int)$d['Org_Cod'];
+		}
+		$out[] = array('Org_Cod' => (int)$d['Org_Cod'], 'Org_Des' => $des);
 	}
 	aud_json_out(array('rows' => $out));
 	$obBD_con1->liberar();
@@ -305,7 +320,13 @@ if (isset($_REQUEST['listProcesosAjax'])) {
 	}
 	$out = array();
 	foreach ($Arr_Pcs as $p) {
-		$lbl = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : ('Proceso '.$p['Pcs_Cod']));
+		$raw = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : '');
+		$lbl = function_exists('aud_filtro_label')
+			? aud_filtro_label($raw, 'Proceso '.(int)$p['Pcs_Cod'])
+			: ($raw !== '' ? $raw : ('Proceso '.$p['Pcs_Cod']));
+		if ($lbl === '') {
+			$lbl = 'Proceso '.(int)$p['Pcs_Cod'];
+		}
 		$out[] = array('Pcs_Cod' => (int)$p['Pcs_Cod'], 'Pcs_Lin' => $lbl);
 	}
 	aud_json_out(array('rows' => $out));
@@ -874,10 +895,10 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 <head>
 	<title><?php echo isset($Ses_Sys_Nom) ? $Ses_Sys_Nom : 'Auditoria'; ?></title>
 	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
-	<?php require_once("../../mascaras/model3/estilos/estilos.php"); ?>
+	<?php require_once("../../mascaras/model4/estilos/estilos.php"); ?>
 	<link rel="stylesheet" type="text/css" media="screen" href="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.css" />
 	<script type="text/javascript" src="../../Librerias/validaciones/validacion.js"></script>
-	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260923_v14" />
+	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260925_dashflt1" />
 </head>
 <body>
 <div class="panel panel-default panel-main exa-ui-panel exa-ui-fill-page">
@@ -887,83 +908,170 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 	<div class="panel-body exa-body">
 		<div id="lista" class="row exa-ui-page-view">
 			<div class="col-xs-12">
-				<div class="aud-page-hero">
-					<div class="aud-page-hero-icon"><span class="glyphicon glyphicon-eye-open"></span></div>
-					<div class="aud-page-hero-text">
-						<h4>Historial de actividades</h4>
-						<p class="aud-page-hero-sub">
+				<div class="aud-page-hero m4-hero">
+					<div class="aud-page-hero-icon m4-hero-icon"><span class="glyphicon glyphicon-eye-open"></span></div>
+					<div class="aud-page-hero-text m4-hero-text">
+						<h4 class="m4-hero-title">Historial de actividades</h4>
+						<p class="aud-page-hero-sub m4-hero-sub">
 							Consulte, filtre y exporte los eventos de inserci&oacute;n, actualizaci&oacute;n y eliminaci&oacute;n
 							registrados seg&uacute;n la configuraci&oacute;n de monitoreo.
 						</p>
 					</div>
-					<div class="aud-page-hero-tags">
-						<span class="aud-page-hero-tag"><span class="glyphicon glyphicon-filter"></span> Filtros</span>
-						<span class="aud-page-hero-tag"><span class="glyphicon glyphicon-download-alt"></span> Exportar</span>
+					<div class="aud-page-hero-tags m4-hero-tags">
+						<span class="aud-page-hero-tag m4-hero-tag"><span class="glyphicon glyphicon-filter"></span> Filtros</span>
+						<span class="aud-page-hero-tag m4-hero-tag"><span class="glyphicon glyphicon-download-alt"></span> Exportar</span>
 					</div>
 				</div>
 				<?php echo aud_html_banner_captura($audEstado); ?>
 				<?php echo aud_html_banner_desde(aud_fecha_registro_inicio($audEmpCod, $obBD_con1, $obBD_conexion)); ?>
-				<div class="aud-toolbar-card">
+				<div class="aud-toolbar-card m4-filters m4-card aud-mon-filters">
 					<form id="frmFiltros" class="exa-ui-busqueda-filtros" onsubmit="return false;">
-						<div class="aud-toolbar">
-							<div class="aud-toolbar-left">
-								<div class="aud-toolbar-dates">
-									<span class="aud-toolbar-label"><span class="glyphicon glyphicon-calendar"></span> Periodo</span>
-									<div class="btn-group btn-group-xs aud-period-presets" id="audMonPeriodoPresets" role="group" aria-label="Rangos rapidos">
-										<button type="button" class="btn aud-btn-preset" data-preset="ayer">Ayer</button>
-										<button type="button" class="btn aud-btn-preset" data-preset="hoy">Hoy</button>
-										<button type="button" class="btn aud-btn-preset" data-preset="1semana">1 Semana</button>
-										<button type="button" class="btn aud-btn-preset active" data-preset="1mes">1 Mes</button>
-										<button type="button" class="btn aud-btn-preset" data-preset="3meses">3 Meses</button>
-									</div>
-									<div class="aud-toolbar-range">
-										<div class="input-group input-group-xs">
-											<span class="input-group-addon">Desde</span>
-											<input name="from" type="text" id="from" class="form-control input-xs" value="<?php echo aud_h($fil_from); ?>" maxlength="10" placeholder="aaaa-mm-dd" autocomplete="off" />
-											<span class="input-group-addon" id="btnFromCal" title="Abrir calendario"><span class="glyphicon glyphicon-calendar"></span></span>
-										</div>
-										<div class="input-group input-group-xs">
-											<span class="input-group-addon">Hasta</span>
-											<input name="to" type="text" id="to" class="form-control input-xs" value="<?php echo aud_h($fil_to); ?>" maxlength="10" placeholder="aaaa-mm-dd" autocomplete="off" />
-											<span class="input-group-addon" id="btnToCal" title="Abrir calendario"><span class="glyphicon glyphicon-calendar"></span></span>
-										</div>
-									</div>
+
+						<!-- 1) Rango de fechas -->
+						<div class="aud-mon-block aud-mon-block-period" id="audMonPeriodBlock">
+							<span class="aud-mon-block-title"><span class="glyphicon glyphicon-calendar"></span> Periodo</span>
+							<div class="aud-mon-block-body aud-toolbar-dates">
+								<div class="btn-group btn-group-xs aud-period-presets" id="audMonPeriodoPresets" role="group" aria-label="Rangos rapidos">
+									<button type="button" class="btn aud-btn-preset" data-preset="ayer" title="Ayer">Ayer</button>
+									<button type="button" class="btn aud-btn-preset" data-preset="hoy" title="Hoy">Hoy</button>
+									<button type="button" class="btn aud-btn-preset" data-preset="1semana" title="1 Semana">1 Semana</button>
+									<button type="button" class="btn aud-btn-preset active" data-preset="1mes" title="1 Mes">1 Mes</button>
+									<button type="button" class="btn aud-btn-preset" data-preset="3meses" title="3 Meses">3 Meses</button>
 								</div>
-								<div class="aud-search-cell aud-search-cell-usu">
-								<label for="usu">Usuario</label>
-								<select name="usu" id="usu" class="form-control input-xs" title="Filtrar por usuario">
-									<option value="0">Todos</option>
-									<?php foreach ($Arr_Usuarios as $u) {
-										$un = trim(isset($u['Usu_Nom']) ? $u['Usu_Nom'] : '');
-										if ($un === '') {
-											$un = 'Usuario '.(int)$u['Usu_Cod'];
-										}
-										$nc = isset($u['N_Ctas']) ? (int)$u['N_Ctas'] : 0;
-										if ($nc > 1) {
-											$un .= ' ('.$nc.' cuentas)';
-										}
-										$usus = (isset($u['Usu_Cods']) && $u['Usu_Cods'] !== '') ? $u['Usu_Cods'] : (string)(int)$u['Usu_Cod'];
-									?>
-									<option value="<?php echo aud_h($usus); ?>"<?php echo $fil_usu === $usus ? ' selected="selected"':''; ?>><?php echo aud_h($un); ?></option>
-									<?php } ?>
-								</select>
+								<div class="aud-toolbar-range">
+									<div class="input-group input-group-xs">
+										<span class="input-group-addon">Desde</span>
+										<input name="from" type="text" id="from" class="form-control input-xs" value="<?php echo aud_h($fil_from); ?>" maxlength="10" placeholder="aaaa-mm-dd" autocomplete="off" />
+										<span class="input-group-addon" id="btnFromCal" title="Abrir calendario"><span class="glyphicon glyphicon-calendar"></span></span>
+									</div>
+									<div class="input-group input-group-xs">
+										<span class="input-group-addon">Hasta</span>
+										<input name="to" type="text" id="to" class="form-control input-xs" value="<?php echo aud_h($fil_to); ?>" maxlength="10" placeholder="aaaa-mm-dd" autocomplete="off" />
+										<span class="input-group-addon" id="btnToCal" title="Abrir calendario"><span class="glyphicon glyphicon-calendar"></span></span>
+									</div>
 								</div>
 							</div>
-							<div class="aud-toolbar-right">
+						</div>
+
+						<!-- 2) Filtros (selects) -->
+						<div class="aud-mon-block aud-mon-block-filters" id="audFiltrosRow">
+							<span class="aud-mon-block-title"><span class="glyphicon glyphicon-filter"></span> Filtros</span>
+							<div class="aud-mon-block-body aud-mon-filters-grid">
+								<div class="aud-search-cell aud-search-cell-usu">
+									<label class="aud-mon-label" for="usu">Usuario</label>
+									<select name="usu" id="usu" class="form-control input-xs aud-select-search" title="Filtrar por usuario" data-placeholder="Buscar usuario...">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Usuarios as $u) {
+											$un = trim(isset($u['Usu_Nom']) ? $u['Usu_Nom'] : '');
+											if ($un === '') {
+												$un = 'Usuario '.(int)$u['Usu_Cod'];
+											}
+											$nc = isset($u['N_Ctas']) ? (int)$u['N_Ctas'] : 0;
+											if ($nc > 1) {
+												$un .= ' ('.$nc.' cuentas)';
+											}
+											$usus = (isset($u['Usu_Cods']) && $u['Usu_Cods'] !== '') ? $u['Usu_Cods'] : (string)(int)$u['Usu_Cod'];
+										?>
+										<option value="<?php echo aud_h($usus); ?>"<?php echo $fil_usu === $usus ? ' selected="selected"':''; ?>><?php echo aud_h($un); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<?php if ($hasSucursales) { ?>
+								<div class="aud-search-cell aud-search-cell-suc">
+									<label class="aud-mon-label" for="suc">Sucursal</label>
+									<select name="suc" id="suc" class="form-control input-xs aud-select-search" title="Filtrar por sucursal" data-placeholder="Buscar sucursal...">
+										<option value="0">Todas</option>
+										<?php foreach ($Arr_Sucursales as $s) { ?>
+										<option value="<?php echo (int)$s['Suc_Cod']; ?>"<?php echo $fil_suc==(int)$s['Suc_Cod']?' selected="selected"':''; ?>><?php echo aud_h($s['Suc_Des']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<?php } ?>
+								<div class="aud-search-cell aud-search-cell-mod">
+									<label class="aud-mon-label" for="org">Modulo</label>
+									<select name="org" id="org" class="form-control input-xs aud-select-search" title="Filtrar por modulo" data-placeholder="Buscar modulo...">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Modulos as $m) {
+											$mDes = function_exists('aud_filtro_label')
+												? aud_filtro_label(isset($m['Org_Des']) ? $m['Org_Des'] : '', 'Modulo '.(int)$m['Org_Cod'])
+												: (isset($m['Org_Des']) ? $m['Org_Des'] : ('Modulo '.$m['Org_Cod']));
+											if ($mDes === '') {
+												$mDes = 'Modulo '.(int)$m['Org_Cod'];
+											}
+										?>
+										<option value="<?php echo (int)$m['Org_Cod']; ?>"<?php echo $fil_org==(int)$m['Org_Cod']?' selected="selected"':''; ?>><?php echo aud_h($mDes); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-dir">
+									<label class="aud-mon-label" for="dir">Directorio</label>
+									<select name="dir" id="dir" class="form-control input-xs aud-select-search" title="Filtrar por directorio" data-placeholder="Buscar directorio...">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Directorios as $d) {
+											$dDes = function_exists('aud_filtro_label')
+												? aud_filtro_label(isset($d['Org_Des']) ? $d['Org_Des'] : '', 'Directorio '.(int)$d['Org_Cod'])
+												: (isset($d['Org_Des']) ? $d['Org_Des'] : ('Directorio '.$d['Org_Cod']));
+											if ($dDes === '') {
+												$dDes = 'Directorio '.(int)$d['Org_Cod'];
+											}
+										?>
+										<option value="<?php echo (int)$d['Org_Cod']; ?>"<?php echo $fil_dir==(int)$d['Org_Cod']?' selected="selected"':''; ?>><?php echo aud_h($dDes); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-pcs">
+									<label class="aud-mon-label" for="pcs">Proceso</label>
+									<select name="pcs" id="pcs" class="form-control input-xs aud-select-search" title="Filtrar por proceso" data-placeholder="Buscar proceso...">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Procesos as $p) {
+											$plRaw = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : '');
+											$pl = function_exists('aud_filtro_label')
+												? aud_filtro_label($plRaw, 'Proceso '.(int)$p['Pcs_Cod'])
+												: ($plRaw !== '' ? $plRaw : ('Proceso '.$p['Pcs_Cod']));
+											if ($pl === '') {
+												$pl = 'Proceso '.(int)$p['Pcs_Cod'];
+											}
+										?>
+										<option value="<?php echo (int)$p['Pcs_Cod']; ?>"<?php echo $fil_pcs==(int)$p['Pcs_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-pla" id="audFilPlantaWrap" style="display:none;">
+									<label class="aud-mon-label" for="filPlanta">Planta</label>
+									<select name="pla" id="filPlanta" class="form-control input-xs aud-select-search" title="Filtrar por planta del proceso" data-placeholder="Buscar planta...">
+										<option value="0">Todas</option>
+										<?php foreach ($Arr_PlantasFiltro as $pl2) { ?>
+										<option value="<?php echo (int)$pl2['Pla_Cod']; ?>"<?php echo $fil_pla==(int)$pl2['Pla_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl2['Pla_Nom']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-eve">
+									<label class="aud-mon-label" for="eve">Evento</label>
+									<select name="eve" id="eve" class="form-control input-xs aud-select-search" title="Filtrar por tipo de evento" data-placeholder="Buscar evento...">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Eventos as $ev) { ?>
+										<option value="<?php echo (int)$ev['Eve_Cod']; ?>"<?php echo $fil_eve==(int)$ev['Eve_Cod']?' selected="selected"':''; ?>><?php echo aud_h($ev['Eve_Des']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+							</div>
+						</div>
+
+						<!-- 3) Acciones -->
+						<div class="aud-mon-block aud-mon-block-actions">
+							<span class="aud-mon-block-title"><span class="glyphicon glyphicon-flash"></span> Acciones</span>
+							<div class="aud-mon-block-body aud-mon-actions-bar">
 								<button type="button" id="btnBuscar" class="btn btn-success btn-sm" title="Aplicar filtros">
-									<span class="glyphicon glyphicon-search"></span> Buscar
+									<span class="glyphicon glyphicon-search"></span> <span class="aud-mon-btn-txt">Buscar</span>
 								</button>
 								<button type="button" id="btnLimpiar" class="btn btn-default btn-sm" title="Restablecer filtros (ultimos 30 dias / 1 Mes)">
-									<span class="glyphicon glyphicon-refresh"></span> Limpiar
-								</button>
-								<button type="button" id="btnFiltrosToggle" class="btn btn-default btn-sm" title="Mostrar u ocultar filtros por sucursal, modulo, directorio, proceso, planta y evento">
-									<span class="glyphicon glyphicon-filter"></span> Filtros <span class="badge aud-filtros-badge" id="filtrosBadge" style="display:none;">0</span>
+									<span class="glyphicon glyphicon-refresh"></span> <span class="aud-mon-btn-txt">Limpiar</span>
 								</button>
 								<div class="aud-col-wrap" id="aud-col-wrap">
 									<button type="button" id="aud-col-btn" class="btn btn-default btn-sm" title="Columnas visibles">
-										<span class="glyphicon glyphicon-th-list"></span> Columnas
+										<span class="glyphicon glyphicon-th-list"></span> <span class="aud-mon-btn-txt">Columnas</span>
 									</button>
-									<div id="aud-col-panel" class="aud-col-panel">
+									<div id="aud-col-panel" class="aud-col-panel m4-card">
 										<strong>Columnas visibles</strong>
 										<label><input type="checkbox" class="aud-col-toggle" data-col="Log_Cod" checked="checked" /> Id</label>
 										<label><input type="checkbox" class="aud-col-toggle" data-col="Fecha" checked="checked" /> Fecha</label>
@@ -980,104 +1088,22 @@ if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
 										<label><input type="checkbox" class="aud-col-toggle" data-col="Detalle" checked="checked" /> Detalle</label>
 									</div>
 								</div>
-								<div class="dropdown" style="display:inline-block;">
+								<div class="dropdown aud-mon-acciones-dd">
 									<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Acciones">
-										<span class="glyphicon glyphicon-cog"></span> Acciones <span class="caret"></span>
+										<span class="glyphicon glyphicon-cog"></span> <span class="aud-mon-btn-txt">Acciones</span> <span class="caret"></span>
 									</button>
 									<ul class="dropdown-menu dropdown-menu-right aud-acciones-menu">
 										<li><a href="javascript:void(0);" id="btnExportPdf"><i class="fa fa-file-pdf-o text-danger"></i> Exportar PDF</a></li>
 										<li><a href="javascript:void(0);" id="btnExportExcel"><span class="glyphicon glyphicon-download-alt text-success"></span> Exportar Excel</a></li>
-										<li class="divider"></li>
-										<li>
-											<form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" onsubmit="return audConfirmarDemoForm(this, event);">
-												<input type="hidden" name="simular" value="1" />
-												<button type="submit" class="aud-acciones-menu-btn" title="Inserta actividad de demostracion (solo pruebas)">
-													<span class="glyphicon glyphicon-plus text-muted"></span> Simular actividad
-												</button>
-											</form>
-										</li>
 									</ul>
 								</div>
 							</div>
 						</div>
 
-						<div class="aud-toolbar aud-toolbar-filtros" id="audFiltrosRow" style="display:none;">
-							<div class="aud-toolbar-left aud-filtros-grid">
-							<?php if ($hasSucursales) { ?>
-							<div class="aud-search-cell aud-search-cell-suc">
-								<label for="suc">Sucursal</label>
-								<select name="suc" id="suc" class="form-control input-xs" title="Filtrar por sucursal">
-									<option value="0">Todas</option>
-									<?php foreach ($Arr_Sucursales as $s) { ?>
-									<option value="<?php echo (int)$s['Suc_Cod']; ?>"<?php echo $fil_suc==(int)$s['Suc_Cod']?' selected="selected"':''; ?>><?php echo aud_h($s['Suc_Des']); ?></option>
-									<?php } ?>
-								</select>
-							</div>
-							<?php } ?>
-							<div class="aud-search-cell aud-search-cell-mod">
-								<label for="org">Modulo</label>
-								<select name="org" id="org" class="form-control input-xs" title="Filtrar por modulo">
-									<option value="0">Todos</option>
-									<?php foreach ($Arr_Modulos as $m) { ?>
-									<option value="<?php echo (int)$m['Org_Cod']; ?>"<?php echo $fil_org==(int)$m['Org_Cod']?' selected="selected"':''; ?>><?php echo aud_h($m['Org_Des']); ?></option>
-									<?php } ?>
-								</select>
-							</div>
-							<div class="aud-search-cell aud-search-cell-dir">
-								<label for="dir">Directorio</label>
-								<select name="dir" id="dir" class="form-control input-xs" title="Filtrar por directorio">
-									<option value="0">Todos</option>
-									<?php foreach ($Arr_Directorios as $d) { ?>
-									<option value="<?php echo (int)$d['Org_Cod']; ?>"<?php echo $fil_dir==(int)$d['Org_Cod']?' selected="selected"':''; ?>><?php echo aud_h($d['Org_Des']); ?></option>
-									<?php } ?>
-								</select>
-							</div>
-							<div class="aud-search-cell aud-search-cell-pcs">
-								<label for="pcs">Proceso</label>
-								<select name="pcs" id="pcs" class="form-control input-xs" title="Filtrar por proceso">
-									<option value="0">Todos</option>
-									<?php foreach ($Arr_Procesos as $p) {
-										$pl = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : ('Proceso '.$p['Pcs_Cod']));
-									?>
-									<option value="<?php echo (int)$p['Pcs_Cod']; ?>"<?php echo $fil_pcs==(int)$p['Pcs_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl); ?></option>
-									<?php } ?>
-								</select>
-							</div>
-							<div class="aud-search-cell aud-search-cell-pla" id="audFilPlantaWrap" style="display:none;">
-								<label for="filPlanta">Planta</label>
-								<select name="pla" id="filPlanta" class="form-control input-xs" title="Filtrar por planta del proceso">
-									<option value="0">Todas</option>
-									<?php foreach ($Arr_PlantasFiltro as $pl2) { ?>
-									<option value="<?php echo (int)$pl2['Pla_Cod']; ?>"<?php echo $fil_pla==(int)$pl2['Pla_Cod']?' selected="selected"':''; ?>><?php echo aud_h($pl2['Pla_Nom']); ?></option>
-									<?php } ?>
-								</select>
-							</div>
-							<div class="aud-search-cell aud-search-cell-eve">
-								<label for="eve">Evento</label>
-								<select name="eve" id="eve" class="form-control input-xs" title="Filtrar por tipo de evento">
-									<option value="0">Todos</option>
-									<?php foreach ($Arr_Eventos as $ev) { ?>
-									<option value="<?php echo (int)$ev['Eve_Cod']; ?>"<?php echo $fil_eve==(int)$ev['Eve_Cod']?' selected="selected"':''; ?>><?php echo aud_h($ev['Eve_Des']); ?></option>
-									<?php } ?>
-								</select>
-							</div>
-							</div>
-						</div>
-						<p class="aud-search-hint" id="audSearchHint">Periodo por defecto: <strong>ultimos 30 dias</strong>. Cambie filtros y pulse Buscar.</p>
 					</form>
 				</div>
 
-				<div class="aud-resumen-wrap" id="audResumenWrap" style="display:none;">
-				<div class="aud-resumen-head">
-					<span class="glyphicon glyphicon-stats"></span> <strong>Resumen de la busqueda</strong>
-					<button type="button" id="btnToggleResumen" class="btn btn-link btn-xs" title="Mostrar u ocultar el resumen">
-						Ocultar
-					</button>
-				</div>
-				<div id="audResumenContenido" class="aud-resumen-body"></div>
-			</div>
-
-			<div class="exa-ui-grid-host">
+			<div class="exa-ui-grid-host m4-table-scroll m4-card">
 					<table id="gridMonitoreo"></table>
 					<div id="gridMonitoreoPager"></div>
 				</div>
@@ -1095,7 +1121,7 @@ var AUD_HAS_SUCURSALES = <?php echo $hasSucursales ? 'true' : 'false'; ?>;
 </script>
 <script type="text/ecmascript" src="../../Librerias/scripts/generales/jquery.PrintExport-1.0.big.js"></script>
 <script type="text/javascript" src="../../framework/jquery/chosen/chosen-1.4.2/chosen.min.js"></script>
-<script type="text/javascript" src="../VALIDACIONES/aud_par_monitoreo.js?v=20260923_v9"></script>
+<script type="text/javascript" src="../VALIDACIONES/aud_par_monitoreo.js?v=20260925_nores"></script>
 </body>
 </html>
 <?php

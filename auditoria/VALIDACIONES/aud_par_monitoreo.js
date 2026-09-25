@@ -12,6 +12,58 @@ $(function () {
 	var storageKey = 'aud_monitoreo_cols_v7';
 	var hasSucursales = (typeof AUD_HAS_SUCURSALES !== 'undefined') ? !!AUD_HAS_SUCURSALES : ($('#suc').length > 0);
 
+	/** Chosen con buscador en todos los selects del filtro */
+	function refreshSelectSearch($sel) {
+		if (!$sel || !$sel.length || !$.fn.chosen) {
+			return;
+		}
+		$sel.each(function () {
+			var $el = $(this);
+			if (!$el.is('select')) {
+				return;
+			}
+			var $dups = $el.nextAll('.chosen-container');
+			if ($dups.length > 1) {
+				$dups.slice(1).remove();
+			}
+			if ($el.data('chosen') || $el.next('.chosen-container').length) {
+				try {
+					$el.trigger('chosen:updated');
+					$el.trigger('chosen:close');
+				} catch (eUp) {}
+				$el.next('.chosen-container').removeClass('chosen-with-drop chosen-container-active');
+				$el.hide();
+				return;
+			}
+			var ph = $el.attr('data-placeholder') || 'Buscar...';
+			var label = $.trim($el.closest('.aud-search-cell').find('label').first().text() || 'opciones');
+			try {
+				$el.chosen({
+					width: '100%',
+					search_contains: true,
+					inherit_select_classes: false,
+					disable_search_threshold: 0,
+					placeholder_text_single: ph,
+					no_results_text: 'Sin coincidencias en ' + label.toLowerCase()
+				});
+			} catch (eCh) {}
+			$el.hide();
+			$el.next('.chosen-container').removeClass('chosen-with-drop chosen-container-active');
+			$el.off('chosen:showing_dropdown.audMon chosen:hiding_dropdown.audMon')
+				.on('chosen:showing_dropdown.audMon', function () {
+					$el.next('.chosen-container').css('z-index', 1060);
+					$el.closest('.aud-mon-filters, .aud-search-cell, .aud-mon-block').css({ overflow: 'visible', zIndex: 55 });
+				})
+				.on('chosen:hiding_dropdown.audMon', function () {
+					$el.next('.chosen-container').removeClass('chosen-with-drop chosen-container-active').css('z-index', 40);
+				});
+		});
+	}
+
+	function initChosen() {
+		refreshSelectSearch($('#frmFiltros select.aud-select-search'));
+	}
+
 	function filtrosPost() {
 		var data = {
 			listMonitoreoGridAjax: 1,
@@ -41,18 +93,22 @@ $(function () {
 		if (pcs <= 0) {
 			$wrap.hide();
 			$sel.val('0');
+			refreshSelectSearch($sel);
 			return;
 		}
 		$.getJSON(window.location.pathname, { plantaProcesoAjax: 1, pcs: pcs }, function (resp) {
 			if (resp && resp.success && resp.tiene) {
 				$wrap.show();
+				refreshSelectSearch($sel);
 			} else {
 				$wrap.hide();
 				$sel.val('0');
+				refreshSelectSearch($sel);
 			}
 		}).fail(function () {
 			$wrap.hide();
 			$sel.val('0');
+			refreshSelectSearch($sel);
 		});
 	}
 
@@ -132,25 +188,7 @@ $(function () {
 	}
 
 	function actualizarHint() {
-		var from = $('#from').val() || '';
-		var to = $('#to').val() || '';
-		var usuTxt = $('#usu option:selected').text() || 'Todos';
-		var orgTxt = $('#org option:selected').text() || 'Todos';
-		var dirTxt = $('#dir option:selected').text() || 'Todos';
-		var pcsTxt = $('#pcs option:selected').text() || 'Todos';
-		var eveTxt = $('#eve option:selected').text() || 'Todos';
-		var periodo = (from && to) ? (from + ' a ' + to) : 'sin periodo';
-		var html = 'Filtros activos: <strong>' + periodo + '</strong>' +
-			' &middot; Usuario: <strong>' + $.trim(usuTxt) + '</strong>';
-		if (hasSucursales) {
-			var sucTxt = $('#suc option:selected').text() || 'Todas';
-			html += ' &middot; Sucursal: <strong>' + $.trim(sucTxt) + '</strong>';
-		}
-		html += ' &middot; Modulo: <strong>' + $.trim(orgTxt) + '</strong>' +
-			' &middot; Directorio: <strong>' + $.trim(dirTxt) + '</strong>' +
-			' &middot; Proceso: <strong>' + $.trim(pcsTxt) + '</strong>' +
-			' &middot; Evento: <strong>' + $.trim(eveTxt) + '</strong>';
-		$('#audSearchHint').html(html);
+		/* Hint de filtros activos eliminado de la UI */
 	}
 
 	function cargarDirectorios(org, done) {
@@ -160,7 +198,11 @@ $(function () {
 			$dir.empty().append('<option value="0">Todos</option>');
 			if (data && data.rows) {
 				$.each(data.rows, function (i, r) {
-					$dir.append($('<option/>').val(r.Org_Cod).text(r.Org_Des));
+					var des = $.trim(r.Org_Des || '');
+					if (!des) {
+						des = 'Directorio ' + (r.Org_Cod || '');
+					}
+					$dir.append($('<option/>').val(r.Org_Cod).text(des));
 				});
 			}
 			if (cur && $dir.find('option[value="' + cur + '"]').length) {
@@ -168,6 +210,7 @@ $(function () {
 			} else {
 				$dir.val('0');
 			}
+			refreshSelectSearch($dir);
 			if (typeof done === 'function') {
 				done();
 			}
@@ -189,7 +232,11 @@ $(function () {
 			$pcs.empty().append('<option value="0">Todos</option>');
 			if (data && data.rows) {
 				$.each(data.rows, function (i, r) {
-					$pcs.append($('<option/>').val(r.Pcs_Cod).text(r.Pcs_Lin));
+					var lin = $.trim(r.Pcs_Lin || '');
+					if (!lin) {
+						lin = 'Proceso ' + (r.Pcs_Cod || '');
+					}
+					$pcs.append($('<option/>').val(r.Pcs_Cod).text(lin));
 				});
 			}
 			if (cur && $pcs.find('option[value="' + cur + '"]').length) {
@@ -197,6 +244,7 @@ $(function () {
 			} else {
 				$pcs.val('0');
 			}
+			refreshSelectSearch($pcs);
 			if (typeof done === 'function') {
 				done();
 			}
@@ -225,16 +273,12 @@ $(function () {
 			} else {
 				$usu.val('0');
 			}
-			if ($.fn.chosen) {
-				$usu.trigger('chosen:updated');
-			}
+			refreshSelectSearch($usu);
 			if (typeof done === 'function') {
 				done();
 			}
 		}).fail(function () {
-			if ($.fn.chosen) {
-				$usu.trigger('chosen:updated');
-			}
+			refreshSelectSearch($('#usu'));
 			if (typeof done === 'function') {
 				done();
 			}
@@ -253,7 +297,6 @@ $(function () {
 			return;
 		}
 		actualizarHint();
-		cargarResumen();
 		$grid.jqGrid('setGridParam', {
 			datatype: 'json',
 			postData: filtrosPost(),
@@ -261,61 +304,14 @@ $(function () {
 		}).trigger('reloadGrid');
 	}
 
-	/* ---- Resumen automatizado del filtro actual (misma consulta que el PDF) ---- */
-	function cargarResumen() {
-		var $wrap = $('#audResumenWrap');
-		var $body = $('#audResumenContenido');
-		if (!$wrap.length || !$body.length) {
-			return;
+	function audResumenFitGrid() {
+		if (typeof exaUiFitJqGrid === 'function') {
+			try { exaUiFitJqGrid('#gridMonitoreo', '#lista .exa-ui-grid-host'); } catch (eFit) {}
 		}
-		var data = filtrosPost();
-		data.resumenMonitoreoAjax = 1;
-		$.getJSON(window.location.pathname, data, function (resp) {
-			var r = resp && resp.resumen;
-			if (!r) {
-				$wrap.hide();
-				return;
-			}
-			var cards = '';
-			function card(num, lbl, cls, tip) {
-				return '<div class="aud-resumen-card ' + (cls || '') + '" title="' + (tip || lbl) + '">' +
-					'<span class="aud-rc-num">' + num + '</span><span class="aud-rc-lbl">' + lbl + '</span></div>';
-			}
-			var pe = r.por_evento || {};
-			cards += card(r.total || 0, 'Actividades', 'aud-rc-total', 'Actividades registradas en el periodo');
-			cards += card(pe.I || 0, 'Insertados', 'aud-rc-i', 'Registros insertados');
-			cards += card(pe.U || 0, 'Actualizados', 'aud-rc-u', 'Registros actualizados');
-			cards += card(pe.D || 0, 'Eliminados', 'aud-rc-d', 'Registros eliminados o anulados');
-			cards += card(pe.F || 0, 'Otras', 'aud-rc-f', 'Otras actividades (no I/U/D)');
-			cards += card(r.usuarios_distintos || 0, 'Usuarios', '', 'Usuarios distintos con actividad');
-			var lists = '<div class="aud-resumen-cols">';
-			lists += '<div class="aud-resumen-col"><strong>Top modulos</strong><ul>';
-			if (r.top_modulos) {
-				$.each(r.top_modulos, function (k, v) { lists += '<li>' + $.trim(k) + ' (' + v + ')</li>'; });
-			} else if (r.total > 0) {
-				lists += '<li class="text-muted">Sin modulo</li>';
-			}
-			lists += '</ul></div><div class="aud-resumen-col"><strong>Top usuarios</strong><ul>';
-			if (r.top_usuarios) {
-				$.each(r.top_usuarios, function (k, v) { lists += '<li>' + $.trim(k) + ' (' + v + ')</li>'; });
-			} else if (r.total > 0) {
-				lists += '<li class="text-muted">-</li>';
-			}
-			lists += '</ul></div><div class="aud-resumen-col"><strong>Top procesos</strong><ul>';
-			if (r.top_procesos) {
-				$.each(r.top_procesos, function (k, v) { lists += '<li>' + $.trim(k) + ' (' + v + ')</li>'; });
-			} else if (r.total > 0) {
-				lists += '<li class="text-muted">-</li>';
-			}
-			lists += '</ul></div></div>';
-			var obs = '<p class="aud-resumen-obs">' +
-				((r.observaciones && r.observaciones.length) ? r.observaciones.join(' ') : 'Sin observaciones.') +
-				'</p>';
-			$body.html('<div class="aud-resumen-cards">' + cards + '</div>' + lists + obs);
-			$wrap.show();
-		}).fail(function () {
-			$wrap.hide();
-		});
+	}
+
+	function cargarResumen() {
+		/* Resumen de monitoreo deshabilitado (ocupaba mucho espacio) */
 	}
 
 	function limpiarFiltros() {
@@ -326,37 +322,61 @@ $(function () {
 		$('#usu').val('0');
 		$('#audFilPlantaWrap').hide();
 		$('#filPlanta').val('0');
-		if ($.fn.chosen) {
-			$('#usu').trigger('chosen:updated');
-		}
 		if (hasSucursales) {
 			$('#suc').val('0');
 		}
+		refreshSelectSearch($('#frmFiltros select.aud-select-search'));
 		cargarDirectorios(0, function () {
 			cargarProcesos(0, 0, function () {
 				$('#pcs').val('0');
-				if (typeof audFiltrosBadgeActualizar === 'function') {
-					audFiltrosBadgeActualizar();
-				}
+				refreshSelectSearch($('#pcs'));
 				buscar();
 			});
 		});
 	}
 
+	function audDetalleDialogWidth() {
+		var vw = $(window).width();
+		if (vw < 520) { return Math.max(280, vw - 24); }
+		if (vw < 900) { return Math.min(720, vw - 40); }
+		return Math.min(860, vw - 48);
+	}
+
 	function verDetalle(logCod) {
-		$('#detalleContenido').html('<p class="text-muted" style="padding:12px 4px;">Cargando detalle...</p>');
+		var loadingHtml = ''
+			+ '<div class="aud-det-loading">'
+			+ '<span class="aud-det-loading-spin"></span>'
+			+ '<span>Cargando detalle de la actividad...</span>'
+			+ '</div>';
+		$('#detalleContenido').html(loadingHtml);
 		if (!$('#detalleDialog').hasClass('ui-dialog-content')) {
 			$('#detalleDialog').dialog({
 				autoOpen: false,
 				modal: true,
-				resizable: false,
-				width: Math.min(760, $(window).width() - 32),
-				maxHeight: Math.min(620, $(window).height() - 40),
+				resizable: true,
+				draggable: true,
+				width: audDetalleDialogWidth(),
+				minWidth: 320,
+				maxWidth: 960,
+				maxHeight: Math.min(680, $(window).height() - 32),
 				height: 'auto',
 				appendTo: '.exa-ui-panel',
 				dialogClass: 'exa-ui-panel exa-ui-dialog',
-				buttons: [{ text: 'Cerrar', click: function () { $(this).dialog('close'); } }]
+				position: { my: 'center', at: 'center', of: window },
+				buttons: [{ text: 'Cerrar', class: 'btn btn-primary', click: function () { $(this).dialog('close'); } }]
 			});
+			$(window).on('resize.audDetalleDlg', function () {
+				try {
+					if ($('#detalleDialog').dialog('isOpen')) {
+						$('#detalleDialog').dialog('option', 'width', audDetalleDialogWidth());
+						$('#detalleDialog').dialog('option', 'position', { my: 'center', at: 'center', of: window });
+					}
+				} catch (eR) {}
+			});
+		} else {
+			try {
+				$('#detalleDialog').dialog('option', 'width', audDetalleDialogWidth());
+			} catch (eW) {}
 		}
 		$('#detalleDialog').dialog('open');
 		$.ajax({
@@ -370,7 +390,9 @@ $(function () {
 				} catch (ePos) {}
 			},
 			error: function () {
-				$('#detalleContenido').html('<div class="alert alert-danger" style="margin:8px 0;">No se pudo cargar el detalle.</div>');
+				$('#detalleContenido').html(
+					'<div class="aud-det-empty"><i class="fa fa-exclamation-triangle"></i> No se pudo cargar el detalle.</div>'
+				);
 			}
 		});
 	}
@@ -502,22 +524,7 @@ $(function () {
 		aplicarRangoPreset($(this).attr('data-preset'), true);
 	});
 
-	/* ---- Chosen buscador para usuario ---- */
-	function initChosen() {
-		var $usu = $('#usu');
-		if (!$usu.length || !$.fn.chosen) {
-			return;
-		}
-		try {
-			$usu.chosen('destroy');
-		} catch (e) {}
-
-		$usu.chosen({
-			width: '100%',
-			search_contains: true,
-			no_results_text: 'No se encontraron usuarios'
-		});
-	}
+	/* ---- Chosen buscador en todos los selects del filtro ---- */
 	initChosen();
 
 	/* ---- Filtro de columnas (localStorage) ---- */
@@ -714,17 +721,6 @@ $(function () {
 		limpiarFiltros();
 	});
 
-	$('#btnToggleResumen').on('click', function () {
-		var $btn = $(this);
-		var $body = $('#audResumenContenido');
-		var ocultar = $body.is(':visible');
-		$body.toggle();
-		$btn.text(ocultar ? 'Mostrar' : 'Ocultar');
-		if (typeof exaUiFitJqGrid === 'function') {
-			exaUiFitJqGrid('#gridMonitoreo', '#lista .exa-ui-grid-host');
-		}
-	});
-
 	$('#frmFiltros').on('keydown', 'input, select', function (e) {
 		if (e.keyCode === 13) {
 			e.preventDefault();
@@ -761,50 +757,6 @@ $(function () {
 	$('#suc').on('change', function () {
 		cargarUsuarios($(this).val() || 0, actualizarHint);
 	});
-
-	/* ---- Filtros avanzados colapsables (Sucursal/Modulo/Directorio/Proceso/Planta/Evento) ---- */
-	function audFiltrosBadgeActualizar() {
-		var campos = ['#suc', '#org', '#dir', '#pcs', '#eve', '#filPlanta'];
-		var n = 0;
-		$.each(campos, function (i, sel) {
-			var $el = $(sel);
-			if (!$el.length) {
-				return;
-			}
-			if (sel === '#filPlanta' && !$('#audFilPlantaWrap').is(':visible')) {
-				return;
-			}
-			var v = $el.val();
-			if (v && String(v) !== '0') {
-				n++;
-			}
-		});
-		var $b = $('#filtrosBadge');
-		if (n > 0) {
-			$b.text(n).show();
-		} else {
-			$b.hide();
-		}
-	}
-
-	$('#btnFiltrosToggle').on('click', function () {
-		$('#audFiltrosRow').slideToggle(150);
-	});
-
-	$('#suc, #org, #dir, #pcs, #eve, #filPlanta').on('change', function () {
-		audFiltrosBadgeActualizar();
-	});
-
-	/* Si la pagina se sirvio con filtros avanzados ya aplicados (enlace
-	   compartido o recarga), se muestra la fila expandida desde el inicio */
-	if (($('#suc').val() && $('#suc').val() !== '0') ||
-		($('#org').val() && $('#org').val() !== '0') ||
-		($('#dir').val() && $('#dir').val() !== '0') ||
-		($('#pcs').val() && $('#pcs').val() !== '0') ||
-		($('#eve').val() && $('#eve').val() !== '0')) {
-		$('#audFiltrosRow').show();
-	}
-	audFiltrosBadgeActualizar();
 
 	function exportOpts() {
 		return {
@@ -860,7 +812,6 @@ $(function () {
 
 	actualizarHint();
 	actualizarPlantaSelect();
-	cargarResumen();
 	setTimeout(function () {
 		if (typeof exaUiAfterViewChange === 'function') {
 			exaUiAfterViewChange('.exa-ui-panel');

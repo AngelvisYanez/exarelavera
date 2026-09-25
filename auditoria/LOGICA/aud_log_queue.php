@@ -419,7 +419,10 @@ class AuditQueue
 
     private static function parseSql($sql, $conexion)
     {
-        $sqlTrim = trim($sql);
+        // Quitar ; final: el regex de INSERT exige que el SQL termine en ')'
+        // y fallaba con "... NOW());" dejando Log_Cam/Log_Val vacios
+        // (solo quedaba el insert_id en Log_Int => "sin datos del movimiento").
+        $sqlTrim = rtrim(trim($sql), " \t\r\n;");
         if (!preg_match('/^\s*(INSERT|UPDATE|DELETE)\b/i', $sqlTrim, $mEve)) {
             return null;
         }
@@ -442,14 +445,25 @@ class AuditQueue
         $val = '';
         $int = '';
         if ($eveIni === 'I') {
-            if (preg_match('/\(([^)]+)\)\s*VALUES\s*\((.*)\)\s*$/is', $sqlTrim, $mIns)) {
-                $cam = trim($mIns[1]);
-                $val = trim($mIns[2]);
+            $parsedIns = self::extractInsertCamVal($sqlTrim);
+            if ($parsedIns !== null) {
+                $cam = $parsedIns['cam'];
+                $val = $parsedIns['val'];
             } elseif (preg_match('/\bSET\s+(.*)$/is', $sqlTrim, $mSet)) {
-                self::splitSet($mSet[1], $cam, $val);
+                $setPart = $mSet[1];
+                // INSERT ... SET ... ON DUPLICATE: cortar en ON DUPLICATE
+                $setParts = preg_split('/\bON\s+DUPLICATE\s+KEY\s+UPDATE\b/i', $setPart, 2);
+                self::splitSet($setParts[0], $cam, $val);
             }
-            if (is_object($conexion)) {
-                $int = (string)@mysqli_insert_id($conexion);
+            // Referencia legible: preferir PK del payload (Mat_Cod=62617) al id crudo.
+            $ref = self::buildInsertRef($cam, $val);
+            if ($ref !== '') {
+                $int = $ref;
+            } elseif (is_object($conexion)) {
+                $insId = (string)@mysqli_insert_id($conexion);
+                if ($insId !== '' && $insId !== '0') {
+                    $int = $insId;
+                }
             }
         } elseif ($eveIni === 'U') {
             $parts = preg_split('/\bWHERE\b/i', $sqlTrim, 2);
@@ -496,6 +510,66 @@ class AuditQueue
         );
     }
 
+    /**
+     * Extrae columnas y valores de INSERT ... (cols) VALUES (...).
+     * Tolera NOW()/CURTIME(), punto y coma y ON DUPLICATE KEY UPDATE.
+     *
+     * @param string $sqlTrim SQL sin ; final
+     * @return array|null {cam, val}
+     */
+    private static function extractInsertCamVal($sqlTrim)
+    {
+        if (!preg_match('/\bVALUES\b/i', $sqlTrim, $mVal, PREG_OFFSET_CAPTURE)) {
+            return null;
+        }
+        $valuesPos = (int)$mVal[0][1];
+        $before = substr($sqlTrim, 0, $valuesPos);
+        $after = substr($sqlTrim, $valuesPos + strlen($mVal[0][0]));
+
+        // Columnas: ultimo (...) antes de VALUES
+        if (!preg_match('/\(([^)]*)\)\s*$/s', $before, $mCam)) {
+            return null;
+        }
+        $cam = trim($mCam[1]);
+
+        // Valores: primer (...) balanceando parentesis (soporta NOW()).
+        $after = ltrim($after);
+        if ($after === '' || $after[0] !== '(') {
+            return null;
+        }
+        $depth = 0;
+        $inQ = '';
+        $len = strlen($after);
+        $end = -1;
+        for ($i = 0; $i < $len; $i++) {
+            $ch = $after[$i];
+            if ($inQ !== '') {
+                if ($ch === $inQ && ($i === 0 || $after[$i - 1] !== '\\')) {
+                    $inQ = '';
+                }
+                continue;
+            }
+            if ($ch === "'" || $ch === '"' || $ch === '`') {
+                $inQ = $ch;
+                continue;
+            }
+            if ($ch === '(') {
+                $depth++;
+            } elseif ($ch === ')') {
+                $depth--;
+                if ($depth === 0) {
+                    $end = $i;
+                    break;
+                }
+            }
+        }
+        if ($end < 1) {
+            return null;
+        }
+        $val = trim(substr($after, 1, $end - 1));
+        return array('cam' => $cam, 'val' => $val);
+    }
+
     private static function splitSet($setSql, &$cam, &$val)
     {
         $camParts = array();
@@ -510,6 +584,85 @@ class AuditQueue
         }
         $cam = implode(',', $camParts);
         $val = implode(',', $valParts);
+    }
+
+    /**
+     * Arma Log_Int legible para INSERT a partir de columnas/valores capturados.
+     * Prioriza campos *Cod / id / Cod.
+     *
+     * @param string $cam
+     * @param string $val
+     * @return string ej. "Mat_Cod=62617" o ''
+     */
+    private static function buildInsertRef($cam, $val)
+    {
+        $cam = trim(str_replace(array('`', '(', ')'), '', (string)$cam));
+        $val = trim((string)$val);
+        if ($cam === '' || $val === '') {
+            return '';
+        }
+        $cols = array();
+        foreach (explode(',', $cam) as $c) {
+            $c = trim($c);
+            if ($c !== '') {
+                $cols[] = $c;
+            }
+        }
+        // Parseo simple de valores (respeta ~texto~ o 'texto' con comas internas no usadas aqui).
+        $vals = array();
+        $buf = '';
+        $inQ = '';
+        $len = strlen($val);
+        for ($i = 0; $i < $len; $i++) {
+            $ch = $val[$i];
+            if ($inQ !== '') {
+                $buf .= $ch;
+                if ($ch === $inQ) {
+                    $inQ = '';
+                }
+                continue;
+            }
+            if ($ch === "'" || $ch === '"' || $ch === '~') {
+                $inQ = $ch;
+                $buf .= $ch;
+                continue;
+            }
+            if ($ch === ',') {
+                $vals[] = trim($buf);
+                $buf = '';
+                continue;
+            }
+            $buf .= $ch;
+        }
+        if (trim($buf) !== '' || $buf === '0') {
+            $vals[] = trim($buf);
+        }
+        $n = min(count($cols), count($vals));
+        if ($n <= 0) {
+            return '';
+        }
+        $prefer = array();
+        $fallback = '';
+        for ($i = 0; $i < $n; $i++) {
+            $col = $cols[$i];
+            $v = trim($vals[$i], " \t\n\r'\"~");
+            if ($v === '' || strtoupper($v) === 'NULL' || stripos($v, 'NOW(') === 0 || stripos($v, 'CUR') === 0) {
+                continue;
+            }
+            if ($fallback === '') {
+                $fallback = $col . '=' . $v;
+            }
+            if (preg_match('/(_Cod|_Id|^id$|^cod$)/i', $col)) {
+                $prefer[] = $col . '=' . $v;
+                if (count($prefer) >= 2) {
+                    break;
+                }
+            }
+        }
+        if (count($prefer) > 0) {
+            return implode(' || ', $prefer);
+        }
+        return $fallback;
     }
 
     private static function sess($key, $default)

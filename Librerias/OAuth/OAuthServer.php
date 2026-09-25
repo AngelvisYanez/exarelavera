@@ -307,8 +307,10 @@ class ExaOAuth
 			return self::normalizarMac($sim);
 		}
 
+		// Preferir IP real del cliente (X-Real-IP / X-Forwarded-For). Con nginx/Plesk
+		// REMOTE_ADDR suele ser 127.0.0.1 y ARP nunca ve al equipo de la LAN.
 		if (trim((string)$ip) === '') {
-			$ip = !empty($_SERVER['REMOTE_ADDR']) ? (string)$_SERVER['REMOTE_ADDR'] : '';
+			$ip = self::detectarIp();
 		}
 		$ip = trim((string)$ip);
 		if ($ip === '' || $ip === '0.0.0.0' || $ip === '::1' || strtolower($ip) === 'localhost') {
@@ -322,24 +324,48 @@ class ExaOAuth
 		}
 
 		$out = self::consultaArp($ip);
-		if ($out === '') {
+		if ($out === '' || !self::extraerMacDeArp($ip, $out)) {
 			// Rebote ARP para poblar la tabla la primera vez (opcional, sin exceso de espera).
 			if (DIRECTORY_SEPARATOR === '\\') {
-				$out = self::ejecutar('ping -n 1 -w 300 ' . self::escapeArg($ip));
+				self::ejecutar('ping -n 1 -w 300 ' . self::escapeArg($ip));
 			} else {
-				$out = self::ejecutar('ping -c 1 -W 1 ' . self::escapeArg($ip));
+				self::ejecutar('ping -c 1 -W 1 ' . self::escapeArg($ip));
 			}
 			$out = self::consultaArp($ip);
 		}
 
-		if ($out === '') {
+		return self::extraerMacDeArp($ip, $out);
+	}
+
+	/**
+	 * Extrae y normaliza la MAC asociada a un IP desde la salida de ARP / /proc/net/arp.
+	 * Rechaza entradas incompletas (00:00:00:00:00:00).
+	 *
+	 * @param string $ip
+	 * @param string $out
+	 * @return string
+	 */
+	private static function extraerMacDeArp($ip, $out)
+	{
+		$out = (string)$out;
+		$ip = (string)$ip;
+		if ($out === '' || $ip === '') {
 			return '';
 		}
-		// Windows: "IP  xx-xx-xx-xx-xx-xx   dinamico"    Linux: "IP  HW  ether  xx:xx:xx:xx:xx:xx"
-		if (preg_match('/\b' . preg_quote($ip, '/') . '\b\s+([0-9a-fA-F]{2}(:?[:-][0-9a-fA-F]{2}){5})/i', $out, $m)) {
-			return self::normalizarMac($m[1]);
+		$macRaw = '';
+		// Windows "arp -a":  IP  xx-xx-xx-xx-xx-xx  tipo
+		// Linux "arp -an" / "ip neigh": IP ... lladdr xx:xx:...  / IP ether xx:xx:...
+		// Linux /proc/net/arp: IP  0x1  0x2  xx:xx:xx:xx:xx:xx  *  eth0
+		if (preg_match('/\b' . preg_quote($ip, '/') . '\b(?:\s+\S+){0,3}\s+([0-9a-fA-F]{2}(?:[:-][0-9a-fA-F]{2}){5})/i', $out, $m)) {
+			$macRaw = $m[1];
+		} elseif (preg_match('/\b' . preg_quote($ip, '/') . '\b[^\r\n]*?(?:lladdr|ether)\s+([0-9a-fA-F]{2}(?:[:-][0-9a-fA-F]{2}){5})/i', $out, $m)) {
+			$macRaw = $m[1];
 		}
-		return '';
+		$mac = self::normalizarMac($macRaw);
+		if ($mac === '' || $mac === '00:00:00:00:00:00') {
+			return '';
+		}
+		return $mac;
 	}
 
 	/**
@@ -383,7 +409,26 @@ class ExaOAuth
 			return self::ejecutar('arp -a ');
 		}
 		$out = @file_get_contents('/proc/net/arp');
-		return is_string($out) ? (string)$out : '';
+		$out = is_string($out) ? (string)$out : '';
+		if ($out !== '' && self::extraerMacDeArp($ip, $out) !== '') {
+			return $out;
+		}
+		// Fallbacks Linux (PATH de PHP-FPM a veces no incluye /sbin|/usr/sbin).
+		$fallbacks = array(
+			'/sbin/arp -an ' . self::escapeArg($ip),
+			'/usr/sbin/arp -an ' . self::escapeArg($ip),
+			'arp -an ' . self::escapeArg($ip),
+			'/sbin/ip neigh show ' . self::escapeArg($ip),
+			'/usr/sbin/ip neigh show ' . self::escapeArg($ip),
+			'ip neigh show ' . self::escapeArg($ip)
+		);
+		foreach ($fallbacks as $cmd) {
+			$alt = self::ejecutar($cmd);
+			if ($alt !== '' && self::extraerMacDeArp($ip, $alt) !== '') {
+				return $alt;
+			}
+		}
+		return $out;
 	}
 
 	/**

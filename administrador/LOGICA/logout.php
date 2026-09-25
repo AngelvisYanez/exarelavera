@@ -1,15 +1,12 @@
 <?php 
 /* 
 Alias:	-
-Descripci�n: Cerrar la sesi�n del sistema y registrar cierre en auditor�a
-Fecha de actualizaci�n:	2026-09-05
+Descripción: Cerrar la sesión del sistema y registrar cierre en auditoría
+Fecha de actualización:	2026-09-22
 */
 
-if (session_id() === '') session_start();
-
-/* Asegurar la clase DebugBar (stub) cuando se invoca sin el bootstrap del sistema */
-if (!class_exists('DebugBar', false)) {
-	require_once dirname(__FILE__) . '/../../Librerias/config.php/debugbar.php';
+if (!isset($_SESSION)) {
+	@session_start();
 }
 
 $sesCod = !empty($_SESSION['Ses_Ses_Cod']) ? (int)$_SESSION['Ses_Ses_Cod'] : 0;
@@ -17,25 +14,40 @@ $usuCod = !empty($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
 
 if ($sesCod > 0 && $usuCod > 0) {
 	try {
-		$archAud = dirname(__FILE__) . '/../../auditoria/LOGICA/aud_log_auditoria.php';
-		if (is_file($archAud) && !class_exists('Class_Log_Datos_Aud')) {
-			require_once $archAud;
-		}
+		require_once dirname(__FILE__) . '/../../auditoria/LOGICA/aud_log_auditoria.php';
 		if (class_exists('Class_Log_Datos_Aud')) {
 			$objAud = new Class_Log_Datos_Aud();
 			$objAud->GuardarCierreSesion($sesCod, date('Y-m-d H:i:s'), $usuCod);
 		}
 	} catch (Exception $e) {
-		// No bloquear el logout en caso de error de BD (PHP 5.6+)
-	} catch (Throwable $e) {
-		// No bloquear el logout en caso de error fatal (PHP 7+)
+		// No bloquear el logout en caso de error de BD o auditoría
 	}
 }
 
-@session_unset();
+// Limpiar todas las variables de sesión
+$_SESSION = array();
+
+// Si se usan cookies para la sesión, destruirla también en la cookie
+if (ini_get("session.use_cookies")) {
+	$params = session_get_cookie_params();
+	setcookie(session_name(), '', time() - 42000,
+		$params["path"], $params["domain"],
+		$params["secure"], $params["httponly"]
+	);
+}
+
+session_unset();
 @session_destroy();
 
 $motivo = isset($_GET['motivo']) ? '?motivo=' . urlencode($_GET['motivo']) : '';
-header('Location: ../../index.php' . $motivo);
-exit;
+$https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+	|| (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
+$proto = $https ? 'https' : 'http';
+$host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+if ($host !== '') {
+	header('Location: ' . $proto . '://' . $host . '/index.php' . $motivo);
+} else {
+	header('Location: ../../index.php' . $motivo);
+}
+exit();
 ?>

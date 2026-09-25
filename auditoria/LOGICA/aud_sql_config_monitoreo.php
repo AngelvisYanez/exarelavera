@@ -6,12 +6,44 @@
 if (!function_exists('aud_sql_db_dis')) {
 	function aud_sql_db_dis()
 	{
+		static $resolved = null;
 		$db = isset($_SESSION['Ses_Dat_Dis']) ? trim((string)$_SESSION['Ses_Dat_Dis']) : '';
 		if ($db === '' && isset($GLOBALS['Ses_Dat_Dis'])) {
 			$db = trim((string)$GLOBALS['Ses_Dat_Dis']);
 		}
+		if ($db === '' && class_exists('Env')) {
+			$db = trim((string)\Env::get('AUDIT_DB_DIS', ''));
+		}
 		$db = preg_replace('/[^a-zA-Z0-9_]/', '', $db);
-		return ($db !== '') ? "`{$db}`" : "`servicios`";
+		if ($db !== '') {
+			return "`{$db}`";
+		}
+		if ($resolved !== null) {
+			return $resolved;
+		}
+		$resolved = '`ecoparkmining`';
+		if (class_exists('Env')) {
+			$host = \Env::get('DB_HOST', '127.0.0.1');
+			$user = \Env::get('DB_USERNAME', 'root');
+			$pass = \Env::get('DB_PASSWORD', '');
+			$port = (int)\Env::get('DB_PORT', 3306);
+			$master = preg_replace('/[^a-zA-Z0-9_]/', '', (string)\Env::get('DB_DATABASE', 'exa_master'));
+			if ($master === '') {
+				$master = 'exa_master';
+			}
+			$con = @mysqli_connect($host, $user, $pass, $master, $port);
+			if ($con) {
+				$r = @mysqli_query($con, "SELECT `Dat_Dis` FROM `data` WHERE IFNULL(`Dat_Est`,'A')='A' AND `Dat_Dis`<>'' ORDER BY `Dat_Cod` ASC LIMIT 1");
+				if ($r && ($row = mysqli_fetch_assoc($r))) {
+					$cand = preg_replace('/[^a-zA-Z0-9_]/', '', (string)$row['Dat_Dis']);
+					if ($cand !== '') {
+						$resolved = "`{$cand}`";
+					}
+				}
+				@mysqli_close($con);
+			}
+		}
+		return $resolved;
 	}
 }
 
@@ -158,7 +190,8 @@ function sentencias_cfg_monitoreo($id, $Par_Sql)
 					GROUP_CONCAT(DISTINCT u.`Usu_Cod` ORDER BY u.`Usu_Cod` SEPARATOR ',') AS `Usu_Cods`,
 					COUNT(DISTINCT u.`Usu_Cod`) AS `N_Ctas`,
 					IFNULL(NULLIF({$nombre},''), CONCAT('Usuario #', MIN(u.`Usu_Cod`))) AS `Usu_Nom`,
-					GROUP_CONCAT(DISTINCT pf.`Per_Des` ORDER BY pf.`Per_Des` SEPARATOR ', ') AS `Roles`
+					GROUP_CONCAT(DISTINCT pf.`Per_Des` ORDER BY pf.`Per_Des` SEPARATOR ', ') AS `Roles`,
+					GROUP_CONCAT(DISTINCT pf.`Per_Cod` ORDER BY pf.`Per_Cod` SEPARATOR ',') AS `Per_Cods`
 				FROM {$dbDis}.`usuarios` u
 				INNER JOIN {$dbDis}.`sucursal` s ON u.`Suc_Cod` = s.`Suc_Cod`
 				LEFT JOIN {$dbDis}.`persona` pr ON u.`Prs_Cod` = pr.`Prs_Cod`

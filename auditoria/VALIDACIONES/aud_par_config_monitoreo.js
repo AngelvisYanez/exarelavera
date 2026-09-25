@@ -27,13 +27,65 @@
 		$status.text(msg).css('color', ok === false ? '#c62828' : '#2e7d32');
 	}
 
-	function esc(s) {
+	function sanitizeText(s) {
 		if (s == null) return '';
+		s = String(s);
+		s = s.replace(/<[^>]*>/g, '');
+		s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
+		s = s.replace(/&#(\d+);/g, function (m, n) {
+			var code = parseInt(n, 10);
+			return (code > 0 && code < 65536) ? String.fromCharCode(code) : '';
+		});
+		s = s.replace(/&#x([0-9a-fA-F]+);/g, function (m, n) {
+			var code = parseInt(n, 16);
+			return (code > 0 && code < 65536) ? String.fromCharCode(code) : '';
+		});
+		var named = {
+			nbsp: ' ', amp: '&', quot: '"', apos: "'", lt: '<', gt: '>',
+			aacute: '\u00e1', eacute: '\u00e9', iacute: '\u00ed', oacute: '\u00f3', uacute: '\u00fa',
+			Aacute: '\u00c1', Eacute: '\u00c9', Iacute: '\u00cd', Oacute: '\u00d3', Uacute: '\u00da',
+			ntilde: '\u00f1', Ntilde: '\u00d1', uuml: '\u00fc', Uuml: '\u00dc',
+			iquest: '\u00bf', iexcl: '\u00a1', deg: '\u00b0', copy: '\u00a9'
+		};
+		s = s.replace(/&([a-zA-Z]+);/g, function (m, name) {
+			return (named[name] != null) ? named[name] : m;
+		});
+		s = s.replace(/\s+/g, ' ').replace(/^\s+|\s+$/g, '');
+		return s;
+	}
+
+	function esc(s) {
+		s = sanitizeText(s);
+		if (s === '') return '';
 		return String(s)
 			.replace(/&/g, '&amp;')
 			.replace(/</g, '&lt;')
 			.replace(/>/g, '&gt;')
 			.replace(/"/g, '&quot;');
+	}
+
+	function refreshSelectSearch($sel) {
+		if (!$sel || !$sel.length) return;
+		if (!$.fn.chosen) return;
+		if ($sel.data('chosen')) {
+			$sel.trigger('chosen:updated');
+		} else {
+			var ph = $sel.attr('data-placeholder') || 'Buscar...';
+			$sel.chosen({
+				width: '100%',
+				search_contains: true,
+				allow_single_deselect: true,
+				placeholder_text_single: ph,
+				placeholder_text_multiple: ph,
+				no_results_text: 'Sin coincidencias para'
+			});
+		}
+	}
+
+	function initSelectSearch() {
+		$('.aud-select-search').each(function () {
+			refreshSelectSearch($(this));
+		});
 	}
 
 	/** Texto util para busqueda: quita toggles, contadores y distintivos */
@@ -683,14 +735,23 @@
 			var optsNotif = '';
 			var optsCorreo = '<option value="">Seleccione usuario...</option>';
 			$.each(usuariosConCorreo, function (i, u) {
-				var nombre = u.Usu_Nom || ('Usuario ' + u.Usu_Cod);
-				optsCorreo += '<option value="' + u.Usu_Cod + '" data-correo="' + esc(u.Correo || '') + '">' + esc(nombre) + (u.Correo ? ' (' + esc(u.Correo) + ')' : '') + '</option>';
-				if (u.Correo) {
-					optsNotif += '<option value="' + u.Usu_Cod + '">' + esc(nombre) + ' (' + esc(u.Correo) + ')</option>';
+				var nombre = sanitizeText(u.Usu_Nom || ('Usuario ' + u.Usu_Cod));
+				var correo = sanitizeText(u.Correo || '');
+				u.Usu_Nom = nombre;
+				u.Correo = correo;
+				optsCorreo += '<option value="' + esc(String(u.Usu_Cod)) + '" data-correo="' + esc(correo) + '">' + esc(nombre) + (correo ? ' (' + esc(correo) + ')' : '') + '</option>';
+				if (correo) {
+					optsNotif += '<option value="' + esc(String(u.Usu_Cod)) + '">' + esc(nombre) + ' (' + esc(correo) + ')</option>';
 				}
 			});
-			if ($selNotif.length) $selNotif.html(optsNotif || '<option value="" disabled="disabled">Ningun usuario tiene correo registrado</option>');
-			if ($selCorreo.length) $selCorreo.html(optsCorreo);
+			if ($selNotif.length) {
+				$selNotif.html(optsNotif || '<option value="" disabled="disabled">Ningun usuario tiene correo registrado</option>');
+				refreshSelectSearch($selNotif);
+			}
+			if ($selCorreo.length) {
+				$selCorreo.html(optsCorreo);
+				refreshSelectSearch($selCorreo);
+			}
 			// Reordenar la tabla de reglas si ya estaba cargada (para mostrar nombres de usuario)
 			if ($('#audNotifTbody tr[data-notcod]').length) {
 				cargarNotifReglas();
@@ -716,6 +777,169 @@
 				.text('No se pudo consultar el estado de la clave de acceso.');
 		});
 	}
+
+	function pintarEstadoIdle(cfg) {
+		var $txt = $('#audIdleEstadoTxt');
+		if (!$txt.length || !cfg) return;
+		if (cfg.activo) {
+			$txt.removeClass('aud-acc-off').addClass('aud-acc-on')
+				.html('<span class="glyphicon glyphicon-ok-sign"></span> Cierre por inactividad <strong>activo</strong>: '
+					+ esc(cfg.minutos) + ' min total, aviso a los &uacute;ltimos '
+					+ esc(cfg.advertencia_seg) + ' s.');
+		} else {
+			var extra = '';
+			$txt.removeClass('aud-acc-on').addClass('aud-acc-off')
+				.html('<span class="glyphicon glyphicon-info-sign"></span> Cierre por inactividad <strong>desactivado</strong>' + extra + '.');
+		}
+		var $ro = $('#audIdleReadonlySummary');
+		if ($ro.length) {
+			$ro.html(
+				'<div><strong>Minutos:</strong> ' + esc(cfg.minutos) + '</div>' +
+				'<div><strong>Advertencia:</strong> ' + esc(cfg.advertencia_seg) + ' s</div>' +
+				'<div><strong>Plantilla:</strong> ' + esc(cfg.plantilla || 'clasico') + '</div>' +
+				'<div><strong>T&iacute;tulo:</strong> ' + esc(cfg.titulo) + '</div>' +
+				'<div style="margin-top:6px;"><strong>Texto:</strong> ' + esc(cfg.texto) + '</div>'
+			);
+		}
+	}
+
+	function seleccionarIdlePlantilla(id) {
+		id = String(id || 'clasico').toLowerCase().replace(/[^a-z0-9_]/g, '');
+		if (!id) id = 'clasico';
+		$('#audIdlePlantilla').val(id);
+		$('#audIdleTplGrid .aud-idle-tpl-card').each(function () {
+			var on = String($(this).attr('data-tpl') || '') === id;
+			$(this).toggleClass('is-selected', on).attr('aria-pressed', on ? 'true' : 'false');
+		});
+	}
+
+	function cargarIdleConfig() {
+		if (!$('#audIdleEstadoTxt').length) return;
+		$.getJSON(window.location.pathname, { getIdleConfigAjax: 1 }, function (resp) {
+			if (!(resp && resp.success && resp.config)) {
+				$('#audIdleEstadoTxt').removeClass('aud-acc-on').addClass('aud-acc-off')
+					.text('No se pudo cargar la configuracion de inactividad.');
+				return;
+			}
+			var c = resp.config;
+			pintarEstadoIdle(c);
+			if ($('#audIdleActivo').length) {
+				$('#audIdleActivo').prop('checked', !!c.activo);
+				$('#audIdleMinutos').val(c.minutos || 15);
+				$('#audIdleAdvSeg').val(c.advertencia_seg || 60);
+				$('#audIdleTitulo').val(c.titulo || '');
+				$('#audIdleTexto').val(c.texto || '');
+				seleccionarIdlePlantilla(c.plantilla || 'clasico');
+			}
+		}).fail(function () {
+			$('#audIdleEstadoTxt').removeClass('aud-acc-on').addClass('aud-acc-off')
+				.text('Error al consultar la configuracion de inactividad.');
+		});
+	}
+
+	$('#audIdleTplGrid').on('click', '.aud-idle-tpl-card', function () {
+		seleccionarIdlePlantilla($(this).attr('data-tpl'));
+	});
+
+	$('#btnAudIdleGuardar').on('click', function () {
+		var $btn = $(this).prop('disabled', true);
+		var $st = $('#audIdleStatus');
+		var minutos = parseInt($('#audIdleMinutos').val(), 10) || 0;
+		var adv = parseInt($('#audIdleAdvSeg').val(), 10) || 0;
+		if (minutos < 2 || minutos > 480) {
+			$st.text('Los minutos deben estar entre 2 y 480.').css('color', '#c62828');
+			$btn.prop('disabled', false);
+			return;
+		}
+		if (adv < 15 || adv > 600) {
+			$st.text('La advertencia debe estar entre 15 y 600 segundos.').css('color', '#c62828');
+			$btn.prop('disabled', false);
+			return;
+		}
+		if (adv >= minutos * 60) {
+			$st.text('La advertencia debe ser menor que el tiempo total de inactividad.').css('color', '#c62828');
+			$btn.prop('disabled', false);
+			return;
+		}
+		$.ajax({
+			url: window.location.pathname,
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				saveIdleConfigAjax: 1,
+				activo: $('#audIdleActivo').is(':checked') ? 1 : 0,
+				minutos: minutos,
+				advertencia_seg: adv,
+				titulo: $('#audIdleTitulo').val() || '',
+				texto: $('#audIdleTexto').val() || '',
+				plantilla: $('#audIdlePlantilla').val() || 'clasico'
+			},
+			success: function (resp) {
+				if (resp && resp.success) {
+					$st.text(resp.message || 'Guardado.').css('color', '#2e7d32');
+					if (resp.config) {
+						pintarEstadoIdle(resp.config);
+						seleccionarIdlePlantilla(resp.config.plantilla || 'clasico');
+					}
+				} else {
+					$st.text((resp && resp.message) ? resp.message : 'No se pudo guardar.').css('color', '#c62828');
+				}
+			},
+			error: function () {
+				$st.text('Error de comunicacion al guardar.').css('color', '#c62828');
+			},
+			complete: function () {
+				$btn.prop('disabled', false);
+			}
+		});
+	});
+
+	$('#btnAudIdleProbar').on('click', function () {
+		var titulo = sanitizeText($('#audIdleTitulo').val() || 'Advertencia de Inactividad');
+		var segs = parseInt($('#audIdleAdvSeg').val(), 10) || 60;
+		var texto = sanitizeText(($('#audIdleTexto').val() || '')
+			.replace(/\{minutos\}/g, $('#audIdleMinutos').val() || '15')
+			.replace(/\{segundos\}/g, String(segs)));
+		var tpl = String($('#audIdlePlantilla').val() || 'clasico');
+		var id = 'modalAudIdlePreview';
+		$('#' + id).remove();
+		var html = [
+			'<div id="' + id + '" class="modal fade aud-idle-modal m4-modal aud-idle-tpl--' + esc(tpl) + '" tabindex="-1" role="dialog">',
+			'  <div class="modal-dialog modal-dialog-centered">',
+			'    <div class="modal-content">',
+			'      <div class="modal-header aud-idle-header aud-idle-header--warning m4-modal-header">',
+			'        <button type="button" class="close" data-dismiss="modal" style="color:#fff;opacity:.9;position:absolute;right:12px;top:10px;">&times;</button>',
+			'        <h4 class="modal-title m4-modal-title">',
+			'          <i class="ace-icon fa fa-hourglass-half"></i> <span>' + esc(titulo) + '</span>',
+			'        </h4>',
+			'        <div class="aud-idle-badge"><span class="aud-idle-badge-dot"></span> Vista previa</div>',
+			'      </div>',
+			'      <div class="modal-body aud-idle-body m4-modal-body">',
+			'        <div class="aud-idle-ring-wrap">',
+			'          <svg class="aud-idle-ring" viewBox="0 0 108 108" aria-hidden="true">',
+			'            <circle class="aud-idle-ring-bg" cx="54" cy="54" r="48"></circle>',
+			'            <circle class="aud-idle-ring-fg" cx="54" cy="54" r="48" style="stroke-dashoffset:75;"></circle>',
+			'          </svg>',
+			'          <div class="aud-idle-countdown-core">',
+			'            <span class="aud-idle-countdown-num">' + esc(String(segs)) + '</span>',
+			'            <span class="aud-idle-countdown-unit">seg</span>',
+			'          </div>',
+			'        </div>',
+			'        <p class="aud-idle-pregunta">&iquest;Sigues trabajando en el sistema?</p>',
+			'        <p class="aud-idle-texto">' + esc(texto) + '</p>',
+			'        <p class="text-muted" style="font-size:11px;margin-top:10px;">Vista previa &mdash; no cierra la sesi&oacute;n</p>',
+			'      </div>',
+			'      <div class="modal-footer aud-idle-footer m4-modal-footer">',
+			'        <button type="button" class="btn btn-default btn-sm aud-idle-btn aud-idle-btn-ghost" data-dismiss="modal">Salir ahora</button>',
+			'        <button type="button" class="btn btn-primary btn-sm aud-idle-btn aud-idle-btn-primary" data-dismiss="modal">Continuar trabajando</button>',
+			'      </div>',
+			'    </div>',
+			'  </div>',
+			'</div>'
+		].join('');
+		$('body').append(html);
+		$('#' + id).modal('show').on('hidden.bs.modal', function () { $(this).remove(); });
+	});
 
 	$('#btnAudAccGuardar').on('click', function () {
 		var $btn = $(this).prop('disabled', true);
@@ -792,6 +1016,108 @@
 		});
 	}
 
+	/** Destinatarios de la clave de acceso: preview filtrable por rol/usuario */
+	var audAccDestRows = [];
+
+	function pintarAccesoDestinatarios() {
+		var $tb = $('#audAccDestTbody');
+		var $count = $('#audAccDestCount');
+		if (!$tb.length) return;
+
+		var rol = String($('#audAccFiltroRol').val() || '0');
+		var usu = String($('#audAccFiltroUsu').val() || '0');
+		var q = $.trim($('#audAccFiltroTexto').val() || '').toLowerCase();
+
+		var filtrados = $.grep(audAccDestRows, function (u) {
+			if (usu && usu !== '0') {
+				var cods = String(u.Usu_Cods || u.Usu_Cod || '');
+				var matchUsu = false;
+				$.each(cods.split(','), function (i, c) {
+					if (String($.trim(c)) === usu || cods === usu) matchUsu = true;
+				});
+				if (!matchUsu && String(u.Usu_Cod) !== usu) return false;
+			}
+			if (rol && rol !== '0') {
+				var perCods = String(u.Per_Cods || '');
+				var hitRol = false;
+				$.each(perCods.split(','), function (i, c) {
+					if (String($.trim(c)) === rol) hitRol = true;
+				});
+				if (!hitRol) return false;
+			}
+			if (q) {
+				var hay = ((u.Usu_Nom || '') + ' ' + (u.Roles || '')).toLowerCase();
+				if (hay.indexOf(q) === -1) return false;
+			}
+			return true;
+		});
+
+		if (!filtrados.length) {
+			$tb.html('<tr><td colspan="3" class="text-center text-muted">Ningun usuario coincide con el filtro.</td></tr>');
+			$count.text('0 de ' + audAccDestRows.length + ' usuarios');
+			return;
+		}
+
+		var html = '';
+		$.each(filtrados, function (i, u) {
+			var nombre = u.Usu_Nom || ('Usuario #' + (u.Usu_Cod || ''));
+			var roles = u.Roles || '<span class="text-muted">Sin rol</span>';
+			var nCtas = parseInt(u.N_Ctas, 10) || 1;
+			html += '<tr>'
+				+ '<td>' + esc(nombre) + '</td>'
+				+ '<td>' + (u.Roles ? esc(u.Roles) : roles) + '</td>'
+				+ '<td class="text-center">' + nCtas + '</td>'
+				+ '</tr>';
+		});
+		$tb.html(html);
+		$count.text(filtrados.length + ' de ' + audAccDestRows.length + ' usuario(s) veran la clave');
+	}
+
+	function cargarAccesoDestinatarios() {
+		if (!$('#audAccDestTbody').length) return;
+
+		$.when(
+			$.getJSON(window.location.pathname, { listRolesAjax: 1 }),
+			$.getJSON(window.location.pathname, { listUsuariosAjax: 1 })
+		).done(function (rolesResp, usuariosResp) {
+			var roles = (rolesResp && rolesResp[0] && rolesResp[0].rows) ? rolesResp[0].rows : [];
+			var usuarios = (usuariosResp && usuariosResp[0] && usuariosResp[0].rows) ? usuariosResp[0].rows : [];
+			audAccDestRows = usuarios || [];
+
+			var $rol = $('#audAccFiltroRol');
+			if ($rol.length) {
+				var optsR = '<option value="0">Todos los roles</option>';
+				$.each(roles, function (i, r) {
+					optsR += '<option value="' + esc(String(r.Per_Cod)) + '">' + esc(r.Per_Des || ('Rol #' + r.Per_Cod)) + '</option>';
+				});
+				$rol.html(optsR);
+				refreshSelectSearch($rol);
+			}
+
+			var $usu = $('#audAccFiltroUsu');
+			if ($usu.length) {
+				var optsU = '<option value="0">Todos los usuarios</option>';
+				$.each(usuarios, function (i, u) {
+					var val = ($.trim(u.Usu_Cods || '') !== '') ? String(u.Usu_Cods).split(',')[0] : String(u.Usu_Cod || '');
+					var nombre = sanitizeText(u.Usu_Nom || ('Usuario #' + (u.Usu_Cod || '')));
+					optsU += '<option value="' + esc(val) + '">' + esc(nombre) + '</option>';
+					u.Usu_Nom = nombre;
+					if (u.Roles) u.Roles = sanitizeText(u.Roles);
+				});
+				$usu.html(optsU);
+				refreshSelectSearch($usu);
+			}
+
+			pintarAccesoDestinatarios();
+		}).fail(function () {
+			$('#audAccDestTbody').html('<tr><td colspan="3" class="text-center text-danger">No se pudieron cargar los usuarios.</td></tr>');
+			$('#audAccDestCount').text('Error al cargar');
+		});
+	}
+
+	$('#audAccFiltroRol, #audAccFiltroUsu').on('change', pintarAccesoDestinatarios);
+	$('#audAccFiltroTexto').on('keyup input', pintarAccesoDestinatarios);
+
 	function limpiarFormNotif() {
 		$('#audNotifCod').val('0');
 		notifAlcances = [];
@@ -799,6 +1125,7 @@
 		$('#audNotifEveU').prop('checked', true);
 		$('#audNotifEveD').prop('checked', true);
 		$('#audNotifUsuarios').val([]);
+		refreshSelectSearch($('#audNotifUsuarios'));
 		$('#audNotifCorreos').val('');
 		$('#audNotifStatus').text('');
 		setNotifEditingUi(false);
@@ -942,7 +1269,11 @@
 				return;
 			}
 			var a = pendientes.shift();
-			var notCod = (notCodBase > 0 && okCount === 0) ? notCodBase : 0;
+			var notCod = 0;
+			if (notCodBase > 0) {
+				notCod = notCodBase;
+				notCodBase = 0;
+			}
 			guardarUnaNotifRegla({
 				saveNotifReglaAjax: 1,
 				notCod: notCod,
@@ -954,6 +1285,9 @@
 			}).done(function (resp) {
 				if (resp && resp.success) {
 					okCount++;
+					if (!errMsg && resp.message) {
+						errMsg = resp.message;
+					}
 				} else {
 					errMsg = (resp && resp.message) || 'No se pudo guardar una de las reglas.';
 				}
@@ -977,7 +1311,8 @@
 		$('#audNotifEveU').prop('checked', eventos.indexOf('U') !== -1);
 		$('#audNotifEveD').prop('checked', eventos.indexOf('D') !== -1);
 		$('#audNotifUsuarios').val(String($tr.attr('data-usuarios') || '').split(',').filter(function (v) { return v; }));
-		$('#audNotifCorreos').val($tr.attr('data-correos') || '');
+		refreshSelectSearch($('#audNotifUsuarios'));
+		$('#audNotifCorreos').val(sanitizeText($tr.attr('data-correos') || ''));
 		$('#audNotifStatus').text('Editando regla #' + $tr.attr('data-notcod') + '.').css('color', '#1f5f9a');
 		setNotifEditingUi(true, $tr.attr('data-notcod'));
 		var $form = $('.aud-notif-form-card');
@@ -1115,9 +1450,10 @@
 			if (resp && resp.success && resp.rows) {
 				var opts = '<option value="">-- Todos los roles --</option>';
 				$.each(resp.rows, function (i, r) {
-					opts += '<option value="' + r.Per_Cod + '">' + esc(r.Per_Des) + '</option>';
+					opts += '<option value="' + esc(String(r.Per_Cod)) + '">' + esc(r.Per_Des) + '</option>';
 				});
 				$sel.html(opts);
+				refreshSelectSearch($sel);
 			}
 		});
 	}
@@ -1130,16 +1466,17 @@
 				var opts = '<option value="">-- Todos los usuarios --</option>';
 				$.each(resp.rows, function (i, u) {
 					var val = ($.trim(u.Usu_Cods || '') !== '') ? u.Usu_Cods : (u.Usu_Cod || '');
-					var nombre = u.Usu_Nom || 'Usuario #' + (u.Usu_Cod || '');
+					var nombre = sanitizeText(u.Usu_Nom || ('Usuario #' + (u.Usu_Cod || '')));
 					if (u.N_Ctas > 1) {
 						nombre += ' (' + u.N_Ctas + ' cuentas)';
 					}
 					if (u.Roles) {
-						nombre += ' (' + u.Roles + ')';
+						nombre += ' (' + sanitizeText(u.Roles) + ')';
 					}
-					opts += '<option value="' + val + '">' + esc(nombre) + '</option>';
+					opts += '<option value="' + esc(String(val)) + '">' + esc(nombre) + '</option>';
 				});
 				$sel.html(opts);
+				refreshSelectSearch($sel);
 			}
 		});
 	}
@@ -1634,10 +1971,20 @@
 	});
 
 	// Inicializacion
+	initSelectSearch();
 	cargar();
 	cargarRoles();
 	cargarUsuarios();
 	cargarAccesoEstado();
+	cargarAccesoDestinatarios();
+	cargarIdleConfig();
 	cargarCorreosUsuario();
+	cargarNotifReglas();
+
+	$('#audCfgTabs a[data-toggle="tab"]').on('shown.bs.tab', function () {
+		$('.aud-select-search').each(function () {
+			refreshSelectSearch($(this));
+		});
+	});
 
 })(jQuery);

@@ -227,7 +227,7 @@ if (!function_exists('aud_notif_listar_correos_usuario')) {
 			}
 		}
 		$usuarios = array();
-		if (function_exists('sentencias_cfg_monitoreo') && is_object($obBD_conexion)) {
+		if (function_exists('sentencias_cfg_monitoreo') && $con) {
 			$sql = sentencias_cfg_monitoreo(10, array($emp));
 			if ($sql !== '') {
 				$r2 = @mysqli_query($con, $sql);
@@ -240,17 +240,40 @@ if (!function_exists('aud_notif_listar_correos_usuario')) {
 			}
 		}
 		$out = array();
+		$vistos = array();
 		foreach ($usuarios as $u) {
 			$cod = (int)$u['Usu_Cod'];
+			$codsCsv = isset($u['Usu_Cods']) ? (string)$u['Usu_Cods'] : (string)$cod;
+			$correo = '';
+			$codConCorreo = $cod;
+			foreach (explode(',', $codsCsv) as $cOne) {
+				$cOne = (int)trim($cOne);
+				if ($cOne <= 0) {
+					continue;
+				}
+				$vistos[$cOne] = true;
+				if ($correo === '' && isset($mapCorreo[$cOne]) && $mapCorreo[$cOne] !== '') {
+					$correo = $mapCorreo[$cOne];
+					$codConCorreo = $cOne;
+				}
+			}
+			$nom = isset($u['Usu_Nom']) ? $u['Usu_Nom'] : ('Usuario ' . $cod);
+			if (function_exists('aud_cfg_sanitizar_texto')) {
+				$nom = aud_cfg_sanitizar_texto($nom);
+				$correo = aud_cfg_sanitizar_texto($correo);
+			}
 			$out[] = array(
-				'Usu_Cod' => $cod,
-				'Usu_Cods' => isset($u['Usu_Cods']) ? $u['Usu_Cods'] : (string)$cod,
-				'Usu_Nom' => isset($u['Usu_Nom']) ? $u['Usu_Nom'] : ('Usuario ' . $cod),
-				'Correo' => isset($mapCorreo[$cod]) ? $mapCorreo[$cod] : ''
+				'Usu_Cod' => $codConCorreo > 0 ? $codConCorreo : $cod,
+				'Usu_Cods' => $codsCsv,
+				'Usu_Nom' => $nom,
+				'Correo' => $correo
 			);
 		}
 		// Usuarios con correo registrado que no aparecieron en el listado (por si cambio de estado)
 		foreach ($mapCorreo as $cod => $correo) {
+			if (!empty($vistos[$cod])) {
+				continue;
+			}
 			$existe = false;
 			foreach ($out as $o) {
 				if ((int)$o['Usu_Cod'] === (int)$cod) {
@@ -432,6 +455,122 @@ if (!function_exists('aud_notif_resolver_destinatarios')) {
 	}
 }
 
+if (!function_exists('aud_notif_html_plantilla')) {
+	/**
+	 * Plantilla HTML del correo de notificacion (tabla 600px, segura para clientes de correo).
+	 */
+	function aud_notif_html_plantilla($datos)
+	{
+		$eveIni = isset($datos['eve']) ? strtoupper((string)$datos['eve']) : 'U';
+		$eveTxt = isset($datos['eve_txt']) ? (string)$datos['eve_txt'] : 'Actualizacion';
+		$empresa = isset($datos['empresa']) ? (string)$datos['empresa'] : '';
+		$fecha = isset($datos['fecha']) ? (string)$datos['fecha'] : '';
+		$usuario = isset($datos['usuario']) ? (string)$datos['usuario'] : '';
+		$modulo = isset($datos['modulo']) ? (string)$datos['modulo'] : '';
+		$proceso = isset($datos['proceso']) ? (string)$datos['proceso'] : '';
+		$verbo = isset($datos['verbo']) ? (string)$datos['verbo'] : 'Cambio';
+		$detalle = isset($datos['detalle']) ? (string)$datos['detalle'] : '';
+
+		if ($eveIni === 'D') {
+			$accent = '#DC2626';
+			$accentSoft = '#FEF2F2';
+			$badgeBg = '#FEE2E2';
+			$badgeFg = '#991B1B';
+			$badgeIcon = 'ELIMINACION';
+		} elseif ($eveIni === 'I') {
+			$accent = '#16A34A';
+			$accentSoft = '#F0FDF4';
+			$badgeBg = '#DCFCE7';
+			$badgeFg = '#166534';
+			$badgeIcon = 'INSERCION';
+		} else {
+			$accent = '#2563EB';
+			$accentSoft = '#EFF6FF';
+			$badgeBg = '#DBEAFE';
+			$badgeFg = '#1E40AF';
+			$badgeIcon = 'ACTUALIZACION';
+		}
+
+		$h = function ($s) {
+			return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+		};
+
+		$fila = function ($label, $valor) use ($h) {
+			if ($valor === '' || $valor === null) {
+				return '';
+			}
+			return '<tr>'
+				. '<td style="padding:10px 14px;border-bottom:1px solid #E2E8F0;width:130px;vertical-align:top;font-size:12px;font-weight:700;color:#64748B;font-family:Arial,Helvetica,sans-serif;">'
+				. $h($label) . '</td>'
+				. '<td style="padding:10px 14px;border-bottom:1px solid #E2E8F0;vertical-align:top;font-size:13px;color:#1E293B;font-family:Arial,Helvetica,sans-serif;">'
+				. $h($valor) . '</td>'
+				. '</tr>';
+		};
+
+		$html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8" />'
+			. '<meta name="viewport" content="width=device-width, initial-scale=1.0" />'
+			. '<title>' . $h($eveTxt) . '</title></head>'
+			. '<body style="margin:0;padding:0;background:#DFE9F6;font-family:Arial,Helvetica,sans-serif;">'
+			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#DFE9F6;padding:24px 12px;">'
+			. '<tr><td align="center">'
+			. '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;">'
+
+			/* Cabecera marca */
+			. '<tr><td style="background:linear-gradient(135deg,#1E3A5F 0%,#254463 55%,#2D5478 100%);padding:18px 22px;">'
+			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
+			. '<td style="font-family:Arial,Helvetica,sans-serif;">'
+			. '<div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#93C5FD;font-weight:700;">ExaContable ERP</div>'
+			. '<div style="font-size:18px;font-weight:700;color:#FFFFFF;margin-top:4px;">Modulo de Auditoria</div>'
+			. '</td>'
+			. '<td align="right" style="vertical-align:middle;">'
+			. '<span style="display:inline-block;padding:6px 12px;border-radius:14px;background:' . $badgeBg . ';color:' . $badgeFg . ';font-size:11px;font-weight:800;letter-spacing:0.04em;font-family:Arial,Helvetica,sans-serif;">'
+			. $h($badgeIcon) . '</span>'
+			. '</td></tr></table>'
+			. '</td></tr>'
+
+			/* Franja de acento + titulo */
+			. '<tr><td style="border-left:4px solid ' . $accent . ';background:' . $accentSoft . ';padding:16px 22px;">'
+			. '<div style="font-size:16px;font-weight:700;color:#1E3A5F;font-family:Arial,Helvetica,sans-serif;">Notificacion de auditoria</div>'
+			. '<div style="font-size:13px;color:#475569;margin-top:4px;font-family:Arial,Helvetica,sans-serif;line-height:1.45;">'
+			. 'Se registro una <strong style="color:' . $accent . ';">' . $h($eveTxt) . '</strong> en el sistema.'
+			. '</div></td></tr>'
+
+			/* Datos */
+			. '<tr><td style="padding:18px 22px 8px;">'
+			. '<div style="font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#64748B;margin-bottom:8px;font-family:Arial,Helvetica,sans-serif;">Detalle del evento</div>'
+			. '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #E2E8F0;border-radius:8px;overflow:hidden;background:#FFFFFF;">'
+			. $fila('Empresa', $empresa)
+			. $fila('Fecha', $fecha)
+			. $fila('Usuario', $usuario)
+			. $fila('Modulo', $modulo)
+			. $fila('Proceso', $proceso)
+			. '</table></td></tr>'
+
+			/* Cambio interpretado */
+			. '<tr><td style="padding:8px 22px 20px;">'
+			. '<div style="font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#64748B;margin-bottom:8px;font-family:Arial,Helvetica,sans-serif;">' . $h($verbo) . '</div>'
+			. '<div style="padding:14px 16px;background:#F8FAFC;border:1px solid #E2E8F0;border-left:4px solid ' . $accent . ';border-radius:8px;font-size:13px;line-height:1.5;color:#1E293B;font-family:Arial,Helvetica,sans-serif;">'
+			. ($detalle !== '' ? $h($detalle) : '<span style="color:#94A3B8;">Sin detalle adicional.</span>')
+			. '</div></td></tr>'
+
+			/* Pie */
+			. '<tr><td style="background:#F8FAFC;border-top:1px solid #E2E8F0;padding:14px 22px;">'
+			. '<div style="font-size:11px;color:#64748B;line-height:1.45;font-family:Arial,Helvetica,sans-serif;">'
+			. 'Notificacion automatica generada por el <strong style="color:#254463;">Modulo de Auditoria</strong> de ExaContable ERP '
+			. 'segun las reglas configuradas en <em>Configuracion de monitoreo</em>.'
+			. '</div>'
+			. '<div style="font-size:10px;color:#94A3B8;margin-top:8px;font-family:Arial,Helvetica,sans-serif;">'
+			. 'No responda a este mensaje. Si no debia recibirlo, revise las reglas de notificacion con el Administrador de Sistemas.'
+			. '</div></td></tr>'
+
+			. '</table>'
+			. '<div style="font-size:10px;color:#94A3B8;margin-top:12px;font-family:Arial,Helvetica,sans-serif;">&copy; ExaContable ERP &middot; Auditoria</div>'
+			. '</td></tr></table></body></html>';
+
+		return $html;
+	}
+}
+
 if (!function_exists('aud_notif_enviar_correo')) {
 	/**
 	 * Construye el contenido interpretado del log y despacha el correo por
@@ -476,16 +615,17 @@ if (!function_exists('aud_notif_enviar_correo')) {
 		$eveTxt = ($eveIni === 'D') ? 'Eliminacion' : (($eveIni === 'I') ? 'Insercion' : 'Actualizacion');
 		$asunto = '[Auditoria] ' . $eveTxt . ' en ' . ($proceso !== '' ? $proceso : $modulo);
 
-		$cuerpo = '<h3>Notificacion de auditoria: ' . htmlspecialchars($eveTxt) . '</h3>';
-		$cuerpo .= '<p><strong>Empresa:</strong> ' . htmlspecialchars($empresa) . '</p>';
-		$cuerpo .= '<p><strong>Fecha:</strong> ' . htmlspecialchars($fecha) . '</p>';
-		$cuerpo .= '<p><strong>Usuario:</strong> ' . htmlspecialchars($usuario) . '</p>';
-		$cuerpo .= '<p><strong>Modulo:</strong> ' . htmlspecialchars($modulo) . '</p>';
-		if ($proceso !== '') {
-			$cuerpo .= '<p><strong>Proceso:</strong> ' . htmlspecialchars($proceso) . '</p>';
-		}
-		$cuerpo .= '<p><strong>' . htmlspecialchars($verbo) . ':</strong> ' . htmlspecialchars($detalle) . '</p>';
-		$cuerpo .= '<hr><p style="font-size:11px;color:#777;">Notificacion automatica generada por el Modulo de Auditoria de ExaContable ERP segun las reglas configuradas en Configuracion de monitoreo.</p>';
+		$cuerpo = aud_notif_html_plantilla(array(
+			'eve' => $eveIni,
+			'eve_txt' => $eveTxt,
+			'empresa' => $empresa,
+			'fecha' => $fecha,
+			'usuario' => $usuario,
+			'modulo' => $modulo,
+			'proceso' => $proceso,
+			'verbo' => $verbo,
+			'detalle' => $detalle
+		));
 
 		return aud_notif_despachar_phpmailer($destinatarios, $asunto, $cuerpo);
 	}
@@ -494,10 +634,17 @@ if (!function_exists('aud_notif_enviar_correo')) {
 if (!function_exists('aud_notif_despachar_phpmailer')) {
 	function aud_notif_despachar_phpmailer($destinatarios, $asunto, $cuerpoHtml)
 	{
+		if (empty($destinatarios)) {
+			return false;
+		}
 		$phpMailerPath = dirname(__FILE__) . '/../../Librerias/PHPMailer_2023/PHPMailer.php';
 		$legacy = !file_exists($phpMailerPath);
 		if ($legacy) {
 			$phpMailerPath = dirname(__FILE__) . '/../../Librerias/PHPMailer/class.phpmailer.php';
+		}
+		if (!file_exists($phpMailerPath)) {
+			$phpMailerPath = dirname(__FILE__) . '/../../Librerias/PHPMail/class.phpmailer.php';
+			$legacy = true;
 		}
 		if (!file_exists($phpMailerPath)) {
 			return false;
@@ -510,25 +657,65 @@ if (!function_exists('aud_notif_despachar_phpmailer')) {
 				$mail = new \PHPMailer\PHPMailer\PHPMailer(true);
 			} else {
 				require_once $phpMailerPath;
-				$mail = new PHPMailer();
+				$mail = new PHPMailer(true);
 			}
-			$mail->isHTML(true);
+
+			/* Mismo transporte SMTP del ERP (facturacion / PHPMail) */
+			if (method_exists($mail, 'isSMTP')) {
+				$mail->isSMTP();
+			} elseif (method_exists($mail, 'IsSMTP')) {
+				$mail->IsSMTP();
+			}
+			$mail->SMTPAuth = true;
+			$mail->Host = 'mail.ofsercont.com';
+			$mail->Port = 587;
+			$mail->SMTPSecure = 'tls';
+			$mail->Username = 'facturacion.electronica@ofsercont.com';
+			$mail->Password = 'p.123456';
+			if (property_exists($mail, 'SMTPOptions')) {
+				$mail->SMTPOptions = array(
+					'ssl' => array(
+						'verify_peer' => false,
+						'verify_peer_name' => false,
+						'allow_self_signed' => true
+					)
+				);
+			}
+			$from = 'facturacion.electronica@ofsercont.com';
+			$fromName = 'Auditoria Exa';
+			if (method_exists($mail, 'setFrom')) {
+				$mail->setFrom($from, $fromName);
+			} else {
+				$mail->From = $from;
+				$mail->FromName = $fromName;
+			}
+
+			if (method_exists($mail, 'isHTML')) {
+				$mail->isHTML(true);
+			} elseif (method_exists($mail, 'IsHTML')) {
+				$mail->IsHTML(true);
+			}
 			$mail->CharSet = 'UTF-8';
 			$mail->Subject = $asunto;
 			$mail->Body = $cuerpoHtml;
+			if (property_exists($mail, 'AltBody')) {
+				$mail->AltBody = strip_tags(str_replace(array('<br>', '<br/>', '<br />', '</p>'), "\n", $cuerpoHtml));
+			}
 			if (property_exists($mail, 'Timeout')) {
-				$mail->Timeout = 8;
+				$mail->Timeout = 12;
 			}
 			if (property_exists($mail, 'SMTPKeepAlive')) {
 				$mail->SMTPKeepAlive = false;
 			}
 			foreach ($destinatarios as $correo) {
-				$mail->addAddress($correo);
+				if (method_exists($mail, 'addAddress')) {
+					$mail->addAddress($correo);
+				} else {
+					$mail->AddAddress($correo);
+				}
 			}
 			return (bool)@$mail->send();
 		} catch (\Exception $e) {
-			return false;
-		} catch (\Throwable $e2) {
 			return false;
 		}
 	}
@@ -560,8 +747,6 @@ if (!function_exists('aud_notif_procesar_evento')) {
 			}
 			return aud_notif_enviar_correo($con, $datDis, $emp, $eveIni, $logCod, $destinatarios);
 		} catch (\Exception $e) {
-			return false;
-		} catch (\Throwable $e2) {
 			return false;
 		}
 	}

@@ -170,6 +170,16 @@ if (!function_exists('fac_ppa_vincular_asiento_proyecto')) {
         if (!$mysqli || $Pdp_Cod <= 0 || $Asi_Cod <= 0 || !fac_ppa_asiento_tabla_ok($mysqli)) {
             return false;
         }
+        /* Esquema real en muchos clientes: solo Pdp_Cod + Asi_Cod (PK Asi_Cod). */
+        $ok = @$mysqli->query(
+            "INSERT INTO pre_proyecto_detalle_asiento (Pdp_Cod, Asi_Cod)
+             VALUES ($Pdp_Cod, $Asi_Cod)
+             ON DUPLICATE KEY UPDATE Pdp_Cod = VALUES(Pdp_Cod)"
+        );
+        if ($ok) {
+            return true;
+        }
+        /* Fallback si la tabla incluye columna Ppa_Cod */
         return (bool)@$mysqli->query(
             "INSERT INTO pre_proyecto_detalle_asiento (Pdp_Cod, Asi_Cod, Ppa_Cod)
              VALUES ($Pdp_Cod, $Asi_Cod, NULL)

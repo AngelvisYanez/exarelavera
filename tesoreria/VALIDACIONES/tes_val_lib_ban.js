@@ -37,7 +37,7 @@ $(function () {
     
     $('#documentoMain').css('visibility', '').hide();
     $('#Pec_Cod').on('change',function(){limit_fec($(this).find(':selected').data())});
-    $('#Pld_Cod,#periodos').chosen({no_results_text: "Oops, sin coincidencias para"});
+    $('#Pld_Cod,#periodos').chosen({no_results_text: "Oops, sin coincidencias para", width: '100%'});
     $('#perio_cont').on('change', function () {
         //console.log(this);
         $('input[name=Pec_Cod]').val($(this).val());
@@ -53,8 +53,10 @@ $(function () {
     //gridStartMovimiento();
     $('.datepicker').createDatePickers({checkAvailability: false, hideMsg: false}).mask("9999-99-99", {placeholder: "_"});
     //$('#periodos').on('change', changePerido);
-    $('#TipBus').chosen();
-    $('#Bak_Cod_Selec').chosen({no_results_text: "Oops, sin coincidencias!"});
+    /* TipBus: select nativo (pocas opciones); evita chosen desproporcionado en filtros */
+    if ($('#Bak_Cod_Selec').length) {
+        $('#Bak_Cod_Selec').chosen({no_results_text: "Oops, sin coincidencias!", width: '100%'});
+    }
     $('#documentoResult').css('visibility', '').hide();
     $('#documentoResult').show();
     $('#gestionarDialog').createDialog({icon: 'plus', width: 500, height: 356});
@@ -204,6 +206,7 @@ var cargarDoc = (obj_row) => {
     obj_row['Num_Doc'] = obj_row['Com_Doc'];
     $(act['formulario']).setData(obj_row);
     tipo = (act['tipo']);
+    if (typeof syncRubroPresupuestoUI === 'function') syncRubroPresupuestoUI();
     if (tipo === 'Ingresos') {
         selectClie({'Cli_Cod': obj_row['Cli_Cod'], 'clientes': obj_row['Prov_Cli']});
     } else {
@@ -246,6 +249,11 @@ var cargarAsientos = (Com_Cod) => {
             });
             gridComp.setRowsByIndex(asientos_complex, 'Index');
             gridComp.startGridEdit().loadUpdate().updateGridDiario();
+            if (r['presupuesto'] && typeof selectPresupuestoRubro === 'function') {
+                selectPresupuestoRubro(r['presupuesto']);
+            } else if (typeof limpiarCamposPresupuesto === 'function') {
+                limpiarCamposPresupuesto();
+            }
             //$('#bancos').attr('onchange',setBanco());
         }
     }, 'json').fail(function (a) {

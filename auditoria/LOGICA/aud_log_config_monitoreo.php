@@ -79,6 +79,70 @@ function aud_cfg_ensure_schema($obBD_conexion)
 }
 
 /**
+ * Limpia texto proveniente de BD: encoding, tags HTML, controles y espacios raros.
+ */
+if (!function_exists('aud_cfg_sanitizar_texto')) {
+	function aud_cfg_sanitizar_texto($s)
+	{
+		if ($s === null) {
+			return '';
+		}
+		if (!is_string($s)) {
+			if (is_numeric($s)) {
+				return (string)$s;
+			}
+			return '';
+		}
+		if ($s === '') {
+			return '';
+		}
+		/* Encoding a UTF-8 si viene en Latin-1 / Windows-1252 */
+		if (function_exists('mb_check_encoding') && !@mb_check_encoding($s, 'UTF-8')) {
+			if (function_exists('mb_convert_encoding')) {
+				$try = @mb_convert_encoding($s, 'UTF-8', 'ISO-8859-1,Windows-1252,UTF-8');
+				if (is_string($try) && $try !== '') {
+					$s = $try;
+				}
+			} elseif (function_exists('utf8_encode')) {
+				$s = @utf8_encode($s);
+			}
+		}
+		$s = strip_tags($s);
+		if (function_exists('html_entity_decode')) {
+			$s = html_entity_decode($s, ENT_QUOTES, 'UTF-8');
+		}
+		/* Quitar controles excepto tab/LF */
+		$s = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $s);
+		if ($s === null) {
+			$s = '';
+		}
+		$s = preg_replace('/\s+/u', ' ', $s);
+		if ($s === null) {
+			$s = '';
+		}
+		return trim($s);
+	}
+}
+
+/**
+ * Sanitiza campos de texto de un arreglo asociativo (filas de BD).
+ */
+if (!function_exists('aud_cfg_sanitizar_fila')) {
+	function aud_cfg_sanitizar_fila($row, $campos)
+	{
+		if (!is_array($row)) {
+			return $row;
+		}
+		foreach ($campos as $c) {
+			if (isset($row[$c])) {
+				$row[$c] = aud_cfg_sanitizar_texto($row[$c]);
+			}
+		}
+		return $row;
+	}
+}
+
+/**
  * Arma modulo -> directorio -> procesos a partir de las filas SQL (case 7).
  */
 function aud_cfg_armar_arbol($rows)
@@ -89,9 +153,9 @@ function aud_cfg_armar_arbol($rows)
 	}
 	foreach ($rows as $row) {
 		$modCod = isset($row['Mod_Cod']) ? (int)$row['Mod_Cod'] : 0;
-		$modDes = isset($row['Mod_Des']) ? trim($row['Mod_Des']) : '';
+		$modDes = isset($row['Mod_Des']) ? aud_cfg_sanitizar_texto($row['Mod_Des']) : '';
 		$dirCod = isset($row['Dir_Cod']) ? (int)$row['Dir_Cod'] : 0;
-		$dirDes = isset($row['Dir_Des']) ? trim($row['Dir_Des']) : '';
+		$dirDes = isset($row['Dir_Des']) ? aud_cfg_sanitizar_texto($row['Dir_Des']) : '';
 		$pcsCod = isset($row['Pcs_Cod']) ? (int)$row['Pcs_Cod'] : 0;
 		if ($modCod <= 0 || $pcsCod <= 0) {
 			continue;
@@ -117,16 +181,16 @@ function aud_cfg_armar_arbol($rows)
 		}
 		$lin = '';
 		if (!empty($row['Pcs_Lin'])) {
-			$lin = trim($row['Pcs_Lin']);
+			$lin = aud_cfg_sanitizar_texto($row['Pcs_Lin']);
 		} elseif (!empty($row['Pcs_Nom'])) {
-			$lin = trim($row['Pcs_Nom']);
+			$lin = aud_cfg_sanitizar_texto($row['Pcs_Nom']);
 		} else {
 			$lin = 'Proceso '.$pcsCod;
 		}
 		$mods[$modCod]['directorios'][$dirCod]['procesos'][] = array(
 			'Pcs_Cod' => $pcsCod,
 			'Pcs_Lin' => $lin,
-			'Pcs_Nom' => isset($row['Pcs_Nom']) ? $row['Pcs_Nom'] : ''
+			'Pcs_Nom' => isset($row['Pcs_Nom']) ? aud_cfg_sanitizar_texto($row['Pcs_Nom']) : ''
 		);
 	}
 	$out = array();
