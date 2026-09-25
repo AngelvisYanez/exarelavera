@@ -57,6 +57,8 @@ nbproject/private/
 build/
 nbbuild/
 dist/
+!Librerias/tailwind/dist/
+!Librerias/tailwind/dist/**
 nbdist/
 .nb-gradle/
 
