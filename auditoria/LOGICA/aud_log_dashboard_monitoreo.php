@@ -56,9 +56,22 @@ if (!function_exists('aud_dash_monitoreo_calcular')) {
 	 * @param string $ini Fecha/hora inicial.
 	 * @param string $fin Fecha/hora final.
 	 * @param int    $lim Limite de top modulos/usuarios/plantas.
+	 * @param array  $filtros Filtros adicionales iguales a Monitoreo:
+	 *                        eve, org (modulo), dir, pcs, usu (CSV), suc, pla.
 	 * @return array
 	 */
-	function aud_dash_monitoreo_calcular($audEmpCod, $ini, $fin, $lim = 8) {
+	function aud_dash_monitoreo_calcular($audEmpCod, $ini, $fin, $lim = 8, $filtros = array()) {
+		// Filtro adicional (mismos indices que espera sentencias_dashboard/aud_dash_where_filtro)
+		$fEve = isset($filtros['eve']) ? (int)$filtros['eve'] : 0;
+		$fOrg = isset($filtros['org']) ? (int)$filtros['org'] : 0;
+		$fDir = isset($filtros['dir']) ? (int)$filtros['dir'] : 0;
+		$fPcs = isset($filtros['pcs']) ? (int)$filtros['pcs'] : 0;
+		$fUsu = isset($filtros['usu']) ? trim((string)$filtros['usu']) : '';
+		$fSuc = isset($filtros['suc']) ? (int)$filtros['suc'] : 0;
+		$fPla = isset($filtros['pla']) ? (int)$filtros['pla'] : 0;
+		// [4]=eve [5]=org/modulo [6]=dir [7]=pcs [8]=usu CSV [9]=suc [10]=pla
+		$opFiltro = array($fEve, $fOrg, $fDir, $fPcs, $fUsu, $fSuc, $fPla);
+
 		// Conexion a la bd de auditoria (mismo mecanismo del dashboard comparativo)
 		$con = null;
 		$Ses_Dat_Dis = isset($_SESSION['Ses_Dat_Dis']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']) : '';
@@ -81,6 +94,12 @@ if (!function_exists('aud_dash_monitoreo_calcular')) {
 			return $resp;
 		}
 
+		// Construye el arreglo de opciones para sentencias_dashboard() con el mismo
+		// limite del arbol de filtros de Monitoreo (indices 4 a 10).
+		$buildOp = function ($limVal) use ($audEmpCod, $ini, $fin, $opFiltro) {
+			return array_merge(array($audEmpCod, $ini, $fin, $limVal), $opFiltro);
+		};
+
 		// Nombre empresa
 		$q = mysqli_query($con, sentencias_dashboard(9, array($audEmpCod)));
 		if ($q && $r = mysqli_fetch_assoc($q)) {
@@ -89,7 +108,7 @@ if (!function_exists('aud_dash_monitoreo_calcular')) {
 
 		// Resumen
 		$resp['resumen'] = array('total' => 0, 'insert' => 0, 'update' => 0, 'delete' => 0, 'usuarios_unicos' => 0);
-		$q = mysqli_query($con, sentencias_dashboard(1, array($audEmpCod, $ini, $fin)));
+		$q = mysqli_query($con, sentencias_dashboard(1, $buildOp($lim)));
 		if ($q && $r = mysqli_fetch_assoc($q)) {
 			$resp['resumen'] = array(
 				'total' => (int)$r['Total_Movimientos'],
@@ -102,7 +121,7 @@ if (!function_exists('aud_dash_monitoreo_calcular')) {
 		// Tendencia diaria
 		$cats = array();
 		$serie = array();
-		$q = mysqli_query($con, sentencias_dashboard(5, array($audEmpCod, $ini, $fin)));
+		$q = mysqli_query($con, sentencias_dashboard(5, $buildOp($lim)));
 		$usuTend = 0;
 		while ($q && $r = mysqli_fetch_assoc($q)) {
 			$cats[] = $r['Dia'];
@@ -115,7 +134,7 @@ if (!function_exists('aud_dash_monitoreo_calcular')) {
 			$resp['resumen']['usuarios_unicos'] = 0;
 			// Recalcular usuarios unicos reales mediante case 2 (total usuarios por modulo)
 			$mapUsuB = array();
-			$q2 = mysqli_query($con, sentencias_dashboard(6, array($audEmpCod, $ini, $fin, 100000)));
+			$q2 = mysqli_query($con, sentencias_dashboard(6, $buildOp(100000)));
 			while ($q2 && $f = mysqli_fetch_assoc($q2)) {
 				$mapUsuB[(int)$f['Usu_Cod']] = 1;
 			}
@@ -124,7 +143,7 @@ if (!function_exists('aud_dash_monitoreo_calcular')) {
 
 		// Top modulos
 		$resp['modulos'] = array();
-		$q = mysqli_query($con, sentencias_dashboard(2, array($audEmpCod, $ini, $fin, $lim)));
+		$q = mysqli_query($con, sentencias_dashboard(2, $buildOp($lim)));
 		while ($q && $r = mysqli_fetch_assoc($q)) {
 			$resp['modulos'][] = array(
 				'modulo' => !empty($r['Modulo']) ? $r['Modulo'] : 'Sin Modulo',
@@ -135,7 +154,7 @@ if (!function_exists('aud_dash_monitoreo_calcular')) {
 		// Franja horaria
 		$horarios = array();
 		for ($h = 0; $h < 24; $h++) $horarios[] = array('hora' => sprintf('%02d:00', $h), 'total' => 0);
-		$q = mysqli_query($con, sentencias_dashboard(3, array($audEmpCod, $ini, $fin)));
+		$q = mysqli_query($con, sentencias_dashboard(3, $buildOp($lim)));
 		while ($q && $r = mysqli_fetch_assoc($q)) {
 			$h = (int)$r['Hora'];
 			if ($h >= 0 && $h <= 23) $horarios[$h]['total'] = (int)$r['Total'];
@@ -144,7 +163,7 @@ if (!function_exists('aud_dash_monitoreo_calcular')) {
 
 		// Top usuarios
 		$resp['usuarios_top'] = array();
-		$q = mysqli_query($con, sentencias_dashboard(6, array($audEmpCod, $ini, $fin, $lim)));
+		$q = mysqli_query($con, sentencias_dashboard(6, $buildOp($lim)));
 		while ($q && $r = mysqli_fetch_assoc($q)) {
 			$nom = trim(trim(isset($r['Prs_Nom']) ? $r['Prs_Nom'] : ('Usuario #' . $r['Usu_Cod'])) . ' ' . (isset($r['Prs_Ape']) ? $r['Prs_Ape'] : ''));
 			if ($nom === '') $nom = 'Usuario #' . $r['Usu_Cod'];
@@ -160,7 +179,7 @@ if (!function_exists('aud_dash_monitoreo_calcular')) {
 
 		// Top plantas
 		$resp['plantas_top'] = array();
-		$q = mysqli_query($con, sentencias_dashboard(7, array($audEmpCod, $ini, $fin, $lim)));
+		$q = mysqli_query($con, sentencias_dashboard(7, $buildOp($lim)));
 		while ($q && $r = mysqli_fetch_assoc($q)) {
 			$resp['plantas_top'][] = array(
 				'Pla_Cod' => (int)$r['Pla_Cod'],
@@ -175,7 +194,7 @@ if (!function_exists('aud_dash_monitoreo_calcular')) {
 
 		// Comportamiento diario por usuario (top 8 por total del periodo)
 		$mapUsu = array();
-		$q = mysqli_query($con, sentencias_dashboard(8, array($audEmpCod, $ini, $fin)));
+		$q = mysqli_query($con, sentencias_dashboard(8, $buildOp($lim)));
 		while ($q && $r = mysqli_fetch_assoc($q)) {
 			$c = (int)$r['Usu_Cod'];
 			if (!isset($mapUsu[$c])) {
@@ -204,7 +223,7 @@ if (!function_exists('aud_dash_monitoreo_calcular')) {
 			mysqli_close($con);
 		}
 
-		return $resp;
+		return aud_dash_to_utf8_deep($resp);
 	}
 }
 
@@ -270,6 +289,43 @@ if (!function_exists('aud_dash_procesar_whatsapp_monitoreo')) {
 }
 
 // -------------------------------------------------------------
+// COMBOS DEPENDIENTES DEL FILTRO (mismos catalogos que Monitoreo):
+// directorio por modulo, proceso por directorio y si el proceso maneja plantas.
+// -------------------------------------------------------------
+if (isset($_REQUEST['directoriosAjax']) || isset($_REQUEST['procesosAjax']) || isset($_REQUEST['plantaProcesoAjax'])) {
+	@ini_set('display_errors', '0');
+	@header('Content-Type: application/json; charset=utf-8');
+	if (session_id() === '') {
+		@session_start();
+	}
+	$audEmpCodC = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
+	require_once dirname(__FILE__) . '/aud_log_acceso_directorio.php';
+	aud_acceso_directorio_gate($audEmpCodC);
+	require_once dirname(__FILE__) . '/aud_log_monitoreo.php';
+	$Ses_Dat_DisC = isset($_SESSION['Ses_Dat_Dis']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']) : '';
+	$obBD_conexionC = new Class_Log_Conexion($Ses_Dat_DisC !== '' ? $Ses_Dat_DisC : null);
+	$obBD_con1C = new Class_Log_Datos();
+
+	if (isset($_REQUEST['directoriosAjax'])) {
+		$fOrg = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
+		$rows = $obBD_con1C->getArrayConsulta(30, array($audEmpCodC, $fOrg), $obBD_conexionC);
+		echo json_encode(aud_dash_to_utf8_deep(array('success' => true, 'rows' => is_array($rows) ? $rows : array())));
+	} elseif (isset($_REQUEST['procesosAjax'])) {
+		$fDir = isset($_REQUEST['dir']) ? (int)$_REQUEST['dir'] : 0;
+		$fOrg = isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0;
+		$rows = $obBD_con1C->getArrayConsulta(26, array($audEmpCodC, $fDir, $fOrg), $obBD_conexionC);
+		echo json_encode(aud_dash_to_utf8_deep(array('success' => true, 'rows' => is_array($rows) ? $rows : array())));
+	} else {
+		$fPcs = isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0;
+		$row = $fPcs > 0 ? $obBD_con1C->getRowConsulta(35, array($fPcs), $obBD_conexionC) : array();
+		echo json_encode(array('success' => true, 'tienePlanta' => !empty($row['count'])));
+	}
+	$obBD_con1C->liberar();
+	$obBD_conexionC->cerrar();
+	exit();
+}
+
+// -------------------------------------------------------------
 // CONTROLADOR AJAX PARA PETICIONES DEL FRONTEND DEL DASHBOARD
 // -------------------------------------------------------------
 if (isset($_REQUEST['action'])) {
@@ -283,22 +339,36 @@ if (isset($_REQUEST['action'])) {
 	$audEmpCod = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
 	$audUsuCod = isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
 
+	require_once dirname(__FILE__) . '/aud_log_acceso_directorio.php';
+	aud_acceso_directorio_gate($audEmpCod);
+
 	$ini = isset($_REQUEST['ini']) ? trim($_REQUEST['ini']) : '';
 	$fin = isset($_REQUEST['fin']) ? trim($_REQUEST['fin']) : '';
 	$ini = $ini !== '' ? $ini : date('Y-m-d 00:00:00', strtotime('-30 days'));
 	$fin = $fin !== '' ? $fin : date('Y-m-d 23:59:59');
 
+	// Mismos filtros que Monitoreo: evento/modulo/directorio/proceso/usuario/sucursal/planta.
+	$audFiltros = array(
+		'eve' => isset($_REQUEST['eve']) ? (int)$_REQUEST['eve'] : 0,
+		'org' => isset($_REQUEST['org']) ? (int)$_REQUEST['org'] : 0,
+		'dir' => isset($_REQUEST['dir']) ? (int)$_REQUEST['dir'] : 0,
+		'pcs' => isset($_REQUEST['pcs']) ? (int)$_REQUEST['pcs'] : 0,
+		'usu' => isset($_REQUEST['usu']) ? trim((string)$_REQUEST['usu']) : '',
+		'suc' => isset($_REQUEST['suc']) ? (int)$_REQUEST['suc'] : 0,
+		'pla' => isset($_REQUEST['pla']) ? (int)$_REQUEST['pla'] : 0
+	);
+
 	switch ($action) {
 		case 'consultar':
 			@header('Content-Type: application/json; charset=utf-8');
-			$datos = aud_dash_monitoreo_calcular($audEmpCod, $ini, $fin);
+			$datos = aud_dash_monitoreo_calcular($audEmpCod, $ini, $fin, 8, $audFiltros);
 			$datos = aud_dash_to_utf8_deep($datos);
 			echo json_encode(array('success' => true) + $datos);
 			exit();
 
 		case 'exportar_pdf':
 			require_once dirname(__FILE__) . '/aud_rep_monitoreo_pdf.php';
-			$datos = aud_dash_monitoreo_calcular($audEmpCod, $ini, $fin);
+			$datos = aud_dash_monitoreo_calcular($audEmpCod, $ini, $fin, 8, $audFiltros);
 			$datos = aud_dash_to_utf8_deep($datos);
 			$datos['usuario_emisor'] = (isset($_SESSION['Ses_Usu_Nom']) && trim($_SESSION['Ses_Usu_Nom']) !== '')
 				? $_SESSION['Ses_Usu_Nom'] : 'Auditor del Sistema';
@@ -317,7 +387,7 @@ if (isset($_REQUEST['action'])) {
 			}
 
 			require_once dirname(__FILE__) . '/aud_rep_monitoreo_pdf.php';
-			$datos = aud_dash_monitoreo_calcular($audEmpCod, $ini, $fin);
+			$datos = aud_dash_monitoreo_calcular($audEmpCod, $ini, $fin, 8, $audFiltros);
 			$datos = aud_dash_to_utf8_deep($datos);
 			$datos['usuario_emisor'] = (isset($_SESSION['Ses_Usu_Nom']) && trim($_SESSION['Ses_Usu_Nom']) !== '')
 				? $_SESSION['Ses_Usu_Nom'] : 'Auditor del Sistema';
@@ -398,7 +468,7 @@ if (isset($_REQUEST['action'])) {
 		case 'enviar_whatsapp':
 			@header('Content-Type: application/json; charset=utf-8');
 			$telefono = isset($_REQUEST['telefono']) ? $_REQUEST['telefono'] : '';
-			$datos = aud_dash_monitoreo_calcular($audEmpCod, $ini, $fin);
+			$datos = aud_dash_monitoreo_calcular($audEmpCod, $ini, $fin, 8, $audFiltros);
 			$datos = aud_dash_to_utf8_deep($datos);
 			$resWa = aud_dash_preparar_whatsapp_monitoreo($datos, $telefono);
 			echo json_encode($resWa);

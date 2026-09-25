@@ -14,12 +14,45 @@
 if (!function_exists('aud_sql_db_dis')) {
 	function aud_sql_db_dis()
 	{
+		static $resolved = null;
 		$db = isset($_SESSION['Ses_Dat_Dis']) ? trim((string)$_SESSION['Ses_Dat_Dis']) : '';
 		if ($db === '' && isset($GLOBALS['Ses_Dat_Dis'])) {
 			$db = trim((string)$GLOBALS['Ses_Dat_Dis']);
 		}
+		if ($db === '' && class_exists('Env')) {
+			$db = trim((string)\Env::get('AUDIT_DB_DIS', ''));
+		}
 		$db = preg_replace('/[^a-zA-Z0-9_]/', '', $db);
-		return ($db !== '') ? "`{$db}`" : "`servicios`";
+		if ($db !== '') {
+			return "`{$db}`";
+		}
+		if ($resolved !== null) {
+			return $resolved;
+		}
+		// Sin sesion: tomar primera BD distribuida activa del master (evita `servicios`).
+		$resolved = '`ecoparkmining`';
+		if (class_exists('Env')) {
+			$host = \Env::get('DB_HOST', '127.0.0.1');
+			$user = \Env::get('DB_USERNAME', 'root');
+			$pass = \Env::get('DB_PASSWORD', '');
+			$port = (int)\Env::get('DB_PORT', 3306);
+			$master = preg_replace('/[^a-zA-Z0-9_]/', '', (string)\Env::get('DB_DATABASE', 'exa_master'));
+			if ($master === '') {
+				$master = 'exa_master';
+			}
+			$con = @mysqli_connect($host, $user, $pass, $master, $port);
+			if ($con) {
+				$r = @mysqli_query($con, "SELECT `Dat_Dis` FROM `data` WHERE IFNULL(`Dat_Est`,'A')='A' AND `Dat_Dis`<>'' ORDER BY `Dat_Cod` ASC LIMIT 1");
+				if ($r && ($row = mysqli_fetch_assoc($r))) {
+					$cand = preg_replace('/[^a-zA-Z0-9_]/', '', (string)$row['Dat_Dis']);
+					if ($cand !== '') {
+						$resolved = "`{$cand}`";
+					}
+				}
+				@mysqli_close($con);
+			}
+		}
+		return $resolved;
 	}
 }
 
@@ -357,16 +390,41 @@ function sentencias($id,$Par_Sql){
 		break;
 
 		case 25:
-			// Modulos raiz (Org_Niv=0) presentes en logs
+			// Modulos raiz (Org_Niv=0): desde logs (LEFT JOIN) + cfg_monitoreo.
+			// Antes usaba INNER JOIN a procesos: si Pcs_Cod del log no resolvia
+			// en Dat_Dis, el combo Modulo quedaba vacio aunque hubiera actividad.
 			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
 			$empF = aud_sql_emp_eq($emp);
+			$modExpr = aud_sql_expr_modulo_cod();
+			$modDesExpr = aud_sql_expr_modulo_des();
+			$modExprCfg = aud_sql_expr_modulo_cod(array(
+				'org' => 'o',
+				'padre' => 'op',
+				'abuelo' => 'oa',
+				'bis' => 'ob'
+			));
+			$modDesExprCfg = aud_sql_expr_modulo_des(array(
+				'org' => 'o',
+				'padre' => 'op',
+				'abuelo' => 'oa',
+				'bis' => 'ob'
+			));
 			$sql = "SELECT DISTINCT t.`Org_Cod`, t.`Org_Des` FROM (
-				SELECT ".aud_sql_expr_modulo_cod()." AS `Org_Cod`,
-					".aud_sql_expr_modulo_des()." AS `Org_Des`
+				SELECT {$modExpr} AS `Org_Cod`,
+					{$modDesExpr} AS `Org_Des`
 				FROM `auditoria`.`logs`
-				INNER JOIN {$dbDis}.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
+				LEFT JOIN {$dbDis}.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
 				".aud_sql_org_tree_joins('`procesos`')."
-				WHERE 1=1 {$empF}
+				WHERE `logs`.`Pcs_Cod` > 0 {$empF}
+				UNION
+				SELECT {$modExprCfg} AS `Org_Cod`,
+					{$modDesExprCfg} AS `Org_Des`
+				FROM `auditoria`.`cfg_monitoreo` c
+				LEFT JOIN {$dbDis}.`organizado` o ON o.`Org_Cod` = c.`Org_Cod`
+				LEFT JOIN {$dbDis}.`organizado` op ON op.`Org_Cod` = o.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` oa ON oa.`Org_Cod` = op.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` ob ON ob.`Org_Cod` = oa.`Org_Niv`
+				WHERE c.`Emp_Cod`={$emp} AND c.`Cfg_Est`='A' AND c.`Org_Cod` > 0
 			) t
 			WHERE t.`Org_Cod` IS NOT NULL AND t.`Org_Des` IS NOT NULL AND TRIM(t.`Org_Des`)<>''
 			ORDER BY t.`Org_Des` ASC";
@@ -374,30 +432,79 @@ function sentencias($id,$Par_Sql){
 		break;
 
 		case 26:
-			// Procesos: 0 emp, 1 directorio, 2 modulo (opcional)
+			// Procesos para filtro: 0 emp, 1 directorio, 2 modulo (opcional).
+			// LEFT JOIN + UNION cfg: el grid usa LEFT JOIN y muestra actividad
+			// aunque el catalogo no resuelva; el combo no puede exigir INNER.
 			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
 			$dir = isset($Par_Sql[1]) ? (int)$Par_Sql[1] : 0;
 			$mod = isset($Par_Sql[2]) ? (int)$Par_Sql[2] : 0;
 			$empF = aud_sql_emp_eq($emp);
-			$dirF = $dir > 0 ? " AND p.`Org_Cod`={$dir}" : '';
+			$dirF = $dir > 0 ? " AND x.`Dir_Cod`={$dir}" : '';
 			$modF = '';
 			if ($mod > 0 && $dir <= 0) {
-				$modF = " AND (".aud_sql_expr_modulo_cod(array(
-					'org' => 'o',
-					'padre' => 'op',
-					'abuelo' => 'oa',
-					'bis' => 'ob'
-				))."={$mod})";
+				$modF = " AND x.`Mod_Cod`={$mod}";
 			}
-			$sql = "SELECT DISTINCT p.`Pcs_Cod`, p.`Pcs_Lin`, p.`Pcs_Nom`, o.`Org_Des`
-			FROM `auditoria`.`logs`
-			INNER JOIN {$dbDis}.`procesos` p ON `logs`.`Pcs_Cod` = p.`Pcs_Cod`
-			LEFT JOIN {$dbDis}.`organizado` o ON p.`Org_Cod` = o.`Org_Cod`
-			LEFT JOIN {$dbDis}.`organizado` op ON op.`Org_Cod` = o.`Org_Niv`
-			LEFT JOIN {$dbDis}.`organizado` oa ON oa.`Org_Cod` = op.`Org_Niv`
-			LEFT JOIN {$dbDis}.`organizado` ob ON ob.`Org_Cod` = oa.`Org_Niv`
-			WHERE p.`Pcs_Cod` > 0 {$empF} {$dirF} {$modF}
-			ORDER BY IFNULL(p.`Pcs_Lin`, p.`Pcs_Nom`) ASC";
+			$lblPcsLog = "IFNULL(NULLIF(TRIM(p.`Pcs_Lin`),''), IFNULL(NULLIF(TRIM(p.`Pcs_Nom`),''), CONCAT('Proceso ', `logs`.`Pcs_Cod`)))";
+			$lblPcsCfg = "IFNULL(NULLIF(TRIM(p.`Pcs_Lin`),''), IFNULL(NULLIF(TRIM(p.`Pcs_Nom`),''), CONCAT('Proceso ', c.`Pcs_Cod`)))";
+			$lblPcsOrg = "IFNULL(NULLIF(TRIM(p.`Pcs_Lin`),''), IFNULL(NULLIF(TRIM(p.`Pcs_Nom`),''), CONCAT('Proceso ', p.`Pcs_Cod`)))";
+			$modCodP = aud_sql_expr_modulo_cod(array(
+				'org' => 'o',
+				'padre' => 'op',
+				'abuelo' => 'oa',
+				'bis' => 'ob'
+			));
+			$sql = "SELECT DISTINCT x.`Pcs_Cod`, x.`Pcs_Lin`, x.`Pcs_Nom`, x.`Org_Des`
+			FROM (
+				SELECT `logs`.`Pcs_Cod` AS `Pcs_Cod`,
+					{$lblPcsLog} AS `Pcs_Lin`,
+					p.`Pcs_Nom` AS `Pcs_Nom`,
+					o.`Org_Des` AS `Org_Des`,
+					p.`Org_Cod` AS `Dir_Cod`,
+					{$modCodP} AS `Mod_Cod`
+				FROM `auditoria`.`logs`
+				LEFT JOIN {$dbDis}.`procesos` p ON `logs`.`Pcs_Cod` = p.`Pcs_Cod`
+				LEFT JOIN {$dbDis}.`organizado` o ON p.`Org_Cod` = o.`Org_Cod`
+				LEFT JOIN {$dbDis}.`organizado` op ON op.`Org_Cod` = o.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` oa ON oa.`Org_Cod` = op.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` ob ON ob.`Org_Cod` = oa.`Org_Niv`
+				WHERE `logs`.`Pcs_Cod` > 0 {$empF}
+				UNION
+				SELECT c.`Pcs_Cod` AS `Pcs_Cod`,
+					{$lblPcsCfg} AS `Pcs_Lin`,
+					p.`Pcs_Nom` AS `Pcs_Nom`,
+					o.`Org_Des` AS `Org_Des`,
+					IFNULL(p.`Org_Cod`, c.`Org_Cod`) AS `Dir_Cod`,
+					{$modCodP} AS `Mod_Cod`
+				FROM `auditoria`.`cfg_monitoreo` c
+				LEFT JOIN {$dbDis}.`procesos` p ON c.`Pcs_Cod` = p.`Pcs_Cod`
+				LEFT JOIN {$dbDis}.`organizado` o ON IFNULL(p.`Org_Cod`, c.`Org_Cod`) = o.`Org_Cod`
+				LEFT JOIN {$dbDis}.`organizado` op ON op.`Org_Cod` = o.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` oa ON oa.`Org_Cod` = op.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` ob ON ob.`Org_Cod` = oa.`Org_Niv`
+				WHERE c.`Emp_Cod`={$emp} AND c.`Cfg_Est`='A' AND c.`Pcs_Cod` > 0
+				UNION
+				SELECT p.`Pcs_Cod` AS `Pcs_Cod`,
+					{$lblPcsOrg} AS `Pcs_Lin`,
+					p.`Pcs_Nom` AS `Pcs_Nom`,
+					o.`Org_Des` AS `Org_Des`,
+					p.`Org_Cod` AS `Dir_Cod`,
+					{$modCodP} AS `Mod_Cod`
+				FROM `auditoria`.`cfg_monitoreo` c
+				INNER JOIN {$dbDis}.`procesos` p ON (
+					p.`Org_Cod` = c.`Org_Cod`
+					OR p.`Org_Cod` IN (
+						SELECT o2.`Org_Cod` FROM {$dbDis}.`organizado` o2 WHERE o2.`Org_Niv` = c.`Org_Cod`
+					)
+				)
+				LEFT JOIN {$dbDis}.`organizado` o ON p.`Org_Cod` = o.`Org_Cod`
+				LEFT JOIN {$dbDis}.`organizado` op ON op.`Org_Cod` = o.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` oa ON oa.`Org_Cod` = op.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` ob ON ob.`Org_Cod` = oa.`Org_Niv`
+				WHERE c.`Emp_Cod`={$emp} AND c.`Cfg_Est`='A' AND c.`Pcs_Cod` = 0 AND c.`Org_Cod` > 0
+					AND IFNULL(p.`Pcs_Est`,'A')='A'
+			) x
+			WHERE x.`Pcs_Cod` > 0 {$dirF} {$modF}
+			ORDER BY IFNULL(x.`Pcs_Lin`, x.`Pcs_Nom`) ASC";
 			return $sql;
 		break;
 
@@ -456,19 +563,42 @@ function sentencias($id,$Par_Sql){
 		 * 0 emp, 1 modulo raiz (opcional)
 		 */
 		case 30:
+			// Directorios: logs (LEFT JOIN) + cfg_monitoreo (misma logica que modulos/procesos).
 			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
 			$mod = isset($Par_Sql[1]) ? (int)$Par_Sql[1] : 0;
 			$empF = aud_sql_emp_eq($emp);
-			$modF = '';
+			$modFLog = '';
+			$modFCfg = '';
 			if ($mod > 0) {
-				$modF = " AND (".aud_sql_expr_modulo_cod()."={$mod})";
+				$modFLog = " AND (".aud_sql_expr_modulo_cod()."={$mod})";
+				$modFCfg = " AND (".aud_sql_expr_modulo_cod(array(
+					'org' => 'o',
+					'padre' => 'op',
+					'abuelo' => 'oa',
+					'bis' => 'ob'
+				))."={$mod})";
 			}
-			$sql = "SELECT DISTINCT `organizado`.`Org_Cod`, `organizado`.`Org_Des`
-			FROM `auditoria`.`logs`
-			INNER JOIN {$dbDis}.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
-			".aud_sql_org_tree_joins('`procesos`')."
-			WHERE `organizado`.`Org_Des` IS NOT NULL AND TRIM(`organizado`.`Org_Des`)<>'' {$empF} {$modF}
-			ORDER BY `organizado`.`Org_Des` ASC";
+			$sql = "SELECT DISTINCT t.`Org_Cod`, t.`Org_Des` FROM (
+				SELECT `organizado`.`Org_Cod`, `organizado`.`Org_Des`
+				FROM `auditoria`.`logs`
+				LEFT JOIN {$dbDis}.`procesos` ON `logs`.`Pcs_Cod` = `procesos`.`Pcs_Cod`
+				".aud_sql_org_tree_joins('`procesos`')."
+				WHERE `logs`.`Pcs_Cod` > 0
+					AND `organizado`.`Org_Des` IS NOT NULL AND TRIM(`organizado`.`Org_Des`)<>''
+					{$empF} {$modFLog}
+				UNION
+				SELECT o.`Org_Cod`, o.`Org_Des`
+				FROM `auditoria`.`cfg_monitoreo` c
+				LEFT JOIN {$dbDis}.`organizado` o ON o.`Org_Cod` = c.`Org_Cod`
+				LEFT JOIN {$dbDis}.`organizado` op ON op.`Org_Cod` = o.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` oa ON oa.`Org_Cod` = op.`Org_Niv`
+				LEFT JOIN {$dbDis}.`organizado` ob ON ob.`Org_Cod` = oa.`Org_Niv`
+				WHERE c.`Emp_Cod`={$emp} AND c.`Cfg_Est`='A' AND c.`Org_Cod` > 0
+					AND o.`Org_Des` IS NOT NULL AND TRIM(o.`Org_Des`)<>''
+					{$modFCfg}
+			) t
+			WHERE t.`Org_Cod` IS NOT NULL AND t.`Org_Des` IS NOT NULL AND TRIM(t.`Org_Des`)<>''
+			ORDER BY t.`Org_Des` ASC";
 			return $sql;
 		break;
 
@@ -537,6 +667,40 @@ function sentencias($id,$Par_Sql){
 				)
 			)";
 			return $sql;
+		break;
+
+		/**
+		 * Historial de un registro: todos los movimientos del mismo tipo de tab
+		 * (Tab_Cod) e identificador (Log_Int) dentro de la misma empresa.
+		 * El identificador se compara con LIKE por prefijo para tolerar el
+		 * sufijo " || OLD:..." que agrega el evento Actualizar.
+		 * 0 tab, 1 emp, 2 identificador (base), 3 limite
+		 */
+		case 36:
+			$tab = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$emp = isset($Par_Sql[1]) ? (int)$Par_Sql[1] : 0;
+			$ident = isset($Par_Sql[2]) ? trim((string)$Par_Sql[2]) : '';
+			$lim = isset($Par_Sql[3]) ? max(1, (int)$Par_Sql[3]) : 100;
+			if ($lim > 500) {
+				$lim = 500;
+			}
+			$identEsc = str_replace(array('\\', '%', '_'), array('\\\\', '\\%', '\\_'), addslashes($ident));
+			$empF = $emp > 0 ? " AND `logs`.`Emp_Cod`={$emp}" : '';
+			if ($tab <= 0 || $ident === '') {
+				return "SELECT `logs`.`Log_Cod` FROM `auditoria`.`logs` WHERE 1=0";
+			}
+			return aud_logs_select()."
+			WHERE `logs`.`Tab_Cod` = {$tab}
+			  AND `logs`.`Log_Int` LIKE '{$identEsc}%' {$empF}
+			ORDER BY `logs`.`Log_Fec` ASC, `logs`.`Log_Cod` ASC
+			LIMIT {$lim}";
+		break;
+
+		/** Fecha mas antigua con datos de auditoria (para el aviso "desde cuando hay datos") */
+		case 37:
+			$emp = isset($Par_Sql[0]) ? (int)$Par_Sql[0] : 0;
+			$empF = $emp > 0 ? " WHERE `Emp_Cod`={$emp}" : '';
+			return "SELECT MIN(`Log_Fec`) AS `min_fec` FROM `auditoria`.`logs`{$empF}";
 		break;
 	}
 }

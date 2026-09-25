@@ -10,9 +10,15 @@ if (session_id() === '' && !headers_sent()) {
 	@session_start();
 }
 
+require_once dirname(__FILE__) . '/../../administrador/LOGICA/seguridad.php';
+
 $audEmpCod = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 1;
 $audEmpNom = isset($_SESSION['Ses_Emp_Nom']) ? $_SESSION['Ses_Emp_Nom'] : 'Empresa Principal';
+$audUsuCod = isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
 $audUsuNom = isset($_SESSION['Ses_Usu_Nom']) ? $_SESSION['Ses_Usu_Nom'] : 'Administrador';
+
+require_once dirname(__FILE__) . '/../LOGICA/aud_log_acceso_directorio.php';
+aud_acceso_directorio_gate($audEmpCod);
 
 // Valores por defecto: Ultimo mes vs mes previo
 $defaultPaIni = date('Y-m-d 00:00:00', strtotime('-60 days'));
@@ -30,8 +36,9 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 
 	<!-- Estilos Oficiales ExaContable ERP -->
 	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
-	<?php require_once("../../mascaras/model3/estilos/estilos.php"); ?>
+	<?php require_once("../../mascaras/model4/estilos/estilos.php"); ?>
 	<script type="text/javascript" src="../../framework/jquery/apexcharts/apexcharts.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260924_desk19c" />
 
 	<style>
 		/* Estilos armonizados con el tema visual de ExaContable */
@@ -62,6 +69,7 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			border: 1px solid #d0dbe5;
 			margin-bottom: 12px;
 			box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+			overflow: visible;
 		}
 		.preset-btn {
 			font-size: 11px;
@@ -73,12 +81,12 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			transition: all 0.15s;
 		}
 
-		/* Barra de herramientas compartida: filtros juntos + Acciones a la derecha */
+		/* Barra de filtros en una sola linea (como Monitoreo / Panel estadistico) */
 		.aud-toolbar {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			flex-wrap: wrap;
+			flex-wrap: nowrap;
 			gap: 10px;
 			padding: 10px 14px;
 		}
@@ -86,34 +94,88 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			flex: 1 1 auto;
 			min-width: 0;
 			display: flex;
-			flex-direction: column;
-			gap: 8px;
-		}
-		.aud-toolbar-presets {
-			display: flex;
+			flex-direction: row;
 			align-items: center;
-			flex-wrap: wrap;
+			flex-wrap: nowrap;
 			gap: 8px;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			scrollbar-width: thin;
+		}
+		.aud-toolbar-left > * {
+			flex-shrink: 0;
 		}
 		.aud-toolbar-label {
 			font-weight: 700;
-			font-size: 12px;
-			color: #334155;
+			font-size: 11px;
+			letter-spacing: 0.03em;
+			text-transform: uppercase;
+			color: #5b6f88;
+			white-space: nowrap;
 		}
 		.aud-toolbar-dates {
-			display: flex;
+			display: inline-flex;
 			align-items: center;
-			flex-wrap: wrap;
-			gap: 10px;
+			flex-wrap: nowrap;
+			gap: 6px;
 		}
-		.aud-toolbar-dates .period-box-a,
-		.aud-toolbar-dates .period-box-b {
-			width: 300px;
-			max-width: 100%;
-			margin-bottom: 0;
+		.aud-cmp-inline {
+			display: inline-flex;
+			align-items: center;
+			flex-wrap: nowrap;
+			gap: 4px;
+		}
+		.aud-cmp-inline .aud-cmp-tag {
+			display: inline-block;
+			font-size: 10px;
+			font-weight: 800;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			padding: 3px 7px;
+			border-radius: 3px;
+			white-space: nowrap;
+			line-height: 1.2;
+		}
+		.aud-cmp-inline.a .aud-cmp-tag {
+			background: #64748b;
+			color: #fff;
+		}
+		.aud-cmp-inline.b .aud-cmp-tag {
+			background: #2563eb;
+			color: #fff;
+		}
+		.aud-cmp-inline .aud-toolbar-range .form-control {
+			width: 96px;
+			text-align: center;
+			font-size: 11px;
+			height: 28px;
+			padding: 2px 6px;
+		}
+		.aud-cmp-inline .aud-toolbar-range .input-group-addon {
+			padding: 2px 6px;
+			font-size: 11px;
+			font-weight: 600;
+		}
+		.dash-vs-pill {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			background: #e2e8f0;
+			color: #475569;
+			font-size: 10px;
+			font-weight: 800;
+			padding: 4px 8px;
+			border-radius: 12px;
+			letter-spacing: 0.04em;
+			white-space: nowrap;
+			flex-shrink: 0;
 		}
 		.aud-toolbar-right {
 			flex: 0 0 auto;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			flex-shrink: 0;
 		}
 		.aud-acciones-menu {
 			min-width: 210px;
@@ -128,12 +190,23 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			margin-right: 4px;
 		}
 		@media (max-width: 767px) {
-			.aud-toolbar-right { width: 100%; }
-			.aud-toolbar-right .dropdown { float: right; }
-			.aud-toolbar-dates .period-box-a,
-			.aud-toolbar-dates .period-box-b { width: 100%; }
+			.aud-toolbar {
+				flex-wrap: nowrap;
+				overflow-x: auto;
+			}
+			.aud-toolbar-right {
+				width: auto;
+				justify-content: flex-end;
+				flex-shrink: 0;
+			}
+			.aud-toolbar-right .dropdown { float: none; }
+		}
+		@media (max-width: 480px) {
+			.aud-acciones-menu { max-width: 90vw; min-width: 0; }
+			.aud-cmp-inline .aud-toolbar-range .form-control { width: 84px; }
 		}
 
+		/* Conservado por si se usa en otros bloques del tablero */
 		.period-box-a {
 			background: #f8fafc;
 			border: 1px solid #e2e8f0;
@@ -148,16 +221,6 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			border-radius: 4px;
 			padding: 10px 12px;
 		}
-		.dash-vs-pill {
-			display: inline-block;
-			background: #e2e8f0;
-			color: #475569;
-			font-size: 11px;
-			font-weight: 800;
-			padding: 3px 8px;
-			border-radius: 12px;
-			letter-spacing: 0.5px;
-		}
 
 		#ui-datepicker-div {
 			z-index: 99999 !important;
@@ -168,69 +231,252 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			background: #ffffff;
 		}
 
-		/* Grid de KPIs */
-		.kpi-grid {
+		/* KPIs comparativos (scoped: no heredar .kpi-card horizontal del CSS global) */
+		.aud-cmp-kpi-grid {
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
-			gap: 10px;
-			margin-bottom: 14px;
+			grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+			gap: 8px;
+			margin-bottom: 10px;
 		}
-		.kpi-card {
+		.aud-cmp-kpi {
+			display: flex;
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0;
 			background: #ffffff;
-			border-radius: 4px;
-			padding: 12px 14px;
-			box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+			border-radius: 8px;
+			padding: 7px 10px 8px;
+			box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 			border: 1px solid #d0dbe5;
-			position: relative;
-			border-left: 4px solid #2563eb;
-			transition: transform 0.15s ease, box-shadow 0.15s ease;
+			border-top: 2px solid #2563eb;
+			border-left-width: 1px;
+			min-width: 0;
+			min-height: 68px;
+			transition: box-shadow 0.15s ease;
 		}
-		.kpi-card:hover {
-			transform: translateY(-2px);
-			box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+		.aud-cmp-kpi:hover {
+			transform: none;
+			box-shadow: 0 2px 8px rgba(37, 68, 99, 0.08);
 		}
-		.kpi-title {
-			font-size: 11px;
+		.aud-cmp-kpi .kpi-title {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+			font-size: 9px;
 			font-weight: 700;
 			text-transform: uppercase;
 			color: #64748b;
-			margin-bottom: 4px;
-			letter-spacing: 0.4px;
+			margin: 0 0 3px;
+			letter-spacing: 0.03em;
+			line-height: 1.2;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
 		}
-		.kpi-values-row {
-			display: flex;
-			align-items: baseline;
-			justify-content: space-between;
-			margin-bottom: 2px;
+		.aud-cmp-kpi .kpi-title .fa {
+			flex-shrink: 0;
+			opacity: 0.85;
 		}
-		.kpi-main-val {
-			font-size: 22px;
+		.aud-cmp-kpi .kpi-values-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 6px;
+			margin-bottom: 4px;
+		}
+		.aud-cmp-kpi .kpi-main-val {
+			font-size: 16px;
 			font-weight: 800;
 			color: #0f172a;
-			line-height: 1.1;
+			line-height: 1.05;
+			letter-spacing: -0.01em;
+			min-width: 0;
 		}
-		.kpi-sub-val {
-			font-size: 11px;
-			color: #94a3b8;
-			margin-top: 2px;
-		}
-		.kpi-badge {
-			font-size: 11px;
+		.aud-cmp-kpi .kpi-badge {
+			font-size: 10px;
 			font-weight: 700;
-			padding: 2px 7px;
+			padding: 2px 5px;
 			border-radius: 3px;
 			display: inline-flex;
 			align-items: center;
-			gap: 4px;
+			gap: 2px;
+			flex-shrink: 0;
+			white-space: nowrap;
+			line-height: 1.2;
 		}
-		.badge-up { background: #dcfce7; color: #15803d; }
-		.badge-down { background: #fee2e2; color: #b91c1c; }
-		.badge-neutral { background: #f1f5f9; color: #64748b; }
+		.aud-cmp-kpi .kpi-compare {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 4px 8px;
+			padding-top: 6px;
+			border-top: 1px solid #f1f5f9;
+			font-size: 11px;
+			line-height: 1.3;
+			color: #64748b;
+		}
+		.aud-cmp-kpi .kpi-compare > div {
+			min-width: 0;
+		}
+		.aud-cmp-kpi .kpi-compare .kpi-tag {
+			display: inline-block;
+			font-size: 9px;
+			font-weight: 800;
+			letter-spacing: 0.04em;
+			padding: 1px 5px;
+			border-radius: 2px;
+			margin-right: 4px;
+			vertical-align: middle;
+		}
+		.aud-cmp-kpi .kpi-compare .kpi-tag.a {
+			background: #e2e8f0;
+			color: #475569;
+		}
+		.aud-cmp-kpi .kpi-compare .kpi-tag.b {
+			background: #dbeafe;
+			color: #1d4ed8;
+		}
+		.aud-cmp-kpi .kpi-compare strong {
+			color: #334155;
+			font-weight: 700;
+		}
+		.aud-cmp-kpi .kpi-compare .kpi-rate {
+			display: block;
+			margin-top: 1px;
+			font-size: 10px;
+			color: #94a3b8;
+		}
+		.aud-cmp-kpi .badge-up { background: #dcfce7; color: #15803d; }
+		.aud-cmp-kpi .badge-down { background: #fee2e2; color: #b91c1c; }
+		.aud-cmp-kpi .badge-neutral { background: #f1f5f9; color: #64748b; }
+		@media (max-width: 480px) {
+			.aud-cmp-kpi-grid {
+				grid-template-columns: 1fr;
+			}
+		}
 
-		/* Paneles de graficos */
+		/* Widgets personalizables (mismo patron que Panel estadistico) */
+		#cmpWidgetGrid {
+			display: block;
+			margin-left: -6px;
+			margin-right: -6px;
+			overflow: hidden;
+		}
+		#cmpWidgetGrid:after { content: ''; display: table; clear: both; }
+		.dash-widget {
+			float: left;
+			box-sizing: border-box;
+			padding: 0 6px 12px;
+		}
+		 .dash-widget.w-full { width: 100% !important; }
+		 .dash-widget.w-12 { width: 50% !important; }
+		@media (max-width: 767px) {
+			 .dash-widget.w-12 { width: 100% !important; }
+		}
+		.dash-widget-inner {
+			background: #fff;
+			border: 1px solid #e2e8f0;
+			border-radius: 6px;
+			box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+			overflow: hidden;
+			height: 100%;
+		}
+		.dash-widget-head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 8px 12px;
+			background: #f8fafc;
+			border-bottom: 1px solid #eef2f7;
+			border-top: 3px solid #2563eb;
+			cursor: move;
+			user-select: none;
+		}
+		.dash-widget-head.ac-green { border-top-color: #10b981; }
+		.dash-widget-head.ac-amber { border-top-color: #f59e0b; }
+		.dash-widget-head.ac-red { border-top-color: #ef4444; }
+		.dash-widget-head.ac-purple { border-top-color: #8b5cf6; }
+		.dash-widget-head.ac-teal { border-top-color: #06b6d4; }
+		.dash-widget-head.ac-pink { border-top-color: #f43f5e; }
+		.dash-widget-head .dash-title { font-size: 12px; font-weight: 700; color: #334155; margin: 0; }
+		.dash-widget-head .dash-actions { display: flex; align-items: center; gap: 10px; }
+		.dash-widget-head .dash-actions .dash-hint { cursor: grab; color: #cbd5e1; font-size: 11px; }
+		.dash-widget-head .dash-actions .dash-hide,
+		.dash-widget-head .dash-actions .dash-size { cursor: pointer; color: #94a3b8; font-size: 12px; }
+		.dash-widget-head .dash-actions .dash-hide:hover { color: #ef4444; }
+		.dash-widget-head .dash-actions .dash-size:hover { color: #2563eb; }
+		.dash-widget-body { padding: 10px 12px; overflow-x: auto; }
+		.dash-widget-placeholder {
+			float: left; box-sizing: border-box;
+			background: #eef2f7; border: 1px dashed #94a3b8; border-radius: 6px;
+			min-height: 90px; margin-bottom: 12px; padding: 0 6px;
+			visibility: visible !important;
+		}
+		 .dash-widget-placeholder.w-12 { width: 50% !important; }
+		 .dash-widget-placeholder.w-full { width: 100% !important; }
+		@media (max-width: 767px) { .dash-widget-placeholder.w-12 { width: 100%; } }
+		.dash-widget.ui-sortable-helper { z-index: 10050 !important; }
+		body.aud-cmp-sorting { cursor: move !important; user-select: none; }
+
+		#cmpKpiGrid {
+			display: block;
+			margin: 0 -6px 10px;
+			overflow: hidden;
+		}
+		#cmpKpiGrid:after { content: ''; display: table; clear: both; }
+		.cmp-kpi-wrap {
+			float: left;
+			box-sizing: border-box;
+			padding: 0 6px 10px;
+			width: 20%;
+			min-width: 160px;
+		}
+		@media (max-width: 991px) { .cmp-kpi-wrap { width: 33.333%; } }
+		@media (max-width: 767px) { .cmp-kpi-wrap { width: 50%; } }
+		@media (max-width: 480px) { .cmp-kpi-wrap { width: 100%; } }
+		.cmp-kpi-wrap .aud-cmp-kpi { margin: 0; min-height: 68px; position: relative; cursor: move; }
+		.cmp-kpi-wrap .kpi-hide {
+			position: absolute; top: 8px; right: 8px;
+			color: #cbd5e1; cursor: pointer; font-size: 11px;
+		}
+		.cmp-kpi-wrap .kpi-hide:hover { color: #ef4444; }
+		.cmp-kpi-placeholder {
+			float: left; box-sizing: border-box;
+			width: 20%; min-width: 160px; min-height: 98px;
+			margin-bottom: 10px; padding: 0 6px;
+			background: #eef2f7; border: 1px dashed #94a3b8; border-radius: 4px;
+		}
+
+		#cmpKpisSorter, #cmpWidgetsSorter {
+			display: block; overflow: hidden; padding: 2px; margin-bottom: 4px; min-height: 40px;
+		}
+		#cmpKpisSorter:after, #cmpWidgetsSorter:after { content: ''; display: table; clear: both; }
+		.aud-sbox {
+			float: left; display: flex; align-items: center; gap: 7px;
+			box-sizing: border-box; width: calc(50% - 6px); margin: 0 6px 6px 0;
+			min-width: 160px; padding: 8px 10px;
+			background: #fff; border: 1px solid #dbe3ee; border-radius: 5px;
+			cursor: move; font-size: 12px; color: #334155;
+		}
+		.aud-sbox:hover { border-color: #2563eb; }
+		.aud-sbox-off { opacity: 0.5; background: #f8fafc; border-style: dashed; }
+		.aud-sbox-off .kbox-txt { text-decoration: line-through; }
+		.kbox-eye { color: #94a3b8; cursor: pointer; font-size: 12px; flex-shrink: 0; }
+		.aud-sbox-off .kbox-eye { color: #ef4444; }
+		.kbox-ico { color: #64748b; font-size: 12px; flex-shrink: 0; }
+		.kbox-txt { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+		.aud-sbox-placeholder {
+			float: left; box-sizing: border-box; width: calc(50% - 6px);
+			margin: 0 6px 6px 0; min-width: 160px; min-height: 38px;
+			border: 1px dashed #94a3b8; border-radius: 5px; background: #eef2f7;
+			visibility: visible !important;
+		}
+		.aud-modal-ayuda { font-size: 11px; color: #64748b; margin-bottom: 8px; }
+		.aud-modal-sec {
+			font-size: 12px; font-weight: 700; color: #334155;
+			margin: 4px 0 6px; text-transform: uppercase; letter-spacing: 0.03em;
+		}
+		#modalWidgetsCmp .modal-body { max-height: 62vh; overflow-y: auto; }
+
 		.chart-panel {
 			background: #ffffff;
 			border-radius: 4px;
@@ -239,6 +485,7 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			border: 1px solid #d0dbe5;
 			margin-bottom: 12px;
 		}
+		/* chart-panel ya no se usa como contenedor externo; se mantiene por compat */
 		.chart-panel h4 {
 			margin: 0 0 10px 0;
 			font-size: 13px;
@@ -321,79 +568,76 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 <body>
 
 <div class="panel panel-default panel-main exa-ui-panel exa-ui-fill-page" style="margin-top: 0;">
+	<div class="panel-heading exa-header">
+		<h3 class="panel-title" style="margin:0;">
+			<i class="fa fa-exchange"></i> Tablero anal&iacute;tico comparativo
+		</h3>
+	</div>
 	<div class="panel-body exa-body" style="padding: 10px 14px;">
 
+		<div class="aud-page-hero m4-hero">
+			<div class="aud-page-hero-icon m4-hero-icon"><i class="fa fa-exchange"></i></div>
+			<div class="aud-page-hero-text m4-hero-text">
+				<h4 class="m4-hero-title">Comparativa de periodos</h4>
+				<p class="aud-page-hero-sub m4-hero-sub">
+					Compare dos rangos de fechas (A vs B), revise variaciones por m&oacute;dulo, hora y usuario,
+					y emita el informe por PDF, correo o WhatsApp.
+				</p>
+			</div>
+			<div class="aud-page-hero-tags m4-hero-tags">
+				<span class="aud-page-hero-tag m4-hero-tag"><i class="fa fa-calendar"></i> Periodo A / B</span>
+				<span class="aud-page-hero-tag m4-hero-tag"><i class="fa fa-file-pdf-o"></i> PDF / WA</span>
+			</div>
+		</div>
+
 		<!-- Barra de herramientas: filtros juntos + Acciones a la derecha -->
-		<div class="period-control-card" style="padding: 0;">
-			<div class="aud-toolbar">
+		<div class="period-control-card m4-filters m4-card" style="padding: 0;">
+			<div class="aud-toolbar m4-toolbar">
 
 				<div class="aud-toolbar-left">
-					<div class="aud-toolbar-presets">
-						<span class="aud-toolbar-label">
-							<i class="fa fa-calendar-check-o text-primary"></i> Rango Temporal de Comparaci&oacute;n:
-						</span>
-						<span id="dashPresetCustomBadge" class="label label-info" style="display:none; font-size:10px; padding: 2px 6px;">Personalizado</span>
-						<div class="btn-group btn-group-xs" id="dashPeriodoPresets">
-							<button type="button" class="btn btn-default preset-btn" data-preset="hoy">Hoy</button>
-							<button type="button" class="btn btn-default preset-btn" data-preset="ayer">Ayer</button>
-							<button type="button" class="btn btn-default preset-btn" data-preset="1semana">1 Semana</button>
-							<button type="button" class="btn btn-primary preset-btn active" data-preset="1mes">1 Mes</button>
-							<button type="button" class="btn btn-default preset-btn" data-preset="3meses">3 Meses</button>
-						</div>
+					<span class="aud-toolbar-label">
+						<i class="fa fa-calendar-check-o text-primary"></i> Rango
+					</span>
+					<span id="dashPresetCustomBadge" class="label label-info m4-badge m4-badge-info" style="display:none; font-size:10px; padding: 2px 6px;">Personalizado</span>
+					<div class="btn-group btn-group-xs aud-period-presets" id="dashPeriodoPresets">
+						<button type="button" class="btn aud-btn-preset" data-preset="ayer" title="Ayer">Ayer</button>
+						<button type="button" class="btn aud-btn-preset" data-preset="hoy" title="Hoy">Hoy</button>
+						<button type="button" class="btn aud-btn-preset" data-preset="1semana" title="1 Semana">1 Semana</button>
+						<button type="button" class="btn aud-btn-preset active" data-preset="1mes" title="1 Mes">1 Mes</button>
+						<button type="button" class="btn aud-btn-preset" data-preset="3meses" title="3 Meses">3 Meses</button>
 					</div>
 
 					<div class="aud-toolbar-dates">
-						<!-- Periodo A (Base) -->
-						<div class="period-box-a">
-							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-								<strong style="font-size: 11px; color: #475569; text-transform: uppercase;">
-									<i class="fa fa-history text-muted"></i> Per&iacute;odo A (Base Hist&oacute;rica)
-								</strong>
-								<span class="label label-default" style="background:#64748b; font-size:9px;">Base</span>
-							</div>
-							<div class="row" style="margin-left:-4px; margin-right:-4px;">
-								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
-									<div class="input-group input-group-sm">
-										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Desde</span>
-										<input type="text" id="pa_ini" class="form-control text-center" value="<?php echo substr($defaultPaIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pa_ini').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
-									</div>
+						<div class="aud-cmp-inline a" title="Periodo A (Base historica)">
+							<span class="aud-cmp-tag">A</span>
+							<div class="aud-toolbar-range">
+								<div class="input-group input-group-sm">
+									<span class="input-group-addon">Desde</span>
+									<input type="text" id="pa_ini" class="form-control text-center" value="<?php echo substr($defaultPaIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+									<span class="input-group-addon" style="cursor:pointer;" onclick="$('#pa_ini').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
 								</div>
-								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
-									<div class="input-group input-group-sm">
-										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Hasta</span>
-										<input type="text" id="pa_fin" class="form-control text-center" value="<?php echo substr($defaultPaFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pa_fin').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
-									</div>
+								<div class="input-group input-group-sm">
+									<span class="input-group-addon">Hasta</span>
+									<input type="text" id="pa_fin" class="form-control text-center" value="<?php echo substr($defaultPaFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+									<span class="input-group-addon" style="cursor:pointer;" onclick="$('#pa_fin').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
 								</div>
 							</div>
 						</div>
 
-						<!-- Separador VS -->
 						<span class="dash-vs-pill"><i class="fa fa-exchange"></i> VS</span>
 
-						<!-- Periodo B (Comparado) -->
-						<div class="period-box-b">
-							<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-								<strong style="font-size: 11px; color: #1e40af; text-transform: uppercase;">
-									<i class="fa fa-line-chart text-primary"></i> Per&iacute;odo B (Evaluado / Actual)
-								</strong>
-								<span class="label label-primary" style="background:#2563eb; font-size:9px;">Comparado</span>
-							</div>
-							<div class="row" style="margin-left:-4px; margin-right:-4px;">
-								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
-									<div class="input-group input-group-sm">
-										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Desde</span>
-										<input type="text" id="pb_ini" class="form-control text-center" value="<?php echo substr($defaultPbIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pb_ini').focus().datepicker('show');"><i class="fa fa-calendar text-primary"></i></span>
-									</div>
+						<div class="aud-cmp-inline b" title="Periodo B (Evaluado / Actual)">
+							<span class="aud-cmp-tag">B</span>
+							<div class="aud-toolbar-range">
+								<div class="input-group input-group-sm">
+									<span class="input-group-addon">Desde</span>
+									<input type="text" id="pb_ini" class="form-control text-center" value="<?php echo substr($defaultPbIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+									<span class="input-group-addon" style="cursor:pointer;" onclick="$('#pb_ini').focus().datepicker('show');"><i class="fa fa-calendar text-primary"></i></span>
 								</div>
-								<div class="col-xs-6" style="padding-left:4px; padding-right:4px;">
-									<div class="input-group input-group-sm">
-										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Hasta</span>
-										<input type="text" id="pb_fin" class="form-control text-center" value="<?php echo substr($defaultPbFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#pb_fin').focus().datepicker('show');"><i class="fa fa-calendar text-primary"></i></span>
-									</div>
+								<div class="input-group input-group-sm">
+									<span class="input-group-addon">Hasta</span>
+									<input type="text" id="pb_fin" class="form-control text-center" value="<?php echo substr($defaultPbFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+									<span class="input-group-addon" style="cursor:pointer;" onclick="$('#pb_fin').focus().datepicker('show');"><i class="fa fa-calendar text-primary"></i></span>
 								</div>
 							</div>
 						</div>
@@ -402,11 +646,13 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 
 				<div class="aud-toolbar-right">
 					<div class="dropdown">
-						<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Acciones">
+						<button type="button" class="btn btn-primary btn-sm dropdown-toggle m4-btn m4-btn-primary" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Acciones">
 							<i class="fa fa-sliders"></i> Acciones <span class="caret"></span>
 						</button>
 						<ul class="dropdown-menu dropdown-menu-right aud-acciones-menu">
 							<li><a href="javascript:void(0);" id="btnRecargarDash" title="Actualizar metricas"><i class="fa fa-refresh"></i> Actualizar Datos</a></li>
+							<li><a href="javascript:void(0);" id="btnCfgWidgetsCmp" title="Mostrar u ocultar widgets y personalizar"><i class="fa fa-th-large"></i> Personalizar</a></li>
+							<li><a href="javascript:void(0);" id="btnResetWidgetsCmp" title="Restablecer orden y visibilidad"><i class="fa fa-undo"></i> Restablecer widgets</a></li>
 							<li class="divider"></li>
 							<li><a href="javascript:void(0);" id="btnDescargarPdf" title="Generar reporte formal PDF"><i class="fa fa-file-pdf-o text-danger"></i> Exportar PDF</a></li>
 							<li><a href="javascript:void(0);" id="btnModalCorreo" title="Enviar reporte por email"><i class="fa fa-envelope-o text-info"></i> Enviar Correo</a></li>
@@ -425,122 +671,238 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			</ul>
 		</div>
 
-		<!-- KPIs Comparativos -->
-		<div class="kpi-grid" id="kpiContainer">
-			<!-- Inyectado dinamicamente por JavaScript -->
-			<div class="text-center text-muted" style="grid-column: 1 / -1; padding: 20px 0;">
+		<!-- KPIs Comparativos (personalizables) -->
+		<div id="cmpKpiGrid">
+			<div class="text-center text-muted" style="padding: 20px 0; clear:both;">
 				<i class="fa fa-spinner fa-spin fa-2x"></i>
 				<div style="margin-top: 6px; font-size: 12px;">Cargando indicadores comparativos...</div>
 			</div>
 		</div>
+		<div class="dash-kpis-foot" id="cmpKpiFoot" style="font-size:11px;color:#64748b;margin:0 0 12px;clear:both;">&nbsp;</div>
 
-		<!-- 1. Tendencia y Evolucion Diaria Comparativa -->
-		<div class="row">
-			<div class="col-xs-12">
-				<div class="chart-panel">
-					<h4>
-						<span><i class="fa fa-area-chart text-primary"></i> Tendencia y Evoluci&oacute;n Diaria de Actividad (Per&iacute;odo A vs Per&iacute;odo B)</span>
-						<small style="font-size: 11px; font-weight: normal; color: #64748b;">Movimientos por d&iacute;a</small>
-					</h4>
-					<div id="chartTendencia" style="min-height: 260px;"></div>
-				</div>
-			</div>
-		</div>
+		<!-- Widgets del tablero comparativo -->
+		<div id="cmpWidgetGrid">
 
-		<!-- 2. Comparativa por Modulo y Operaciones (Ingresar, Actualizar, Eliminar) -->
-		<div class="row">
-			<div class="col-xs-12 col-md-7">
-				<div class="chart-panel">
-					<h4>
-						<span><i class="fa fa-cubes text-primary"></i> Comparativa de Actividad por M&oacute;dulo</span>
-						<small style="font-size: 11px; font-weight: normal; color: #64748b;">Top m&oacute;dulos con mayor concurrencia</small>
-					</h4>
-					<div id="chartModulos" style="min-height: 260px;"></div>
+			<div class="dash-widget w-full" data-widget="tendencia">
+				<div class="dash-widget-inner">
+					<div class="dash-widget-head">
+						<h5 class="dash-title"><i class="fa fa-area-chart"></i> Tendencia diaria (A vs B)</h5>
+						<div class="dash-actions">
+							<i class="fa fa-arrows dash-hint" title="Arrastrar"></i>
+							<i class="fa fa-expand dash-size" title="Tamano"></i>
+							<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
+						</div>
+					</div>
+					<div class="dash-widget-body"><div id="chartTendencia" style="min-height: 260px;"></div></div>
 				</div>
 			</div>
-			<div class="col-xs-12 col-md-5">
-				<div class="chart-panel">
-					<h4>
-						<span><i class="fa fa-bar-chart text-success"></i> Comparativa de Operaciones (Ingresar / Actualizar / Eliminar)</span>
-						<small style="font-size: 11px; font-weight: normal; color: #64748b;">Distribuci&oacute;n de eventos</small>
-					</h4>
-					<div id="chartEventos" style="min-height: 260px;"></div>
-				</div>
-			</div>
-		</div>
 
-		<!-- 3. Franja Horaria y Metricas de Sesiones/Seguridad -->
-		<div class="row">
-			<div class="col-xs-12 col-md-6">
-				<div class="chart-panel">
-					<h4>
-						<span><i class="fa fa-clock-o text-warning"></i> Distribuci&oacute;n por Franja Horaria (00:00 a 23:00)</span>
-						<small style="font-size: 11px; font-weight: normal; color: #64748b;">24 Horas</small>
-					</h4>
-					<div id="chartHorarios" style="min-height: 250px;"></div>
+			<div class="dash-widget w-12" data-widget="modulos">
+				<div class="dash-widget-inner">
+					<div class="dash-widget-head ac-purple">
+						<h5 class="dash-title"><i class="fa fa-cubes"></i> Actividad por modulo</h5>
+						<div class="dash-actions">
+							<i class="fa fa-arrows dash-hint" title="Arrastrar"></i>
+							<i class="fa fa-expand dash-size" title="Tamano"></i>
+							<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
+						</div>
+					</div>
+					<div class="dash-widget-body"><div id="chartModulos" style="min-height: 260px;"></div></div>
 				</div>
 			</div>
-			<div class="col-xs-12 col-md-6">
-				<div class="chart-panel">
-					<h4>
-						<span><i class="fa fa-user-secret text-danger"></i> Comparativa de Sesiones y Seguridad</span>
-						<small style="font-size: 11px; font-weight: normal; color: #64748b;">Tiempos y cierres forzados/inactividad</small>
-					</h4>
-					<div id="chartSesiones" style="min-height: 250px;"></div>
-				</div>
-			</div>
-		</div>
 
-		<!-- 4. Tablas Desglosadas: Top Modulos y Top Usuarios -->
-		<div class="row">
-			<div class="col-xs-12 col-md-6">
-				<div class="chart-panel">
-					<h4>
-						<span><i class="fa fa-table text-primary"></i> Detalle de Variaci&oacute;n por M&oacute;dulo</span>
-					</h4>
-					<div class="table-responsive">
-						<table class="table table-hover table-comp">
-							<thead>
-								<tr>
-									<th>M&oacute;dulo</th>
-									<th style="text-align: right;">Base (A)</th>
-									<th style="text-align: right;">Comp (B)</th>
-									<th style="text-align: right;">Variaci&oacute;n</th>
-								</tr>
-							</thead>
-							<tbody id="tbodyModulos">
-								<tr><td colspan="4" class="text-center text-muted"><i class="fa fa-spinner fa-spin"></i> Cargando datos...</td></tr>
-							</tbody>
-						</table>
+			<div class="dash-widget w-12" data-widget="eventos">
+				<div class="dash-widget-inner">
+					<div class="dash-widget-head ac-green">
+						<h5 class="dash-title"><i class="fa fa-bar-chart"></i> Operaciones (Ingresar / Actualizar / Eliminar)</h5>
+						<div class="dash-actions">
+							<i class="fa fa-arrows dash-hint" title="Arrastrar"></i>
+							<i class="fa fa-expand dash-size" title="Tamano"></i>
+							<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
+						</div>
+					</div>
+					<div class="dash-widget-body"><div id="chartEventos" style="min-height: 260px;"></div></div>
+				</div>
+			</div>
+
+			<div class="dash-widget w-12" data-widget="horarios">
+				<div class="dash-widget-inner">
+					<div class="dash-widget-head ac-amber">
+						<h5 class="dash-title"><i class="fa fa-clock-o"></i> Franja horaria (00-23)</h5>
+						<div class="dash-actions">
+							<i class="fa fa-arrows dash-hint" title="Arrastrar"></i>
+							<i class="fa fa-expand dash-size" title="Tamano"></i>
+							<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
+						</div>
+					</div>
+					<div class="dash-widget-body"><div id="chartHorarios" style="min-height: 250px;"></div></div>
+				</div>
+			</div>
+
+			<div class="dash-widget w-12" data-widget="sesiones">
+				<div class="dash-widget-inner">
+					<div class="dash-widget-head ac-red">
+						<h5 class="dash-title"><i class="fa fa-user-secret"></i> Sesiones y seguridad</h5>
+						<div class="dash-actions">
+							<i class="fa fa-arrows dash-hint" title="Arrastrar"></i>
+							<i class="fa fa-expand dash-size" title="Tamano"></i>
+							<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
+						</div>
+					</div>
+					<div class="dash-widget-body"><div id="chartSesiones" style="min-height: 250px;"></div></div>
+				</div>
+			</div>
+
+			<div class="dash-widget w-12" data-widget="usuarios">
+				<div class="dash-widget-inner">
+					<div class="dash-widget-head ac-teal">
+						<h5 class="dash-title"><i class="fa fa-users"></i> Top usuarios (A vs B)</h5>
+						<div class="dash-actions">
+							<i class="fa fa-arrows dash-hint" title="Arrastrar"></i>
+							<i class="fa fa-expand dash-size" title="Tamano"></i>
+							<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
+						</div>
+					</div>
+					<div class="dash-widget-body"><div id="chartUsuarios" style="min-height: 260px;"></div></div>
+				</div>
+			</div>
+
+			<div class="dash-widget w-12" data-widget="plantas">
+				<div class="dash-widget-inner">
+					<div class="dash-widget-head ac-amber">
+						<h5 class="dash-title"><i class="fa fa-industry"></i> Plantas (A vs B)</h5>
+						<div class="dash-actions">
+							<i class="fa fa-arrows dash-hint" title="Arrastrar"></i>
+							<i class="fa fa-expand dash-size" title="Tamano"></i>
+							<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
+						</div>
+					</div>
+					<div class="dash-widget-body"><div id="chartPlantas" style="min-height: 260px;"></div></div>
+				</div>
+			</div>
+
+			<div class="dash-widget w-12" data-widget="variacion">
+				<div class="dash-widget-inner">
+					<div class="dash-widget-head ac-pink">
+						<h5 class="dash-title"><i class="fa fa-percent"></i> Variacion % por modulo</h5>
+						<div class="dash-actions">
+							<i class="fa fa-arrows dash-hint" title="Arrastrar"></i>
+							<i class="fa fa-expand dash-size" title="Tamano"></i>
+							<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
+						</div>
+					</div>
+					<div class="dash-widget-body"><div id="chartVariacion" style="min-height: 260px;"></div></div>
+				</div>
+			</div>
+
+			<div class="dash-widget w-12" data-widget="mixOps">
+				<div class="dash-widget-inner">
+					<div class="dash-widget-head ac-green">
+						<h5 class="dash-title"><i class="fa fa-pie-chart"></i> Mix de operaciones A / B</h5>
+						<div class="dash-actions">
+							<i class="fa fa-arrows dash-hint" title="Arrastrar"></i>
+							<i class="fa fa-expand dash-size" title="Tamano"></i>
+							<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
+						</div>
+					</div>
+					<div class="dash-widget-body">
+						<div class="row">
+							<div class="col-xs-6"><div id="chartMixA" style="min-height: 220px;"></div></div>
+							<div class="col-xs-6"><div id="chartMixB" style="min-height: 220px;"></div></div>
+						</div>
 					</div>
 				</div>
 			</div>
 
-			<div class="col-xs-12 col-md-6">
-				<div class="chart-panel">
-					<h4>
-						<span><i class="fa fa-users text-info"></i> Usuarios M&aacute;s Activos (Per&iacute;odo B)</span>
-					</h4>
-					<div class="table-responsive">
-						<table class="table table-hover table-comp">
-							<thead>
-								<tr>
-									<th>Usuario</th>
-									<th style="text-align: right;">Total</th>
-									<th style="text-align: right;">Ingresar</th>
-									<th style="text-align: right;">Actualizar</th>
-									<th style="text-align: right;">Eliminar</th>
-								</tr>
-							</thead>
-							<tbody id="tbodyUsuarios">
-								<tr><td colspan="5" class="text-center text-muted"><i class="fa fa-spinner fa-spin"></i> Cargando datos...</td></tr>
-							</tbody>
-						</table>
+			<div class="dash-widget w-12" data-widget="tablaMod">
+				<div class="dash-widget-inner">
+					<div class="dash-widget-head">
+						<h5 class="dash-title"><i class="fa fa-table"></i> Detalle por modulo</h5>
+						<div class="dash-actions">
+							<i class="fa fa-arrows dash-hint" title="Arrastrar"></i>
+							<i class="fa fa-expand dash-size" title="Tamano"></i>
+							<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
+						</div>
+					</div>
+					<div class="dash-widget-body">
+						<div class="table-responsive">
+							<table class="table table-hover table-comp">
+								<thead>
+									<tr>
+										<th>Modulo</th>
+										<th style="text-align: right;">Base (A)</th>
+										<th style="text-align: right;">Comp (B)</th>
+										<th style="text-align: right;">Variacion</th>
+									</tr>
+								</thead>
+								<tbody id="tbodyModulos">
+									<tr><td colspan="4" class="text-center text-muted"><i class="fa fa-spinner fa-spin"></i> Cargando datos...</td></tr>
+								</tbody>
+							</table>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
 
+			<div class="dash-widget w-12" data-widget="tablaUsu">
+				<div class="dash-widget-inner">
+					<div class="dash-widget-head ac-teal">
+						<h5 class="dash-title"><i class="fa fa-list"></i> Usuarios mas activos (Periodo B)</h5>
+						<div class="dash-actions">
+							<i class="fa fa-arrows dash-hint" title="Arrastrar"></i>
+							<i class="fa fa-expand dash-size" title="Tamano"></i>
+							<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
+						</div>
+					</div>
+					<div class="dash-widget-body">
+						<div class="table-responsive">
+							<table class="table table-hover table-comp">
+								<thead>
+									<tr>
+										<th>Usuario</th>
+										<th style="text-align: right;">Total</th>
+										<th style="text-align: right;">Ingresar</th>
+										<th style="text-align: right;">Actualizar</th>
+										<th style="text-align: right;">Eliminar</th>
+									</tr>
+								</thead>
+								<tbody id="tbodyUsuarios">
+									<tr><td colspan="5" class="text-center text-muted"><i class="fa fa-spinner fa-spin"></i> Cargando datos...</td></tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+		<div id="cmpWidgetOcultos" style="display:none;"></div>
+
+	</div>
+</div>
+
+
+<!-- Modal personalizacion comparativo -->
+<div class="modal fade" id="modalWidgetsCmp" tabindex="-1" role="dialog" aria-hidden="true" style="display:none;">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" id="btnCerrarWidgetsCmp" aria-hidden="true">&times;</button>
+				<h4 class="modal-title"><i class="fa fa-th-large"></i> Personalizar tablero comparativo</h4>
+			</div>
+			<div class="modal-body">
+				<p class="aud-modal-ayuda">Arrastra para ordenar. Clic en el ojo para mostrar u ocultar. <strong>Guardar</strong> aplica; <strong>Restablecer</strong> vuelve al original.</p>
+				<h4 class="aud-modal-sec"><i class="fa fa-tachometer"></i> Metricas (KPIs)</h4>
+				<div id="cmpKpisSorter"></div>
+				<h4 class="aud-modal-sec" style="margin-top:14px;"><i class="fa fa-th-large"></i> Widgets</h4>
+				<div id="cmpWidgetsSorter"></div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default btn-sm" id="btnCerrarWidgetsCmp2">Cerrar</button>
+				<button type="button" class="btn btn-warning btn-sm" id="btnRestablecerWidgetsCmp"><i class="fa fa-undo"></i> Restablecer</button>
+				<button type="button" class="btn btn-primary btn-sm" id="btnGuardarWidgetsCmp"><i class="fa fa-check"></i> Guardar</button>
+			</div>
+		</div>
 	</div>
 </div>
 
@@ -620,6 +982,12 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 	</div>
 </div>
 
+<script type="text/javascript">
+	window.audCmpEmp = <?php echo (int)$audEmpCod; ?>;
+	window.audCmpUsu = <?php echo (int)$audUsuCod; ?>;
+	window.audCmpCharts = {};
+</script>
+<script type="text/javascript" src="../VALIDACIONES/aud_par_dashboard_comparativo_widgets.js?v=20260924_v1"></script>
 <script>
 (function (window, $) {
 	'use strict';
@@ -629,7 +997,13 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 	var chartEventosInstance = null;
 	var chartHorariosInstance = null;
 	var chartSesionesInstance = null;
+	var chartUsuariosInstance = null;
+	var chartPlantasInstance = null;
+	var chartVariacionInstance = null;
+	var chartMixAInstance = null;
+	var chartMixBInstance = null;
 	var cacheDatosComparativa = null;
+	window.audCmpNumFmt = null;
 
 	function fmt(d) {
 		var m = '' + (d.getMonth() + 1), dia = '' + d.getDate(), y = d.getFullYear();
@@ -693,7 +1067,7 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 		var pb_ini = $('#pb_ini').val();
 		var pb_fin = $('#pb_fin').val();
 
-		var presets = ['hoy', 'ayer', '1semana', '1mes', '3meses'];
+		var presets = ['ayer', 'hoy', '1semana', '1mes', '3meses'];
 		var coincidencia = null;
 		for (var i = 0; i < presets.length; i++) {
 			var r = calcularRangoPresetDash(presets[i]);
@@ -703,9 +1077,9 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			}
 		}
 
-		$('.preset-btn').removeClass('btn-primary active').addClass('btn-default');
+		$('.aud-btn-preset').removeClass('active');
 		if (coincidencia) {
-			$('.preset-btn[data-preset="' + coincidencia + '"]').removeClass('btn-default').addClass('btn-primary active');
+			$('.aud-btn-preset[data-preset="' + coincidencia + '"]').addClass('active');
 			$('#dashPresetCustomBadge').hide();
 		} else {
 			$('#dashPresetCustomBadge').show();
@@ -722,9 +1096,9 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 				currentText: 'Hoy',
 				monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
 				monthNamesShort: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-				dayNames: ['Domingo','Lunes','Martes','MiÃ©rcoles','Jueves','Viernes','SÃ¡bado'],
-				dayNamesShort: ['Dom','Lun','Mar','MiÃ©','Jue','Vie','SÃ¡b'],
-				dayNamesMin: ['Do','Lu','Ma','Mi','Ju','Vi','SÃ¡'],
+				dayNames: ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],
+				dayNamesShort: ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
+				dayNamesMin: ['Do','Lu','Ma','Mi','Ju','Vi','Sá'],
 				weekHeader: 'Sm',
 				dateFormat: 'yy-mm-dd',
 				firstDay: 1,
@@ -743,7 +1117,7 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			firstDay: 1,
 			monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
 			monthNamesShort: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
-			dayNamesMin: ['Do','Lu','Ma','Mi','Ju','Vi','SÃ¡']
+			dayNamesMin: ['Do','Lu','Ma','Mi','Ju','Vi','Sá']
 		};
 
 		$('#pa_ini').datepicker($.extend({}, baseOpts, {
@@ -818,15 +1192,25 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			success: function (res) {
 				if (res && res.success && res.data) {
 					cacheDatosComparativa = res.data;
-					renderizarKPIs(res.data.kpis_comparativa || []);
+					if (window.audCmpRenderKPIs) window.audCmpRenderKPIs(res.data.kpis_comparativa || [], numFmt);
+					else renderizarKPIs(res.data.kpis_comparativa || []);
 					renderizarObservaciones(res.data.observaciones || []);
 					renderizarGraficoTendencia(res.data.temporal_comparativa || {});
 					renderizarGraficoModulos(res.data.modulos_comparativa || []);
 					renderizarGraficoEventosComp(res.data.eventos_comparativa || {});
 					renderizarGraficoHorarios(res.data.horarios_comparativa || []);
 					renderizarGraficoSesiones(res.data.sesiones_comparativa || {});
+					renderizarGraficoUsuarios(res.data.usuarios_comparativa || {});
+					renderizarGraficoPlantas(res.data.plantas_comparativa || []);
+					renderizarGraficoVariacion(res.data.variacion_modulos || []);
+					renderizarGraficoMix(res.data.mix_operaciones || {});
 					renderizarTablaModulos(res.data.modulos_comparativa || []);
 					renderizarTablaUsuarios(res.data.usuarios_top_b || []);
+					var foot = [];
+					if (res.data.empresa_nombre) foot.push('<i class="fa fa-building-o"></i> ' + res.data.empresa_nombre);
+					if (res.data.periodo_a_label) foot.push('A: ' + res.data.periodo_a_label);
+					if (res.data.periodo_b_label) foot.push('B: ' + res.data.periodo_b_label);
+					$('#cmpKpiFoot').html(foot.join(' &nbsp;&middot;&nbsp; ') || '&nbsp;');
 				} else {
 					alert('Error al consultar datos comparativos.');
 				}
@@ -842,6 +1226,7 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 		var n = parseFloat(x) || 0;
 		return n.toLocaleString(undefined, { maximumFractionDigits: maxDecs });
 	}
+	window.audCmpNumFmt = numFmt;
 
 	function renderizarKPIs(kpis) {
 		var html = '';
@@ -871,19 +1256,21 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			else if (k.color === 'orange') borderCol = '#ea580c';
 
 			var tituloTip = k.titulo;
-			if (k.dias_a && k.dias_b) tituloTip += ' (A: ' + k.dias_a + ' d&iacute;as Â· B: ' + k.dias_b + ' d&iacute;as)';
+			if (k.dias_a && k.dias_b) tituloTip += ' (A: ' + k.dias_a + ' dias · B: ' + k.dias_b + ' dias)';
 
-			html += '<div class="kpi-card" style="border-left-color: ' + borderCol + ';">';
-			html += '  <div class="kpi-title" title="' + tituloTip + '"><i class="fa ' + k.icono + '"></i> ' + k.titulo + '</div>';
+			html += '<div class="aud-cmp-kpi" style="border-top-color: ' + borderCol + ';" title="' + tituloTip + '">';
+			html += '  <div class="kpi-title"><i class="fa ' + k.icono + '"></i> <span>' + k.titulo + '</span></div>';
 			html += '  <div class="kpi-values-row">';
 			html += '    <div class="kpi-main-val">' + numFmt(k.valor_b) + '</div>';
 			html += '    <span class="kpi-badge ' + badgeClass + '"><i class="fa ' + icono + '"></i> ' + txtPct + '</span>';
 			html += '  </div>';
-			html += '  <div class="kpi-sub-val">Base (A): <strong>' + numFmt(k.valor_a) + '</strong> &middot; ritmo ' + numFmt(k.promedio_diario_a, 1) + '/d&iacute;a</div>';
-			html += '  <div class="kpi-sub-val">Comparado (B): <strong>' + numFmt(k.valor_b) + '</strong> &middot; ritmo ' + numFmt(k.promedio_diario_b, 1) + '/d&iacute;a</div>';
+			html += '  <div class="kpi-compare">';
+			html += '    <div><span class="kpi-tag a">A</span><strong>' + numFmt(k.valor_a) + '</strong><span class="kpi-rate">' + numFmt(k.promedio_diario_a, 1) + '/d&iacute;a</span></div>';
+			html += '    <div><span class="kpi-tag b">B</span><strong>' + numFmt(k.valor_b) + '</strong><span class="kpi-rate">' + numFmt(k.promedio_diario_b, 1) + '/d&iacute;a</span></div>';
+			html += '  </div>';
 			html += '</div>';
 		});
-		$('#kpiContainer').html(html);
+		$('#cmpKpiGrid').html(html || '<div class="text-muted" style="font-size:12px;padding:8px;">Sin metricas.</div>');
 	}
 
 	function renderizarObservaciones(obs) {
@@ -913,15 +1300,15 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 		var sB = tempComp.serie_b || [];
 
 		if (cats.length === 0) {
-			cats = ['DÃ­a 1'];
+			cats = ['Día 1'];
 			sA = [0];
 			sB = [0];
 		}
 
 		var options = {
 			series: [
-				{ name: 'PerÃ­odo A (Base)', data: sA },
-				{ name: 'PerÃ­odo B (Comparado)', data: sB }
+				{ name: 'Período A (Base)', data: sA },
+				{ name: 'Período B (Comparado)', data: sB }
 			],
 			chart: {
 				type: 'area',
@@ -942,22 +1329,30 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			grid: { borderColor: '#f1f5f9' }
 		};
 
-		if (chartTendenciaInstance) chartTendenciaInstance.destroy();
-		chartTendenciaInstance = new ApexCharts(document.querySelector("#chartTendencia"), options);
-		chartTendenciaInstance.render();
+		try {
+			if (chartTendenciaInstance) chartTendenciaInstance.destroy();
+			chartTendenciaInstance = new ApexCharts(document.querySelector("#chartTendencia"), options);
+			chartTendenciaInstance.render();
+			window.audCmpCharts.tendencia = chartTendenciaInstance;
+		} catch (e) {
+			$('#chartTendencia').html('<div class="text-muted text-center" style="padding:40px 10px;font-size:12px;">No hay datos suficientes para el gr&aacute;fico.</div>');
+		}
 	}
 
 	// Grafico 2: Modulos Comparativo
 	function renderizarGraficoModulos(modulos) {
-		var topM = modulos.slice(0, 8);
+		var topM = (modulos || []).slice(0, 8);
+		if (!topM.length) {
+			topM = [{ modulo: 'Sin datos', total_a: 0, total_b: 0 }];
+		}
 		var categorias = topM.map(function (m) { return m.modulo; });
 		var serieA = topM.map(function (m) { return m.total_a; });
 		var serieB = topM.map(function (m) { return m.total_b; });
 
 		var options = {
 			series: [
-				{ name: 'PerÃ­odo A (Base)', data: serieA },
-				{ name: 'PerÃ­odo B (Comparado)', data: serieB }
+				{ name: 'Período A (Base)', data: serieA },
+				{ name: 'Período B (Comparado)', data: serieB }
 			],
 			chart: {
 				type: 'bar',
@@ -976,9 +1371,14 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			grid: { borderColor: '#f1f5f9' }
 		};
 
-		if (chartModulosInstance) chartModulosInstance.destroy();
-		chartModulosInstance = new ApexCharts(document.querySelector("#chartModulos"), options);
-		chartModulosInstance.render();
+		try {
+			if (chartModulosInstance) chartModulosInstance.destroy();
+			chartModulosInstance = new ApexCharts(document.querySelector("#chartModulos"), options);
+			chartModulosInstance.render();
+			window.audCmpCharts.modulos = chartModulosInstance;
+		} catch (e) {
+			$('#chartModulos').html('<div class="text-muted text-center" style="padding:40px 10px;font-size:12px;">No hay datos suficientes para el gr&aacute;fico.</div>');
+		}
 	}
 
 	// Grafico 3: Comparativa de Operaciones (Ingresar, Actualizar, Eliminar)
@@ -989,8 +1389,8 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 
 		var options = {
 			series: [
-				{ name: 'PerÃ­odo A (Base)', data: sA },
-				{ name: 'PerÃ­odo B (Comparado)', data: sB }
+				{ name: 'Período A (Base)', data: sA },
+				{ name: 'Período B (Comparado)', data: sB }
 			],
 			chart: {
 				type: 'bar',
@@ -1012,6 +1412,7 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 		if (chartEventosInstance) chartEventosInstance.destroy();
 		chartEventosInstance = new ApexCharts(document.querySelector("#chartEventos"), options);
 		chartEventosInstance.render();
+		window.audCmpCharts.eventos = chartEventosInstance;
 	}
 
 	// Grafico 4: Horarios Comparativo
@@ -1022,8 +1423,8 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 
 		var options = {
 			series: [
-				{ name: 'PerÃ­odo A (Base)', data: serieA },
-				{ name: 'PerÃ­odo B (Comparado)', data: serieB }
+				{ name: 'Período A (Base)', data: serieA },
+				{ name: 'Período B (Comparado)', data: serieB }
 			],
 			chart: {
 				type: 'area',
@@ -1047,6 +1448,7 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 		if (chartHorariosInstance) chartHorariosInstance.destroy();
 		chartHorariosInstance = new ApexCharts(document.querySelector("#chartHorarios"), options);
 		chartHorariosInstance.render();
+		window.audCmpCharts.horarios = chartHorariosInstance;
 	}
 
 	// Grafico 5: Metricas de Sesiones y Seguridad
@@ -1057,8 +1459,8 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 
 		var options = {
 			series: [
-				{ name: 'PerÃ­odo A (Base)', data: sA },
-				{ name: 'PerÃ­odo B (Comparado)', data: sB }
+				{ name: 'Período A (Base)', data: sA },
+				{ name: 'Período B (Comparado)', data: sB }
 			],
 			chart: {
 				type: 'bar',
@@ -1079,7 +1481,110 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 		if (chartSesionesInstance) chartSesionesInstance.destroy();
 		chartSesionesInstance = new ApexCharts(document.querySelector("#chartSesiones"), options);
 		chartSesionesInstance.render();
+		window.audCmpCharts.sesiones = chartSesionesInstance;
 	}
+
+	function cmpDualBar(cats, serieA, serieB, horizontal) {
+		return {
+			series: [
+				{ name: 'Periodo A (Base)', data: serieA },
+				{ name: 'Periodo B (Comp)', data: serieB }
+			],
+			chart: { type: 'bar', height: horizontal ? Math.max(220, cats.length * 28) : 260, toolbar: { show: false }, fontFamily: 'inherit' },
+			plotOptions: { bar: { horizontal: !!horizontal, columnWidth: '55%', borderRadius: 2 } },
+			colors: ['#64748b', '#2563eb'],
+			dataLabels: { enabled: false },
+			xaxis: { categories: cats },
+			legend: { position: 'top', fontSize: '11px' },
+			grid: { borderColor: '#eef2f7' },
+			tooltip: { shared: true, intersect: false }
+		};
+	}
+
+	function cmpEmpty(sel, msg) {
+		$(sel).html('<div class="text-muted text-center" style="padding:40px 10px;font-size:12px;">' + (msg || 'No hay datos suficientes para el grafico.') + '</div>');
+	}
+
+	function renderizarGraficoUsuarios(usuComp) {
+		var cats = usuComp.categorias || [];
+		var a = usuComp.serie_a || [];
+		var b = usuComp.serie_b || [];
+		if (chartUsuariosInstance) { try { chartUsuariosInstance.destroy(); } catch (e) {} chartUsuariosInstance = null; }
+		if (!cats.length) { cmpEmpty('#chartUsuarios'); return; }
+		chartUsuariosInstance = new ApexCharts(document.querySelector('#chartUsuarios'), cmpDualBar(cats, a, b, true));
+		chartUsuariosInstance.render();
+		window.audCmpCharts.usuarios = chartUsuariosInstance;
+	}
+
+	function renderizarGraficoPlantas(plantas) {
+		var top = (plantas || []).slice(0, 8);
+		var cats = top.map(function (p) { return p.planta; });
+		var a = top.map(function (p) { return p.total_a; });
+		var b = top.map(function (p) { return p.total_b; });
+		if (chartPlantasInstance) { try { chartPlantasInstance.destroy(); } catch (e) {} chartPlantasInstance = null; }
+		if (!cats.length) { cmpEmpty('#chartPlantas', 'Sin actividad por planta en los periodos.'); return; }
+		chartPlantasInstance = new ApexCharts(document.querySelector('#chartPlantas'), cmpDualBar(cats, a, b, true));
+		chartPlantasInstance.render();
+		window.audCmpCharts.plantas = chartPlantasInstance;
+	}
+
+	function renderizarGraficoVariacion(rows) {
+		var cats = (rows || []).map(function (r) { return r.modulo; });
+		var data = (rows || []).map(function (r) { return r.pct; });
+		if (chartVariacionInstance) { try { chartVariacionInstance.destroy(); } catch (e) {} chartVariacionInstance = null; }
+		if (!cats.length) { cmpEmpty('#chartVariacion'); return; }
+		var colors = data.map(function (v) { return v >= 0 ? '#10b981' : '#ef4444'; });
+		chartVariacionInstance = new ApexCharts(document.querySelector('#chartVariacion'), {
+			series: [{ name: 'Variacion %', data: data }],
+			chart: { type: 'bar', height: Math.max(240, cats.length * 26), toolbar: { show: false }, fontFamily: 'inherit' },
+			plotOptions: { bar: { horizontal: true, distributed: true, borderRadius: 2 } },
+			colors: colors,
+			dataLabels: { enabled: true, formatter: function (v) { return (v > 0 ? '+' : '') + v + '%'; }, style: { fontSize: '10px' } },
+			xaxis: { categories: cats },
+			legend: { show: false },
+			grid: { borderColor: '#eef2f7' },
+			tooltip: { y: { formatter: function (v) { return (v > 0 ? '+' : '') + v + '%'; } } }
+		});
+		chartVariacionInstance.render();
+		window.audCmpCharts.variacion = chartVariacionInstance;
+	}
+
+	function renderizarGraficoMix(mix) {
+		var labels = mix.labels || ['Ingresar', 'Actualizar', 'Eliminar', 'Otros'];
+		var a = mix.serie_a || [0, 0, 0, 0];
+		var b = mix.serie_b || [0, 0, 0, 0];
+		if (chartMixAInstance) { try { chartMixAInstance.destroy(); } catch (e) {} chartMixAInstance = null; }
+		if (chartMixBInstance) { try { chartMixBInstance.destroy(); } catch (e) {} chartMixBInstance = null; }
+		var colors = ['#10b981', '#f59e0b', '#ef4444', '#94a3b8'];
+		function pieOpts(title, serie) {
+			return {
+				series: serie,
+				labels: labels,
+				chart: { type: 'donut', height: 220, toolbar: { show: false }, fontFamily: 'inherit' },
+				colors: colors,
+				legend: { position: 'bottom', fontSize: '10px' },
+				title: { text: title, align: 'center', style: { fontSize: '12px', fontWeight: 700, color: '#334155' } },
+				dataLabels: { enabled: true, style: { fontSize: '10px' } },
+				plotOptions: { pie: { donut: { size: '55%' } } }
+			};
+		}
+		if (!document.querySelector('#chartMixA') || !document.querySelector('#chartMixB')) return;
+		chartMixAInstance = new ApexCharts(document.querySelector('#chartMixA'), pieOpts('Periodo A', a));
+		chartMixBInstance = new ApexCharts(document.querySelector('#chartMixB'), pieOpts('Periodo B', b));
+		chartMixAInstance.render();
+		chartMixBInstance.render();
+		window.audCmpCharts.mixA = chartMixAInstance;
+		window.audCmpCharts.mixB = chartMixBInstance;
+	}
+
+	window.audCmpResizeCharts = function () {
+		var list = [chartTendenciaInstance, chartModulosInstance, chartEventosInstance, chartHorariosInstance, chartSesionesInstance, chartUsuariosInstance, chartPlantasInstance, chartVariacionInstance, chartMixAInstance, chartMixBInstance];
+		for (var i = 0; i < list.length; i++) {
+			if (list[i] && typeof list[i].resize === 'function') {
+				try { list[i].resize(); } catch (e) {}
+			}
+		}
+	};
 
 	function renderizarTablaModulos(modulos) {
 		var html = '';
@@ -1170,7 +1675,7 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 			},
 			error: function () {
 				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar Documento');
-				alert('Fallo de conexiÃ³n al enviar correo.');
+				alert('Fallo de conexión al enviar correo.');
 			}
 		});
 	});
@@ -1178,16 +1683,16 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 	// Modal WhatsApp
 	$('#btnModalWhatsApp').on('click', function () {
 		if (cacheDatosComparativa) {
-			var preview = "*INFORME COMPARATIVO DE AUDITORÃA ERP*\n" +
+			var preview = "*INFORME COMPARATIVO DE AUDITORÍA ERP*\n" +
 				"Empresa: " + cacheDatosComparativa.empresa_nombre + "\n" +
 				"Base (A): " + cacheDatosComparativa.periodo_a_label + "\n" +
 				"Comparado (B): " + cacheDatosComparativa.periodo_b_label + "\n" +
-				"DÃ­as analizados: A (" + (cacheDatosComparativa.periodo_a_dias || '?') + ") â†’ B (" + (cacheDatosComparativa.periodo_b_dias || '?') + ")\n\n";
+				"Días analizados: A (" + (cacheDatosComparativa.periodo_a_dias || '?') + ") ? B (" + (cacheDatosComparativa.periodo_b_dias || '?') + ")\n\n";
 			if (cacheDatosComparativa.kpis_comparativa) {
 				cacheDatosComparativa.kpis_comparativa.forEach(function (k) {
 					var pctV = (typeof k.pct_cambio === 'number' && !isNaN(k.pct_cambio)) ? k.pct_cambio : null;
 					var sPct = (pctV === null) ? 'N/D (sin base)' : ((pctV > 0 ? '+' : '') + pctV.toFixed(1) + '%');
-					preview += "â€¢ " + k.titulo + ": " + Number(k.valor_b).toLocaleString() + " (" + sPct + ")\n";
+					preview += "• " + k.titulo + ": " + Number(k.valor_b).toLocaleString() + " (" + sPct + ")\n";
 				});
 			}
 			$('#waPreviewMensaje').text(preview);
@@ -1205,7 +1710,7 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 	$('#btnEnviarWaApi').on('click', function () {
 		var tel = $('#waTelefono').val().trim();
 		if (!tel) {
-			alert('Por favor ingrese el nÃºmero de telÃ©fono destinatario.');
+			alert('Por favor ingrese el número de teléfono destinatario.');
 			return;
 		}
 		var f = obtenerFechasInput();
@@ -1225,9 +1730,9 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 				pb_fin: f.pb_fin
 			},
 			success: function (res) {
-				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar VÃ­a API ERP');
+				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar Vía API ERP');
 				if (res && res.success) {
-					alert('Se generÃ³ el despacho para WhatsApp.');
+					alert('Se generó el despacho para WhatsApp.');
 					if (res.url_whatsapp) {
 						window.open(res.url_whatsapp, '_blank');
 					}
@@ -1237,8 +1742,8 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 				}
 			},
 			error: function () {
-				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar VÃ­a API ERP');
-				alert('Fallo de conexiÃ³n al enviar WhatsApp.');
+				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar Vía API ERP');
+				alert('Fallo de conexión al enviar WhatsApp.');
 			}
 		});
 	});
@@ -1268,13 +1773,13 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 	});
 
 	// Manejo de presets
-	$('.preset-btn').on('click', function (e) {
+	$('.aud-btn-preset').on('click', function (e) {
 		e.preventDefault();
 		var preset = $(this).data('preset');
 		var r = calcularRangoPresetDash(preset);
 		if (r) {
-			$('.preset-btn').removeClass('btn-primary active').addClass('btn-default');
-			$(this).removeClass('btn-default').addClass('btn-primary active');
+			$('.aud-btn-preset').removeClass('active');
+			$(this).addClass('active');
 			$('#dashPresetCustomBadge').hide();
 
 			$('#pa_ini').val(r.pa_ini);
@@ -1305,6 +1810,7 @@ $defaultPbFin = date('Y-m-d 23:59:59');
 	$(document).ready(function () {
 		initCalendariosDash();
 		sincronizarPresetActivoDash();
+		if (typeof window.audCmpWidgetsReady === 'function') window.audCmpWidgetsReady();
 		consultarDashboard();
 	});
 

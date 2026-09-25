@@ -2,7 +2,7 @@
 /**
  * Dashboard Estadistico Interactivo de Monitoreo de Actividades.
  *
- * Dos pesta√±as:
+ * Dos pestaÒas:
  *  - Inicio: estadisticas interactivas (graficos + top) del periodo seleccionado
  *            con el filtro estandarizado (Hoy / Ayer / 1 Semana / 1 Mes / 3 Meses
  *            + calendario Desde-Hasta). Sin exportaciones estaticas.
@@ -16,13 +16,66 @@ if (session_id() === '' && !headers_sent()) {
 	@session_start();
 }
 
+require_once dirname(__FILE__) . '/../../administrador/LOGICA/seguridad.php';
+
 $audEmpCod = isset($_SESSION['Ses_Emp_Cod']) ? (int)$_SESSION['Ses_Emp_Cod'] : 0;
 $audEmpNom = isset($_SESSION['Ses_Emp_Nom']) ? $_SESSION['Ses_Emp_Nom'] : 'Empresa Principal';
 $audUsuCod = isset($_SESSION['Ses_Usu_Cod']) ? (int)$_SESSION['Ses_Usu_Cod'] : 0;
 
+require_once dirname(__FILE__) . '/../LOGICA/aud_log_acceso_directorio.php';
+aud_acceso_directorio_gate($audEmpCod);
+
+// Aviso "datos desde": se consulta el MIN(Log_Fec) una sola vez por empresa (cache en sesion)
+require_once dirname(__FILE__) . '/../LOGICA/aud_log_interpretar.php';
+if (!class_exists('Class_Log_Datos_CfgMon')) {
+	$audCfgFile = dirname(__FILE__) . '/../LOGICA/aud_log_config_monitoreo.php';
+	if (file_exists($audCfgFile)) {
+		require_once $audCfgFile;
+	}
+}
+$audSesDatDis = isset($_SESSION['Ses_Dat_Dis']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']) : '';
+$audDesdeFechaHtml = '';
+if (class_exists('Class_Log_Datos_CfgMon')) {
+	$obBD_desde1 = new Class_Log_Datos_CfgMon();
+	$obBD_desdeCon = new Class_Log_Conexion_CfgMon($audSesDatDis !== '' ? $audSesDatDis : null);
+	$audDesdeFechaHtml = aud_html_banner_desde(aud_fecha_registro_inicio($audEmpCod, $obBD_desde1, $obBD_desdeCon));
+	$obBD_desde1->liberar();
+	$obBD_desdeCon->cerrar();
+} else {
+	$audDesdeFechaHtml = aud_html_banner_desde(aud_fecha_registro_inicio($audEmpCod));
+}
+
 // Rango por defecto: ultimos 30 dias
 $defaultIni = date('Y-m-d 00:00:00', strtotime('-30 days'));
 $defaultFin = date('Y-m-d 23:59:59');
+
+// Combos del filtro estandarizado (mismos catalogos y case numbers que Monitoreo)
+// para que el Panel Estadistico soporte el mismo filtro de evento/modulo/directorio/
+// proceso/usuario/sucursal/planta.
+require_once dirname(__FILE__) . '/../LOGICA/aud_log_monitoreo.php';
+$audObBD_conexionMon = new Class_Log_Conexion($audSesDatDis !== '' ? $audSesDatDis : null);
+$audObBD_con1Mon = new Class_Log_Datos();
+$Arr_Modulos = $audObBD_con1Mon->getArrayConsulta(25, array($audEmpCod), $audObBD_conexionMon);
+$Arr_Directorios = $audObBD_con1Mon->getArrayConsulta(30, array($audEmpCod, 0), $audObBD_conexionMon);
+$Arr_Procesos = $audObBD_con1Mon->getArrayConsulta(26, array($audEmpCod, 0, 0), $audObBD_conexionMon);
+$Arr_Usuarios = $audObBD_con1Mon->getArrayConsulta(27, array($audEmpCod, 0), $audObBD_conexionMon);
+$Arr_Sucursales = $audObBD_con1Mon->getArrayConsulta(28, array($audEmpCod), $audObBD_conexionMon);
+$Arr_Eventos = $audObBD_con1Mon->getArrayConsulta(17, '', $audObBD_conexionMon);
+$Arr_PlantasFiltro = $audObBD_con1Mon->getArrayConsulta(33, array(), $audObBD_conexionMon);
+$rowSucCountMon = $audObBD_con1Mon->getRowConsulta(29, array($audEmpCod), $audObBD_conexionMon);
+$hasSucursalesMon = (!empty($rowSucCountMon['count']) && (int)$rowSucCountMon['count'] > 1);
+if (!is_array($Arr_Modulos)) $Arr_Modulos = array();
+if (!is_array($Arr_Directorios)) $Arr_Directorios = array();
+if (!is_array($Arr_Procesos)) $Arr_Procesos = array();
+if (!is_array($Arr_Usuarios)) $Arr_Usuarios = array();
+if (!is_array($Arr_Sucursales)) $Arr_Sucursales = array();
+if (!is_array($Arr_Eventos)) $Arr_Eventos = array();
+if (!is_array($Arr_PlantasFiltro)) $Arr_PlantasFiltro = array();
+$audObBD_con1Mon->liberar();
+$audObBD_conexionMon->cerrar();
+if (!function_exists('aud_h')) {
+	function aud_h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -33,8 +86,9 @@ $defaultFin = date('Y-m-d 23:59:59');
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 
 	<?php require_once("../../mascaras/model1/estilos/jqgrid5.php"); ?>
-	<?php require_once("../../mascaras/model3/estilos/estilos.php"); ?>
+	<?php require_once("../../mascaras/model4/estilos/estilos.php"); ?>
 	<script type="text/javascript" src="../../framework/jquery/apexcharts/apexcharts.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../RECURSOS/aud_monitoreo_ui_1.0.css?v=20260924_desk19c" />
 
 	<style>
 		.panel-heading.exa-header, .exa-header {
@@ -64,6 +118,11 @@ $defaultFin = date('Y-m-d 23:59:59');
 			border-color: #254463 #dbe3ec #fff;
 			color: #254463;
 		}
+		@media (max-width: 480px) {
+			.aud-dash-tabs .nav-tabs { display: flex; }
+			.aud-dash-tabs .nav-tabs > li { float: none; flex: 1 1 0%; }
+			.aud-dash-tabs .nav-tabs > li > a { padding: 8px 4px; text-align: center; font-size: 11px; }
+		}
 
 		.period-control-card {
 			background: #ffffff;
@@ -72,15 +131,16 @@ $defaultFin = date('Y-m-d 23:59:59');
 			padding: 10px 14px;
 			margin-bottom: 12px;
 			box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+			overflow: visible;
 		}
 		.preset-btn { font-size: 11px; }
 
-		/* Barra de herramientas compartida: filtros juntos + Acciones a la derecha */
+		/* Barra de herramientas: rango en una sola linea */
 		.aud-toolbar {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			flex-wrap: wrap;
+			flex-wrap: nowrap;
 			gap: 10px;
 			padding: 10px 14px;
 		}
@@ -88,30 +148,45 @@ $defaultFin = date('Y-m-d 23:59:59');
 			flex: 1 1 auto;
 			min-width: 0;
 			display: flex;
-			flex-direction: column;
+			flex-direction: row;
+			align-items: center;
+			flex-wrap: nowrap;
 			gap: 8px;
+			overflow-x: auto;
+			-webkit-overflow-scrolling: touch;
+			scrollbar-width: thin;
 		}
 		.aud-toolbar-presets {
-			display: flex;
+			display: inline-flex;
 			align-items: center;
-			flex-wrap: wrap;
-			gap: 8px;
+			flex-wrap: nowrap;
+			gap: 6px;
+			flex-shrink: 0;
 		}
 		.aud-toolbar-label {
 			font-weight: 700;
-			font-size: 12px;
-			color: #334155;
+			font-size: 11px;
+			letter-spacing: 0.03em;
+			text-transform: uppercase;
+			color: #5b6f88;
+			white-space: nowrap;
+			flex-shrink: 0;
 		}
 		.aud-toolbar-dates {
-			display: flex;
+			display: inline-flex;
 			align-items: center;
-			flex-wrap: wrap;
+			flex-wrap: nowrap;
 			gap: 6px;
+			flex-shrink: 0;
 		}
 		.aud-toolbar-dates .input-group { width: auto; }
-		.aud-toolbar-dates .input-group .form-control { width: 112px; }
+		.aud-toolbar-dates .input-group .form-control { width: 100px; }
 		.aud-toolbar-right {
 			flex: 0 0 auto;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			flex-shrink: 0;
 		}
 		.aud-acciones-menu {
 			min-width: 210px;
@@ -126,45 +201,90 @@ $defaultFin = date('Y-m-d 23:59:59');
 			margin-right: 4px;
 		}
 		@media (max-width: 767px) {
-			.aud-toolbar-right { width: 100%; }
-			.aud-toolbar-right .dropdown { float: right; }
+			.aud-toolbar {
+				flex-wrap: nowrap;
+				overflow-x: auto;
+			}
+			.aud-toolbar-right {
+				width: auto;
+				justify-content: flex-end;
+				flex-shrink: 0;
+			}
+			.aud-toolbar-right .dropdown { float: none; }
+		}
+		@media (max-width: 480px) {
+			.aud-toolbar-dates .input-group .form-control { width: 84px; }
+			.aud-toolbar-presets #monPeriodoPresets .btn { padding: 3px 6px; }
+		}
+
+		/* Fila de filtros avanzados usa .aud-filtros-grid del CSS compartido */
+		.aud-toolbar-filtros {
+			border-top: 1px solid #e2e8f0;
+			padding-top: 10px;
+			margin-top: 8px;
 		}
 
 		.kpi-mon-card {
 			background: #ffffff;
-			border-radius: 4px;
-			border: 1px dashed #e2e8f0;
-			border-top: 3px solid #2563eb;
-			padding: 8px 12px;
-			margin-bottom: 10px;
-			min-height: 74px;
+			border-radius: 8px;
+			border: 1px solid #e2e8f0;
+			border-top: 2px solid #2563eb;
+			padding: 6px 10px;
+			margin-bottom: 8px;
+			min-height: 52px;
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
+			transition: box-shadow 0.15s ease;
+		}
+		.kpi-mon-card:hover {
+			box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+			transform: none;
+		}
+		.btn, .preset-btn, .dropdown-toggle {
+			transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, transform 0.05s ease;
+		}
+		.btn:active, .preset-btn:active {
+			transform: translateY(1px);
 		}
 		.kpi-mon-card.green { border-top-color: #10b981; }
 		.kpi-mon-card.amber { border-top-color: #f59e0b; }
 		.kpi-mon-card.red { border-top-color: #ef4444; }
 		.kpi-mon-card.purple { border-top-color: #8b5cf6; }
 		.kpi-mon-card .kpi-label {
-			font-size: 10px; font-weight: 700; text-transform: uppercase;
-			letter-spacing: 0.04em; color: #64748b;
+			font-size: 9px; font-weight: 700; text-transform: uppercase;
+			letter-spacing: 0.03em; color: #64748b;
 		}
-		.kpi-mon-card .kpi-val { font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1; }
-		.kpi-mon-card .kpi-sub { font-size: 11px; color: #94a3b8; }
+		.kpi-mon-card .kpi-val { font-size: 16px; font-weight: 800; color: #0f172a; line-height: 1.1; }
+		.kpi-mon-card .kpi-sub { font-size: 10px; color: #94a3b8; }
 
-		/* KPIs configurables (mover / ocultar / anadir) */
+		/* KPIs configurables (mover / ocultar / anadir) ó float para jQuery UI sortable */
 		#dashKpiGrid {
-			display: flex;
-			flex-wrap: wrap;
+			display: block;
 			margin-left: -6px;
 			margin-right: -6px;
+			overflow: hidden;
+		}
+		#dashKpiGrid:after {
+			content: '';
+			display: table;
+			clear: both;
 		}
 		.dash-kpi-card {
-			flex: 1 1 0%;
+			float: left;
 			box-sizing: border-box;
 			padding: 0 6px;
+			width: 16.666%;
 			min-width: 150px;
+		}
+		@media (max-width: 991px) {
+			.dash-kpi-card { width: 33.333%; }
+		}
+		@media (max-width: 767px) {
+			.dash-kpi-card { width: 50%; }
+		}
+		@media (max-width: 480px) {
+			.dash-kpi-card, .dash-kpi-placeholder { width: 100%; min-width: 100%; }
 		}
 		.dash-kpi-card .kpi-mon-card {
 			cursor: move;
@@ -184,35 +304,47 @@ $defaultFin = date('Y-m-d 23:59:59');
 		.kpi-label { display: inline-block; }
 		.dash-kpi-placeholder {
 			box-sizing: border-box;
-			flex: 1 1 0%;
+			float: left;
+			width: 16.666%;
 			min-width: 150px;
 			background: #eef2f7;
 			border: 1px dashed #94a3b8;
 			border-radius: 6px;
-			min-height: 74px;
-			margin-bottom: 10px;
+			min-height: 52px;
+			margin-bottom: 8px;
+			padding: 0 6px;
 		}
 		.dash-kpis-foot {
-			font-size: 11px; color: #64748b;
-			margin: 0 0 14px; padding: 0 2px;
+			font-size: 10px; color: #64748b;
+			margin: 0 0 10px; padding: 0 2px;
+			clear: both;
 		}
 		.aud-modal-sec {
 			font-size: 12px; font-weight: 700; color: #334155;
 			margin: 4px 0 6px; text-transform: uppercase; letter-spacing: 0.03em;
 		}
 
-		/* Widgets del dashboard de inicio (configurables de lugar) */
+		/* Widgets: float (sortable de jQuery UI falla con flex wrap) */
 		#dashWidgetGrid {
-			display: flex;
-			flex-wrap: wrap;
+			display: block;
 			margin-left: -6px;
 			margin-right: -6px;
+			overflow: hidden;
 		}
-		.dash-widget { flex: 0 0 auto; box-sizing: border-box; padding: 0 6px 12px; }
-		.dash-widget.w-full { width: 100%; }
-		.dash-widget.w-12 { width: 50%; }
+		#dashWidgetGrid:after {
+			content: '';
+			display: table;
+			clear: both;
+		}
+		.dash-widget {
+			float: left;
+			box-sizing: border-box;
+			padding: 0 6px 12px;
+		}
+		 .dash-widget.w-full { width: 100% !important; }
+		 .dash-widget.w-12 { width: 50% !important; }
 		@media (max-width: 767px) {
-			.dash-widget.w-12 { width: 100%; }
+			 .dash-widget.w-12 { width: 100% !important; }
 		}
 
 		.dash-widget-inner {
@@ -222,6 +354,10 @@ $defaultFin = date('Y-m-d 23:59:59');
 			box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 			overflow: hidden;
 			height: 100%;
+			transition: box-shadow 0.15s ease;
+		}
+		.dash-widget-inner:hover {
+			box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 		}
 		.dash-widget-head {
 			display: flex;
@@ -260,20 +396,45 @@ $defaultFin = date('Y-m-d 23:59:59');
 			cursor: pointer; color: #10b981; font-size: 12px;
 		}
 		.dash-widget-head .dash-actions .dash-show:hover { color: #065f46; }
-		.dash-widget-body { padding: 10px 12px; }
+		.dash-widget-body { padding: 10px 12px; overflow-x: auto; }
 		.dash-widget-body .chart-empty { color: #94a3b8; font-size: 12px; text-align: center; padding: 28px 10px; }
+		.dash-widget-body table { min-width: 100%; }
+		@media (max-width: 480px) {
+			.dash-widget-head { flex-wrap: wrap; row-gap: 6px; }
+			.dash-widget-head .dash-title { flex: 1 1 100%; }
+			.dash-widget-body table { min-width: 420px; }
+		}
 
 		.dash-widget-placeholder {
+			float: left;
 			box-sizing: border-box;
 			background: #eef2f7;
 			border: 1px dashed #94a3b8;
 			border-radius: 6px;
 			min-height: 90px;
 			margin-bottom: 12px;
+			padding: 0 6px;
+			visibility: visible !important;
+		}
+		 .dash-widget-placeholder.w-12 { width: 50% !important; }
+		 .dash-widget-placeholder.w-full { width: 100% !important; }
+		@media (max-width: 767px) {
+			.dash-widget-placeholder.w-12 { width: 100%; }
+		}
+		.dash-widget.ui-sortable-helper {
+			z-index: 10050 !important;
 		}
 		.dash-widget.ui-sortable-helper .dash-widget-inner {
 			box-shadow: 0 10px 28px rgba(15, 23, 42, 0.2);
-			transform: rotate(1deg);
+		}
+		body.aud-mon-sorting {
+			cursor: move !important;
+			user-select: none;
+		}
+		body.aud-mon-sorting .kpi-mon-card,
+		body.aud-mon-sorting .dash-widget-inner {
+			transition: none !important;
+			transform: none !important;
 		}
 
 		.aud-mini-list { margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 6px; }
@@ -287,33 +448,67 @@ $defaultFin = date('Y-m-d 23:59:59');
 		.aud-modal-ayuda { font-size: 11px; color: #64748b; margin-bottom: 8px; }
 		.modal-body { max-height: 62vh; overflow-y: auto; }
 
-		/* Cuadros configurables del modal de personalizacion */
+		/* Cuadros del modal de personalizacion */
 		#kpisSorter, #widgetsSorter {
-			display: flex; flex-wrap: wrap; gap: 6px;
-			padding: 2px; margin-bottom: 4px;
+			display: block;
+			overflow: hidden;
+			padding: 2px;
+			margin-bottom: 4px;
+			min-height: 40px;
+		}
+		#kpisSorter:after, #widgetsSorter:after {
+			content: '';
+			display: table;
+			clear: both;
 		}
 		.aud-sbox {
-			display: inline-flex; align-items: center; gap: 7px;
-			box-sizing: border-box; flex: 1 1 auto;
-			min-width: 175px; max-width: 100%;
+			float: left;
+			display: flex;
+			align-items: center;
+			gap: 7px;
+			box-sizing: border-box;
+			width: calc(50% - 6px);
+			margin: 0 6px 6px 0;
+			min-width: 160px;
 			padding: 8px 10px;
-			background: #ffffff; border: 1px solid #dbe3ee; border-radius: 5px;
-			cursor: move; font-size: 12px; color: #334155;
+			background: #ffffff;
+			border: 1px solid #dbe3ee;
+			border-radius: 5px;
+			cursor: move;
+			font-size: 12px;
+			color: #334155;
 			box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+		}
+		@media (max-width: 480px) {
+			.aud-sbox { width: 100%; margin-right: 0; }
 		}
 		.aud-sbox:hover { border-color: #2563eb; }
 		.aud-sbox-off { opacity: 0.5; background: #f8fafc; border-style: dashed; }
 		.aud-sbox-off .kbox-txt { text-decoration: line-through; }
-		.kbox-eye { color: #94a3b8; cursor: pointer; font-size: 12px; }
+		.kbox-eye { color: #94a3b8; cursor: pointer; font-size: 12px; flex-shrink: 0; }
 		.aud-sbox-on .kbox-eye { color: #10b981; }
 		.aud-sbox-off .kbox-eye { color: #ef4444; }
-		.kbox-ico { color: #64748b; font-size: 12px; }
+		.kbox-ico { color: #64748b; font-size: 12px; flex-shrink: 0; }
 		.kbox-txt { flex: 1 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 		.aud-sbox-placeholder {
-			box-sizing: border-box; flex: 1 1 auto; min-width: 175px;
-			border: 1px dashed #94a3b8; border-radius: 5px; background: #eef2f7;
+			float: left;
+			box-sizing: border-box;
+			width: calc(50% - 6px);
+			margin: 0 6px 6px 0;
+			min-width: 160px;
+			min-height: 38px;
+			border: 1px dashed #94a3b8;
+			border-radius: 5px;
+			background: #eef2f7;
+			visibility: visible !important;
 		}
-		.aud-sbox.ui-sortable-helper { box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18); }
+		@media (max-width: 480px) {
+			.aud-sbox-placeholder { width: 100%; margin-right: 0; }
+		}
+		.aud-sbox.ui-sortable-helper {
+			z-index: 10060 !important;
+			box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+		}
 
 		.table-mon-top th {
 			background: #f8fafc; color: #475569; font-weight: 700;
@@ -353,8 +548,25 @@ $defaultFin = date('Y-m-d 23:59:59');
 
 	<div class="panel-body exa-body" style="padding: 10px 14px;">
 
-		<!-- Pesta√±as -->
-		<div class="aud-dash-tabs">
+		<div class="aud-page-hero m4-hero">
+			<div class="aud-page-hero-icon m4-hero-icon"><i class="fa fa-bar-chart"></i></div>
+			<div class="aud-page-hero-text m4-hero-text">
+				<h4 class="m4-hero-title">Panel estad&iacute;stico</h4>
+				<p class="aud-page-hero-sub m4-hero-sub">
+					Resumen ejecutivo del periodo con gr&aacute;ficos, tops y el mismo filtro que Monitoreo.
+					Exporte PDF o env&iacute;e por correo y WhatsApp.
+				</p>
+			</div>
+			<div class="aud-page-hero-tags m4-hero-tags">
+				<span class="aud-page-hero-tag m4-hero-tag"><i class="fa fa-line-chart"></i> Inicio</span>
+				<span class="aud-page-hero-tag m4-hero-tag"><i class="fa fa-exchange"></i> Comparativo</span>
+			</div>
+		</div>
+
+		<?php echo $audDesdeFechaHtml; ?>
+
+		<!-- PestaÒas -->
+		<div class="aud-dash-tabs aud-ui-tabs">
 			<ul class="nav nav-tabs" id="audDashTabs">
 				<li class="active">
 					<a href="#tabInicio" data-toggle="tab"><i class="fa fa-line-chart"></i> Inicio</a>
@@ -369,43 +581,44 @@ $defaultFin = date('Y-m-d 23:59:59');
 				<div class="tab-pane active" id="tabInicio">
 
 					<!-- Barra de herramientas: filtros juntos + Acciones a la derecha -->
-					<div class="period-control-card" style="padding: 0;">
-						<div class="aud-toolbar">
+					<div class="period-control-card m4-filters m4-card" style="padding: 0;">
+						<div class="aud-toolbar m4-toolbar">
 
 							<div class="aud-toolbar-left">
-								<div class="aud-toolbar-presets">
-									<span class="aud-toolbar-label">
-										<i class="fa fa-calendar-check-o text-primary"></i> Rango de fechas:
-									</span>
-									<span id="monPresetCustomBadge" class="label label-info" style="display:none; font-size:10px; padding: 2px 6px;">Personalizado</span>
-									<div class="btn-group btn-group-xs" id="monPeriodoPresets">
-										<button type="button" class="btn btn-default preset-btn" data-preset="hoy">Hoy</button>
-										<button type="button" class="btn btn-default preset-btn" data-preset="ayer">Ayer</button>
-										<button type="button" class="btn btn-default preset-btn" data-preset="1semana">1 Semana</button>
-										<button type="button" class="btn btn-primary preset-btn active" data-preset="1mes">1 Mes</button>
-										<button type="button" class="btn btn-default preset-btn" data-preset="3meses">3 Meses</button>
-									</div>
+								<span class="aud-toolbar-label">
+									<i class="fa fa-calendar-check-o text-primary"></i> Rango de fechas
+								</span>
+								<div class="btn-group btn-group-xs aud-period-presets" id="monPeriodoPresets">
+									<button type="button" class="btn aud-btn-preset" data-preset="ayer" title="Ayer">Ayer</button>
+									<button type="button" class="btn aud-btn-preset" data-preset="hoy" title="Hoy">Hoy</button>
+									<button type="button" class="btn aud-btn-preset" data-preset="1semana" title="1 Semana">1 Semana</button>
+									<button type="button" class="btn aud-btn-preset active" data-preset="1mes" title="1 Mes">1 Mes</button>
+									<button type="button" class="btn aud-btn-preset" data-preset="3meses" title="3 Meses">3 Meses</button>
 								</div>
-
+								<span id="monPresetCustomBadge" class="label label-info m4-badge m4-badge-info" style="display:none; font-size:10px; padding: 2px 6px;">Personalizado</span>
 								<div class="aud-toolbar-dates">
-									<div class="input-group input-group-sm">
-										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Desde</span>
-										<input type="text" id="mon_ini" class="form-control text-center" value="<?php echo substr($defaultIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#mon_ini').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+									<div class="aud-toolbar-range">
+										<div class="input-group input-group-sm">
+											<span class="input-group-addon">Desde</span>
+											<input type="text" id="mon_ini" class="form-control text-center m4-input" value="<?php echo substr($defaultIni, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+											<span class="input-group-addon" style="cursor:pointer;" onclick="$('#mon_ini').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+										</div>
+										<div class="input-group input-group-sm">
+											<span class="input-group-addon">Hasta</span>
+											<input type="text" id="mon_fin" class="form-control text-center m4-input" value="<?php echo substr($defaultFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
+											<span class="input-group-addon" style="cursor:pointer;" onclick="$('#mon_fin').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
+										</div>
 									</div>
-									<span class="text-muted" style="font-size:12px;">&ndash;</span>
-									<div class="input-group input-group-sm">
-										<span class="input-group-addon" style="padding: 2px 6px; font-size: 11px;">Hasta</span>
-										<input type="text" id="mon_fin" class="form-control text-center" value="<?php echo substr($defaultFin, 0, 10); ?>" readonly style="background:#fff; cursor:pointer;" placeholder="AAAA-MM-DD" />
-										<span class="input-group-addon" style="cursor:pointer; padding: 2px 6px;" onclick="$('#mon_fin').focus().datepicker('show');"><i class="fa fa-calendar text-muted"></i></span>
-									</div>
-									<span id="monRangoLabel" class="label label-default" style="font-size:11px; background:#475569;"></span>
+									<span id="monRangoLabel" class="label label-default m4-chip" style="font-size:11px; background:#475569;"></span>
 								</div>
 							</div>
 
 							<div class="aud-toolbar-right">
+								<button type="button" class="btn btn-default btn-sm m4-btn m4-btn-ghost" id="btnMonFiltrosToggle" title="Mostrar/ocultar filtros avanzados (mismos filtros que Monitoreo)">
+									<i class="fa fa-filter"></i> Filtros <span class="badge m4-badge m4-badge-info" id="monFiltrosBadge" style="display:none;">0</span>
+								</button>
 								<div class="dropdown">
-									<button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Acciones">
+									<button type="button" class="btn btn-primary btn-sm dropdown-toggle m4-btn m4-btn-primary" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Acciones">
 										<i class="fa fa-sliders"></i> Acciones <span class="caret"></span>
 									</button>
 									<ul class="dropdown-menu dropdown-menu-right aud-acciones-menu">
@@ -417,6 +630,88 @@ $defaultFin = date('Y-m-d 23:59:59');
 										<li><a href="javascript:void(0);" id="btnModalCorreoMon" title="Enviar reporte por correo"><i class="fa fa-envelope-o text-info"></i> Enviar Correo</a></li>
 										<li><a href="javascript:void(0);" id="btnModalWhatsAppMon" title="Compartir informe por WhatsApp"><i class="fa fa-whatsapp text-success"></i> WhatsApp</a></li>
 									</ul>
+								</div>
+							</div>
+						</div>
+
+						<div class="aud-toolbar aud-toolbar-filtros" id="monFiltrosRow" style="display:none;">
+							<div class="aud-toolbar-left aud-filtros-grid">
+								<?php if ($hasSucursalesMon) { ?>
+								<div class="aud-search-cell aud-search-cell-suc">
+									<label for="mon_suc">Sucursal</label>
+									<select id="mon_suc" class="form-control input-sm">
+										<option value="0">Todas</option>
+										<?php foreach ($Arr_Sucursales as $s) { ?>
+										<option value="<?php echo (int)$s['Suc_Cod']; ?>"><?php echo aud_h($s['Suc_Des']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<?php } ?>
+								<div class="aud-search-cell aud-search-cell-mod">
+									<label for="mon_org">Modulo</label>
+									<select id="mon_org" class="form-control input-sm">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Modulos as $m) { ?>
+										<option value="<?php echo (int)$m['Org_Cod']; ?>"><?php echo aud_h($m['Org_Des']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-dir">
+									<label for="mon_dir">Directorio</label>
+									<select id="mon_dir" class="form-control input-sm">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Directorios as $d) { ?>
+										<option value="<?php echo (int)$d['Org_Cod']; ?>"><?php echo aud_h($d['Org_Des']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-pcs">
+									<label for="mon_pcs">Proceso</label>
+									<select id="mon_pcs" class="form-control input-sm">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Procesos as $p) {
+											$pl = !empty($p['Pcs_Lin']) ? $p['Pcs_Lin'] : (isset($p['Pcs_Nom']) ? $p['Pcs_Nom'] : ('Proceso '.$p['Pcs_Cod']));
+										?>
+										<option value="<?php echo (int)$p['Pcs_Cod']; ?>"><?php echo aud_h($pl); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-pla" id="monFilPlantaWrap" style="display:none;">
+									<label for="mon_pla">Planta</label>
+									<select id="mon_pla" class="form-control input-sm">
+										<option value="0">Todas</option>
+										<?php foreach ($Arr_PlantasFiltro as $pl2) { ?>
+										<option value="<?php echo (int)$pl2['Pla_Cod']; ?>"><?php echo aud_h($pl2['Pla_Nom']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-usu">
+									<label for="mon_usu">Usuario</label>
+									<select id="mon_usu" class="form-control input-sm">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Usuarios as $u) {
+											$un = trim(isset($u['Usu_Nom']) ? $u['Usu_Nom'] : '');
+											if ($un === '') { $un = 'Usuario '.(int)$u['Usu_Cod']; }
+											$usus = (isset($u['Usu_Cods']) && $u['Usu_Cods'] !== '') ? $u['Usu_Cods'] : (string)(int)$u['Usu_Cod'];
+										?>
+										<option value="<?php echo aud_h($usus); ?>"><?php echo aud_h($un); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-eve">
+									<label for="mon_eve">Evento</label>
+									<select id="mon_eve" class="form-control input-sm">
+										<option value="0">Todos</option>
+										<?php foreach ($Arr_Eventos as $ev) { ?>
+										<option value="<?php echo (int)$ev['Eve_Cod']; ?>"><?php echo aud_h($ev['Eve_Des']); ?></option>
+										<?php } ?>
+									</select>
+								</div>
+								<div class="aud-search-cell aud-search-cell-limpiar">
+									<label>&nbsp;</label>
+									<button type="button" id="btnMonFiltrosLimpiar" class="btn btn-default btn-sm btn-block" title="Quitar todos los filtros">
+										<i class="fa fa-eraser"></i> Limpiar
+									</button>
 								</div>
 							</div>
 						</div>
@@ -435,7 +730,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 									<h4 class="dash-title"><i class="fa fa-area-chart"></i> Tendencia y Evoluci&oacute;n Diaria de Actividad</h4>
 									<span class="dash-actions">
 										<i class="fa fa-arrows-v dash-hint" title="Arrastrar para mover"></i>
-										<i class="fa fa-expand dash-size" title="Cambiar tama√±o (mitad / ancho completo)"></i>
+										<i class="fa fa-expand dash-size" title="Cambiar tamaÒo (mitad / ancho completo)"></i>
 										<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
 									</span>
 								</div>
@@ -449,7 +744,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 									<h4 class="dash-title"><i class="fa fa-clock-o"></i> Distribuci&oacute;n por Franja Horaria</h4>
 									<span class="dash-actions">
 										<i class="fa fa-arrows-v dash-hint" title="Arrastrar para mover"></i>
-										<i class="fa fa-expand dash-size" title="Cambiar tama√±o (mitad / ancho completo)"></i>
+										<i class="fa fa-expand dash-size" title="Cambiar tamaÒo (mitad / ancho completo)"></i>
 										<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
 									</span>
 								</div>
@@ -463,7 +758,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 									<h4 class="dash-title"><i class="fa fa-users"></i> Comportamiento Diario por Usuario</h4>
 									<span class="dash-actions">
 										<i class="fa fa-arrows-v dash-hint" title="Arrastrar para mover"></i>
-										<i class="fa fa-expand dash-size" title="Cambiar tama√±o (mitad / ancho completo)"></i>
+										<i class="fa fa-expand dash-size" title="Cambiar tamaÒo (mitad / ancho completo)"></i>
 										<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
 									</span>
 								</div>
@@ -477,7 +772,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 									<h4 class="dash-title"><i class="fa fa-bar-chart"></i> Top Usuarios M&aacute;s Activos</h4>
 									<span class="dash-actions">
 										<i class="fa fa-arrows-v dash-hint" title="Arrastrar para mover"></i>
-										<i class="fa fa-expand dash-size" title="Cambiar tama√±o (mitad / ancho completo)"></i>
+										<i class="fa fa-expand dash-size" title="Cambiar tamaÒo (mitad / ancho completo)"></i>
 										<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
 									</span>
 								</div>
@@ -491,7 +786,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 									<h4 class="dash-title"><i class="fa fa-industry"></i> Top Plantas de Beneficio</h4>
 									<span class="dash-actions">
 										<i class="fa fa-arrows-v dash-hint" title="Arrastrar para mover"></i>
-										<i class="fa fa-expand dash-size" title="Cambiar tama√±o (mitad / ancho completo)"></i>
+										<i class="fa fa-expand dash-size" title="Cambiar tamaÒo (mitad / ancho completo)"></i>
 										<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
 									</span>
 								</div>
@@ -505,7 +800,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 									<h4 class="dash-title"><i class="fa fa-database"></i> Actividad por M&oacute;dulo / Proceso</h4>
 									<span class="dash-actions">
 										<i class="fa fa-arrows-v dash-hint" title="Arrastrar para mover"></i>
-										<i class="fa fa-expand dash-size" title="Cambiar tama√±o (mitad / ancho completo)"></i>
+										<i class="fa fa-expand dash-size" title="Cambiar tamaÒo (mitad / ancho completo)"></i>
 										<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
 									</span>
 								</div>
@@ -522,7 +817,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 									<h4 class="dash-title"><i class="fa fa-trophy"></i> Ranking de Usuarios</h4>
 									<span class="dash-actions">
 										<i class="fa fa-arrows-v dash-hint" title="Arrastrar para mover"></i>
-										<i class="fa fa-expand dash-size" title="Cambiar tama√±o (mitad / ancho completo)"></i>
+										<i class="fa fa-expand dash-size" title="Cambiar tamaÒo (mitad / ancho completo)"></i>
 										<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
 									</span>
 								</div>
@@ -543,7 +838,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 									<h4 class="dash-title"><i class="fa fa-industry"></i> Detalle por Planta de Beneficio</h4>
 									<span class="dash-actions">
 										<i class="fa fa-arrows-v dash-hint" title="Arrastrar para mover"></i>
-										<i class="fa fa-expand dash-size" title="Cambiar tama√±o (mitad / ancho completo)"></i>
+										<i class="fa fa-expand dash-size" title="Cambiar tamaÒo (mitad / ancho completo)"></i>
 										<i class="fa fa-eye-slash dash-hide" title="Ocultar widget"></i>
 									</span>
 								</div>
@@ -576,56 +871,59 @@ $defaultFin = date('Y-m-d 23:59:59');
 </div>
 
 <!-- Modal personalizacion de widgets -->
-<div class="modal fade" id="modalWidgetsMon" tabindex="-1" role="dialog" aria-hidden="true" style="display:none;">
+<div class="modal fade m4-modal" id="modalWidgetsMon" tabindex="-1" role="dialog" aria-hidden="true" style="display:none;">
 	<div class="modal-dialog">
 		<div class="modal-content">
-			<div class="modal-header">
+			<div class="modal-header m4-modal-header m4-modal-header--navy">
 				<button type="button" class="close" id="btnCerrarWidgetsMon" aria-hidden="true">&times;</button>
-				<h4 class="modal-title"><i class="fa fa-th-large"></i> Personalizar tablero</h4>
+				<h4 class="modal-title m4-modal-title"><i class="fa fa-th-large"></i> Personalizar tablero</h4>
 			</div>
-			<div class="modal-body">
-				<p class="aud-modal-ayuda">Arrastra los cuadros para definir la posici&oacute;n en pantalla. Clic en el ojo para mostrar u ocultar cada elemento.</p>
+			<div class="modal-body m4-modal-body">
+				<p class="aud-modal-ayuda m4-alert m4-alert-info">Arrastra para ordenar. Clic en el ojo para mostrar u ocultar. Pulsa <strong>Guardar</strong> para aplicar los cambios, o <strong>Restablecer</strong> para volver al tablero original.</p>
 				<h4 class="aud-modal-sec"><i class="fa fa-tachometer"></i> M&eacute;tricas (KPIs)</h4>
 				<div id="kpisSorter"></div>
 				<h4 class="aud-modal-sec" style="margin-top:14px;"><i class="fa fa-th-large"></i> Widgets</h4>
 				<div id="widgetsSorter"></div>
 			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default btn-sm" id="btnCerrarWidgetsMon2">Cerrar</button>
-				<button type="button" class="btn btn-primary btn-sm" id="btnGuardarWidgetsMon"><i class="fa fa-check"></i> Guardar</button>
+			<div class="modal-footer m4-modal-footer">
+				<button type="button" class="btn btn-default btn-sm m4-btn m4-btn-ghost" id="btnCerrarWidgetsMon2">Cerrar</button>
+				<button type="button" class="btn btn-warning btn-sm m4-btn m4-btn-warning" id="btnRestablecerWidgetsMon" title="Volver al orden y visibilidad originales">
+					<i class="fa fa-undo"></i> Restablecer
+				</button>
+				<button type="button" class="btn btn-primary btn-sm m4-btn m4-btn-primary" id="btnGuardarWidgetsMon"><i class="fa fa-check"></i> Guardar</button>
 			</div>
 		</div>
 	</div>
 </div>
 
 <!-- Modal Envio de Reporte por Correo -->
-<div class="modal fade" id="modalEnvioCorreoMon" tabindex="-1" role="dialog" aria-hidden="true" style="display:none;">
+<div class="modal fade m4-modal" id="modalEnvioCorreoMon" tabindex="-1" role="dialog" aria-hidden="true" style="display:none;">
 	<div class="modal-dialog">
 		<div class="modal-content">
-			<div class="modal-header">
+			<div class="modal-header m4-modal-header m4-modal-header--navy">
 				<button type="button" class="close" id="btnCerrarCorreoMon" aria-hidden="true">&times;</button>
-				<h4 class="modal-title"><i class="fa fa-envelope-o"></i> Enviar Reporte por Correo Electr&oacute;nico</h4>
+				<h4 class="modal-title m4-modal-title"><i class="fa fa-envelope-o"></i> Enviar Reporte por Correo Electr&oacute;nico</h4>
 			</div>
-			<div class="modal-body" style="padding: 16px;">
-				<div class="form-group">
-					<label style="font-weight: 600; font-size: 12px; color: #334155;">Correo Electr&oacute;nico Destinatario:</label>
-					<input type="email" id="mailDestinatarioMon" class="form-control" placeholder="ejemplo@empresa.com" required />
+			<div class="modal-body m4-modal-body">
+				<div class="form-group m4-field">
+					<label class="m4-label">Correo Electr&oacute;nico Destinatario:</label>
+					<input type="email" id="mailDestinatarioMon" class="form-control m4-input" placeholder="ejemplo@empresa.com" required />
 				</div>
-				<div class="form-group">
-					<label style="font-weight: 600; font-size: 12px; color: #334155;">Nombre del Destinatario (Opcional):</label>
-					<input type="text" id="mailNombreMon" class="form-control" placeholder="Ej: Gerencia General" />
+				<div class="form-group m4-field">
+					<label class="m4-label">Nombre del Destinatario (Opcional):</label>
+					<input type="text" id="mailNombreMon" class="form-control m4-input" placeholder="Ej: Gerencia General" />
 				</div>
-				<div class="form-group">
-					<label style="font-weight: 600; font-size: 12px; color: #334155;">Asunto del Mensaje:</label>
-					<input type="text" id="mailAsuntoMon" class="form-control" value="Informe Estadistico de Actividad de Auditoria" />
+				<div class="form-group m4-field">
+					<label class="m4-label">Asunto del Mensaje:</label>
+					<input type="text" id="mailAsuntoMon" class="form-control m4-input" value="Informe Estadistico de Actividad de Auditoria" />
 				</div>
-				<div class="alert alert-info" style="margin-bottom: 0; font-size: 11px; padding: 8px 12px;">
+				<div class="alert alert-info m4-alert m4-alert-info" style="margin-bottom: 0;">
 					<i class="fa fa-info-circle"></i> El reporte del periodo seleccionado se adjuntar&aacute; autom&aacute;ticamente en formato <strong>PDF</strong> oficial.
 				</div>
 			</div>
-			<div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 10px 18px;">
-				<button type="button" class="btn btn-default btn-sm" id="btnCerrarCorreoMon2">Cancelar</button>
-				<button type="button" id="btnEnviarCorreoConfirmMon" class="btn btn-primary btn-sm" style="font-weight: 600;">
+			<div class="modal-footer m4-modal-footer">
+				<button type="button" class="btn btn-default btn-sm m4-btn m4-btn-ghost" id="btnCerrarCorreoMon2">Cancelar</button>
+				<button type="button" id="btnEnviarCorreoConfirmMon" class="btn btn-primary btn-sm m4-btn m4-btn-primary">
 					<i class="fa fa-paper-plane"></i> Enviar Documento
 				</button>
 			</div>
@@ -634,12 +932,12 @@ $defaultFin = date('Y-m-d 23:59:59');
 </div>
 
 <!-- Modal Envio WhatsApp -->
-<div class="modal fade" id="modalEnvioWhatsAppMon" tabindex="-1" role="dialog" aria-hidden="true" style="display:none;">
-	<div class="modal-dialog" style="max-width: 480px;">
+<div class="modal fade m4-modal" id="modalEnvioWhatsAppMon" tabindex="-1" role="dialog" aria-hidden="true" style="display:none;">
+	<div class="modal-dialog">
 		<div class="modal-content">
-			<div class="modal-header" style="background-color: #15803d !important;">
+			<div class="modal-header m4-modal-header" style="background: linear-gradient(135deg, #166534 0%, #16A34A 100%) !important;">
 				<button type="button" class="close" id="btnCerrarWaMon" aria-hidden="true">&times;</button>
-				<h4 class="modal-title"><i class="fa fa-whatsapp"></i> Compartir Informe por WhatsApp</h4>
+				<h4 class="modal-title m4-modal-title"><i class="fa fa-whatsapp"></i> Compartir Informe por WhatsApp</h4>
 			</div>
 			<div class="modal-body" style="padding: 16px;">
 				<div class="form-group">
@@ -704,15 +1002,15 @@ $defaultFin = date('Y-m-d 23:59:59');
 
 	function audMonSincronizarPreset() {
 		var ini = $('#mon_ini').val(), fin = $('#mon_fin').val();
-		var presets = ['hoy', 'ayer', '1semana', '1mes', '3meses'];
+		var presets = ['ayer', 'hoy', '1semana', '1mes', '3meses'];
 		var coincide = null;
 		for (var i = 0; i < presets.length; i++) {
 			var r = audMonCalcularRango(presets[i]);
 			if (r && r.ini === ini && r.fin === fin) { coincide = presets[i]; break; }
 		}
-		$('#monPeriodoPresets .preset-btn').removeClass('btn-primary active').addClass('btn-default');
+		$('#monPeriodoPresets .aud-btn-preset').removeClass('active');
 		if (coincide) {
-			$('#monPeriodoPresets .preset-btn[data-preset="' + coincide + '"]').removeClass('btn-default').addClass('btn-primary active');
+			$('#monPeriodoPresets .aud-btn-preset[data-preset="' + coincide + '"]').addClass('active');
 			$('#monPresetCustomBadge').hide();
 		} else {
 			$('#monPresetCustomBadge').show();
@@ -820,6 +1118,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 	}
 
 	// Tamanos: mitad (w-12) o ancho completo (w-full), persiste por widget
+	var audMonWidgetOrdenDef = ['tendencia', 'horas', 'usuariosDia', 'topUsu', 'topPla', 'modulos', 'rankUsu', 'detPla'];
 	var audMonWidgetTamanosDef = {
 		tendencia: 'w-12', horas: 'w-12', usuariosDia: 'w-full', topUsu: 'w-12',
 		topPla: 'w-12', modulos: 'w-12', rankUsu: 'w-12', detPla: 'w-12'
@@ -872,18 +1171,36 @@ $defaultFin = date('Y-m-d 23:59:59');
 	function audMonWidgetOrdenCanonico() {
 		var saved = null;
 		try { saved = JSON.parse(localStorage.getItem(audMonWidgetClave()) || 'null'); } catch (e) {}
-		if (saved && saved.length) {
-			var seen = {}, extra = [];
-			for (var i = 0; i < saved.length; i++) seen[saved[i]] = 1;
-			$('#dashWidgetGrid .dash-widget, #dashWidgetOcultos .dash-widget').each(function () {
-				var id = $(this).attr('data-widget');
-				if (!seen[id]) extra.push(id);
-			});
-			return saved.concat(extra);
+		var existentes = {};
+		$('#dashWidgetGrid .dash-widget, #dashWidgetOcultos .dash-widget').each(function () {
+			existentes[$(this).attr('data-widget')] = 1;
+		});
+		var orden = [];
+		var seen = {};
+		var fuente = (saved && $.isArray(saved) && saved.length) ? saved : audMonWidgetOrdenDef;
+		var i, id;
+		for (i = 0; i < fuente.length; i++) {
+			id = fuente[i];
+			if (existentes[id] && !seen[id]) {
+				orden.push(id);
+				seen[id] = 1;
+			}
 		}
-		var def = [];
-		$('#dashWidgetGrid .dash-widget, #dashWidgetOcultos .dash-widget').each(function () { def.push($(this).attr('data-widget')); });
-		return def;
+		for (i = 0; i < audMonWidgetOrdenDef.length; i++) {
+			id = audMonWidgetOrdenDef[i];
+			if (existentes[id] && !seen[id]) {
+				orden.push(id);
+				seen[id] = 1;
+			}
+		}
+		$('#dashWidgetGrid .dash-widget, #dashWidgetOcultos .dash-widget').each(function () {
+			id = $(this).attr('data-widget');
+			if (id && !seen[id]) {
+				orden.push(id);
+				seen[id] = 1;
+			}
+		});
+		return orden;
 	}
 
 	function audMonWidgetAplicar() {
@@ -905,8 +1222,9 @@ $defaultFin = date('Y-m-d 23:59:59');
 				$grid.append(el);
 			}
 		}
-		$grid.find('.dash-widget').css({ display: '', 'float': '' });
+		$grid.find('.dash-widget').css({ display: '', float: 'left', position: '', top: '', left: '', width: '' });
 		audMonTamanosAplicar();
+		audMonSortableRefrescar();
 	}
 
 	function audMonWidgetOcultar(id) {
@@ -929,7 +1247,9 @@ $defaultFin = date('Y-m-d 23:59:59');
 		if ($ic.length) {
 			var cls = $ic.attr('class') || '';
 			var partes = cls.split(' ');
-			for (var i = partes.length - 1; i >= 0; i--) { if (partes[i] && partes[i] !== 'fa') { ico = partes[i]; break; } }
+			for (var i = partes.length - 1; i >= 0; i--) {
+				if (partes[i] && partes[i] !== 'fa') { ico = partes[i].replace(/^fa-/, ''); break; }
+			}
 		}
 		return '<div class="aud-sbox' + (oculto ? ' aud-sbox-off' : '') + '" data-id="' + ordenId + '">'
 			+ '<i class="fa ' + (oculto ? 'fa-eye-slash' : 'fa-eye') + ' kbox-eye" title="Clic para mostrar/ocultar"></i>'
@@ -963,6 +1283,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 			$lista.html(html || '<p class="text-muted">Sin widgets.</p>');
 		}
 		audMonKpisConstruirLista();
+		audMonSortableRefrescar();
 	}
 
 	function audMonRedimensionar() {
@@ -975,59 +1296,139 @@ $defaultFin = date('Y-m-d 23:59:59');
 		}, 40);
 	}
 
+	function audMonSortableRefrescar($solo) {
+		if (!$.fn.sortable) return;
+		var lista = $solo && $solo.length
+			? $solo
+			: $('#dashWidgetGrid, #dashKpiGrid, #kpisSorter, #widgetsSorter');
+		lista.each(function () {
+			var $el = $(this);
+			if (!$el.length || !$el.hasClass('ui-sortable')) return;
+			try { $el.sortable('refresh'); } catch (e) {}
+		});
+	}
+
+	function audMonSortableIniciar($el, opts) {
+		if (!$el.length || !$.fn.sortable) return;
+		if ($el.hasClass('ui-sortable')) {
+			try { $el.sortable('destroy'); } catch (e) {}
+		}
+		$el.sortable(opts);
+	}
+
 	function audMonIniciarWidgets() {
-		var $grid = $('#dashWidgetGrid');
-		if ($grid.length && $.fn.sortable) {
-			$grid.sortable({
-				items: '.dash-widget',
-				handle: '.dash-widget-head',
-				placeholder: 'dash-widget-placeholder',
-				forcePlaceholderSize: true,
-				tolerance: 'pointer',
-				helper: 'original',
-				start: function (e, ui) { ui.placeholder.height(ui.item.outerHeight()); },
-				stop: function () {
-					audMonWidgetOrdenGuardar();
-					audMonRedimensionar();
-				}
-			});
-			$grid.disableSelection();
-		}
-		var $kpi = $('#dashKpiGrid');
-		if ($kpi.length && $.fn.sortable) {
-			$kpi.sortable({
-				items: '.dash-kpi-card',
-				handle: '.dash-kpi-card .kpi-mon-card',
-				placeholder: 'dash-kpi-placeholder',
-				forcePlaceholderSize: true,
-				tolerance: 'pointer',
-				helper: 'original',
-				stop: function () {
-					audMonKpisGuardar();
-				}
-			});
-			$kpi.disableSelection();
-		}
-		var $ks = $('#kpisSorter');
-		if ($ks.length && $.fn.sortable) {
-			$ks.sortable({
-				items: '.aud-sbox',
-				placeholder: 'aud-sbox-placeholder',
-				forcePlaceholderSize: true,
-				tolerance: 'pointer'
-			});
-			$ks.disableSelection();
-		}
-		var $ws = $('#widgetsSorter');
-		if ($ws.length && $.fn.sortable) {
-			$ws.sortable({
-				items: '.aud-sbox',
-				placeholder: 'aud-sbox-placeholder',
-				forcePlaceholderSize: true,
-				tolerance: 'pointer'
-			});
-			$ws.disableSelection();
-		}
+		audMonSortableIniciar($('#dashWidgetGrid'), {
+			items: '> .dash-widget',
+			handle: '.dash-widget-head',
+			cancel: '.dash-hide, .dash-size, .dash-show, a, button, input, select, textarea',
+			placeholder: 'dash-widget-placeholder',
+			forcePlaceholderSize: true,
+			tolerance: 'pointer',
+			opacity: 0.92,
+			zIndex: 10050,
+			scroll: true,
+			scrollSensitivity: 60,
+			distance: 4,
+			start: function (e, ui) {
+				$('body').addClass('aud-mon-sorting');
+				var wClass = ui.item.hasClass('w-full') ? 'w-full' : 'w-12';
+				ui.placeholder.removeClass('w-full w-12').addClass(wClass);
+				ui.placeholder.css({
+					width: ui.item.outerWidth(),
+					height: Math.max(90, ui.item.outerHeight()),
+					visibility: 'visible'
+				});
+				ui.item.css('width', ui.item.outerWidth());
+			},
+			stop: function (e, ui) {
+				$('body').removeClass('aud-mon-sorting');
+				ui.item.css({ width: '', height: '', position: '', top: '', left: '' });
+				audMonWidgetOrdenGuardar();
+				audMonRedimensionar();
+			}
+		});
+
+		audMonSortableIniciar($('#dashKpiGrid'), {
+			items: '> .dash-kpi-card',
+			handle: '.kpi-mon-card',
+			cancel: '.kpi-hide, a, button, input, select, textarea',
+			placeholder: 'dash-kpi-placeholder',
+			forcePlaceholderSize: true,
+			tolerance: 'pointer',
+			opacity: 0.92,
+			zIndex: 10050,
+			distance: 4,
+			start: function (e, ui) {
+				$('body').addClass('aud-mon-sorting');
+				ui.placeholder.css({
+					width: ui.item.outerWidth(),
+					height: Math.max(74, ui.item.outerHeight()),
+					visibility: 'visible'
+				});
+				ui.item.css('width', ui.item.outerWidth());
+			},
+			stop: function (e, ui) {
+				$('body').removeClass('aud-mon-sorting');
+				ui.item.css({ width: '', height: '', position: '', top: '', left: '' });
+				audMonKpisGuardar();
+			}
+		});
+
+		audMonSortableIniciar($('#kpisSorter'), {
+			items: '> .aud-sbox',
+			cancel: '.kbox-eye, a, button, input',
+			placeholder: 'aud-sbox-placeholder',
+			forcePlaceholderSize: true,
+			tolerance: 'pointer',
+			opacity: 0.92,
+			zIndex: 10060,
+			distance: 3,
+			appendTo: 'body',
+			helper: 'clone',
+			start: function (e, ui) {
+				$('body').addClass('aud-mon-sorting');
+				ui.placeholder.css({
+					width: ui.item.outerWidth(),
+					height: ui.item.outerHeight(),
+					visibility: 'visible'
+				});
+				ui.helper.css({
+					width: ui.item.outerWidth(),
+					'z-index': 10060
+				});
+			},
+			stop: function () {
+				$('body').removeClass('aud-mon-sorting');
+			}
+		});
+
+		audMonSortableIniciar($('#widgetsSorter'), {
+			items: '> .aud-sbox',
+			cancel: '.kbox-eye, a, button, input',
+			placeholder: 'aud-sbox-placeholder',
+			forcePlaceholderSize: true,
+			tolerance: 'pointer',
+			opacity: 0.92,
+			zIndex: 10060,
+			distance: 3,
+			appendTo: 'body',
+			helper: 'clone',
+			start: function (e, ui) {
+				$('body').addClass('aud-mon-sorting');
+				ui.placeholder.css({
+					width: ui.item.outerWidth(),
+					height: ui.item.outerHeight(),
+					visibility: 'visible'
+				});
+				ui.helper.css({
+					width: ui.item.outerWidth(),
+					'z-index': 10060
+				});
+			},
+			stop: function () {
+				$('body').removeClass('aud-mon-sorting');
+			}
+		});
 	}
 
 	// ---------- KPIs configurables (mover / ocultar / anadir) ----------
@@ -1037,16 +1438,16 @@ $defaultFin = date('Y-m-d 23:59:59');
 		{ id: 'insert', titulo: 'Ingresar', icono: 'plus-circle', color: 'green', sub: 'Operaciones', fn: function (d) { return d.resumen ? d.resumen.insert : 0; } },
 		{ id: 'update', titulo: 'Actualizar', icono: 'pencil', color: 'amber', sub: 'Operaciones', fn: function (d) { return d.resumen ? d.resumen.update : 0; } },
 		{ id: 'delete', titulo: 'Eliminar', icono: 'times-circle', color: 'red', sub: 'Operaciones', fn: function (d) { return d.resumen ? d.resumen.delete : 0; } },
-		{ id: 'usuarios', titulo: 'Usuarios √∫nicos', icono: 'users', color: 'purple', sub: 'En el rango', fn: function (d) { return d.resumen ? d.resumen.usuarios_unicos : 0; } },
-		{ id: 'dias', titulo: 'D√≠as con Datos', icono: 'calendar', color: '', sub: 'En el rango', fn: function (d) { return d.tendencia && d.tendencia.categorias ? d.tendencia.categorias.length : 0; } },
-		{ id: 'modulosAct', titulo: 'M√≥dulos activos', icono: 'cubes', color: 'purple', sub: 'Con actividad', fn: function (d) { return (d.modulos || []).length; } },
+		{ id: 'usuarios', titulo: 'Usuarios ˙nicos', icono: 'users', color: 'purple', sub: 'En el rango', fn: function (d) { return d.resumen ? d.resumen.usuarios_unicos : 0; } },
+		{ id: 'dias', titulo: 'DÌas con Datos', icono: 'calendar', color: '', sub: 'En el rango', fn: function (d) { return d.tendencia && d.tendencia.categorias ? d.tendencia.categorias.length : 0; } },
+		{ id: 'modulosAct', titulo: 'MÛdulos activos', icono: 'cubes', color: 'purple', sub: 'Con actividad', fn: function (d) { return (d.modulos || []).length; } },
 		{ id: 'plantasAct', titulo: 'Plantas activas', icono: 'industry', color: 'amber', sub: 'Con movimiento', fn: function (d) { return (d.plantas_top || []).length; } },
 		{ id: 'usuTop', titulo: 'Usuarios top', icono: 'star', color: 'green', sub: 'Mayor actividad', fn: function (d) { return (d.usuarios_top || []).length; } },
-		{ id: 'promedio', titulo: 'Promedio diario', icono: 'tachometer', color: 'red', sub: 'Movimientos / d√≠a', fn: function (d) {
+		{ id: 'promedio', titulo: 'Promedio diario', icono: 'tachometer', color: 'red', sub: 'Movimientos / dÌa', fn: function (d) {
 			var t = d.resumen ? (d.resumen.total || 0) : 0, dd = d.tendencia && d.tendencia.categorias ? d.tendencia.categorias.length : 0;
 			return dd ? Math.round((t / dd) * 100) / 100 : 0;
 		} },
-		{ id: 'rango', titulo: 'Rango consultado', icono: 'calendar-o', color: '', sub: '', fn: function (d) { return d.rango || '‚Äî'; } }
+		{ id: 'rango', titulo: 'Rango consultado', icono: 'calendar-o', color: '', sub: '', fn: function (d) { return d.rango || 'ó'; } }
 	];
 
 	function audMonKpisBuscar(id) {
@@ -1058,20 +1459,29 @@ $defaultFin = date('Y-m-d 23:59:59');
 		return 'exa_aud_dash_mon_kpis_' + audMonEmp + '_' + audMonUsu;
 	}
 
+	function audMonKpisDefecto() {
+		var def = [];
+		for (var j = 0; j < 6 && j < audMonKpis.length; j++) def.push(audMonKpis[j].id);
+		return def;
+	}
+
 	function audMonKpisLeer() {
 		try {
-			var v = JSON.parse(localStorage.getItem(audMonKpisClave()) || 'null');
-			if (v && v.length) {
+			var raw = localStorage.getItem(audMonKpisClave());
+			if (raw === null || raw === undefined) return audMonKpisDefecto();
+			var v = JSON.parse(raw);
+			if ($.isArray(v)) {
 				var valid = [], seen = {};
 				for (var i = 0; i < v.length; i++) {
-					if (audMonKpisBuscar(v[i]) && !seen[v[i]]) { valid.push(v[i]); seen[v[i]] = 1; }
+					if (audMonKpisBuscar(v[i]) && !seen[v[i]]) {
+						valid.push(v[i]);
+						seen[v[i]] = 1;
+					}
 				}
 				return valid;
 			}
 		} catch (e) {}
-		var def = [];
-		for (var j = 0; j < 6 && j < audMonKpis.length; j++) def.push(audMonKpis[j].id);
-		return def;
+		return audMonKpisDefecto();
 	}
 
 	function audMonKpisGuardar() {
@@ -1099,17 +1509,18 @@ $defaultFin = date('Y-m-d 23:59:59');
 			html += '<div class="dash-kpi-card" data-kpi="' + k.id + '">'
 				+ '<div class="kpi-mon-card ' + k.color + '">'
 				+ '<div class="kpi-head"><span class="kpi-label"><i class="fa fa-' + k.icono + '"></i> ' + k.titulo + '</span>'
-				+ '<i class="fa fa-eye-slash kpi-hide" title="Ocultar m√©trica"></i></div>'
+				+ '<i class="fa fa-eye-slash kpi-hide" title="Ocultar mÈtrica"></i></div>'
 				+ '<div class="kpi-val">' + audMonKpisFormato(k, val) + '</div>'
 				+ '<div class="kpi-sub">' + (k.sub || '&nbsp;') + '</div>'
 				+ '</div></div>';
 		}
-		$('#dashKpiGrid').html(html || '<div class="text-muted" style="font-size:12px;padding:8px 6px;">No hay m√©tricas visibles.</div>');
+		$('#dashKpiGrid').html(html || '<div class="text-muted" style="font-size:12px;padding:8px 6px;clear:both;">No hay mÈtricas visibles.</div>');
 		var foot = [];
 		if (data.empresa) foot.push('<i class="fa fa-building-o"></i> ' + data.empresa);
 		if (data.rango) foot.push('<i class="fa fa-calendar-o"></i> ' + data.rango);
 		if (data.plantas_top && data.plantas_top.length) foot.push('<i class="fa fa-industry"></i> ' + data.plantas_top.length + ' planta(s)');
 		$('#kpiFootMon').html(foot.join(' &nbsp;&middot;&nbsp; ') || '&nbsp;');
+		audMonSortableRefrescar($('#dashKpiGrid'));
 	}
 
 	function audMonKpisQuitar(id) {
@@ -1134,7 +1545,8 @@ $defaultFin = date('Y-m-d 23:59:59');
 			if (!k) continue;
 			html += audMonKpisSbox(k, ids.indexOf(k.id) === -1);
 		}
-		$lista.html(html || '<p class="text-muted">Sin m√©tricas.</p>');
+		$lista.html(html || '<p class="text-muted">Sin mÈtricas.</p>');
+		audMonSortableRefrescar($('#kpisSorter'));
 	}
 
 	function audMonKpisSbox(k, oculto) {
@@ -1265,14 +1677,100 @@ $defaultFin = date('Y-m-d 23:59:59');
 		audMonRenderTabla('tablaTopPlantas', topP.map(function (p) { return [p.planta, p.usuarios, p.insert, p.update, p.delete, p.total]; }), 7);
 	}
 
+	// ---------- Filtros avanzados (mismos filtros que Monitoreo) ----------
+	function audMonFiltrosActuales() {
+		return {
+			eve: $('#mon_eve').length ? $('#mon_eve').val() : 0,
+			org: $('#mon_org').length ? $('#mon_org').val() : 0,
+			dir: $('#mon_dir').length ? $('#mon_dir').val() : 0,
+			pcs: $('#mon_pcs').length ? $('#mon_pcs').val() : 0,
+			usu: $('#mon_usu').length ? $('#mon_usu').val() : 0,
+			suc: $('#mon_suc').length ? $('#mon_suc').val() : 0,
+			pla: $('#mon_pla').length ? $('#mon_pla').val() : 0
+		};
+	}
+
+	function audMonFiltrosActualizarBadge() {
+		var f = audMonFiltrosActuales();
+		var n = 0;
+		$.each(f, function (k, v) { if (v && String(v) !== '0') n++; });
+		var $b = $('#monFiltrosBadge');
+		if (n > 0) { $b.text(n).show(); } else { $b.hide(); }
+	}
+
+	$('#btnMonFiltrosToggle').on('click', function () {
+		$('#monFiltrosRow').slideToggle(150);
+	});
+
+	function audMonCargarDirectorios(org, dirSel) {
+		$.getJSON('../LOGICA/aud_log_dashboard_monitoreo.php', { directoriosAjax: 1, org: org || 0 }, function (resp) {
+			var $sel = $('#mon_dir');
+			var html = '<option value="0">Todos</option>';
+			$.each((resp && resp.rows) || [], function (i, d) {
+				html += '<option value="' + d.Org_Cod + '">' + $('<div>').text(d.Org_Des).html() + '</option>';
+			});
+			$sel.html(html);
+			if (dirSel) $sel.val(dirSel);
+		});
+	}
+
+	function audMonCargarProcesos(dir, org, pcsSel) {
+		$.getJSON('../LOGICA/aud_log_dashboard_monitoreo.php', { procesosAjax: 1, dir: dir || 0, org: org || 0 }, function (resp) {
+			var $sel = $('#mon_pcs');
+			var html = '<option value="0">Todos</option>';
+			$.each((resp && resp.rows) || [], function (i, p) {
+				var nom = p.Pcs_Lin || p.Pcs_Nom || ('Proceso ' + p.Pcs_Cod);
+				html += '<option value="' + p.Pcs_Cod + '">' + $('<div>').text(nom).html() + '</option>';
+			});
+			$sel.html(html);
+			if (pcsSel) $sel.val(pcsSel);
+			audMonVerificarPlanta();
+		});
+	}
+
+	function audMonVerificarPlanta() {
+		var pcs = $('#mon_pcs').val();
+		if (!pcs || pcs === '0') {
+			$('#monFilPlantaWrap').hide();
+			return;
+		}
+		$.getJSON('../LOGICA/aud_log_dashboard_monitoreo.php', { plantaProcesoAjax: 1, pcs: pcs }, function (resp) {
+			$('#monFilPlantaWrap').toggle(!!(resp && resp.tienePlanta));
+		});
+	}
+
+	$('#mon_org').on('change', function () {
+		audMonCargarDirectorios($(this).val());
+		audMonCargarProcesos(0, $(this).val());
+	});
+	$('#mon_dir').on('change', function () {
+		audMonCargarProcesos($(this).val(), $('#mon_org').val());
+	});
+	$('#mon_pcs').on('change', function () {
+		audMonVerificarPlanta();
+	});
+	$('#mon_eve, #mon_dir, #mon_pcs, #mon_usu, #mon_suc, #mon_pla, #mon_org').on('change', function () {
+		audMonFiltrosActualizarBadge();
+		audMonCargar();
+	});
+
+	$('#btnMonFiltrosLimpiar').on('click', function () {
+		$('#mon_eve, #mon_org, #mon_usu, #mon_suc, #mon_pla').val('0');
+		audMonCargarDirectorios(0);
+		audMonCargarProcesos(0, 0);
+		audMonFiltrosActualizarBadge();
+		audMonCargar();
+	});
+
 	function audMonCargar() {
 		var ini = $('#mon_ini').val(), fin = $('#mon_fin').val();
 		$('#monRangoLabel').text('Rango seleccionado: ' + ini + ' al ' + fin);
-		$.getJSON('../LOGICA/aud_log_dashboard_monitoreo.php', {
+		var params = $.extend({
 			action: 'consultar',
 			ini: ini + ' 00:00:00',
 			fin: fin + ' 23:59:59'
-		}).done(function (res) {
+		}, audMonFiltrosActuales());
+		$.getJSON('../LOGICA/aud_log_dashboard_monitoreo.php', params).done(function (res) {
 			if (res && res.success) {
 				audMonDestruirGraficos();
 				audMonRender(res);
@@ -1285,7 +1783,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 	}
 
 	// Presets
-	$('#monPeriodoPresets').on('click', '.preset-btn', function () {
+	$('#monPeriodoPresets').on('click', '.aud-btn-preset', function () {
 		var preset = $(this).data('preset');
 		var r = audMonCalcularRango(preset);
 		if (!r) return;
@@ -1300,15 +1798,33 @@ $defaultFin = date('Y-m-d 23:59:59');
 	});
 
 	$('#btnResetWidgetsMon').on('click', function () {
+		audMonRestablecerPersonalizacion(false);
+	});
+
+	function audMonRestablecerPersonalizacion(desdeModal) {
 		try { localStorage.removeItem(audMonWidgetClave()); } catch (e) {}
 		try { localStorage.removeItem(audMonWidgetOcultosClave()); } catch (e) {}
 		try { localStorage.removeItem(audMonWidgetTamanosClave()); } catch (e) {}
 		try { localStorage.removeItem(audMonKpisClave()); } catch (e) {}
+
+		// Forzar orden y visibilidad por defecto en storage
+		try { localStorage.setItem(audMonWidgetClave(), JSON.stringify(audMonWidgetOrdenDef.slice())); } catch (e) {}
+		try { localStorage.setItem(audMonWidgetOcultosClave(), JSON.stringify([])); } catch (e) {}
+		try { localStorage.setItem(audMonKpisClave(), JSON.stringify(audMonKpisDefecto())); } catch (e) {}
+
 		audMonWidgetAplicar();
-		audMonWidgetSyncCheck();
 		audMonKpisRender(audMonLastData);
 		audMonRedimensionar();
-	});
+
+		if (desdeModal || window.audMonModalAbierto) {
+			audMonWidgetConstruirLista();
+			setTimeout(function () {
+				audMonSortableRefrescar($('#kpisSorter, #widgetsSorter'));
+			}, 30);
+		} else {
+			audMonWidgetSyncCheck();
+		}
+	}
 
 	// ---------- Ocultar widget desde su cabecera ----------
 	$(document).on('mousedown', '.dash-hide', function (e) {
@@ -1354,6 +1870,9 @@ $defaultFin = date('Y-m-d 23:59:59');
 		$m.addClass('in').css('display', 'block');
 		window.audMonModalAbierto = true;
 		audMonWidgetConstruirLista();
+		setTimeout(function () {
+			audMonSortableRefrescar($('#kpisSorter, #widgetsSorter'));
+		}, 30);
 	}
 
 	function audMonModalCerrar() {
@@ -1378,7 +1897,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 		var ini = $('#mon_ini').val(), fin = $('#mon_fin').val();
 		if (!ini) { ini = audMonFmt(new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate() - 29)); }
 		if (!fin) { fin = audMonFmt(new Date()); }
-		return { ini: ini + ' 00:00:00', fin: fin + ' 23:59:59' };
+		return $.extend({ ini: ini + ' 00:00:00', fin: fin + ' 23:59:59' }, audMonFiltrosActuales());
 	}
 
 	function audMonModalGenericoAbrir(id) {
@@ -1395,31 +1914,30 @@ $defaultFin = date('Y-m-d 23:59:59');
 
 	function audMonPreviewWhatsApp() {
 		var d = audMonLastData || {};
-		var txt = "*INFORME ESTAD√çSTICO DE MONITOREO DE AUDITOR√çA*\n" +
+		var txt = "*INFORME ESTADÕSTICO DE MONITOREO DE AUDITORÕA*\n" +
 			"Empresa: " + (d.empresa || '') + "\n" +
 			"Rango: " + (d.rango || '') + "\n\n";
 		if (d.resumen) {
-			txt += "‚Ä¢ Total Movimientos: " + Number(d.resumen.total || 0).toLocaleString() + "\n";
-			txt += "‚Ä¢ Ingresar: " + Number(d.resumen.insert || 0).toLocaleString() + "\n";
-			txt += "‚Ä¢ Actualizar: " + Number(d.resumen.update || 0).toLocaleString() + "\n";
-			txt += "‚Ä¢ Eliminar: " + Number(d.resumen.delete || 0).toLocaleString() + "\n";
-			txt += "‚Ä¢ Usuarios √önicos: " + Number(d.resumen.usuarios_unicos || 0) + "\n";
+			txt += "ï Total Movimientos: " + Number(d.resumen.total || 0).toLocaleString() + "\n";
+			txt += "ï Ingresar: " + Number(d.resumen.insert || 0).toLocaleString() + "\n";
+			txt += "ï Actualizar: " + Number(d.resumen.update || 0).toLocaleString() + "\n";
+			txt += "ï Eliminar: " + Number(d.resumen.delete || 0).toLocaleString() + "\n";
+			txt += "ï Usuarios ⁄nicos: " + Number(d.resumen.usuarios_unicos || 0) + "\n";
 		}
 		if (d.modulos && d.modulos.length) {
-			txt += "\nM√≥dulos con m√°s actividad:\n";
+			txt += "\nMÛdulos con m·s actividad:\n";
 			for (var i = 0; i < Math.min(d.modulos.length, 5); i++) {
-				txt += "‚Ä¢ " + d.modulos[i].modulo + ": " + Number(d.modulos[i].total || 0).toLocaleString() + "\n";
+				txt += "ï " + d.modulos[i].modulo + ": " + Number(d.modulos[i].total || 0).toLocaleString() + "\n";
 			}
 		}
-		txt += "\n_Generado por ExaContable ERP Auditor√≠a_";
+		txt += "\n_Generado por ExaContable ERP AuditorÌa_";
 		return txt;
 	}
 
 	// Descargar PDF del periodo
 	$('#btnDescargarPdfMon').on('click', function () {
 		var f = audMonFechaParams();
-		var url = '../LOGICA/aud_log_dashboard_monitoreo.php?action=exportar_pdf&ini=' + encodeURIComponent(f.ini) +
-			'&fin=' + encodeURIComponent(f.fin);
+		var url = '../LOGICA/aud_log_dashboard_monitoreo.php?action=exportar_pdf&' + $.param(f);
 		window.open(url, '_blank');
 	});
 
@@ -1445,14 +1963,12 @@ $defaultFin = date('Y-m-d 23:59:59');
 			url: '../LOGICA/aud_log_dashboard_monitoreo.php',
 			type: 'POST',
 			dataType: 'json',
-			data: {
+			data: $.extend({
 				action: 'enviar_correo',
 				correo: correo,
 				nombre: $('#mailNombreMon').val().trim(),
-				asunto: $('#mailAsuntoMon').val().trim(),
-				ini: f.ini,
-				fin: f.fin
-			},
+				asunto: $('#mailAsuntoMon').val().trim()
+			}, f),
 			success: function (res) {
 				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar Documento');
 				if (res && res.success) {
@@ -1464,7 +1980,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 			},
 			error: function () {
 				$btn.prop('disabled', false).html('<i class="fa fa-paper-plane"></i> Enviar Documento');
-				alert('Fallo de conexi√≥n al enviar correo.');
+				alert('Fallo de conexiÛn al enviar correo.');
 			}
 		});
 	});
@@ -1481,7 +1997,7 @@ $defaultFin = date('Y-m-d 23:59:59');
 	function audMonEnviarWhatsApp(btnId, botonHtml) {
 		var tel = $('#waTelefonoMon').val().trim();
 		if (!tel) {
-			alert('Por favor ingrese el n√∫mero de tel√©fono destinatario.');
+			alert('Por favor ingrese el n˙mero de telÈfono destinatario.');
 			return;
 		}
 		var f = audMonFechaParams();
@@ -1492,12 +2008,10 @@ $defaultFin = date('Y-m-d 23:59:59');
 			url: '../LOGICA/aud_log_dashboard_monitoreo.php',
 			type: 'POST',
 			dataType: 'json',
-			data: {
+			data: $.extend({
 				action: 'enviar_whatsapp',
-				telefono: tel,
-				ini: f.ini,
-				fin: f.fin
-			},
+				telefono: tel
+			}, f),
 			success: function (res) {
 				$btn.prop('disabled', false).html(botonHtml);
 				if (res && res.url_whatsapp) {
@@ -1511,13 +2025,13 @@ $defaultFin = date('Y-m-d 23:59:59');
 			},
 			error: function () {
 				$btn.prop('disabled', false).html(botonHtml);
-				alert('Fallo de conexi√≥n al enviar WhatsApp.');
+				alert('Fallo de conexiÛn al enviar WhatsApp.');
 			}
 		});
 	}
 
 	$('#btnEnviarWaApiMon').on('click', function () {
-		audMonEnviarWhatsApp('#btnEnviarWaApiMon', '<i class="fa fa-paper-plane"></i> Enviar V√≠a API ERP');
+		audMonEnviarWhatsApp('#btnEnviarWaApiMon', '<i class="fa fa-paper-plane"></i> Enviar VÌa API ERP');
 	});
 
 	$('#btnAbrirWaWebMon').on('click', function () {
@@ -1535,33 +2049,58 @@ $defaultFin = date('Y-m-d 23:59:59');
 		$b.toggleClass('aud-sbox-off');
 		var off = $b.hasClass('aud-sbox-off');
 		$b.find('.kbox-eye').attr('class', 'fa ' + (off ? 'fa-eye-slash' : 'fa-eye') + ' kbox-eye');
+		$b.attr('title', off ? 'Oculto (se aplicara al Guardar)' : 'Visible (se aplicara al Guardar)');
 	});
 
-	$('#btnGuardarWidgetsMon').on('click', function () {
+	function audMonPersonalizacionGuardar() {
 		var kpiIds = [];
 		$('#kpisSorter .aud-sbox').each(function () {
 			var $b = $(this);
-			if (!$b.hasClass('aud-sbox-off')) kpiIds.push($b.attr('data-id'));
+			if (!$b.hasClass('aud-sbox-off')) {
+				var kid = $b.attr('data-id');
+				if (kid) kpiIds.push(kid);
+			}
 		});
 		try { localStorage.setItem(audMonKpisClave(), JSON.stringify(kpiIds)); } catch (e) {}
-		audMonKpisRender(audMonLastData);
 
 		var wOrden = [];
 		var wOcultos = [];
 		$('#widgetsSorter .aud-sbox').each(function () {
 			var $b = $(this);
 			var id = $b.attr('data-id');
+			if (!id) return;
 			wOrden.push(id);
 			if ($b.hasClass('aud-sbox-off')) wOcultos.push(id);
 		});
+		// Completar widgets que pudieran faltar en la lista del modal
+		var i, wid;
+		for (i = 0; i < audMonWidgetOrdenDef.length; i++) {
+			wid = audMonWidgetOrdenDef[i];
+			if (wOrden.indexOf(wid) === -1) wOrden.push(wid);
+		}
+
 		try { localStorage.setItem(audMonWidgetClave(), JSON.stringify(wOrden)); } catch (e) {}
 		try { localStorage.setItem(audMonWidgetOcultosClave(), JSON.stringify(wOcultos)); } catch (e) {}
+
+		audMonKpisRender(audMonLastData);
 		audMonWidgetAplicar();
-		audMonModalCerrar();
 		audMonRedimensionar();
+		return true;
+	}
+
+	$('#btnGuardarWidgetsMon').on('click', function () {
+		audMonPersonalizacionGuardar();
+		audMonModalCerrar();
 	});
 
-	// Carga perezosa del iframe comparativo al activar la pesta√±a
+	$('#btnRestablecerWidgetsMon').on('click', function () {
+		if (!window.confirm('Se restablecera el orden, la visibilidad y el tamano de metricas y widgets. Continuar?')) {
+			return;
+		}
+		audMonRestablecerPersonalizacion(true);
+	});
+
+	// Carga perezosa del iframe comparativo al activar la pestaÒa
 	$('#audDashTabs a[href="#tabComparativo"]').on('shown.bs.tab', function () {
 		var $if = $('#iframeComparativo');
 		if ($if.attr('src') === '') {

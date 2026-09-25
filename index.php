@@ -99,7 +99,7 @@ if (isset($_SESSION) && !(!isset($_SESSION['Ses_Lis_Per']) || !isset($_SESSION['
 $http_host = isset($_SERVER['HTTP_HOST']) ? strtolower($_SERVER['HTTP_HOST']) : '';
 $host_base = preg_replace('/:\d+$/', '', $http_host);
 $es_localhost = in_array($host_base, array('localhost', '127.0.0.1', '::1'), true);
-$relavera_por_host = (strpos($http_host, 'relavera.erpexa') !== false) || $es_localhost;
+$relavera_por_host = (strpos($http_host, 'relavera.erpexa') !== false) || (strpos($http_host, 'auditoria.erpexa') !== false) || $es_localhost;
 if (isset($_GET['portal']) && $_GET['portal'] === 'exa') {
     $es_portal_relavera = false;
 } elseif (isset($_GET['portal']) && $_GET['portal'] === 'relavera') {
@@ -1038,6 +1038,8 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                             <div class="form-group login-actions">
                                 <input type="hidden" name="encryptor" id="encryptor" />
                                 <input type="hidden" name="Suc_Cod" id="Suc_Cod" />
+                                <input type="hidden" name="dev_cod" id="dev_cod" />
+                                <input type="hidden" name="device_fp" id="device_fp" />
                                 <button class="btn btn-primary w-100" type="button"
                                     onClick="handleLogin();">
                                     Entrar <i class="bi bi-box-arrow-in-right"></i>
@@ -1046,7 +1048,7 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
                             <?php if ((isset($_GET["errorusuario"]) && $_GET["errorusuario"] == "si") || (isset($_GET["errorsistema"]) && $_GET["errorsistema"] == "si") || (isset($_GET["errordispositivo"]) && $_GET["errordispositivo"] == "si")) {
                                 $errorMsg = 'Error del Sistema';
                                 if (isset($_GET["errorusuario"])) $errorMsg = 'Datos incorrectos';
-                                if (isset($_GET["errordispositivo"])) $errorMsg = 'Acceso denegado: dispositivo no autorizado. Este usuario solo puede ingresar desde equipos previamente registrados.';
+                                if (isset($_GET["errordispositivo"])) $errorMsg = 'Acceso denegado: está intentando ingresar desde otro dispositivo, o su usuario ya se encuentra ingresado en otro equipo. Para más información, comuníquese con el área de soporte.';
                                 echo '<div class="alert alert-danger mt-3 py-2 small text-center" style="border-radius: 8px;"><span>' . $errorMsg . '</span></div>';
                             } ?>
                         </form>
@@ -1464,6 +1466,53 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
     </div>
 
     <script type="text/javascript">
+        /**
+         * Huella digital ligera del navegador/equipo, calculada 100% en el
+         * cliente (sin dependencias externas). Se usa UNICAMENTE como respaldo
+         * de auditoria en el monitor de Actividad de Usuarios cuando el acceso
+         * es remoto/VPN/Internet y por lo tanto la MAC real no es detectable
+         * por ARP desde el servidor (limitacion de capa 2, no atraviesa
+         * routers). No sustituye ni afecta el control de cupos por MAC/OAuth.
+         *
+         * @return string Cadena hexadecimal corta (hash FNV-1a x2 + longitud).
+         */
+        function exaDeviceFingerprint() {
+            try {
+                var partes = [];
+                partes.push(navigator.userAgent || '');
+                partes.push(navigator.language || '');
+                partes.push(navigator.platform || '');
+                partes.push((screen.width || 0) + 'x' + (screen.height || 0) + 'x' + (screen.colorDepth || 0));
+                partes.push(String(new Date().getTimezoneOffset()));
+                partes.push(String(navigator.hardwareConcurrency || ''));
+                partes.push(String(navigator.maxTouchPoints || 0));
+                try {
+                    var c = document.createElement('canvas');
+                    var ctx = c.getContext('2d');
+                    ctx.textBaseline = 'top';
+                    ctx.font = "14px 'Arial'";
+                    ctx.fillStyle = '#f60';
+                    ctx.fillRect(0, 0, 100, 20);
+                    ctx.fillStyle = '#069';
+                    ctx.fillText('exa-fp', 2, 2);
+                    partes.push(c.toDataURL());
+                } catch (eCanvas) {}
+
+                var raw = partes.join('||');
+                var h1 = 0x811c9dc5, h2 = 0x811c9dc5;
+                for (var i = 0; i < raw.length; i++) {
+                    var ch = raw.charCodeAt(i);
+                    h1 ^= ch; h1 = (h1 * 0x01000193) >>> 0;
+                    h2 ^= (ch << 1); h2 = (h2 * 0x01000199) >>> 0;
+                }
+                return ('00000000' + h1.toString(16)).slice(-8) +
+                       ('00000000' + h2.toString(16)).slice(-8) +
+                       ('0000' + raw.length.toString(16)).slice(-4);
+            } catch (e) {
+                return '';
+            }
+        }
+
         function handleLogin() {
             var user = $('#user_name').val();
             var pass = $('#password').val();
@@ -1480,7 +1529,25 @@ $tiene_logo_rcet = is_file($path_logo_rcet);
             // Preparar encriptación para el controlador
             document.getElementById('encryptor').value = md5(pass);
             document.getElementById('Suc_Cod').value = suc;
-            
+
+            // Identificador persistente del navegador/dispositivo (control OAuth / MAC)
+            var devCod = '';
+            try {
+                devCod = localStorage.getItem('exa_dev_cod') || '';
+            } catch (e) { devCod = ''; }
+            if (!devCod) {
+                devCod = 'DEV-' + Math.random().toString(36).substring(2, 10).toUpperCase() +
+                         Date.now().toString(36).toUpperCase();
+                try {
+                    localStorage.setItem('exa_dev_cod', devCod);
+                } catch (e) {}
+            }
+            document.getElementById('dev_cod').value = devCod;
+
+            // Huella digital del navegador (respaldo de auditoria cuando la MAC
+            // real no es detectable por estar el acceso fuera de la LAN del servidor).
+            document.getElementById('device_fp').value = exaDeviceFingerprint();
+
             // Verificación silenciosa
             var formData = $('#acceso').serialize() + '&ajax_check=1';
             

@@ -18,7 +18,7 @@ function aud_etiquetas_campo()
 {
 	return array(
 		'Pec_Cod' => 'Periodo',
-		'Com_Cod' => 'Codigo de comprobante',
+		'Com_Cod' => 'Comprobante',
 		'Com_Num' => 'Numero de comprobante',
 		'Com_Fec' => 'Fecha del comprobante',
 		'Com_Con' => 'Concepto',
@@ -27,7 +27,7 @@ function aud_etiquetas_campo()
 		'Tia_Cod' => 'Tipo de asiento',
 		'Prv_Cod' => 'Proveedor',
 		'Cli_Cod' => 'Cliente',
-		'Asi_Cod' => 'Codigo de asiento',
+		'Asi_Cod' => 'Asiento',
 		'Asi_Deh' => 'Debe / Haber',
 		'Asi_Val' => 'Valor del asiento',
 		'Asi_Con' => 'Concepto del asiento',
@@ -37,8 +37,8 @@ function aud_etiquetas_campo()
 		'Suc_Cod' => 'Sucursal',
 		'Usu_Cod' => 'Usuario',
 		'Pcs_Cod' => 'Proceso',
-		'Log_Int' => 'Identificador',
-		'Man_Cod' => 'Codigo de manifiesto',
+		'Log_Int' => 'Referencia',
+		'Man_Cod' => 'Manifiesto',
 		'Man_Num' => 'Numero de manifiesto',
 		'Man_Fec' => 'Fecha del manifiesto',
 		'Man_Pes' => 'Peso',
@@ -49,7 +49,6 @@ function aud_etiquetas_campo()
 		'Man_Obs' => 'Observacion',
 		'Man_Obe' => 'Observacion',
 		'Man_Gui' => 'Guia',
-		'Cli_Cod' => 'Cliente',
 		'Pla_Cod' => 'Planta',
 		'Veh_Cod' => 'Vehiculo',
 		'Cho_Cod' => 'Chofer',
@@ -63,7 +62,7 @@ function aud_etiquetas_campo()
 		'Tur_Fei' => 'Inicio de vigencia',
 		'Tur_Fef' => 'Fin de vigencia',
 		'Tur_Est' => 'Estado de turnos',
-		'MVis_Cod' => 'Codigo de visitante',
+		'MVis_Cod' => 'Visitante',
 		'MVis_Est' => 'Estado del visitante',
 		'MVis_Nac' => 'Nacionalidad',
 		'MVis_Eci' => 'Estado civil',
@@ -77,7 +76,7 @@ function aud_etiquetas_campo()
 		'Man_Ehor' => 'Horas del evento',
 		'Ama_Val' => 'Valor del anticipo',
 		'Ama_Est' => 'Estado del anticipo',
-		'Vet_Cod' => 'Codigo de venta',
+		'Vet_Cod' => 'Venta',
 		'Vet_Num' => 'Numero de factura',
 		'Vet_Obs' => 'Observacion',
 		'Vet_Des' => 'Fecha de la venta',
@@ -98,13 +97,25 @@ function aud_etiquetas_campo()
 		'Caj_Hoi' => 'Hora de inicio',
 		'Caj_Hof' => 'Hora de cierre',
 		'Caj_Obs' => 'Observacion',
-		'Caj_Exi' => 'Existencia en caja',
-		'Caj_Est' => 'Estado de la caja',
-		'Caj_Gen' => 'Generacion automatica',
-		'Pun_Cod' => 'Punto de emision',
+		'Caj_Est' => 'Estado de caja',
+		'Caj_Gen' => 'Generada',
+		'Caj_Exi' => 'Efectivo',
 		'Vnd_Cod' => 'Vendedor',
-		'Aut_Cod' => 'Punto de emision',
-		'Pro_Cod' => 'Producto'
+		'Pro_Cod' => 'Producto',
+		'InvDis_Cod' => 'Dispositivo',
+		'DisUsr_Cod' => 'Asignacion de dispositivo',
+		'Cfg_Cod' => 'Regla de monitoreo',
+		'Cfg_Est' => 'Estado de la regla',
+		'Org_Cod' => 'Modulo / directorio',
+		'Not_Cod' => 'Notificacion',
+		'Not_Est' => 'Estado de notificacion',
+		'Correo' => 'Correo electronico',
+		'Ses_Cod' => 'Sesion',
+		'Ses_Est' => 'Estado de sesion',
+		'Ses_Ip' => 'Direccion IP',
+		'Ses_Min_Uso' => 'Minutos de uso',
+		'Pun_Cod' => 'Punto de emision',
+		'Aut_Cod' => 'Punto de emision'
 	);
 }
 
@@ -259,11 +270,11 @@ function aud_sim_casos()
 		),
 		array(
 			'id' => 'inventario',
-			'pcs_noms' => array('inventario_dispositivos', 'man_adm_usuarios', 'man_adm_notificacion'),
+			'pcs_noms' => array('inventario_dispositivos', 'dispositivos_usuario', 'man_adm_usuarios', 'man_adm_notificacion'),
 			'mod_like' => 'elavera',
 			'mod_re' => '/relavera|inventario|dispositivo/i',
 			'mod_not_re' => '/auditoria|contabilid|facturaci/i',
-			'tabs' => array('inventario_dispositivos', 'usuario_inventario')
+			'tabs' => array('inventario_dispositivos', 'usuario_inventario', 'dispositivos_usuario')
 		),
 		array(
 			'id' => 'cobranzas',
@@ -403,7 +414,34 @@ function aud_verbo_evento($eveIni, $eveDes)
 		return 'Intento fallido';
 	}
 	$des = trim((string)$eveDes);
+	$mapDes = array(
+		'Insertar' => 'Nuevo registro',
+		'Actualizar' => 'Modificacion',
+		'Eliminar' => 'Eliminacion',
+		'Fallido' => 'Intento fallido'
+	);
+	if ($des !== '' && isset($mapDes[$des])) {
+		return $mapDes[$des];
+	}
 	return $des !== '' ? $des : 'Actividad';
+}
+
+function aud_etiqueta_evento($eveIni, $eveDes)
+{
+	$ini = strtoupper(trim((string)$eveIni));
+	if ($ini === 'I') {
+		return 'Nuevo registro';
+	}
+	if ($ini === 'U') {
+		return 'Modificacion';
+	}
+	if ($ini === 'D') {
+		return 'Eliminacion';
+	}
+	if ($ini === 'F') {
+		return 'Intento fallido';
+	}
+	return aud_verbo_evento($eveIni, $eveDes);
 }
 
 function aud_nombre_modulo($row)
@@ -561,18 +599,202 @@ function aud_identificador($row)
 	if ($int === '') {
 		return '';
 	}
-	if (strpos($int, '=') !== false) {
-		$partes = explode('=', $int, 2);
-		$eti = aud_humanizar_campo(trim($partes[0]));
-		$val = isset($partes[1]) ? trim($partes[1]) : '';
-		if ($val !== '') {
-			return $eti.': '.$val;
+	$bits = array();
+	$chunks = preg_split('/\s*\|\|\s*|\s*;\s*/', $int);
+	foreach ($chunks as $chunk) {
+		$chunk = trim($chunk);
+		if ($chunk === '' || stripos($chunk, 'Pcs_Nom=') === 0) {
+			continue;
 		}
-		return $eti;
+		if (strpos($chunk, '=') !== false) {
+			$partes = explode('=', $chunk, 2);
+			$eti = aud_humanizar_campo(trim($partes[0]));
+			$val = isset($partes[1]) ? trim($partes[1]) : '';
+			if ($val !== '') {
+				$bits[] = $eti.': '.$val;
+			} else {
+				$bits[] = $eti;
+			}
+		} else {
+			$bits[] = $chunk;
+		}
+		if (count($bits) >= 3) {
+			break;
+		}
 	}
-	return $int;
+	return implode(' · ', $bits);
 }
 
+function aud_etiqueta_campo($atr, $rowCampo)
+{
+	$atr = trim(str_replace('`', '', (string)$atr));
+	if (is_array($rowCampo)) {
+		$ali = !empty($rowCampo['Cam_Ali']) ? trim($rowCampo['Cam_Ali']) : '';
+		$des = !empty($rowCampo['Cam_Des']) ? trim($rowCampo['Cam_Des']) : '';
+		// Si el alias sigue siendo el codigo tecnico (Cam_Nom), humanizar.
+		if ($ali !== '' && strcasecmp($ali, $atr) !== 0 && strpos($ali, '_') === false) {
+			return $ali;
+		}
+		if ($des !== '' && strcasecmp($des, $atr) !== 0 && strpos($des, '_') === false) {
+			return $des;
+		}
+		if ($ali !== '' && strcasecmp($ali, $atr) !== 0) {
+			return $ali;
+		}
+	}
+	return aud_humanizar_campo($atr);
+}
+
+/**
+ * Explica que significa el VALOR concreto (no el nombre del campo).
+ * Ej.: A => "Activo: el registro esta vigente";
+ *      42 => "El valor 42 corresponde al usuario Juan Perez".
+ */
+function aud_descripcion_meta($atr, $valNatural, $valRaw, $rowCampo = null)
+{
+	$atr = trim(str_replace('`', '', (string)$atr));
+	$eti = aud_etiqueta_campo($atr, $rowCampo);
+	$valNatural = trim((string)$valNatural);
+	$valRaw = trim((string)$valRaw);
+	$rawUp = strtoupper($valRaw);
+
+	if ($valNatural === '' || $valNatural === '(sin valor)') {
+		return 'Sin valor: no se indico informacion en este dato.';
+	}
+
+	$suf = '';
+	$partes = explode('_', $atr);
+	if (count($partes) >= 2) {
+		$suf = strtolower($partes[count($partes) - 1]);
+	}
+	$esCodigo = ($suf === 'cod' || preg_match('/_Cod$/', $atr));
+	$codigoResuelto = ($esCodigo && $valRaw !== '' && preg_match('/^\d+$/', $valRaw) && $valNatural !== $valRaw);
+
+	// Estados: significado del valor A/I/C/S/F
+	$estados = array(
+		'Man_Est', 'Tud_Est', 'Tur_Est', 'MVis_Est', 'Man_EEst', 'Ama_Est',
+		'Com_Est', 'Cfg_Est', 'Not_Est', 'Caj_Est', 'Ses_Est'
+	);
+	if (in_array($atr, $estados) || $suf === 'est') {
+		$mapEst = array(
+			'A' => 'Activo: el registro esta vigente y disponible para usarse.',
+			'I' => 'Inactivo: el registro fue anulado o deshabilitado.',
+			'C' => 'Cerrado: el registro quedo finalizado y ya no admite cambios normales.',
+			'S' => 'Suspendido: el registro esta temporalmente detenido.',
+			'F' => 'Forzado: el cierre se hizo de manera administrativa (no por el usuario).'
+		);
+		if ($atr === 'Caj_Est') {
+			$mapEst['A'] = 'Abierta: la caja esta en operacion.';
+			$mapEst['C'] = 'Cerrada: la caja ya fue cuadrada o cerrada.';
+		}
+		if ($atr === 'Ses_Est') {
+			$mapEst['A'] = 'Activa: la sesion del usuario sigue abierta.';
+			$mapEst['C'] = 'Cerrada: el usuario cerro sesion normalmente.';
+			$mapEst['I'] = 'Inactividad: la sesion se cerro automaticamente por falta de uso.';
+			$mapEst['F'] = 'Forzada: un administrador cerro la sesion del usuario.';
+		}
+		if (isset($mapEst[$rawUp])) {
+			return $mapEst[$rawUp];
+		}
+		return 'El valor "'.$valNatural.'" es el estado actual de '.$eti.'.';
+	}
+
+	// Si / No
+	if (in_array($atr, array('Caj_Gen', 'Man_Vig', 'Cfg_Activo')) || $suf === 'vig' || $suf === 'gen') {
+		if ($rawUp === 'S' || $rawUp === 'A' || strcasecmp($valNatural, 'Si') === 0) {
+			return 'Si: esta opcion esta marcada / habilitada.';
+		}
+		if ($rawUp === 'N' || $rawUp === 'I' || strcasecmp($valNatural, 'No') === 0) {
+			return 'No: esta opcion no esta marcada / esta deshabilitada.';
+		}
+	}
+
+	if ($atr === 'Asi_Deh') {
+		if ($rawUp === 'D' || stripos($valNatural, 'Debe') !== false) {
+			return 'Debe: el monto se cargo al lado Debe del asiento.';
+		}
+		if ($rawUp === 'H' || stripos($valNatural, 'Haber') !== false) {
+			return 'Haber: el monto se cargo al lado Haber del asiento.';
+		}
+	}
+
+	if ($atr === 'Man_Tip') {
+		$mapTip = array(
+			'P' => 'Productor: tipo de manifiesto de productor.',
+			'C' => 'Comercial: tipo de manifiesto comercial.',
+			'T' => 'Transporte: tipo de manifiesto de transporte.',
+			'V' => 'Visitante: tipo asociado a visitante.'
+		);
+		if (isset($mapTip[$rawUp])) {
+			return $mapTip[$rawUp];
+		}
+	}
+
+	// Codigos resueltos a nombre (usuarios anadidos, plantas, clientes, etc.)
+	if ($codigoResuelto) {
+		$quien = array(
+			'Usu_Cod' => 'usuario',
+			'Cli_Cod' => 'cliente',
+			'Prv_Cod' => 'proveedor',
+			'Pla_Cod' => 'planta',
+			'Veh_Cod' => 'vehiculo',
+			'Cho_Cod' => 'chofer',
+			'Pro_Cod' => 'producto',
+			'Vnd_Cod' => 'vendedor',
+			'Emp_Cod' => 'empresa',
+			'Suc_Cod' => 'sucursal',
+			'Pcs_Cod' => 'proceso',
+			'Org_Cod' => 'modulo o area',
+			'Man_Cod' => 'manifiesto',
+			'Vet_Cod' => 'venta',
+			'Com_Cod' => 'comprobante',
+			'Asi_Cod' => 'asiento',
+			'Caj_Cod' => 'caja',
+			'InvDis_Cod' => 'dispositivo',
+			'DisUsr_Cod' => 'asignacion de dispositivo'
+		);
+		$tipo = isset($quien[$atr]) ? $quien[$atr] : strtolower($eti);
+		return 'El valor '.$valRaw.' corresponde al '.$tipo.' "'.$valNatural.'".';
+	}
+
+	if ($esCodigo && preg_match('/^\d+$/', $valRaw)) {
+		return 'El valor '.$valRaw.' es el codigo interno de "'.$eti.'". No se pudo obtener el nombre asociado.';
+	}
+
+	if ($suf === 'num') {
+		return 'El valor "'.$valNatural.'" es el numero que identifica este documento.';
+	}
+	if ($suf === 'fec' || $suf === 'fei' || $suf === 'fef' || ($suf === 'des' && preg_match('/^\d{4}-\d{2}-\d{2}/', $valNatural))) {
+		return 'El valor "'.$valNatural.'" es la fecha registrada en este movimiento.';
+	}
+	if ($suf === 'hor' || $suf === 'hin' || $suf === 'hfi' || $suf === 'hoi' || $suf === 'hof') {
+		return 'El valor "'.$valNatural.'" es la hora registrada en este movimiento.';
+	}
+	if ($suf === 'val' || $suf === 'imp' || $suf === 'pru' || $suf === 'prop' || $suf === 'exi' || $suf === 'pun') {
+		return 'El valor "'.$valNatural.'" es el monto monetario registrado.';
+	}
+	if ($suf === 'pes') {
+		return 'El valor "'.$valNatural.'" es el peso registrado.';
+	}
+	if ($suf === 'can' || $suf === 'cup') {
+		return 'El valor "'.$valNatural.'" es la cantidad de unidades registrada.';
+	}
+	if ($suf === 'obs' || $suf === 'obe' || $suf === 'con') {
+		return 'El valor es el texto: "'.$valNatural.'".';
+	}
+	if ($atr === 'Ses_Ip') {
+		return 'El valor "'.$valNatural.'" es la direccion IP de origen de la accion.';
+	}
+
+	if (is_array($rowCampo) && !empty($rowCampo['Cam_Des'])) {
+		$desCat = trim($rowCampo['Cam_Des']);
+		if ($desCat !== '' && strcasecmp($desCat, $atr) !== 0 && strpos($desCat, '_') === false) {
+			return 'El valor "'.$valNatural.'" significa: '.$desCat.'.';
+		}
+	}
+
+	return 'El valor registrado es "'.$valNatural.'".';
+}
 function aud_parse_cam_val($campos, $valores)
 {
 	$campos = str_replace('`', '', (string)$campos);
@@ -627,6 +849,9 @@ function aud_formato_valor($atr, $val)
 {
 	$atr = trim($atr);
 	$val = trim((string)$val);
+	if ($val === '' || strtoupper($val) === 'NULL') {
+		return '(sin valor)';
+	}
 	if ($atr === 'Asi_Deh') {
 		$u = strtoupper(trim($val, " \t,"));
 		if ($u === 'D') {
@@ -655,16 +880,23 @@ function aud_formato_valor($atr, $val)
 			return 'Cerrada';
 		}
 	}
-	if ($atr === 'Caj_Gen') {
+	if ($atr === 'Ses_Est') {
+		$mapSes = array('A' => 'Activa', 'C' => 'Cerrada', 'I' => 'Cerrada por inactividad', 'F' => 'Cierre forzado');
 		$u = strtoupper($val);
-		if ($u === 'S') {
+		if (isset($mapSes[$u])) {
+			return $mapSes[$u];
+		}
+	}
+	if ($atr === 'Caj_Gen' || $atr === 'Man_Vig' || $atr === 'Cfg_Activo') {
+		$u = strtoupper($val);
+		if ($u === 'S' || $u === 'A') {
 			return 'Si';
 		}
-		if ($u === 'N') {
+		if ($u === 'N' || $u === 'I') {
 			return 'No';
 		}
 	}
-	$estados = array('Man_Est', 'Tud_Est', 'Tur_Est', 'MVis_Est', 'Man_EEst', 'Ama_Est', 'Com_Est');
+	$estados = array('Man_Est', 'Tud_Est', 'Tur_Est', 'MVis_Est', 'Man_EEst', 'Ama_Est', 'Com_Est', 'Cfg_Est', 'Not_Est');
 	if (in_array($atr, $estados)) {
 		$u = strtoupper($val);
 		if ($u === 'A') {
@@ -676,14 +908,15 @@ function aud_formato_valor($atr, $val)
 		if ($u === 'S') {
 			return 'Suspendido';
 		}
-	}
-	if ($atr === 'Man_Vig') {
-		$u = strtoupper($val);
-		if ($u === 'S') {
-			return 'Si';
+		if ($u === 'C') {
+			return 'Cerrado';
 		}
-		if ($u === 'N') {
-			return 'No';
+	}
+	if ($atr === 'Man_Tip') {
+		$u = strtoupper($val);
+		$mapTip = array('P' => 'Productor', 'C' => 'Comercial', 'T' => 'Transporte', 'V' => 'Visitante');
+		if (isset($mapTip[$u])) {
+			return $mapTip[$u];
 		}
 	}
 	return $val;
@@ -725,6 +958,39 @@ function aud_valor_codigo_desde_row($atr, $val, $row)
 	return '';
 }
 
+function aud_db_dis_para_lookup($row)
+{
+	$datDis = '';
+	if (!empty($row['Dat_Dis'])) {
+		$datDis = preg_replace('/[^a-zA-Z0-9_]/', '', $row['Dat_Dis']);
+	}
+	if ($datDis === '' && !empty($_SESSION['Ses_Dat_Dis'])) {
+		$datDis = preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']);
+	}
+	if ($datDis === '' && !empty($GLOBALS['Ses_Dat_Dis'])) {
+		$datDis = preg_replace('/[^a-zA-Z0-9_]/', '', $GLOBALS['Ses_Dat_Dis']);
+	}
+	if ($datDis === '' && function_exists('aud_sql_db_dis')) {
+		$datDis = preg_replace('/[^a-zA-Z0-9_]/', '', str_replace('`', '', aud_sql_db_dis()));
+	}
+	if ($datDis === '' || $datDis === 'servicios' || $datDis === 'exa') {
+		$datDis = 'ecoparkmining';
+	}
+	return $datDis;
+}
+
+function aud_db_master_para_lookup()
+{
+	$master = 'exa_master';
+	if (class_exists('Env')) {
+		$cand = preg_replace('/[^a-zA-Z0-9_]/', '', (string)\Env::get('DB_DATABASE', 'exa_master'));
+		if ($cand !== '') {
+			$master = $cand;
+		}
+	}
+	return $master;
+}
+
 function aud_valor_codigo_lookup($atr, $val, $row, $obBD_conexion)
 {
 	$atr = trim((string)$atr);
@@ -736,19 +1002,14 @@ function aud_valor_codigo_lookup($atr, $val, $row, $obBD_conexion)
 	if (!$con) {
 		return '';
 	}
-	$datDis = !empty($row['Dat_Dis']) ? preg_replace('/[^a-zA-Z0-9_]/', '', $row['Dat_Dis']) : '';
-	if ($datDis === '' && !empty($_SESSION['Ses_Dat_Dis'])) {
-		$datDis = preg_replace('/[^a-zA-Z0-9_]/', '', $_SESSION['Ses_Dat_Dis']);
-	}
-	if ($datDis === '') {
-		$datDis = 'exa';
-	}
+	$datDis = aud_db_dis_para_lookup($row);
+	$master = aud_db_master_para_lookup();
 	$id = (int)$val;
 	$sql = '';
 	if ($atr === 'Emp_Cod') {
-		$sql = "SELECT `Emp_Nom` AS `Nom` FROM `exa`.`empresas` WHERE `Emp_Cod`={$id} LIMIT 1";
+		$sql = "SELECT `Emp_Nom` AS `Nom` FROM `{$master}`.`empresas` WHERE `Emp_Cod`={$id} LIMIT 1";
 	} elseif ($atr === 'Suc_Cod') {
-		$sql = "SELECT `Suc_Des` AS `Nom` FROM `exa`.`sucursal` WHERE `Suc_Cod`={$id} LIMIT 1";
+		$sql = "SELECT `Suc_Des` AS `Nom` FROM `{$master}`.`sucursal` WHERE `Suc_Cod`={$id} LIMIT 1";
 	} elseif ($atr === 'Usu_Cod') {
 		$sql = "SELECT TRIM(CONCAT(IFNULL(p.`Prs_Ape`,''),' ',IFNULL(p.`Prs_Nom`,''))) AS `Nom`
 			FROM `{$datDis}`.`usuarios` u
@@ -756,7 +1017,37 @@ function aud_valor_codigo_lookup($atr, $val, $row, $obBD_conexion)
 			WHERE u.`Usu_Cod`={$id} LIMIT 1";
 	} elseif ($atr === 'Pcs_Cod') {
 		$sql = "SELECT IFNULL(NULLIF(TRIM(`Pcs_Lin`),''), IFNULL(NULLIF(TRIM(`Pcs_Det`),''), `Pcs_Nom`)) AS `Nom`
-			FROM `exa`.`procesos` WHERE `Pcs_Cod`={$id} LIMIT 1";
+			FROM `{$datDis}`.`procesos` WHERE `Pcs_Cod`={$id} LIMIT 1";
+	} elseif ($atr === 'Cli_Cod') {
+		$sql = "SELECT IFNULL(NULLIF(TRIM(c.`Cli_Nom`),''), TRIM(CONCAT(IFNULL(p.`Prs_Ape`,''),' ',IFNULL(p.`Prs_Nom`,'')))) AS `Nom`
+			FROM `{$datDis}`.`clientes` c
+			LEFT JOIN `{$datDis}`.`persona` p ON c.`Prs_Cod` = p.`Prs_Cod`
+			WHERE c.`Cli_Cod`={$id} LIMIT 1";
+	} elseif ($atr === 'Prv_Cod') {
+		$sql = "SELECT IFNULL(NULLIF(TRIM(pr.`Prv_Com`),''), TRIM(CONCAT(IFNULL(p.`Prs_Ape`,''),' ',IFNULL(p.`Prs_Nom`,'')))) AS `Nom`
+			FROM `{$datDis}`.`proveedore` pr
+			LEFT JOIN `{$datDis}`.`persona` p ON pr.`Prs_Cod` = p.`Prs_Cod`
+			WHERE pr.`Prv_Cod`={$id} LIMIT 1";
+	} elseif ($atr === 'Pla_Cod') {
+		$sql = "SELECT `Pla_Nom` AS `Nom` FROM `{$datDis}`.`manifiesto_plantas` WHERE `Pla_Cod`={$id} LIMIT 1";
+	} elseif ($atr === 'Veh_Cod') {
+		$sql = "SELECT IFNULL(NULLIF(TRIM(`Veh_Pla`),''), IFNULL(NULLIF(TRIM(`Veh_Des`),''), CONCAT('Vehiculo ',`Veh_Cod`))) AS `Nom`
+			FROM `{$datDis}`.`vehiculo` WHERE `Veh_Cod`={$id} LIMIT 1";
+	} elseif ($atr === 'Cho_Cod') {
+		$sql = "SELECT TRIM(CONCAT(IFNULL(p.`Prs_Ape`,''),' ',IFNULL(p.`Prs_Nom`,''))) AS `Nom`
+			FROM `{$datDis}`.`chofer` c
+			LEFT JOIN `{$datDis}`.`persona` p ON c.`Prs_Cod` = p.`Prs_Cod`
+			WHERE c.`Cho_Cod`={$id} LIMIT 1";
+	} elseif ($atr === 'Pro_Cod') {
+		$sql = "SELECT IFNULL(NULLIF(TRIM(`Pro_Nom`),''), IFNULL(NULLIF(TRIM(`Pro_Des`),''), CONCAT('Producto ',`Pro_Cod`))) AS `Nom`
+			FROM `{$datDis}`.`productos` WHERE `Pro_Cod`={$id} LIMIT 1";
+	} elseif ($atr === 'Vnd_Cod') {
+		$sql = "SELECT TRIM(CONCAT(IFNULL(p.`Prs_Ape`,''),' ',IFNULL(p.`Prs_Nom`,''))) AS `Nom`
+			FROM `{$datDis}`.`vendedores` v
+			LEFT JOIN `{$datDis}`.`persona` p ON v.`Prs_Cod` = p.`Prs_Cod`
+			WHERE v.`Vnd_Cod`={$id} LIMIT 1";
+	} elseif ($atr === 'Org_Cod') {
+		$sql = "SELECT `Org_Des` AS `Nom` FROM `{$datDis}`.`organizado` WHERE `Org_Cod`={$id} LIMIT 1";
 	}
 	if ($sql === '') {
 		return '';
@@ -778,10 +1069,7 @@ function aud_valor_natural($atr, $val, $row, $obBD_conexion = null)
 		$nom = aud_valor_codigo_lookup($atr, $val, $row, $obBD_conexion);
 	}
 	if ($nom !== '') {
-		if (trim((string)$base) === '' || trim((string)$base) === $nom) {
-			return $nom;
-		}
-		return $nom.' ('.$base.')';
+		return $nom;
 	}
 	return $base;
 }
@@ -817,7 +1105,14 @@ function aud_humanizar_campo($atr)
 			'VET' => 'venta',
 			'TIC' => 'comprobante',
 			'VND' => 'vendedor',
-			'CAJ' => 'caja'
+			'CAJ' => 'caja',
+			'PRO' => 'producto',
+			'ORG' => 'modulo',
+			'CFG' => 'configuracion',
+			'NOT' => 'notificacion',
+			'SES' => 'sesion',
+			'INV' => 'inventario',
+			'DIS' => 'dispositivo'
 		);
 		$sufNom = array(
 			'cod' => 'codigo',
@@ -827,27 +1122,16 @@ function aud_humanizar_campo($atr)
 			'val' => 'valor',
 			'est' => 'estado',
 			'des' => 'descripcion',
-			'nom' => 'nombre'
+			'nom' => 'nombre',
+			'obs' => 'observacion',
+			'hor' => 'hora',
+			'ip' => 'direccion IP'
 		);
 		$izq = isset($prefNom[$pref]) ? $prefNom[$pref] : strtolower($partes[0]);
 		$der = isset($sufNom[$suf]) ? $sufNom[$suf] : strtolower($partes[count($partes) - 1]);
 		return ucfirst($der).' de '.$izq;
 	}
 	return $atr;
-}
-
-function aud_etiqueta_campo($atr, $rowCampo)
-{
-	$atr = trim(str_replace('`', '', (string)$atr));
-	if (is_array($rowCampo)) {
-		if (!empty($rowCampo['Cam_Ali'])) {
-			return trim($rowCampo['Cam_Ali']);
-		}
-		if (!empty($rowCampo['Cam_Des'])) {
-			return trim($rowCampo['Cam_Des']);
-		}
-	}
-	return aud_humanizar_campo($atr);
 }
 
 function aud_resumen_actividad($row)
@@ -877,10 +1161,13 @@ function aud_pares_interpretados($row, $obBD_con1, $obBD_conexion)
 		if ($obBD_con1 && $obBD_conexion && !empty($row['Tab_Cod']) && $p['atr'] !== '') {
 			$rowCampo = $obBD_con1->getRowConsulta(8, $row['Tab_Cod'].'*'.$p['atr'], $obBD_conexion);
 		}
+		$valNat = aud_valor_natural($p['atr'], $p['val'], $row, $obBD_conexion);
 		$out[] = array(
 			'atr' => $p['atr'],
 			'eti' => aud_etiqueta_campo($p['atr'], $rowCampo),
-			'val' => aud_valor_natural($p['atr'], $p['val'], $row, $obBD_conexion)
+			'val' => $valNat,
+			'val_raw' => $p['val'],
+			'des' => aud_descripcion_meta($p['atr'], $valNat, $p['val'], $rowCampo)
 		);
 	}
 	return $out;
@@ -970,7 +1257,7 @@ function aud_html_detalle($row, $pares)
 	));
 	$ident = aud_h(aud_identificador($row));
 	$eveIni = strtoupper(trim(isset($row['Eve_Ini']) ? $row['Eve_Ini'] : ''));
-	$eveDes = aud_h(isset($row['Eve_Des']) ? $row['Eve_Des'] : aud_verbo_evento($eveIni, ''));
+	$eveDes = aud_h(aud_etiqueta_evento($eveIni, isset($row['Eve_Des']) ? $row['Eve_Des'] : ''));
 	$badgeClass = 'aud-det-badge';
 	if ($eveIni === 'I') {
 		$badgeClass .= ' aud-det-badge-i';
@@ -989,27 +1276,36 @@ function aud_html_detalle($row, $pares)
 		$fecha = aud_h(isset($parts[0]) ? $parts[0] : '');
 		$hora = aud_h(isset($parts[1]) ? $parts[1] : '');
 	}
-	$logCod = isset($row['Log_Cod']) ? (int)$row['Log_Cod'] : 0;
 
-	$html = '<div class="aud-detalle">';
+	$html = '<div class="aud-detalle m4-detalle">';
 
-	/* 1) Cabecera: evento + fecha + id */
+	/* 1) Cabecera: evento + fecha */
 	$html .= '<div class="aud-det-head">';
+	$html .= '<div class="aud-det-head-left">';
 	$html .= '<span class="'.$badgeClass.'">'.($eveDes !== '' ? $eveDes : 'Actividad').'</span>';
+	if (!empty($row['Log_Cod'])) {
+		$html .= '<span class="aud-det-id">#'.(int)$row['Log_Cod'].'</span>';
+	}
+	$html .= '</div>';
 	$html .= '<div class="aud-det-when">';
 	if ($fecha !== '') {
-		$html .= '<span class="aud-det-when-main">'.$fecha.($hora !== '' ? ' <span class="aud-det-hora">'.$hora.'</span>' : '').'</span>';
-	}
-	if ($logCod > 0) {
-		$html .= '<span class="aud-det-id">#'.$logCod.'</span>';
+		$html .= '<span class="aud-det-when-main"><i class="fa fa-calendar"></i> '.$fecha;
+		if ($hora !== '') {
+			$html .= ' <span class="aud-det-hora"><i class="fa fa-clock-o"></i> '.$hora.'</span>';
+		}
+		$html .= '</span>';
 	}
 	$html .= '</div></div>';
 
 	/* 2) Resumen de la accion */
+	$usuPlain = trim(aud_nombre_usuario($row));
+	$inicial = $usuPlain !== '' ? strtoupper(substr($usuPlain, 0, 1)) : 'U';
 	$html .= '<div class="aud-det-summary">';
-	$html .= '<p class="aud-det-title"><strong>'.$usuario.'</strong> realizo la accion: '.$actividad.'.</p>';
+	$html .= '<div class="aud-det-avatar">'.aud_h($inicial).'</div>';
+	$html .= '<div class="aud-det-summary-body">';
+	$html .= '<p class="aud-det-title"><strong>'.$usuario.'</strong> '.$actividad.'.</p>';
 	$html .= '<p class="aud-det-lead">'.aud_h(aud_frase_movimiento($row, $pares)).'</p>';
-	$html .= '</div>';
+	$html .= '</div></div>';
 
 	/* 3) Contexto en rejilla */
 	$html .= '<fieldset class="exa-fieldset aud-det-context"><legend class="Titulos2">Contexto</legend>';
@@ -1020,12 +1316,10 @@ function aud_html_detalle($row, $pares)
 	}
 	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Modulo</span><span class="aud-det-value">'.$modulo.'</span></div>';
 	if ($directorio !== '' && $directorio !== $modulo) {
-		$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Directorio</span><span class="aud-det-value">'.$directorio.'</span></div>';
-	} elseif ($directorio !== '') {
-		$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Directorio</span><span class="aud-det-value">'.$directorio.'</span></div>';
+		$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Area</span><span class="aud-det-value">'.$directorio.'</span></div>';
 	}
 	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Proceso</span><span class="aud-det-value">'.$proceso.'</span></div>';
-	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Tipo de registro</span><span class="aud-det-value">'.$registro.'</span></div>';
+	$html .= '<div class="aud-det-meta-item"><span class="aud-det-label">Tipo de documento</span><span class="aud-det-value">'.ucfirst($registro).'</span></div>';
 	if ($ident !== '') {
 		$html .= '<div class="aud-det-meta-item aud-det-meta-wide"><span class="aud-det-label">Referencia</span><span class="aud-det-value">'.$ident.'</span></div>';
 	}
@@ -1034,29 +1328,43 @@ function aud_html_detalle($row, $pares)
 	/* 4) Datos del movimiento */
 	$html .= '<fieldset class="exa-fieldset aud-det-datos"><legend class="Titulos2">Datos del movimiento</legend>';
 	if (count($pares) === 0) {
-		$html .= '<p class="aud-det-empty">No se registraron campos adicionales en este movimiento.</p>';
+		$html .= '<p class="aud-det-empty"><i class="fa fa-info-circle"></i> No hay datos adicionales para mostrar en este movimiento.</p>';
 	} else {
-		$html .= '<div class="table-responsive"><table class="table table-bordered table-condensed table-striped aud-det-table">';
+		$html .= '<div class="table-responsive aud-det-table-wrap"><table class="table table-bordered table-condensed aud-det-table">';
 		$html .= '<thead><tr><th class="aud-det-col-dato">Dato</th>';
 		$viejos = aud_valores_anteriores($row);
 		if (count($viejos) > 0) {
-			$html .= '<th>Valor anterior</th>';
+			$html .= '<th class="aud-det-col-antes">Antes</th><th class="aud-det-col-despues">Despues</th>';
+		} else {
+			$html .= '<th class="aud-det-col-valor">Valor</th>';
 		}
-		$html .= '<th>Valor registrado</th></tr></thead><tbody>';
+		$html .= '<th class="aud-det-col-des">Que significa este valor</th></tr></thead><tbody>';
 		foreach ($pares as $p) {
 			$eti = isset($p['eti']) ? $p['eti'] : aud_humanizar_campo($p['atr']);
 			if ($eti === $p['atr']) {
 				$eti = aud_humanizar_campo($p['atr']);
 			}
+			$des = isset($p['des']) ? $p['des'] : aud_descripcion_meta(
+				isset($p['atr']) ? $p['atr'] : '',
+				isset($p['val']) ? $p['val'] : '',
+				isset($p['val_raw']) ? $p['val_raw'] : (isset($p['val']) ? $p['val'] : ''),
+				null
+			);
 			$html .= '<tr><td class="aud-det-col-dato">'.aud_h($eti).'</td>';
 			if (count($viejos) > 0) {
 				$oldVal = '';
+				$oldRaw = '';
 				if (isset($p['atr']) && isset($viejos[$p['atr']])) {
-					$oldVal = aud_valor_natural($p['atr'], $viejos[$p['atr']], $row, null);
+					$oldRaw = $viejos[$p['atr']];
+					$oldVal = aud_valor_natural($p['atr'], $oldRaw, $row, null);
 				}
-				$html .= '<td>'.aud_h($oldVal).'</td>';
+				$html .= '<td class="aud-det-col-antes"><span class="aud-det-val-old">'.aud_h($oldVal !== '' ? $oldVal : '—').'</span></td>';
+				if ($oldVal !== '' && $oldVal !== $p['val']) {
+					$des = 'Antes: "'.$oldVal.'". Ahora: '.$des;
+				}
 			}
-			$html .= '<td>'.aud_h($p['val']).'</td></tr>';
+			$html .= '<td class="aud-det-col-despues"><span class="aud-det-val-new">'.aud_h($p['val']).'</span></td>';
+			$html .= '<td class="aud-det-col-des">'.aud_h($des).'</td></tr>';
 		}
 		$html .= '</tbody></table></div>';
 	}
@@ -1083,15 +1391,15 @@ function aud_estado_captura($empCod, $cfgCount = -1)
 	$ok = true;
 	if (!$enabled) {
 		$ok = false;
-		$msg = 'La captura esta desactivada (AUDIT_ENABLED). El monitor no registrara actividad nueva.';
+		$msg = 'El registro de actividades esta desactivado. No se guardaran movimientos nuevos hasta reactivarlo.';
 	} elseif ($emp <= 0) {
 		$ok = false;
 		$msg = 'No hay empresa activa. No se puede asociar la actividad al monitoreo.';
 	} elseif ($cfg > 0) {
-		$msg = 'Captura activa: se registra la actividad de los '.$cfg.' modulo(s)/directorio(s)/proceso(s) marcados en configuracion.';
+		$msg = 'Registro activo: se guardan los movimientos de los '.$cfg.' modulo(s)/area(s)/proceso(s) marcados en la configuracion.';
 	} else {
 		$ok = false;
-		$msg = 'Captura activa pero sin reglas: no se registrara actividad. Marque modulos en Configuracion de monitoreo para cubrir el sistema.';
+		$msg = 'El registro esta activo, pero aun no hay reglas. Marque modulos en Configuracion de monitoreo para comenzar a auditar.';
 	}
 	return array('ok' => $ok, 'enabled' => $enabled, 'cfg' => $cfg, 'message' => $msg);
 }
@@ -1103,4 +1411,154 @@ function aud_html_banner_captura($estado)
 	}
 	$cls = !empty($estado['ok']) ? 'aud-captura-ok' : 'aud-captura-off';
 	return '<p class="aud-captura-banner '.$cls.'">'.aud_h($estado['message']).'</p>';
+}
+
+/**
+ * Fecha mas antigua con datos registrados en auditoria (aviso "datos desde").
+ * Se consulta una sola vez por empresa y se cachea en sesion.
+ * $obBD_con1 / $obBD_conexion son opcionales: si no llegan se usa la fecha
+ * de inicio del monitoreo (10-sep-2026).
+ */
+function aud_fecha_registro_inicio($empCod, $obBD_con1 = null, $obBD_conexion = null)
+{
+	try {
+		$sessOk = (function_exists('session_status') && session_status() === PHP_SESSION_ACTIVE);
+	} catch (\Exception $eSess) {
+		$sessOk = false;
+	} catch (\Throwable $eSess2) {
+		$sessOk = false;
+	}
+	if (!isset($sessOk)) {
+		$sessOk = false;
+	}
+	$emp = (int)$empCod;
+	$key = 'aud_min_fec_'.(int)$emp;
+	if ($sessOk && isset($_SESSION[$key]) && $_SESSION[$key] !== '') {
+		return (string)$_SESSION[$key];
+	}
+	$fecha = '2026-09-10';
+	if ($obBD_con1 && $obBD_conexion && method_exists($obBD_con1, 'getRowConsulta')) {
+		try {
+			$row = $obBD_con1->getRowConsulta(37, array($emp), $obBD_conexion);
+			if (is_array($row) && !empty($row['min_fec'])) {
+				$d = substr(trim((string)$row['min_fec']), 0, 10);
+				if ($d !== '' && $d !== '0000-00-00' && strtotime($d)) {
+					$fecha = $d;
+				}
+			}
+		} catch (\Exception $eSQL) {
+			// conservar la fecha por defecto
+		} catch (\Throwable $eSQL2) {
+			// conservar la fecha por defecto
+		}
+	}
+	if ($sessOk) {
+		$_SESSION[$key] = $fecha;
+	}
+	return $fecha;
+}
+
+/** Banner informativo: desde que fecha hay datos en auditoria. */
+function aud_html_banner_desde($fecha)
+{
+	$fecha = trim((string)$fecha);
+	if ($fecha === '' || $fecha === '0000-00-00') {
+		return '';
+	}
+	$ts = strtotime($fecha);
+	if (!$ts) {
+		return '';
+	}
+	$meses = array('enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre');
+	$legible = (int)date('j', $ts).' de '.$meses[(int)date('n', $ts) - 1].' de '.date('Y', $ts);
+	$dia = date('d/m/Y', $ts);
+	return '<p class="aud-aviso-desde"><span class="glyphicon glyphicon-info-sign"></span> La auditoria registra datos desde el <strong>'.$legible.'</strong> ('.$dia.'). No hay movimientos registrados con anterioridad a esa fecha.</p>';
+}
+
+/**
+ * Historial (timeline) de un registro: todos los movimientos del mismo
+ * tipo de registro e identificador, ordenados cronologicamente.
+ */
+function aud_html_historial($row, $obBD_con1 = null, $obBD_conexion = null)
+{
+	if (!$obBD_con1 || !$obBD_conexion || !method_exists($obBD_con1, 'getArrayConsulta')) {
+		return '<p class="aud-det-empty">Historial no disponible.</p>';
+	}
+	$tabCod = isset($row['Tab_Cod']) ? (int)$row['Tab_Cod'] : 0;
+	$emp = isset($row['Emp_Cod']) ? (int)$row['Emp_Cod'] : 0;
+	$actualCod = isset($row['Log_Cod']) ? (int)$row['Log_Cod'] : 0;
+	$int = trim((string)(isset($row['Log_Int']) ? $row['Log_Int'] : ''));
+	// El identificador base es lo que precede a " || OLD:..."
+	$base = trim(preg_replace('/\s*\|\|.*$/s', '', $int));
+	if ($base === '') {
+		return '<p class="aud-det-empty">Este movimiento no tiene referencia para armar su historial de cambios.</p>';
+	}
+	$hist = $obBD_con1->getArrayConsulta(36, array($tabCod, $emp, $base, 100), $obBD_conexion);
+	if (!is_array($hist) || count($hist) === 0) {
+		return '<p class="aud-det-empty">No hay otros cambios registrados sobre este documento.</p>';
+	}
+	$html = '<ul class="aud-hist-list">';
+	foreach ($hist as $r) {
+		$eveIni = strtoupper(trim(isset($r['Eve_Ini']) ? $r['Eve_Ini'] : ''));
+		$eveDes = aud_h(aud_etiqueta_evento($eveIni, isset($r['Eve_Des']) ? $r['Eve_Des'] : ''));
+		$badgeClass = 'aud-det-badge';
+		if ($eveIni === 'I') {
+			$badgeClass .= ' aud-det-badge-i';
+		} elseif ($eveIni === 'U') {
+			$badgeClass .= ' aud-det-badge-u';
+		} elseif ($eveIni === 'D') {
+			$badgeClass .= ' aud-det-badge-d';
+		} elseif ($eveIni === 'F') {
+			$badgeClass .= ' aud-det-badge-f';
+		}
+		$fec = trim(isset($r['Log_Fec']) ? $r['Log_Fec'] : '');
+		$usuario = aud_nombre_usuario($r);
+		$usuario = ($usuario !== '' && $usuario !== 'Usuario no identificado') ? $usuario : '';
+		$paresDet = aud_pares_interpretados($r, null, null);
+		$resumen = aud_h(aud_resumen_detalle($r, $paresDet));
+		$esActual = ((int)$r['Log_Cod'] === $actualCod);
+		$html .= '<li class="aud-hist-item'.($esActual ? ' aud-hist-item-actual' : '').'">';
+		$html .= '<div class="aud-hist-top">';
+		$html .= '<span class="'.$badgeClass.'">'.($eveDes !== '' ? $eveDes : 'Actividad').'</span>';
+		$html .= '<span class="aud-hist-when">'.aud_h($fec).'</span>';
+		if ($esActual) {
+			$html .= '<span class="aud-hist-actual">Este movimiento</span>';
+		}
+		$html .= '</div>';
+		if ($usuario !== '') {
+			$html .= '<div class="aud-hist-usuario">Por '.aud_h($usuario).'</div>';
+		}
+		if ($resumen !== '') {
+			$html .= '<div class="aud-hist-resumen">'.$resumen.'</div>';
+		}
+		$logCodRow = (int)$r['Log_Cod'];
+		if ($logCodRow > 0) {
+			$html .= '<div class="aud-hist-ver"><a href="javascript:void(0);" data-logcod="'.$logCodRow.'" class="aud-hist-verlink">Ver este movimiento</a></div>';
+		}
+		$html .= '</li>';
+	}
+	$html .= '</ul>';
+	return $html;
+}
+
+/**
+ * Detalle con pestañas: "Movimiento" (contenido clasico + contenido extra)
+ * y "Historial de cambios" (linea de tiempo del registro).
+ */
+function aud_html_detalle_tabs($row, $pares, $obBD_con1 = null, $obBD_conexion = null, $extraMovHtml = '')
+{
+	$html = '<div class="aud-det-tabs">';
+	$html .= '<ul class="aud-det-tabnav">';
+	$html .= '<li class="aud-det-tabli active" data-tab="mov"><a href="javascript:void(0);">Movimiento</a></li>';
+	$html .= '<li class="aud-det-tabli" data-tab="hist"><a href="javascript:void(0);">Historial de cambios</a></li>';
+	$html .= '</ul>';
+	$html .= '<div class="aud-det-tabpane active" id="audDetTabMov">';
+	$html .= aud_html_detalle($row, $pares);
+	$html .= (string)$extraMovHtml;
+	$html .= '</div>';
+	$html .= '<div class="aud-det-tabpane" id="audDetTabHist" style="display:none;">';
+	$html .= aud_html_historial($row, $obBD_con1, $obBD_conexion);
+	$html .= '</div></div>';
+	$html .= '<script type="text/javascript">(function(){var $w=window.jQuery;if(!$w){return;}$w("#detalleContenido").off("click.audDet").on("click.audDet",".aud-det-tabnav .aud-det-tabli a",function(e){e.preventDefault();var $li=$w(this).closest(".aud-det-tabli");var t=$li.attr("data-tab")||"mov";var $dlg=$w("#detalleContenido");$dlg.find(".aud-det-tabli").removeClass("active");$li.addClass("active");$dlg.find(".aud-det-tabpane").hide();$dlg.find(".aud-det-tabpane").removeClass("active");var $pane=$dlg.find("#audDetTab"+((t==="hist")?"Hist":"Mov"));$pane.show().addClass("active");try{$w("#detalleDialog").dialog("option","position",{my:"center",at:"center",of:window});}catch(e2){}});$w("#detalleContenido").off("click.audHist").on("click.audHist",".aud-hist-verlink",function(e){e.preventDefault();var c=parseInt($w(this).attr("data-logcod"),10);if(c>0&&typeof window.audVerDetalle==="function"){window.audVerDetalle(c);}});})();</script>';
+	return $html;
 }
