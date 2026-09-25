@@ -1,0 +1,79 @@
+/**
+ * Model4 — puente ligero sobre componentes Tailwind m4-*
+ * Los estilos principales viven en Librerias/tailwind/dist/tailwind.min.css
+ */
+
+/* Restaurar anchos de widgets del dashboard (conflicto histórico Tailwind w-12) */
+.exa-ui-panel .dash-widget.w-12,
+.exa-ui-panel .dash-widget-placeholder.w-12 {
+	width: 50% !important;
+	max-width: 50% !important;
+	float: left;
+	box-sizing: border-box;
+}
+.exa-ui-panel .dash-widget.w-full,
+.exa-ui-panel .dash-widget-placeholder.w-full {
+	width: 100% !important;
+	max-width: 100% !important;
+	float: left;
+	box-sizing: border-box;
+}
+@media (max-width: 900px) {
+	.exa-ui-panel .dash-widget.w-12,
+	.exa-ui-panel .dash-widget-placeholder.w-12 {
+		width: 100% !important;
+		max-width: 100% !important;
+	}
+}
+
+.exa-ui-panel .m4-page { width: 100%; }
+
+/* Dropdowns de Acciones sobre barras de filtro */
+.exa-ui-panel .m4-filters,
+.exa-ui-panel .m4-card.period-control-card,
+.exa-ui-panel .aud-toolbar-card.m4-card,
+.exa-ui-panel .period-control-card {
+	overflow: visible !important;
+}
+.exa-ui-panel .aud-toolbar-right .dropdown {
+	position: relative;
+	z-index: 40;
+}
+.exa-ui-panel .aud-toolbar-right .dropdown-menu {
+	z-index: 1080 !important;
+}
+
+/* Drawer filtros */
+.m4-filters-backdrop.is-open,
+.m4-filters-drawer.is-open {
+	visibility: visible;
+}
+.m4-filters-placeholder {
+	display: none !important;
+}
+.m4-filters-drawer [data-m4-filters-source] {
+	display: block !important;
+	margin: 0;
+	padding: 0;
+	border: none;
+	box-shadow: none;
+	background: transparent;
+}
+.m4-filters-drawer .aud-filtros-grid {
+	display: grid !important;
+	grid-template-columns: 1fr;
+	gap: 10px;
+}
+@media (min-width: 480px) {
+	.m4-filters-drawer .aud-filtros-grid {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+/* Touch targets en móvil */
+@media (max-width: 639px) {
+	.exa-ui-panel .m4-btn,
+	.exa-ui-panel .aud-toolbar-right .btn {
+		min-height: 40px;
+	}
+}

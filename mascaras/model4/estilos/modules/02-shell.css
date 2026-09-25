@@ -1,0 +1,28 @@
+﻿/* Panel principal — Model4 */
+.panel.panel-main.exa-ui-panel {
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	background: transparent;
+	overflow: visible;
+}
+.panel.panel-main.exa-ui-panel > .panel-heading.exa-header {
+	color: #fff !important;
+	background: linear-gradient(135deg, #1E3A5F 0%, #254463 55%, #1D4ED8 160%) !important;
+	background-image: linear-gradient(135deg, #1E3A5F 0%, #254463 55%, #1D4ED8 160%) !important;
+	border: none;
+	padding: 8px 16px;
+	box-shadow: 0 1px 0 rgba(15, 23, 42, 0.08);
+	text-shadow: none;
+}
+.panel.panel-main.exa-ui-panel > .panel-heading.exa-header .panel-title {
+	color: #fff;
+	font-weight: 700 !important;
+	font-size: 13px !important;
+	letter-spacing: 0.02em;
+	text-shadow: none;
+}
+.panel.panel-main.exa-ui-panel > .exa-body {
+	background: var(--v2-bg-page) !important;
+	padding: 10px 10px 12px !important;
+}

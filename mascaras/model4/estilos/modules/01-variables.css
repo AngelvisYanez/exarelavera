@@ -1,0 +1,41 @@
+﻿/** Model4 - variables y tipografia base (.exa-ui-panel) — paleta azul moderna */
+.panel.panel-main.exa-ui-panel {
+	/* Jerarquia visual (4 niveles) */
+	--v2-bg-page: #DFE9F6;
+	--v2-bg-panel: #F1F5F9;
+	--v2-bg-grid: #FFFFFF;
+	--v2-bg-input: #ffffff;
+	--v2-bg-readonly: #E8EEF6;
+	--v2-brand: #2563EB;
+	--v2-brand-dark: #1D4ED8;
+	--v2-brand-soft: #DBEAFE;
+	--v2-brand-muted: #BFDBFE;
+	--v2-grid-header-dark-bg: #1E3A5F;
+	--v2-grid-header-dark-gradient: linear-gradient(180deg, #254463 0%, #1E3A5F 100%);
+	--v2-grid-header-dark-text: #ffffff;
+	--v2-grid-header-dark-border: #163A5F;
+	--v2-grid-row-pagado-bg: #dcefe2;
+	--v2-surface: #FFFFFF;
+	--v2-surface-alt: #F8FAFC;
+	--v2-surface-hover: #EFF6FF;
+	--v2-surface-input: var(--v2-bg-input);
+	--v2-celeste-page: var(--v2-bg-page);
+	--v2-border: #E2E8F0;
+	--v2-border-light: #E2E8F0;
+	--v2-grid-row-vencido-bg: #f3dede;
+	--v2-grid-footer-font-size: 15px;
+	--v2-grid-footer-font-weight: 600;
+	--v2-text: #1E293B;
+	--v2-text-muted: #64748B;
+	--v2-radius: 10px;
+	--v2-radius-sm: 8px;
+	--v2-elev-border: 1px solid #E2E8F0;
+	--v2-elev-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+	--v2-shadow-sm: var(--v2-elev-shadow);
+	--v2-shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+	--v2-focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.18);
+	--v2-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-family: var(--v2-font);
+	color: var(--v2-text);
+	-webkit-font-smoothing: antialiased;
+}

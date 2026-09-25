@@ -1,0 +1,292 @@
+/**
+ * Alineacion input-xs (22px) en model3  SIN display:flex en .input-group
+ * (flex rompe el layout table de Bootstrap 3).
+ *
+ * Contextos:
+ *   .exa-ui-busqueda-filtros   busqueda simple (1 fila)
+ *   .exa-ui-list-toolbar       filtros cobros / lotes
+ *   .exa-ui-form-ficha        ficha edicion
+ */
+
+/* --- Altura unificada 22px (compatible Bootstrap input-group table) --- */
+.exa-ui-panel .exa-ui-busqueda-filtros .input-group.input-group-xs,
+.exa-ui-panel .exa-ui-list-toolbar .input-group.input-group-xs,
+.exa-ui-panel .exa-ui-toolbar-filtros .input-group.input-group-xs,
+.exa-ui-panel .exa-ui-toolbar-cliente .input-group.input-group-xs,
+.exa-ui-panel .exa-ui-list-toolbar .exa-ui-bar-asignar .input-group.input-group-xs,
+.exa-ui-panel .exa-ui-form-ficha .input-group.input-group-xs,
+.exa-ui-panel .input-group.exa-ui-input-group-xs {
+	display: table;
+	border-collapse: separate;
+	width: 100%;
+	max-width: 100%;
+}
+
+.exa-ui-panel .exa-ui-busqueda-filtros .input-group.input-group-xs > .form-control,
+.exa-ui-panel .exa-ui-list-toolbar .input-group.input-group-xs > .form-control,
+.exa-ui-panel .exa-ui-toolbar-filtros .input-group.input-group-xs > .form-control,
+.exa-ui-panel .exa-ui-toolbar-cliente .input-group.input-group-xs > .form-control,
+.exa-ui-panel .exa-ui-list-toolbar .exa-ui-bar-asignar .input-group.input-group-xs > .form-control,
+.exa-ui-panel .exa-ui-form-ficha .input-group.input-group-xs > .form-control,
+.exa-ui-panel .input-group.exa-ui-input-group-xs > .form-control {
+	height: 22px;
+	padding: 2px 8px;
+	font-size: 12px;
+	line-height: 1.35;
+}
+
+.exa-ui-panel .exa-ui-list-toolbar .input-group.input-group-xs > .input-group-addon,
+.exa-ui-panel .exa-ui-toolbar-filtros .input-group.input-group-xs > .input-group-addon,
+.exa-ui-panel .exa-ui-toolbar-cliente .input-group.input-group-xs > .input-group-addon,
+.exa-ui-panel .exa-ui-form-ficha .input-group.input-group-xs > .input-group-addon,
+.exa-ui-panel .exa-ui-busqueda-filtros .input-group.input-group-xs > .input-group-addon {
+	height: 22px;
+	padding: 2px 8px;
+	font-size: 12px;
+	line-height: 18px;
+	vertical-align: middle;
+}
+
+.exa-ui-panel .exa-ui-list-toolbar .input-group.input-group-xs > .input-group-addon.exa-ui-addon-chk,
+.exa-ui-panel .exa-ui-toolbar-filtros .input-group.input-group-xs > .input-group-addon.exa-ui-addon-chk {
+	padding: 2px 6px;
+	line-height: 1;
+}
+
+.exa-ui-panel .exa-ui-list-toolbar .input-group.input-group-xs > .input-group-addon.exa-ui-addon-chk input[type="checkbox"],
+.exa-ui-panel .exa-ui-toolbar-filtros .input-group.input-group-xs > .input-group-addon.exa-ui-addon-chk input[type="checkbox"] {
+	margin: 0;
+	vertical-align: middle;
+	position: relative;
+	top: 0;
+}
+
+.exa-ui-panel .exa-ui-list-toolbar .input-group.input-group-xs > .input-group-btn > .btn,
+.exa-ui-panel .exa-ui-toolbar-filtros .input-group.input-group-xs > .input-group-btn > .btn,
+.exa-ui-panel .exa-ui-toolbar-cliente .input-group.input-group-xs > .input-group-btn > .btn,
+.exa-ui-panel .exa-ui-list-toolbar .exa-ui-bar-asignar .input-group.input-group-xs > .input-group-btn > .btn,
+.exa-ui-panel .exa-ui-busqueda-filtros .input-group.input-group-xs > .input-group-btn > .btn,
+.exa-ui-panel .exa-ui-form-ficha .input-group.input-group-xs > .input-group-btn > .btn,
+.exa-ui-panel .input-group.exa-ui-input-group-xs > .input-group-btn > .btn {
+	height: 22px;
+	padding: 2px 10px;
+	font-size: 12px;
+	line-height: 18px;
+	margin-top: 0;
+	vertical-align: middle;
+}
+
+/* --- Radioset jQuery UI (altura 22px) --- */
+.exa-ui-panel .exa-ui-busqueda-filtros .radioset.ui-buttonset,
+.exa-ui-panel .exa-ui-list-toolbar .radioset.ui-buttonset,
+.exa-ui-panel .exa-ui-toolbar-filtros .radioset.ui-buttonset {
+	display: inline-block;
+	vertical-align: middle;
+	margin: 0;
+	max-width: 100%;
+}
+
+.exa-ui-panel .exa-ui-list-toolbar .exa-ui-radioset-bar.radioset,
+.exa-ui-panel .exa-ui-toolbar-filtros .exa-ui-radioset-bar.radioset {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+/* Filtros: radioset en la fila Filtrar Por (col-xs-8) */
+.exa-ui-panel .exa-ui-toolbar-filtros .form-group > .col-xs-8.radioset {
+	padding-top: 1px;
+}
+
+/* Valor a cobrar / Asignar: fuera del fieldset Filtros (col-xs-4 a la derecha) */
+.exa-ui-panel .exa-ui-list-toolbar .exa-ui-bar-asignar {
+	padding-left: 8px;
+	padding-right: 8px;
+}
+
+.exa-ui-panel .exa-ui-busqueda-filtros .radioset.ui-buttonset .ui-button,
+.exa-ui-panel .exa-ui-list-toolbar .radioset.ui-buttonset .ui-button,
+.exa-ui-panel .exa-ui-toolbar-filtros .radioset.ui-buttonset .ui-button {
+	height: 22px !important;
+	min-height: 22px !important;
+	padding: 0 12px !important;
+	margin-right: -0.35em !important;
+	margin-bottom: 0 !important;
+	line-height: 20px !important;
+	font-size: 12px !important;
+	box-sizing: border-box;
+}
+
+.exa-ui-panel .exa-ui-busqueda-filtros .radioset.ui-buttonset .ui-button .ui-button-text,
+.exa-ui-panel .exa-ui-list-toolbar .radioset.ui-buttonset .ui-button .ui-button-text,
+.exa-ui-panel .exa-ui-toolbar-filtros .radioset.ui-buttonset .ui-button .ui-button-text {
+	padding: 0 2px !important;
+	line-height: 20px !important;
+}
+
+/* --- Busqueda simple (mod. clientes lista) --- */
+.exa-ui-panel .exa-ui-busqueda-filtros .form-group > [class*="col-sm-5"],
+.exa-ui-panel .exa-ui-busqueda-filtros .form-group > [class*="col-xs-5"] {
+	max-width: 480px;
+}
+
+/* --- Toolbar listas (cobros lotes, etc.) --- */
+.exa-ui-panel .exa-ui-list-toolbar fieldset.exa-fieldset,
+.exa-ui-panel .exa-ui-toolbar-filtros.exa-fieldset,
+.exa-ui-panel .exa-ui-toolbar-cliente.exa-fieldset {
+	margin-bottom: 6px;
+}
+
+.exa-ui-panel .exa-ui-list-toolbar .form-group,
+.exa-ui-panel .exa-ui-toolbar-filtros .form-group,
+.exa-ui-panel .exa-ui-toolbar-cliente .form-group {
+	margin-bottom: 8px;
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.exa-ui-panel .exa-ui-list-toolbar .form-group::before,
+.exa-ui-panel .exa-ui-list-toolbar .form-group::after,
+.exa-ui-panel .exa-ui-toolbar-filtros .form-group::before,
+.exa-ui-panel .exa-ui-toolbar-filtros .form-group::after,
+.exa-ui-panel .exa-ui-toolbar-cliente .form-group::before,
+.exa-ui-panel .exa-ui-toolbar-cliente .form-group::after {
+	display: table;
+	content: " ";
+}
+
+.exa-ui-panel .exa-ui-list-toolbar .form-group::after,
+.exa-ui-panel .exa-ui-toolbar-filtros .form-group::after,
+.exa-ui-panel .exa-ui-toolbar-cliente .form-group::after {
+	clear: both;
+}
+
+.exa-ui-panel .exa-ui-list-toolbar .form-group > .control-label,
+.exa-ui-panel .exa-ui-toolbar-filtros .form-group > .control-label,
+.exa-ui-panel .exa-ui-toolbar-cliente .form-group > .control-label {
+	padding-top: 4px;
+	line-height: 22px;
+	margin-bottom: 0;
+}
+
+.exa-ui-panel .exa-ui-list-toolbar .exa-ui-bar-asignar .input-group.input-group-xs {
+	width: 100%;
+}
+
+/* Caption ORDENAR POR en jqGrid */
+.exa-ui-panel .exa-ui-grid-host .ui-jqgrid-titlebar .pull-right {
+	display: inline-block;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.exa-ui-panel .exa-ui-grid-host .ui-jqgrid-titlebar .pull-right select {
+	height: 22px;
+	font-size: 12px;
+	line-height: 20px;
+	max-width: 200px;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+/* --- Grid compacto --- */
+.exa-ui-panel .exa-ui-grid-host--compact {
+	max-width: calc(100% - 14px);
+	box-sizing: border-box;
+}
+
+.exa-ui-panel .exa-ui-grid-host--compact [id^="gbox_"] .ui-jqgrid tr.jqgrow > td {
+	padding: 4px 6px;
+	font-size: 11px;
+}
+
+.exa-ui-panel .exa-ui-grid-host--compact .ui-jqgrid .ui-jqgrid-htable th,
+.exa-ui-panel .exa-ui-grid-host--compact .ui-jqgrid .ui-jqgrid-htable th div {
+	padding: 4px 6px !important;
+	font-size: 10px !important;
+}
+
+/* --- Ficha edicion (formCliente)  addons especiales con flex interno OK --- */
+.exa-ui-panel .exa-ui-form-ficha .form-control.input-xs,
+.exa-ui-panel .exa-ui-form-ficha select.form-control.input-xs {
+	height: 22px;
+	padding: 2px 8px;
+	font-size: 12px;
+	line-height: 1.35;
+	box-sizing: border-box;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .form-group {
+	margin-bottom: 8px;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .form-group > .control-label.label-xs {
+	padding-top: 4px;
+	line-height: 22px;
+	margin-bottom: 0;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .exa-ui-btn-group-xs .btn.btn-xs {
+	height: 22px;
+	padding: 0 10px;
+	line-height: 20px;
+	display: inline-flex;
+	align-items: center;
+	margin-bottom: 0;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .exa-ui-row-cedula-fields {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px 14px;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .exa-ui-cedula-group {
+	flex: 1 1 280px;
+	max-width: 420px;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .exa-ui-cedula-group > .input-group-addon {
+	height: 22px;
+	padding: 0 8px;
+	line-height: 22px;
+	vertical-align: middle;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .exa-ui-cedula-group > .input-group-addon.validate i {
+	line-height: 22px;
+	vertical-align: middle;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .exa-ui-addon-check input[type="checkbox"] {
+	margin: 0 4px 0 0;
+	vertical-align: middle;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .exa-ui-check-inline {
+	position: static !important;
+	margin: 0;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .exa-ui-check-inline label {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0;
+	font-size: 12px;
+	line-height: 22px;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .exa-ui-telefonos {
+	display: table;
+	width: 100%;
+	border-collapse: separate;
+}
+
+.exa-ui-panel .exa-ui-form-ficha .exa-ui-telefonos > .input-group-addon,
+.exa-ui-panel .exa-ui-form-ficha .exa-ui-telefonos > .form-control {
+	display: table-cell;
+	float: none;
+	vertical-align: middle;
+	height: 22px;
+}
